@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="include\Components">
+      <UniqueIdentifier>{59fb1ac6-6abf-4a1c-a295-2c026d073c9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Components">
+      <UniqueIdentifier>{6831924b-f2f5-4af4-843d-93267fbc4990}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\Components\Physics">
+      <UniqueIdentifier>{6c3b615b-20e3-44c6-a302-8b3e45cc18c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Components\Physics">
+      <UniqueIdentifier>{69ce79ce-243c-44ce-ba5c-deeb8a0c9e01}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\Interfaces">
+      <UniqueIdentifier>{31dd1fa3-4511-47b7-b7fa-220fc77cd492}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="include\Engine\config.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Transform2D.h">
+      <Filter>include\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Scene.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\StaticMesh.h">
+      <Filter>include\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Physics\Collider.h">
+      <Filter>include\Components\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Physics\CubeCollider.h">
+      <Filter>include\Components\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Interfaces\ISystem.h">
+      <Filter>include\Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Component.h">
+      <Filter>include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\Component.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Transform2D.cpp">
+      <Filter>source\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Scene.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\StaticMesh.cpp">
+      <Filter>source\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Physics\Collider.cpp">
+      <Filter>source\Components\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Physics\CubeCollider.cpp">
+      <Filter>source\Components\Physics</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

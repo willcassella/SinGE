@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="include">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="source">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="include\Interfaces">
+      <UniqueIdentifier>{d3139d96-c850-46ca-893a-0a7b9365cca0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Interfaces">
+      <UniqueIdentifier>{55bffbf1-034e-4c2c-99c0-63995288f4b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\STDE">
+      <UniqueIdentifier>{36513db6-ed7a-413a-93c9-16c345d58f21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\Math">
+      <UniqueIdentifier>{fb9fad61-6fc9-4384-8f95-2128ede873f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\Reflection">
+      <UniqueIdentifier>{6bfdecb3-41d1-44bd-9cf2-9fb8a817312d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Reflection">
+      <UniqueIdentifier>{2864fc61-16c7-43e1-a749-82b701c2eb74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Math">
+      <UniqueIdentifier>{534a0e42-2619-455e-8046-ab8d64835034}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\Core\include\Core\env.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\config.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\STDE\TypeSequence.h">
+      <Filter>include\STDE</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\STDE\Macros.h">
+      <Filter>include\STDE</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\STDE\TypeTraits.h">
+      <Filter>include\STDE</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Math\Vec2.h">
+      <Filter>include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Reflection\Reflection.h">
+      <Filter>include\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Reflection\TypeInfo.h">
+      <Filter>include\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Reflection\InterfaceInfo.h">
+      <Filter>include\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Interfaces\IToString.h">
+      <Filter>include\Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Interfaces\IFromString.h">
+      <Filter>include\Interfaces</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\Reflection\TypeInfo.cpp">
+      <Filter>source\Reflection</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Math\Vec2.cpp">
+      <Filter>source\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Reflection\InterfaceInfo.cpp">
+      <Filter>source\Reflection</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Reflection\Reflection.cpp">
+      <Filter>source\Reflection</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IFromString.cpp">
+      <Filter>source\Interfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IToString.cpp">
+      <Filter>source\Interfaces</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
