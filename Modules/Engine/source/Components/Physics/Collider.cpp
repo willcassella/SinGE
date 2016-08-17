@@ -3,8 +3,7 @@
 #include "../../../include/Engine/Components/Physics/Collider.h"
 #include "../../../include/Engine/Component.h"
 
-REFLECT_TYPE(singe::Collider)
-.auto_impl<singe::Component>();
+REFLECT_TYPE(singe::Collider);
 
 namespace singe
 {

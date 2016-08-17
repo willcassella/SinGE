@@ -6,7 +6,7 @@
 
 REFLECT_TYPE(singe::Transform2D)
 .auto_impl<singe::IToString>()
-.auto_impl<singe::Component>();
+.auto_impl<singe::IComponent>();
 
 namespace singe
 {

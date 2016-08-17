@@ -4,7 +4,7 @@
 #include "../../include/Engine/Component.h"
 
 REFLECT_TYPE(singe::StaticMesh)
-.auto_impl<singe::Component>();
+.auto_impl<singe::IComponent>();
 
 namespace singe
 {

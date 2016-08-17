@@ -5,4 +5,4 @@
 
 REFLECT_TYPE(singe::CubeCollider)
 .extends<singe::Collider>()
-.auto_impl<singe::Component>();
+.auto_impl<singe::IComponent>();
