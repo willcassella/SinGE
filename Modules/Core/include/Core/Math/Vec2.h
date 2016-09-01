@@ -5,11 +5,11 @@
 #include <sstream>
 #include "../Reflection/Reflection.h"
 
-namespace singe
+namespace sge
 {
-	struct CORE_API Vec2 final
+	struct SGE_CORE_API Vec2 final
 	{
-		REFLECTED_TYPE;
+		SGE_REFLECTED_TYPE;
 
 		////////////////////////
 		///   Constructors   ///

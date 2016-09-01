@@ -1,0 +1,49 @@
+Entity: ID, name, parent, components, tags
+Component: data
+Tag: Single-frame piece of data associated with component, used for event system and other stuff
+System: operates on entities and components
+
+template <typename T, typename ... Tags>
+struct ComponentInstance
+{
+	EntityID entity;
+	ComponentID component;
+	T* object;
+	std::tuple<Tags...> tags;
+};
+
+/* Selector used to indicate a component with the given tags is required to exist on the entity. */
+template <typename T, typename ... Tags>
+struct RequiredComponent: ComponentInstance<T, Tags...> {};
+
+/* Selector used to indicate a component with the given tags is required not to exist on the entity. */
+template <typename T, typename ... Tags>
+struct RequiredNotComponent: ComponentInstance<T, Tags...> {};
+
+/* Selector used to indicate a component with the given tags may or may not exist on the entity. */
+template <typename T, typename ... Tags>
+struct OptionalComponent: ComponentInstance<T, Tags...> {};
+
+template <typename ... Selectors>
+void add_selector(void(*handler)(void*, EntityID, Selectors...));
+
+
+struct StaticMeshComponent {
+	ResourceHandle<StaticMesh> mesh;
+	ResourceHandle<Material> material;
+	Material::ParamTable params;
+
+	// Tag used when the 'mesh' field is changed
+	struct MeshChanged
+	{
+		ResourceHandle<StaticMesh> old_mesh;
+	};
+
+	// Tag used when the 'material' field is changed
+	struct MaterialChanged
+	{
+		ResourceHandle<Material> old_material;
+	};
+
+	struct ParamsChanged {};
+};

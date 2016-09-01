@@ -24,6 +24,15 @@
     <Filter Include="include\Interfaces">
       <UniqueIdentifier>{31dd1fa3-4511-47b7-b7fa-220fc77cd492}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\Interfaces">
+      <UniqueIdentifier>{17017b05-37e7-4e19-bc79-41a4f862c4a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\Components\Display">
+      <UniqueIdentifier>{75d7ae61-5a17-4231-9782-0113743fd0dc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Components\Display">
+      <UniqueIdentifier>{c3a29cdf-2d17-49cd-b103-eeaaab3e75f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Engine\config.h">
@@ -35,12 +44,6 @@
     <ClInclude Include="include\Engine\Scene.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Engine\Components\StaticMesh.h">
-      <Filter>include\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\Components\Physics\Collider.h">
-      <Filter>include\Components\Physics</Filter>
-    </ClInclude>
     <ClInclude Include="include\Engine\Components\Physics\CubeCollider.h">
       <Filter>include\Components\Physics</Filter>
     </ClInclude>
@@ -50,25 +53,25 @@
     <ClInclude Include="include\Engine\Component.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\Components\Display\StaticMesh.h">
+      <Filter>include\Components\Display</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\Component.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="source\Components\Transform2D.cpp">
       <Filter>source\Components</Filter>
     </ClCompile>
     <ClCompile Include="source\Scene.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="source\Components\StaticMesh.cpp">
-      <Filter>source\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Components\Physics\Collider.cpp">
-      <Filter>source\Components\Physics</Filter>
-    </ClCompile>
     <ClCompile Include="source\Components\Physics\CubeCollider.cpp">
       <Filter>source\Components\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\ISystem.cpp">
+      <Filter>source\Interfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Display\StaticMesh.cpp">
+      <Filter>source\Components\Display</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

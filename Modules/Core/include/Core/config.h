@@ -3,8 +3,8 @@
 
 #include "env.h"
 
-#ifdef CORE_BUILD
-#	define CORE_API EXPORT
+#ifdef SGE_CORE_BUILD
+#	define SGE_CORE_API SGE_EXPORT
 #else
-#	define CORE_API IMPORT
+#	define SGE_CORE_API SGE_IMPORT
 #endif

@@ -2,7 +2,7 @@
 
 #include "../../include/Core/Reflection/Reflection.h"
 
-namespace singe
+namespace sge
 {
 	namespace specialized
 	{

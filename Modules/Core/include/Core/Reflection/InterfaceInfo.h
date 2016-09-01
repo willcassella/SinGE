@@ -1,25 +1,28 @@
 // InterfaceInfo.h
 #pragma once
 
+#include <unordered_map>
 #include <string>
 #include "../config.h"
 
-namespace singe
+namespace sge
 {
-	template <typename T>
+	struct TypeInfo;
+
+	template <class I>
 	struct InterfaceInfoBuilder;
 
-	struct CORE_API InterfaceInfo final
+	struct SGE_CORE_API InterfaceInfo final
 	{
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		InterfaceInfo();
+		InterfaceInfo() = default;
 
-		template <typename T>
-		InterfaceInfo(InterfaceInfoBuilder<T>&& builder)
-			: InterfaceInfo{ std::move(builder.result) }
+		template <class I>
+		InterfaceInfo(InterfaceInfoBuilder<I>&& builder)
+			: InterfaceInfo{ std::move(builder).result }
 		{
 		}
 
@@ -28,9 +31,11 @@ namespace singe
 	public:
 
 		std::string name;
+
+		std::unordered_map<const TypeInfo*, const void*> implementations;
 	};
 
-	template <typename T>
+	template <class I>
 	struct InterfaceInfoBuilder final
 	{
 		////////////////////////
@@ -47,5 +52,17 @@ namespace singe
 	public:
 
 		InterfaceInfo result;
+
+		///////////////////
+		///   Methods   ///
+	public:
+
+		template <typename T>
+		InterfaceInfoBuilder&& implemented_for()
+		{
+			static const I vtable = I::get_vtable<T>();
+			result.implementations.insert(std::make_pair(&get_type<T>(), &vtable));
+			return std::move(*this);
+		}
 	};
 }

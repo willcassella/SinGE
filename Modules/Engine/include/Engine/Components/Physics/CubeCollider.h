@@ -1,14 +1,38 @@
 // CubeCollider.h
 #pragma once
 
-#include "Collider.h"
+#include <Core/Math/Vec2.h>
+#include "../../config.h"
 
-namespace singe
+namespace sge
 {
-	struct ENGINE_API CubeCollider final : Collider
+	struct SGE_ENGINE_API CCubeCollider 
 	{
-		REFLECTED_TYPE;
+		SGE_REFLECTED_TYPE;
+		
+		////////////////
+		///   Tags   ///
+	public:
 
+		struct SGE_ENGINE_API TShapeChanged 
+		{
+			SGE_REFLECTED_TYPE;
+		};
+
+		////////////////////
+		////   Methods   ///
+	public:
+
+		Vec2 get_shape() const
+		{
+			return _shape;
+		}
+		
+		void set_shape(struct Frame& frame, Vec2 shape)
+		{
+			_shape = shape;
+		}
+		
 		////////////////
 		///   Data   ///
 	private:

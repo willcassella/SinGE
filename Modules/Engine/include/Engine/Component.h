@@ -1,10 +1,12 @@
 // Component.h
 #pragma once
 
+#include <tuple>
+#include <Core/STDE/TMP.h>
 #include <Core/Reflection/Reflection.h>
 #include "config.h"
 
-namespace singe
+namespace sge
 {
 	/* Type used to represent Components. */
 	using ComponentID = uint64;
@@ -21,23 +23,33 @@ namespace singe
 	/* EntityID used for the World entity. */
 	constexpr EntityID WORLD_ENTITY = 1;
 
-	template <typename T>
-	struct Handle final
+	struct ComponentIdentity
+	{
+		EntityID entity;
+		ComponentID component;
+	};
+
+	template <typename C>
+	struct Handle
 	{
 		ComponentID id;
 	};
 
-	template <typename T>
+	template <typename C, typename ... Tags>
 	struct ComponentInstance
 	{
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		ComponentInstance(ComponentID id, EntityID entity, T* object)
+		ComponentInstance(ComponentID id, EntityID entity, C* object)
 			: id{ id }, entity{ entity }, object{ object }
 		{
-			// All done
+		}
+
+		ComponentInstance(ComponentID id, EntityID entity, C* object, std::tuple<Tags...> tags)
+			: id{ id }, entity{ entity }, object{ object }, tags{ std::move(tags) }
+		{
 		}
 
 		static ComponentInstance null()
@@ -51,12 +63,27 @@ namespace singe
 
 		const ComponentID id;
 		const EntityID entity;
-		T* const object;
+		C* const object;
+		const std::tuple<std::pair<const Tags*, int>...> tags;
 	};
 
-	struct ENGINE_API IComponent
+	template <typename C, typename ... Tags>
+	struct RequiredComponent : ComponentInstance<C, Tags...>
 	{
-		REFLECTED_INTERFACE;
-		AUTO_IMPL_0(IComponent);
+	};
+
+	template <typename C, typename ... Tags>
+	struct OptionalComponent : ComponentInstance<C, Tags...>
+	{
+	};
+
+	template <typename C, typename ... Tags>
+	struct RequiredNotComponent
+	{
+	};
+
+	struct SGE_ENGINE_API TNewComponent
+	{
+		SGE_REFLECTED_TYPE;
 	};
 }

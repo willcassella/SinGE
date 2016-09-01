@@ -1,29 +1,17 @@
 // TypeInfo.h
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include "../config.h"
 
-namespace singe
+namespace sge
 {
-	////////////////////////////////
-	///   Forward Declarations   ///
-
-	/* Defined in 'InterfaceInfo.h' */
 	struct InterfaceInfo;
 
-	/* Defined below */
 	template <typename T>
 	struct TypeInfoBuilder;
-	
-	/* Defined in 'Reflection.h' */
-	template <typename T>
-	const InterfaceInfo& get_interface();
 
-	/////////////////
-	///   Types   ///
-
-	struct CORE_API TypeInfo final
+	struct SGE_CORE_API TypeInfo
 	{
 		////////////////////////
 		///   Constructors   ///
@@ -50,32 +38,32 @@ namespace singe
 		size_t alignment;
 
 		/* Default-initializes a new instance of this type. */
-		void(C_CALL*initialize)(void*);
+		void(SGE_C_CALL*init)(void*);
 
 		/* Copy-initializes a new instance of this type. */
-		void(C_CALL*copy_initialize)(void*, const void*);
+		void(SGE_C_CALL*copy_init)(void*, const void*);
 
 		/* Move-initializes a new instance of this type. */
-		void(C_CALL*move_initialize)(void*, void*);
+		void(SGE_C_CALL*move_init)(void*, void*);
 
 		/* Copy-assigns one instance of this type to another. */
-		void(C_CALL*copy_assign)(void*, const void*);
+		void(SGE_C_CALL*copy_assign)(void*, const void*);
 
 		/* Move-assigns one instance of this type to another. */
-		void(C_CALL*move_assign)(void*, void*);
+		void(SGE_C_CALL*move_assign)(void*, void*);
 
 		/* Deinitializes an instance of this type. */
-		void(C_CALL*drop)(void*);
+		void(SGE_C_CALL*drop)(void*);
 
 		/* Base class for instances of this type. */
 		const TypeInfo* base;
 
 		/* Map Associating interface objects to their implementations. */
-		std::map<const InterfaceInfo*, const void*> interfaces;
+		std::unordered_map<const InterfaceInfo*, const void*> interfaces;
 	};
 
 	template <typename T>
-	struct TypeInfoBuilder final
+	struct TypeInfoBuilder
 	{
 		////////////////////////
 		///   Constructors   ///
@@ -95,9 +83,9 @@ namespace singe
 			result.name = std::move(name);
 			result.alignment = alignof(T&);
 
-			this->set_initialize<T>();
-			this->set_copy_initialize<T>();
-			this->set_move_initialize<T>();
+			this->set_init<T>();
+			this->set_copy_init<T>();
+			this->set_move_init<T>();
 			this->set_copy_assign<T>();
 			this->set_move_assign<T>();
 			this->set_drop<T>();
@@ -114,18 +102,10 @@ namespace singe
 	public:
 
 		template <typename InterfaceT>
-		TypeInfoBuilder&& auto_impl()
+		TypeInfoBuilder&& implements()
 		{
-			static InterfaceT impl = InterfaceT::auto_impl<T>();
-			result.interfaces[&get_interface<InterfaceT>()] = &impl;
-			return std::move(*this);
-		}
-
-		template <typename InterfaceT>
-		TypeInfoBuilder&& custom_impl(InterfaceT customImpl)
-		{
-			static InterfaceT impl = std::move(customImpl);
-			result.interfaces[&get_interface<InterfaceT>()] = &impl;
+			static InterfaceT vtable = InterfaceT::get_vtable<T>();
+			result.interfaces[&get_interface<InterfaceT>()] = &vtable;
 			return std::move(*this);
 		}
 
@@ -140,45 +120,45 @@ namespace singe
 	private:
 
 		template <typename F>
-		auto set_initialize() -> std::enable_if_t<std::is_default_constructible<F>::value>
+		auto set_init() -> std::enable_if_t<std::is_default_constructible<F>::value>
 		{
-			result.initialize = [](void* addr) {
+			result.init = [](void* addr) {
 				new(addr) F{};
 			};
 		}
 
 		template <typename F>
-		auto set_initialize() -> std::enable_if_t<!std::is_default_constructible<F>::value>
+		auto set_init() -> std::enable_if_t<!std::is_default_constructible<F>::value>
 		{
-			result.initialize = nullptr;
+			result.init = nullptr;
 		}
 
 		template <typename F>
-		auto set_copy_initialize() -> std::enable_if_t<std::is_copy_constructible<F>::value>
+		auto set_copy_init() -> std::enable_if_t<std::is_copy_constructible<F>::value>
 		{
-			result.copy_initialize = [](void* addr, const void* copy) {
+			result.copy_init = [](void* addr, const void* copy) {
 				new(addr) F{ *static_cast<const F*>(copy) };
 			};
 		}
 
 		template <typename F>
-		auto set_copy_initialize() -> std::enable_if_t<!std::is_copy_constructible<F>::value>
+		auto set_copy_init() -> std::enable_if_t<!std::is_copy_constructible<F>::value>
 		{
-			result.copy_initialize = nullptr;
+			result.copy_init = nullptr;
 		}
 
 		template <typename F>
-		auto set_move_initialize() -> std::enable_if_t<std::is_move_constructible<F>::value>
+		auto set_move_init() -> std::enable_if_t<std::is_move_constructible<F>::value>
 		{
-			result.move_initialize = [](void* addr, void* move) {
+			result.move_init = [](void* addr, void* move) {
 				new(addr) T{ std::move(*static_cast<T*>(move)) };
 			};
 		}
 
 		template <typename F>
-		auto set_move_initialize() -> std::enable_if_t<!std::is_move_constructible<F>::value>
+		auto set_move_init() -> std::enable_if_t<!std::is_move_constructible<F>::value>
 		{
-			result.move_initialize = nullptr;
+			result.move_init = nullptr;
 		}
 
 		template <typename F>

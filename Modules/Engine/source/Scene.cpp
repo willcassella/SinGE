@@ -1,10 +1,12 @@
 // Scene.cpp
 
+#include <Core/Memory/Functions.h>
 #include "../include/Engine/Scene.h"
 
-REFLECT_TYPE(singe::Scene);
+SGE_REFLECT_TYPE(sge::Scene);
+SGE_REFLECT_TYPE(sge::TNewComponent);
 
-namespace singe
+namespace sge
 {
 	////////////////////////
 	///   Constructors   ///
@@ -17,17 +19,20 @@ namespace singe
 
 	Scene::~Scene()
 	{
-		for (auto componentType : _component_types)
+		for (const auto& componentType : _components)
 		{
-			auto object = _component_objects.find(componentType.first);
-			if (object != _component_objects.end())
+			for (auto component : componentType.second)
 			{
-				if (componentType.second->drop != nullptr)
+				auto object = _component_objects.find(component.component);
+				if (object != _component_objects.end())
 				{
-					componentType.second->drop(object->second);
-				}
+					if (componentType.first->drop != nullptr)
+					{
+						componentType.first->drop(object->second);
+					}
 
-				std::free(object->second);
+					sge::free(object->second);
+				}
 			}
 		}
 	}
@@ -131,6 +136,19 @@ namespace singe
 		}
 	}
 
+	void Scene::new_tag(ComponentID id, const TypeInfo& type, void* object)
+	{
+		// Allocate memory for the tag if required, and move it into the buffer.
+		void* buff = nullptr;
+		if (type.size > 0)
+		{
+			buff = std::malloc(type.size);
+			type.move_init(buff, object);
+		}
+
+		_component_tags[id][&type].push_back(buff);
+	}
+
 	ComponentInstance<void> Scene::new_component(EntityID entity, const TypeInfo& type, void* object)
 	{
 		// If the entity the component is being added to is the world entity or a non-existant entity, don't do anything
@@ -139,29 +157,44 @@ namespace singe
 			return ComponentInstance<void>::null();
 		}
 
-		auto id = _next_component_id++;
-		_component_types[id] = &type;
-		_component_entities[id] = entity;
+		// Create an identity for the component
+		ComponentIdentity identity;
+		identity.entity = entity;
+		identity.component = _next_component_id++;
+		_component_entities[identity.component] = entity;
 		
 		// If the type has a size, allocate memory for it
 		void* buff = nullptr;
 		if (type.size != 0)
 		{
-			buff = std::malloc(type.size);
-			_component_objects[id] = buff;
+			buff = sge::malloc(type.size);
+			_component_objects[identity.component] = buff;
+			
+			if (object != nullptr)
+			{
+				type.move_init(buff, object);
+			}
+			else
+			{
+				type.init(object);
+			}
 		}
 
-		// If an initial state was passed it, move from that
-		if (object != nullptr)
+		// Find a spot for the identity in the array ordered by EntityID
+		auto& typeArray = _components[&type];
+		auto iter = typeArray.cbegin();
+		while (iter != typeArray.cend() && iter->entity < entity)
 		{
-			type.move_initialize(buff, object);
+			++iter;
 		}
-		else
-		{
-			type.initialize(buff);
-		}
-		
-		return{ id, entity, buff };
+
+		// Insert the identity
+		typeArray.insert(iter, identity);
+
+		// Give the componet the 'NewComponent' tag, so that it may be picked up by relevant systems
+		new_tag(identity.component, TNewComponent{});
+
+		return{ identity.component, identity.entity, buff };
 	}
 
 }

@@ -4,17 +4,32 @@
 #include <string>
 #include "../Reflection/Reflection.h"
 
-namespace singe
+namespace sge
 {
-	struct CORE_API IFromString final
+	struct SGE_CORE_API IFromString
 	{
-		REFLECTED_INTERFACE;
-		AUTO_IMPL_1(IFromString, from_string)
+		SGE_REFLECTED_INTERFACE;
+		SGE_VTABLE_1(IFromString, from_string)
 
 		/////////////////////
 		///   Functions   ///
 	public:
 
-		std::string(C_CALL*from_string)(void* self, const std::string& str);
+		std::string(SGE_C_CALL*from_string)(void* self, const std::string& str);
 	};
+
+	template <typename T>
+	struct Impl< IFromString, T >
+	{
+		static std::string from_string(void* self, const std::string& str)
+		{
+			return static_cast<T*>(self)->from_string(str);
+		}
+	};
+
+	template <typename T>
+	std::string from_string(T& self, const std::string& str)
+	{
+		return Impl<IFromString, T>::from_string(&self, str);
+	}
 }

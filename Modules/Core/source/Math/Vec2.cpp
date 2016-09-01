@@ -4,10 +4,10 @@
 #include "../../include/Core/Math/Vec2.h"
 #include "../../include/Core/Interfaces/IToString.h"
 
-REFLECT_TYPE(singe::Vec2)
-.auto_impl<singe::IToString>();
+SGE_REFLECT_TYPE(sge::Vec2)
+.implements<sge::IToString>();
 
-namespace singe
+namespace sge
 {
 	std::string Vec2::to_string() const
 	{

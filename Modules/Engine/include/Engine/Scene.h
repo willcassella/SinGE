@@ -3,13 +3,17 @@
 
 #include <map>
 #include <vector>
+#include <functional>
 #include "Component.h"
 
-namespace singe
+namespace sge
 {
-	struct ENGINE_API Scene final
+	struct SGE_ENGINE_API Scene
 	{
-		REFLECTED_TYPE;
+		SGE_REFLECTED_TYPE;
+		
+		typedef EntityID(SGE_C_CALL*SelectorFn)(void* outComponent, Scene& scene, int i);
+		typedef void(SGE_C_CALL*ProcessorFn)(void* data, EntityID entity, const void** components);
 
 		////////////////////////
 		///   Constructors   ///
@@ -17,6 +21,9 @@ namespace singe
 
 		Scene();
 		Scene(const Scene& copy) = delete;
+		Scene& operator=(const Scene& copy) = delete;
+		Scene(Scene&& move) = default;
+		Scene& operator=(Scene&& move) = default;
 		~Scene();
 
 		///////////////////
@@ -36,11 +43,11 @@ namespace singe
 		void set_entity_name(EntityID entity, std::string name);
 		
 		ComponentInstance<void> new_component(EntityID entity, const TypeInfo& type, void* object);
-
+		
 		template <typename T>
-		ComponentInstance<T> new_component(EntityID entity, T component)
+		ComponentInstance<T> new_component(EntityID entity, T&& component)
 		{
-			auto instance = this->new_component(entity, get_type<T>(), &component);
+			auto instance = this->new_component(entity, sge::get_type(component), &component);
 			return{ instance.id, instance.entity, static_cast<T*>(instance.object) };
 		}
 
@@ -62,21 +69,28 @@ namespace singe
 			return{ instance.id, instance.entity, static_cast<const T*>(instance.object) };
 		}
 
-		template <typename T>
-		auto enumerate_components() const
-		{
-			std::vector< ComponentInstance<const T> > result;
-			for (auto componentType : _component_types)
-			{
-				if (componentType.second == &get_type<T>())
-				{
-					Handle<T> handle;
-					handle.id = componentType.first;
-					result.push_back(get_component(handle));
-				}
-			}
+		void new_tag(ComponentID component, const TypeInfo& type, void* tag);
 
-			return result;
+		template <typename T>
+		void new_tag(ComponentID component, T&& tag)
+		{
+			new_tag(component, sge::get_type(tag), &tag);
+		}
+
+		template <class System, typename ... Selectors>
+		void new_system(System& system, void(System::*handler)(EntityID, Selectors...))
+		{
+			
+		}
+
+	private:
+		
+		template <typename ComponentType, typename ... Tags, typename ... RestS>
+		static SelectorFn new_selectors(stde::type_sequence<RequiredComponent<ComponentType, Tags...>, RestS...>)
+		{
+			return [](void* outComponent, Scene& scene, int i) -> EntityID {
+				
+			};
 		}
 
 		////////////////
@@ -88,8 +102,12 @@ namespace singe
 
 		/* Component Data */
 		std::map<ComponentID, EntityID> _component_entities;
-		std::map<ComponentID, const TypeInfo*> _component_types;
 		std::map<ComponentID, void*> _component_objects;
+		std::map<ComponentID, std::map<const TypeInfo*, std::vector<void*>>> _component_tags;
+		std::map<const TypeInfo*, std::vector<ComponentIdentity>> _components;
+
+		/* System data */
+		std::vector<std::function<void(Scene&)>> _systems;
 
 		/* Entity Data */
 		std::map<EntityID, EntityID> _entity_parents;

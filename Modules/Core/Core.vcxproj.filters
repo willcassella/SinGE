@@ -9,9 +9,6 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="include\Interfaces">
-      <UniqueIdentifier>{d3139d96-c850-46ca-893a-0a7b9365cca0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="source\Interfaces">
       <UniqueIdentifier>{55bffbf1-034e-4c2c-99c0-63995288f4b8}</UniqueIdentifier>
     </Filter>
@@ -30,6 +27,15 @@
     <Filter Include="source\Math">
       <UniqueIdentifier>{534a0e42-2619-455e-8046-ab8d64835034}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Memory">
+      <UniqueIdentifier>{33d4f6d6-3e73-4f2d-af15-58c0ccb9e559}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Memory">
+      <UniqueIdentifier>{d92e0a84-b12c-4732-ab38-33dfec9e5e50}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\Interfaces">
+      <UniqueIdentifier>{8c0e153d-4e33-4c5d-9c53-03c8d24b26ad}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Core\include\Core\env.h">
@@ -37,9 +43,6 @@
     </ClInclude>
     <ClInclude Include="include\Core\config.h">
       <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Core\STDE\TypeSequence.h">
-      <Filter>include\STDE</Filter>
     </ClInclude>
     <ClInclude Include="include\Core\STDE\Macros.h">
       <Filter>include\STDE</Filter>
@@ -56,14 +59,20 @@
     <ClInclude Include="include\Core\Reflection\TypeInfo.h">
       <Filter>include\Reflection</Filter>
     </ClInclude>
+    <ClInclude Include="include\Core\Memory\Functions.h">
+      <Filter>include\Memory</Filter>
+    </ClInclude>
     <ClInclude Include="include\Core\Reflection\InterfaceInfo.h">
       <Filter>include\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Interfaces\IFromString.h">
+      <Filter>include\Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="include\Core\Interfaces\IToString.h">
       <Filter>include\Interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="include\Core\Interfaces\IFromString.h">
-      <Filter>include\Interfaces</Filter>
+    <ClInclude Include="include\Core\STDE\TMP.h">
+      <Filter>include\STDE</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -73,9 +82,6 @@
     <ClCompile Include="source\Math\Vec2.cpp">
       <Filter>source\Math</Filter>
     </ClCompile>
-    <ClCompile Include="source\Reflection\InterfaceInfo.cpp">
-      <Filter>source\Reflection</Filter>
-    </ClCompile>
     <ClCompile Include="source\Reflection\Reflection.cpp">
       <Filter>source\Reflection</Filter>
     </ClCompile>
@@ -84,6 +90,9 @@
     </ClCompile>
     <ClCompile Include="source\Interfaces\IToString.cpp">
       <Filter>source\Interfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Memory\Functions.cpp">
+      <Filter>source\Memory</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

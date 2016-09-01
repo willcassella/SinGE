@@ -6,7 +6,7 @@
 #include "TypeInfo.h"
 #include "InterfaceInfo.h"
 
-namespace singe
+namespace sge
 {
 	namespace specialized
 	{
@@ -18,142 +18,146 @@ namespace singe
 			{
 				return T::type_info;
 			}
-		};
 
-		/* Generic implementation of 'GetInterface' */
-		template <typename T>
-		struct GetInterface final
-		{
-			static const InterfaceInfo& get_interface()
+			static const TypeInfo& get_type(const T& value)
 			{
-				return T::interface_info;
+				return value.get_type();
 			}
 		};
 
 		template <>
-		struct CORE_API GetType < char > final
+		struct SGE_CORE_API GetType < char > final
 		{
 			static const TypeInfo type_info;
 
-			static const TypeInfo& get_type()
+			static const TypeInfo& get_type(...)
 			{
 				return type_info;
 			}
 		};
 
 		template <>
-		struct CORE_API GetType < byte > final
+		struct SGE_CORE_API GetType < byte > final
 		{
 			static const TypeInfo type_info;
 
-			static const TypeInfo& get_type()
+			static const TypeInfo& get_type(...)
 			{
 				return type_info;
 			}
 		};
 
 		template <>
-		struct CORE_API GetType < int16 > final
+		struct SGE_CORE_API GetType < int16 > final
 		{
 			static const TypeInfo type_info;
 
-			static const TypeInfo& get_type()
+			static const TypeInfo& get_type(...)
 			{
 				return type_info;
 			}
 		};
 
 		template <>
-		struct CORE_API GetType < uint16 > final
+		struct SGE_CORE_API GetType < uint16 > final
 		{
 			static const TypeInfo type_info;
 
-			static const TypeInfo& get_type()
+			static const TypeInfo& get_type(...)
 			{
 				return type_info;
 			}
 		};
 
 		template <>
-		struct CORE_API GetType < int32 > final
+		struct SGE_CORE_API GetType < int32 > final
 		{
 			static const TypeInfo type_info;
 
-			static const TypeInfo& get_type()
+			static const TypeInfo& get_type(...)
 			{
 				return type_info;
 			}
 		};
 
 		template <>
-		struct CORE_API GetType < uint32 > final
+		struct SGE_CORE_API GetType < uint32 > final
 		{
 			static const TypeInfo type_info;
 
-			static const TypeInfo& get_type()
+			static const TypeInfo& get_type(...)
 			{
 				return type_info;
 			}
 		};
 
 		template <>
-		struct CORE_API GetType < int64 > final
+		struct SGE_CORE_API GetType < int64 > final
 		{
 			static const TypeInfo type_info;
 
-			static const TypeInfo& get_type()
+			static const TypeInfo& get_type(...)
 			{
 				return type_info;
 			}
 		};
 
 		template <>
-		struct CORE_API GetType < uint64 > final
+		struct SGE_CORE_API GetType < uint64 > final
 		{
 			static const TypeInfo type_info;
 
-			static const TypeInfo& get_type()
+			static const TypeInfo& get_type(...)
 			{
 				return type_info;
 			}
 		};
 
 		template <>
-		struct CORE_API GetType < float > final
+		struct SGE_CORE_API GetType < float > final
 		{
 			static const TypeInfo type_info;
 
-			static const TypeInfo& get_type()
+			static const TypeInfo& get_type(...)
 			{
 				return type_info;
 			}
 		};
 
 		template <>
-		struct CORE_API GetType < double > final
+		struct SGE_CORE_API GetType < double > final
 		{
 			static const TypeInfo type_info;
 
-			static const TypeInfo& get_type()
+			static const TypeInfo& get_type(...)
 			{
 				return type_info;
 			}
 		};
 
 		template <>
-		struct CORE_API GetType < long double > final
+		struct SGE_CORE_API GetType < long double > final
 		{
 			static const TypeInfo type_info;
 
-			static const TypeInfo& get_type()
+			static const TypeInfo& get_type(...)
 			{
 				return type_info;
 			}
 		};
 	}
 
+	template <class I, typename T>
+	struct Impl;
+
 	/////////////////////
 	///   Functions   ///
+
+	template <typename I>
+	const InterfaceInfo& get_interface()
+	{
+		return I::interface_info;
+	}
 
 	template <typename T>
 	const TypeInfo& get_type()
@@ -162,31 +166,41 @@ namespace singe
 	}
 
 	template <typename T>
-	const InterfaceInfo& get_interface()
+	const TypeInfo& get_type(const T& value)
 	{
-		return specialized::GetInterface<T>::get_interface();
+		return specialized::GetType<T>::get_type(value);
 	}
 }
 
 //////////////////
 ///   Macros   ///
 
-#define REFLECTED_TYPE			static const ::singe::TypeInfo type_info
-#define REFLECT_TYPE(T)			const ::singe::TypeInfo T::type_info = ::singe::TypeInfoBuilder<T>(#T)
+/* Use the macro inside the definition of a type in order for it to be recognized by the reflection system. */
+#define SGE_REFLECTED_TYPE			static const ::sge::TypeInfo type_info; const ::sge::TypeInfo& get_type() const { return type_info; }
 
-#define REFLECTED_INTERFACE		static const ::singe::InterfaceInfo interface_info
-#define REFLECT_INTERFACE(T)	const ::singe::InterfaceInfo T::interface_info = ::singe::InterfaceInfoBuilder<T>(#T)
+/* Use this macro in the source file for a type, in order to deine its reflection data. */
+#define SGE_REFLECT_TYPE(TYPE)		const ::sge::TypeInfo TYPE::type_info = ::sge::TypeInfoBuilder<TYPE>(#TYPE)
 
-#define AUTO_IMPL_BEGIN(InterfaceT) template <typename T> static InterfaceT auto_impl() { InterfaceT result;
-#define AUTO_IMPL_END return result; }
+/* Use this macro in the definition of an interface, in order for it to be recorgnized by the reflection system. */
+#define SGE_REFLECTED_INTERFACE			static const ::sge::InterfaceInfo interface_info;
 
-#define IMPL(method)																		\
-	result.method = [](auto* self, auto&& ... args) -> decltype(auto) {						\
-		using TargetT = ::stde::copy_const_t<std::remove_pointer_t<decltype(self)>, T>;		\
-		return static_cast<TargetT*>(self)->method(std::forward<decltype(args)>(args)...);	\
-	};
+/* Use this macro in the source file for an interface, in order to define its pre-existing implementations. */
+#define SGE_REFLECT_INTERFACE(INTERF)	const ::sge::InterfaceInfo INTERF::interface_info = ::sge::InterfaceInfoBuilder<INTERF>(#INTERF)
 
-#define AUTO_IMPL_0(InterfaceT) AUTO_IMPL_BEGIN(InterfaceT) AUTO_IMPL_END
-#define AUTO_IMPL_1(InterfaceT, m1) AUTO_IMPL_BEGIN(InterfaceT) IMPL(m1) AUTO_IMPL_END
-#define AUTO_IMPL_2(InterfaceT, m1, m2) AUTO_IMPL_BEGIN(InterfaceT) IMPL(m1) IMPL(m2) AUTO_IMPL_END
-#define AUTO_IMPL_3(InterfaceT, m1, m2, m3) AUTO_IMPL_BEGIN(InterfaceT) IMPL(m1) IMPL(m2) IMPL(m2) AUTO_IMPL_END
+/* Internal macros, used by VTABLE macros. */
+#define SGE_VTABLE_BEGIN(INTERF)	template <typename T> static INTERF get_vtable() { INTERF vtable; using ImplT = ::sge::Impl<INTERF, T>;
+#define SGE_VTABLE_END				return vtable; }
+#define SGE_VTABLE_FN(FUNC)			vtable.FUNC = &ImplT::FUNC;
+
+/* Use these macros in the definition of an interface, where 'INTERF' is name of the interface type, and the proceeding arguments are
+* the names of the interface functions to be automatically registered from the 'Impl' specialization.
+* Use 'SGE_VTABLE_X' where 'X' is the number of function arguments given. */
+#define SGE_VTABLE_0(INTERF, ...)		SGE_VTABLE_BEGIN(INTERF) __VA_ARGS__ SGE_VTABLE_END
+#define SGE_VTABLE_1(INTERF, F1, ...)	SGE_VTABLE_0(INTERF, __VA_ARGS__ SGE_VTABLE_FN(F1))
+#define SGE_VTABLE_2(INTERF, F1, ...)	SGE_VTABLE_1(INTERF, __VA_ARGS__, SGE_VTABLE_FN(F1))
+#define SGE_VTABLE_3(INTERF, F1, ...)	SGE_VTABLE_2(INTERF, __VA_ARGS__, SGE_VTABLE_FN(F1))
+#define SGE_VTABLE_4(INTERF, F1, ...)	SGE_VTABLE_3(INTERF, __VA_ARGS__, SGE_VTABLE_FN(F1))
+#define SGE_VTABLE_5(INTERF, F1, ...)	SGE_VTABLE_4(INTERF, __VA_ARGS__, SGE_VTABLE_FN(F1))
+#define SGE_VTABLE_6(INTERF, F1, ...)	SGE_VTABLE_5(INTERF, __VA_ARGS__, SGE_VTABLE_FN(F1))
+#define SGE_VTABLE_7(INTERF, F1, ...)	SGE_VTABLE_6(INTERF, __VA_ARGS__, SGE_VTABLE_FN(F1))
+#define SGE_VTABLE_8(INTERF, F1, ...)	SGE_VTABLE_7(INTERF, __VA_ARGS__, SGE_VTABLE_FN(F1))

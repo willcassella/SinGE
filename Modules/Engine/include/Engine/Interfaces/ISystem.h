@@ -1,20 +1,31 @@
-// System.h
+// ISystem.h
 #pragma once
 
 #include <Core/Reflection/Reflection.h>
 #include "../config.h"
 
-namespace singe
+namespace sge
 {
-	struct ENGINE_API System final
+	struct Scene;
+
+	struct SGE_ENGINE_API ISystem final
 	{
-		REFLECTED_INTERFACE;
-		AUTO_IMPL_0(System)
+		SGE_REFLECTED_INTERFACE;
+		SGE_VTABLE_1(ISystem, init_selectors);
 
 		/////////////////////
 		///   Functions   ///
 	public:
 
-		
+		void(SGE_C_CALL*init_selectors)(const void*, const Scene&);
+	};
+
+	template <typename T>
+	struct Impl < ISystem, T >
+	{
+		static void init_selectors(const void* self, const Scene& scene)
+		{
+			static_cast<const T*>(self)->init_selectors(scene);
+		}
 	};
 }

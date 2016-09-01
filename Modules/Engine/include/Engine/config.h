@@ -3,8 +3,8 @@
 
 #include <Core/config.h>
 
-#ifdef ENGINE_BUILD
-#	define ENGINE_API EXPORT
+#ifdef SGE_ENGINE_BUILD
+#	define SGE_ENGINE_API SGE_EXPORT
 #else
-#	define ENGINE_API IMPORT
+#	define SGE_ENGINE_API SGE_IMPORT
 #endif

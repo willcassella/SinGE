@@ -4,17 +4,17 @@
 #include <Core/Math/Vec2.h>
 #include "../config.h"
 
-namespace singe
+namespace sge
 {
-	struct ENGINE_API Transform2D final
+	struct SGE_ENGINE_API CTransform2D
 	{
-		REFLECTED_TYPE;
+		SGE_REFLECTED_TYPE;
 
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		Transform2D();
+		CTransform2D();
 
 		///////////////////
 		///   Fields    ///
@@ -29,5 +29,14 @@ namespace singe
 	public:
 
 		std::string to_string() const;
+
+		////////////////
+		///   Tags   ///
+	public:
+
+		struct SGE_ENGINE_API TChanged
+		{
+			SGE_REFLECTED_TYPE;
+		};
 	};
 }

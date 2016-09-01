@@ -2,7 +2,7 @@
 
 #include "../../include/Core/Reflection/TypeInfo.h"
 
-namespace singe
+namespace sge
 {
 	////////////////////////
 	///   Constructors   ///
@@ -11,9 +11,9 @@ namespace singe
 	{
 		size = 0;
 		alignment = 0;
-		initialize = nullptr;
-		copy_initialize = nullptr;
-		move_initialize = nullptr;
+		init = nullptr;
+		copy_init = nullptr;
+		move_init = nullptr;
 		copy_assign = nullptr;
 		move_assign = nullptr;
 		drop = nullptr;

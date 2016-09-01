@@ -1,0 +1,14 @@
+System iteration:
+typedef void(*ResultHandlerFn)(Frame&, EntityID, ComponentInstance<void>* components, int nComponents);
+
+scene.iterate([&get_type<StaticMeshComponent>(), &get_type<TransformComponent>()], 2, render_entity);
+
+
+Selection system should allow user to select entities by:
+- Exisitng component types
+- Non-existing component types
+- Dispatched events
+
+StaticMesh - Identifies a static mesh, using default material and params
+StaticMeshMaterial - Identifies material to use when drawing a static mesh
+StaticMeshMaterialParams - Identifies overriding material parameters

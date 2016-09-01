@@ -2,4 +2,4 @@
 
 #include "../../include/Core/Interfaces/IFromString.h"
 
-REFLECT_INTERFACE(singe::IFromString);
+SGE_REFLECT_INTERFACE(sge::IFromString);

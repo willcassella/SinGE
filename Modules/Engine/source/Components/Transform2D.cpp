@@ -4,16 +4,17 @@
 #include "../../include/Engine/Components/Transform2D.h"
 #include "../../include/Engine/Component.h"
 
-REFLECT_TYPE(singe::Transform2D)
-.auto_impl<singe::IToString>()
-.auto_impl<singe::IComponent>();
+SGE_REFLECT_TYPE(sge::CTransform2D)
+.implements<sge::IToString>();
 
-namespace singe
+SGE_REFLECT_TYPE(sge::CTransform2D::TChanged);
+
+namespace sge
 {
 	////////////////////////
 	///   Constructors   ///
 
-	Transform2D::Transform2D()
+	CTransform2D::CTransform2D()
 		: rot{ 0 }
 	{
 	}
@@ -21,7 +22,7 @@ namespace singe
 	///////////////////
 	///   Methods   ///
 
-	std::string Transform2D::to_string() const
+	std::string CTransform2D::to_string() const
 	{
 		return "Transform";
 	}
