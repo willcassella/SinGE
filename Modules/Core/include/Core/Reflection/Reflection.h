@@ -12,7 +12,7 @@ namespace sge
 	{
 		/* Generic implementation of 'GetType' */
 		template <typename T>
-		struct GetType final
+		struct GetType
 		{
 			static const TypeInfo& get_type()
 			{
@@ -26,7 +26,7 @@ namespace sge
 		};
 
 		template <>
-		struct SGE_CORE_API GetType < char > final
+		struct SGE_CORE_API GetType < char >
 		{
 			static const TypeInfo type_info;
 
@@ -37,7 +37,7 @@ namespace sge
 		};
 
 		template <>
-		struct SGE_CORE_API GetType < byte > final
+		struct SGE_CORE_API GetType < byte >
 		{
 			static const TypeInfo type_info;
 
@@ -48,7 +48,7 @@ namespace sge
 		};
 
 		template <>
-		struct SGE_CORE_API GetType < int16 > final
+		struct SGE_CORE_API GetType < int16 >
 		{
 			static const TypeInfo type_info;
 
@@ -59,7 +59,7 @@ namespace sge
 		};
 
 		template <>
-		struct SGE_CORE_API GetType < uint16 > final
+		struct SGE_CORE_API GetType < uint16 >
 		{
 			static const TypeInfo type_info;
 
@@ -70,7 +70,7 @@ namespace sge
 		};
 
 		template <>
-		struct SGE_CORE_API GetType < int32 > final
+		struct SGE_CORE_API GetType < int32 >
 		{
 			static const TypeInfo type_info;
 
@@ -81,7 +81,7 @@ namespace sge
 		};
 
 		template <>
-		struct SGE_CORE_API GetType < uint32 > final
+		struct SGE_CORE_API GetType < uint32 >
 		{
 			static const TypeInfo type_info;
 
@@ -92,7 +92,7 @@ namespace sge
 		};
 
 		template <>
-		struct SGE_CORE_API GetType < int64 > final
+		struct SGE_CORE_API GetType < int64 >
 		{
 			static const TypeInfo type_info;
 
@@ -103,7 +103,7 @@ namespace sge
 		};
 
 		template <>
-		struct SGE_CORE_API GetType < uint64 > final
+		struct SGE_CORE_API GetType < uint64 >
 		{
 			static const TypeInfo type_info;
 
@@ -114,7 +114,7 @@ namespace sge
 		};
 
 		template <>
-		struct SGE_CORE_API GetType < float > final
+		struct SGE_CORE_API GetType < float >
 		{
 			static const TypeInfo type_info;
 
@@ -136,7 +136,7 @@ namespace sge
 		};
 
 		template <>
-		struct SGE_CORE_API GetType < long double > final
+		struct SGE_CORE_API GetType < long double >
 		{
 			static const TypeInfo type_info;
 

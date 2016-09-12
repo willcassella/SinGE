@@ -15,7 +15,7 @@ namespace sge
 		///   Functions   ///
 	public:
 
-		std::string(SGE_C_CALL*from_string)(void* self, const std::string& str);
+		std::string(*from_string)(void* self, const std::string& str);
 	};
 
 	template <typename T>

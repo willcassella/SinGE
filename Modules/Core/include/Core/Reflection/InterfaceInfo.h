@@ -12,6 +12,9 @@ namespace sge
 	template <class I>
 	struct InterfaceInfoBuilder;
 
+	template <typename T>
+	const TypeInfo& get_type();
+
 	struct SGE_CORE_API InterfaceInfo final
 	{
 		////////////////////////
@@ -60,7 +63,7 @@ namespace sge
 		template <typename T>
 		InterfaceInfoBuilder&& implemented_for()
 		{
-			static const I vtable = I::get_vtable<T>();
+			static const I vtable = I::template get_vtable<T>();
 			result.implementations.insert(std::make_pair(&get_type<T>(), &vtable));
 			return std::move(*this);
 		}

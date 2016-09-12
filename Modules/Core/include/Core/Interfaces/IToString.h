@@ -15,7 +15,7 @@ namespace sge
 		///   Functions   ///
 	public:
 
-		std::string(SGE_C_CALL*to_string)(const void* self);
+		std::string(*to_string)(const void* self);
 	};
 
 	template <typename T>
@@ -121,5 +121,43 @@ namespace sge
 	std::string to_string(const T& value)
 	{
 		return Impl<IToString, T>::to_string(&value);
+	}
+
+	template <typename T, typename ... Ts>
+	void format_impl(std::string& out, const char* fmt, std::size_t len, const T& t, const Ts& ... ts)
+	{
+		for (; len > 0; ++fmt, --len)
+		{
+			if (*fmt == '@')
+			{
+				out += to_string(t);
+				return format_impl(out, fmt + 1, len - 1, ts...);
+			}
+			else
+			{
+				out += *fmt;
+			}
+		}
+	}
+
+	inline void format_impl(std::string& out, const char* fmt, std::size_t len)
+	{
+		out.append(fmt, len);
+	}
+
+	template <typename ... Ts>
+	std::string format(const char* fmt, const Ts& ... ts)
+	{
+		std::string result;
+		format_impl(result, fmt, std::strlen(fmt), ts...);
+		return result;
+	}
+
+	template <typename ... Ts>
+	std::string format(const std::string& fmt, const Ts& ... ts)
+	{
+		std::string result;
+		format_impl(result, fmt.c_str(), fmt.length(), ts...);
+		return result;
 	}
 }

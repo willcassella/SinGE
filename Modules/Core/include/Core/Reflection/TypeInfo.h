@@ -1,15 +1,27 @@
 // TypeInfo.h
 #pragma once
 
+#include <map>
 #include <unordered_map>
 #include "../config.h"
+#include "PropertyInfo.h"
 
 namespace sge
 {
+	struct TypeInfo;
+
 	struct InterfaceInfo;
+	
+	struct PropertyInfo;
 
 	template <typename T>
 	struct TypeInfoBuilder;
+
+	template <typename T>
+	const TypeInfo& get_type();
+
+	template <class I>
+	const InterfaceInfo& get_interface();
 
 	struct SGE_CORE_API TypeInfo
 	{
@@ -38,28 +50,31 @@ namespace sge
 		size_t alignment;
 
 		/* Default-initializes a new instance of this type. */
-		void(SGE_C_CALL*init)(void*);
+		void(*init)(void*);
 
 		/* Copy-initializes a new instance of this type. */
-		void(SGE_C_CALL*copy_init)(void*, const void*);
+		void(*copy_init)(void*, const void*);
 
 		/* Move-initializes a new instance of this type. */
-		void(SGE_C_CALL*move_init)(void*, void*);
+		void(*move_init)(void*, void*);
 
 		/* Copy-assigns one instance of this type to another. */
-		void(SGE_C_CALL*copy_assign)(void*, const void*);
+		void(*copy_assign)(void*, const void*);
 
 		/* Move-assigns one instance of this type to another. */
-		void(SGE_C_CALL*move_assign)(void*, void*);
+		void(*move_assign)(void*, void*);
 
 		/* Deinitializes an instance of this type. */
-		void(SGE_C_CALL*drop)(void*);
+		void(*drop)(void*);
 
 		/* Base class for instances of this type. */
 		const TypeInfo* base;
 
 		/* Map Associating interface objects to their implementations. */
 		std::unordered_map<const InterfaceInfo*, const void*> interfaces;
+
+		/* Map associating property names to property objects. */
+		std::map<std::string, PropertyInfo> properties;
 	};
 
 	template <typename T>
@@ -101,19 +116,58 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		template <typename InterfaceT>
-		TypeInfoBuilder&& implements()
-		{
-			static InterfaceT vtable = InterfaceT::get_vtable<T>();
-			result.interfaces[&get_interface<InterfaceT>()] = &vtable;
-			return std::move(*this);
-		}
-
 		template <typename BaseT>
 		TypeInfoBuilder&& extends()
 		{
 			static_assert(std::is_base_of<BaseT, T>::value, "The given type is not actually a base of this type.");
 			result.base = &get_type<BaseT>();
+			return std::move(*this);
+		}
+
+		template <typename InterfaceT>
+		TypeInfoBuilder&& implements()
+		{
+			static InterfaceT vtable = InterfaceT::template get_vtable<T>();
+			result.interfaces[&get_interface<InterfaceT>()] = &vtable;
+			return std::move(*this);
+		}
+
+		/* Creates a property with a method getter and no setter. */
+		template <typename PropT>
+		TypeInfoBuilder&& property(
+			std::string name, 
+			PropT(T::*getter)()const, 
+			std::nullptr_t /*setter*/, 
+			PropertyFlags flags = PF_NONE)
+		{
+			auto prop = PropertyInfo::create<PropT>(name, flags);
+			prop.getter = [getter](const void* self, const void* context, PropertyInfo::GetterOut out) {
+				const auto& result = (static_cast<const T*>(self)->*getter)();
+				out(result);
+			};
+
+			result.properties.insert(std::make_pair(name, std::move(prop)));
+			return std::move(*this);
+		}
+
+		/* Creates a property with a method getter and setter. */
+		template <typename PropT>
+		TypeInfoBuilder&& property(
+			std::string name,
+			PropT(T::*getter)()const, 
+			void(T::*setter)(PropT), 
+			PropertyFlags flags = PF_NONE)
+		{
+			auto prop = PropertyInfo::create<PropT>(name, flags);
+			prop.getter = [getter](const void* self, const void* context, PropertyInfo::GetterOut out) {
+				const auto& result = (static_cast<const T*>(self)->*getter)();
+				out(result);
+			};
+			prop.setter = [setter](void* self, const void* context, const void* value) {
+				(static_cast<T*>(self)->*setter)(*static_cast<const PropT*>(value));
+			};
+			
+			result.properties.insert(std::make_pair(name, std::move(prop)));
 			return std::move(*this);
 		}
 

@@ -36,6 +36,9 @@
     <Filter Include="include\Interfaces">
       <UniqueIdentifier>{8c0e153d-4e33-4c5d-9c53-03c8d24b26ad}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Functional">
+      <UniqueIdentifier>{3a299172-4274-4e49-becf-82cacf6c3315}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Core\include\Core\env.h">
@@ -49,9 +52,6 @@
     </ClInclude>
     <ClInclude Include="include\Core\STDE\TypeTraits.h">
       <Filter>include\STDE</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Core\Math\Vec2.h">
-      <Filter>include\Math</Filter>
     </ClInclude>
     <ClInclude Include="include\Core\Reflection\Reflection.h">
       <Filter>include\Reflection</Filter>
@@ -74,6 +74,33 @@
     <ClInclude Include="include\Core\STDE\TMP.h">
       <Filter>include\STDE</Filter>
     </ClInclude>
+    <ClInclude Include="include\Core\Math\Angle.h">
+      <Filter>include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Math\Mat4.h">
+      <Filter>include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Math\Quat.h">
+      <Filter>include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Math\Vec2.h">
+      <Filter>include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Math\Vec3.h">
+      <Filter>include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Math\Vec4.h">
+      <Filter>include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Reflection\PropertyInfo.h">
+      <Filter>include\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Functional\FunctionView.h">
+      <Filter>include\Functional</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Reflection\Any.h">
+      <Filter>include\Reflection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Reflection\TypeInfo.cpp">
@@ -93,6 +120,18 @@
     </ClCompile>
     <ClCompile Include="source\Memory\Functions.cpp">
       <Filter>source\Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Math\Vec3.cpp">
+      <Filter>source\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Math\Quat.cpp">
+      <Filter>source\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Math\Vec4.cpp">
+      <Filter>source\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Math\Mat4.cpp">
+      <Filter>source\Math</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

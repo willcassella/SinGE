@@ -100,8 +100,6 @@ namespace sge
 
 #ifdef __cplusplus
 #	define SGE_EXTERN_C extern "C"
-#	define SGE_C_CALL _cdecl
 #else
 #	define SGE_EXTERN_C
-#	define SGE_C_CALL
 #endif
