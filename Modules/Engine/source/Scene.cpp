@@ -23,7 +23,7 @@ namespace sge
 		{
 			for (auto component : componentType.second)
 			{
-				auto object = _component_objects.find(component.component);
+				auto object = _component_objects.find(component.id);
 				if (object != _component_objects.end())
 				{
 					if (componentType.first->drop != nullptr)
@@ -136,19 +136,6 @@ namespace sge
 		}
 	}
 
-	void Scene::new_tag(ComponentID id, const TypeInfo& type, void* object)
-	{
-		// Allocate memory for the tag if required, and move it into the buffer.
-		void* buff = nullptr;
-		if (type.size > 0)
-		{
-			buff = std::malloc(type.size);
-			type.move_init(buff, object);
-		}
-
-		_component_tags[id][&type].push_back(buff);
-	}
-
 	ComponentInstance<void> Scene::new_component(EntityID entity, const TypeInfo& type, void* object)
 	{
 		// If the entity the component is being added to is the world entity or a non-existant entity, don't do anything
@@ -160,15 +147,15 @@ namespace sge
 		// Create an identity for the component
 		ComponentIdentity identity;
 		identity.entity = entity;
-		identity.component = _next_component_id++;
-		_component_entities[identity.component] = entity;
+		identity.id = _next_component_id++;
+		_component_entities[identity.id] = entity;
 		
 		// If the type has a size, allocate memory for it
 		void* buff = nullptr;
-		if (type.size != 0)
+		if (type.size > 0)
 		{
 			buff = sge::malloc(type.size);
-			_component_objects[identity.component] = buff;
+			_component_objects[identity.id] = buff;
 			
 			if (object != nullptr)
 			{
@@ -192,9 +179,8 @@ namespace sge
 		typeArray.insert(iter, identity);
 
 		// Give the componet the 'NewComponent' tag, so that it may be picked up by relevant systems
-		new_tag(identity.component, TNewComponent{});
+		//new_tag(identity.component, TNewComponent{});
 
-		return{ identity.component, identity.entity, buff };
+		return{ identity.id, identity.entity, buff };
 	}
-
 }

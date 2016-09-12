@@ -17,7 +17,7 @@ namespace sge
 		///   Functions   ///
 	public:
 
-		void(SGE_C_CALL*init_selectors)(const void*, const Scene&);
+		void(*init_selectors)(const void*, const Scene&);
 	};
 
 	template <typename T>

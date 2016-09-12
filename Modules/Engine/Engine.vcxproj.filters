@@ -33,6 +33,9 @@
     <Filter Include="source\Components\Display">
       <UniqueIdentifier>{c3a29cdf-2d17-49cd-b103-eeaaab3e75f0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Resources">
+      <UniqueIdentifier>{eefdaa8e-b134-48f9-9e64-3df81033bce3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Engine\config.h">
@@ -55,6 +58,12 @@
     </ClInclude>
     <ClInclude Include="include\Engine\Components\Display\StaticMesh.h">
       <Filter>include\Components\Display</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Resources\StaticMesh.h">
+      <Filter>include\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Frame.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

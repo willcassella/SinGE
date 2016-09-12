@@ -4,22 +4,43 @@
 #include <string>
 #include <unordered_map>
 #include <Core/Math/Vec2.h>
-#include "../../Scene.h"
+#include <Core/Math/Vec4.h>
+#include "../../config.h"
 
 namespace sge
 {
+	struct Scene;
+
+	template <class T>
+	struct ComponentInstance;
+
 	struct SGE_ENGINE_API CStaticMesh
 	{
 		SGE_REFLECTED_TYPE;
 	
-		//////////////////
-		///   Fields   ///
+		////////////////
+		///   Data   ///
+	private:
+
+		std::string _mesh;
+		std::string _material;
+		std::unordered_map<std::string, float> _float_params;
+		std::unordered_map<std::string, Vec2> _vec2_params;
+		std::unordered_map<std::string, Vec3> _vec3_params;
+
+		///////////////////
+		///   Methods   ///
 	public:
 
-		std::string mesh;
-		std::string material;
-		std::unordered_map<std::string, float> float_params;
-		std::unordered_map<std::string, Vec2> vec2_params;
+		std::string get_mesh() const
+		{
+			return _mesh;
+		}
+
+		std::string get_material() const
+		{
+			return _material;
+		}
 
 		////////////////
 		///   Tags   ///

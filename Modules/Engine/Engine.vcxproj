@@ -158,7 +158,9 @@
     <ClInclude Include="include\Engine\Components\Physics\CubeCollider.h" />
     <ClInclude Include="include\Engine\Components\Transform2D.h" />
     <ClInclude Include="include\Engine\config.h" />
+    <ClInclude Include="include\Engine\Frame.h" />
     <ClInclude Include="include\Engine\Interfaces\ISystem.h" />
+    <ClInclude Include="include\Engine\Resources\StaticMesh.h" />
     <ClInclude Include="include\Engine\Scene.h" />
   </ItemGroup>
   <ItemGroup>

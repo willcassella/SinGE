@@ -8,7 +8,9 @@
 
 namespace sge
 {
-	/* Type used to represent Components. */
+	struct Scene;
+
+	/* Type used to represent Component Identifiers. */
 	using ComponentID = uint64;
 
 	/* Type used to represent Entities. */
@@ -23,19 +25,19 @@ namespace sge
 	/* EntityID used for the World entity. */
 	constexpr EntityID WORLD_ENTITY = 1;
 
-	struct ComponentIdentity
-	{
-		EntityID entity;
-		ComponentID component;
-	};
-
 	template <typename C>
 	struct Handle
 	{
 		ComponentID id;
 	};
 
-	template <typename C, typename ... Tags>
+	struct ComponentIdentity
+	{
+		ComponentID id;
+		EntityID entity;
+	};
+
+	template <typename C>
 	struct ComponentInstance
 	{
 		////////////////////////
@@ -44,11 +46,6 @@ namespace sge
 
 		ComponentInstance(ComponentID id, EntityID entity, C* object)
 			: id{ id }, entity{ entity }, object{ object }
-		{
-		}
-
-		ComponentInstance(ComponentID id, EntityID entity, C* object, std::tuple<Tags...> tags)
-			: id{ id }, entity{ entity }, object{ object }, tags{ std::move(tags) }
 		{
 		}
 
@@ -64,23 +61,27 @@ namespace sge
 		const ComponentID id;
 		const EntityID entity;
 		C* const object;
-		const std::tuple<std::pair<const Tags*, int>...> tags;
 	};
 
-	template <typename C, typename ... Tags>
-	struct RequiredComponent : ComponentInstance<C, Tags...>
+	namespace comp
 	{
-	};
+		template <typename C>
+		struct With : ComponentInstance<C>
+		{
+			using ComponentInstance<C>::ComponentInstance;
+		};
 
-	template <typename C, typename ... Tags>
-	struct OptionalComponent : ComponentInstance<C, Tags...>
-	{
-	};
+		template <typename C>
+		struct Without
+		{
+		};
 
-	template <typename C, typename ... Tags>
-	struct RequiredNotComponent
-	{
-	};
+		template <typename C>
+		struct Optional : ComponentInstance<C>
+		{
+			using ComponentInstance<C>::ComponentInstance;
+		};
+	}
 
 	struct SGE_ENGINE_API TNewComponent
 	{
