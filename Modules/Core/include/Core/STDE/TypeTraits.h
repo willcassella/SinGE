@@ -2,6 +2,7 @@
 #pragma once
 
 #include <type_traits>
+#include "TMP.h"
 
 namespace stde 
 {
@@ -22,4 +23,40 @@ namespace stde
 	/* Copies the const qualifier from 'FromT' to 'ToT' */
 	template <typename FromT, typename ToT>
 	using copy_const_t = typename copy_const<FromT, ToT>::type;
+
+	template <typename FuncT>
+	struct function_traits : function_traits<decltype(&FuncT::operator())>
+	{
+	};
+
+	template <typename Ret, typename ... Args>
+	struct function_traits< Ret(Args...) >
+	{
+		using return_type = Ret;
+		using self_type = void;
+		using arg_types = type_sequence<Args...>;
+	};
+
+	template <class T, typename Ret, typename ... Args>
+	struct function_traits< Ret(T::*)(Args...) >
+	{
+		using return_type = Ret;
+		using self_type = T;
+		using arg_types = type_sequence<Args...>;
+		static constexpr std::size_t arity = sizeof...(Args);
+	};
+
+	template <typename T, typename Ret, typename ... Args>
+	struct function_traits< Ret(T::*)(Args...)const >
+	{
+		using return_type = Ret;
+		using self_type = const T;
+		using arg_types = type_sequence<Args...>;
+		static constexpr std::size_t arity = sizeof...(Args);
+	};
+
+	/* Handles case when 'nullptr' was passed a function pointer argument, allows you to perform SFINAE instead of erroring out. */
+	template <>
+	struct function_traits< std::nullptr_t >
+	{};
 }

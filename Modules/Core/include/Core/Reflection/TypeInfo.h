@@ -132,46 +132,152 @@ namespace sge
 			return std::move(*this);
 		}
 
-		/* Creates a property with a method getter and no setter. */
-		template <typename PropT>
+		/* Creates a property with a generic getter and generic setter. */
+		template <typename GetT, typename SetT>
 		TypeInfoBuilder&& property(
-			std::string name, 
-			PropT(T::*getter)()const, 
-			std::nullptr_t /*setter*/, 
+			std::string name,
+			GetT getter,
+			SetT setter,
 			PropertyFlags flags = PF_NONE)
 		{
-			auto prop = PropertyInfo::create<PropT>(name, flags);
-			prop.getter = [getter](const void* self, const void* context, PropertyInfo::GetterOut out) {
-				const auto& result = (static_cast<const T*>(self)->*getter)();
-				out(result);
-			};
+			create_property(name, getter, setter, flags);
+			return std::move(*this);
+		}
 
-			result.properties.insert(std::make_pair(name, std::move(prop)));
+		/* Creates a property with a method getter and generic setter. */
+		template <typename GetRetT, typename SetT>
+		TypeInfoBuilder&& property(
+			std::string name, 
+			GetRetT(T::*getter)()const,
+			SetT setter,
+			PropertyFlags flags = PF_NONE)
+		{
+			create_property(name, getter, setter, flags);
 			return std::move(*this);
 		}
 
 		/* Creates a property with a method getter and setter. */
-		template <typename PropT>
+		template <typename GetRetT, typename SetRetT, typename SetArgT>
 		TypeInfoBuilder&& property(
 			std::string name,
-			PropT(T::*getter)()const, 
-			void(T::*setter)(PropT), 
+			GetRetT(T::*getter)()const, 
+			SetRetT(T::*setter)(SetArgT), 
 			PropertyFlags flags = PF_NONE)
 		{
-			auto prop = PropertyInfo::create<PropT>(name, flags);
-			prop.getter = [getter](const void* self, const void* context, PropertyInfo::GetterOut out) {
-				const auto& result = (static_cast<const T*>(self)->*getter)();
-				out(result);
-			};
-			prop.setter = [setter](void* self, const void* context, const void* value) {
-				(static_cast<T*>(self)->*setter)(*static_cast<const PropT*>(value));
-			};
-			
-			result.properties.insert(std::make_pair(name, std::move(prop)));
+			create_property(name, getter, setter, flags);
 			return std::move(*this);
 		}
 
 	private:
+
+		template <typename GetT, typename SetT>
+		void create_property(std::string name, GetT getter, SetT setter, PropertyFlags flags)
+		{
+			using PropT = std::decay_t<typename stde::function_traits<GetT>::return_type>;
+
+			auto prop = PropertyInfo::create<PropT>(name, flags);
+			create_getter(prop, getter);
+			create_setter<PropT>(prop, setter);
+			result.properties.insert(std::make_pair(name, std::move(prop)));
+		}
+
+		/* Creates a getter for a method that does not require a context. */
+		template <typename RetT>
+		void create_getter(PropertyInfo& prop, RetT(T::*getter)() const)
+		{
+			prop.getter = [getter](const void* self, const void* /*context*/, PropertyInfo::GetterOut out) {
+				const auto& result = (static_cast<const T*>(self)->*getter)();
+				out(result);
+			};
+		}
+
+		/* Creates a getter for a method that does require a context. */
+		template <typename RetT, typename ContextT>
+		void create_getter(PropertyInfo& prop, RetT(T::*getter)(ContextT) const)
+		{
+			prop.getter = [getter](const void* self, const void* context, PropertyInfo::GetterOut out) {
+				const auto& result = (static_cast<const T*>(self)->*getter)(*static_cast<const std::decay_t<ContextT>*>(context));
+				out(result);
+			};
+		}
+
+		/* Creates a getter for a generic function that does not require a context. */
+		template <typename GetT, typename GetF = stde::function_traits<GetT>>
+		auto create_getter(PropertyInfo& prop, GetT getter) -> std::enable_if_t<GetF::arity == 1>
+		{
+			prop.getter = [getter](const void* self, const void* /*context*/, PropertyInfo::GetterOut out) {
+				const auto& result = getter(static_cast<const T*>(self));
+				out(result);
+			};
+		}
+
+		/* Creates a getter for a generic function that does require a context. */
+		template <typename GetT, typename GetF = stde::function_traits<GetT>>
+		auto create_getter(PropertyInfo& prop, GetT getter) -> std::enable_if_t<GetF::arity == 2>
+		{
+			using ContextT = typename GetF::arg_types::at<1>;
+
+			prop.getter = [getter](const void* self, const void* context, PropertyInfo::GetterOut out) {
+				const auto& result = getter(static_cast<const T*>(self), static_cast<ContextT>(context));
+				out(result);
+			};
+		}
+
+		/* Does nothing. */
+		template <typename PropT>
+		void create_setter(PropertyInfo& /*prop*/, std::nullptr_t /*setter*/)
+		{
+		}
+
+		/* Creates a setter for a method that does not require a context. */
+		template <typename PropT, typename RetT, typename ArgT>
+		void create_setter(PropertyInfo& prop, RetT(T::*setter)(ArgT))
+		{
+			using DecayedArgT = std::decay_t<ArgT>;
+			static_assert(std::is_same<PropT, DecayedArgT>::value, "The getter and the setter use different property types.");
+		
+			prop.setter = [setter](void* self, const void* /*context*/, const void* value) {
+				(static_cast<T*>(self)->*setter)(*static_cast<const DecayedArgT*>(value));
+			};
+		}
+
+		/* Creates a setter for a method that does require a context. */
+		template <typename PropT, typename RetT, typename ArgT, typename ContextT>
+		void create_setter(PropertyInfo& prop, RetT(T::*setter)(ContextT, ArgT))
+		{
+			using DecayedContextT = std::decay_t<ContextT>;
+			using DecayedArgT = std::decay_t<ArgT>;
+			static_assert(std::is_same<PropT, DecayedArgT>::value, "The getter and the setter use different property types.");
+
+			prop.setter = [setter](void* self, const void* context, const void* value) {
+				(static_cast<T*>(self)->*setter)(*static_cast<const DecayedArgT*>(value), *static_cast<const DecayedContextT*>(context));
+			};
+		}
+
+		/* Creates a setter for a generic function that does not require a context. */
+		template <typename PropT, typename SetT, typename SetF = stde::function_traits<SetT>>
+		auto create_setter(PropertyInfo& prop, SetT setter) -> std::enable_if_t<SetF::arity == 2>
+		{
+			using ArgT = typename SetF::arg_types::at<1>;
+			static_assert(std::is_same<const PropT*, ArgT>::value, "The getter and the setter use different property types.");
+
+			prop.setter = [setter](void* self, const void* /*context*/, const void* value) {
+				setter(static_cast<T*>(self), *static_cast<ArgT>(value));
+			};
+		}
+
+		/* Creates a setter for a generic function that does require a context. */
+		template <typename PropT, typename SetT, typename SetF = stde::function_traits<SetT>>
+		auto create_setter(PropertyInfo& prop, SetT setter) -> std::enable_if_t<SetF::arity == 3>
+		{
+			using ContextT = typename SetF::arg_types::at<1>;
+			using ArgT = typename SetF::arg_types::at<2>;
+			static_assert(std::is_same<const PropT*, ArgT>::value, "The getter and the setter use different property types.");
+
+			prop.setter = [setter](void* self, const void* context, const void* value) {
+				setter(static_cast<T*>(self), static_cast<ContextT>(context), static_cast<ArgT>(value));
+			};
+		}
 
 		template <typename F>
 		auto set_init() -> std::enable_if_t<std::is_default_constructible<F>::value>
