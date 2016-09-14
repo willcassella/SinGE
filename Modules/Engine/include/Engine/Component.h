@@ -28,13 +28,53 @@ namespace sge
 	template <typename C>
 	struct Handle
 	{
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		Handle()
+			: id{ NULL_COMPONENT }
+		{
+		}
+		Handle(Handle<const C> copy)
+			: id{ copy.id }
+		{
+		}
+		
+		//////////////////
+		///   Fields   ///
+	public:
+
 		ComponentID id;
+
+		///////////////////
+		///   Methods   ///
+	public:
+
+		bool is_null() const
+		{
+			return id == NULL_COMPONENT;
+		}
 	};
 
 	struct ComponentIdentity
 	{
 		ComponentID id;
 		EntityID entity;
+	};
+
+	struct ComponentContext
+	{
+		ComponentID id;
+		EntityID entity;
+		const Scene* scene;
+	};
+
+	struct ComponentContextMut
+	{
+		ComponentID id;
+		EntityID entity;
+		Scene* scene;
 	};
 
 	template <typename C>
@@ -61,6 +101,15 @@ namespace sge
 		const ComponentID id;
 		const EntityID entity;
 		C* const object;
+
+		/////////////////////
+		///   Operators   ///
+	public:
+
+		C* operator->() const
+		{
+			return object;
+		}
 	};
 
 	namespace comp
@@ -87,4 +136,60 @@ namespace sge
 	{
 		SGE_REFLECTED_TYPE;
 	};
+
+	template <class C, typename PropT>
+	auto component_getter(PropT(*getter)(ComponentInstance<const C>))
+	{
+		return [getter](const C* self, const ComponentContext* context) -> PropT {
+			auto instance = ComponentInstance<const C>{
+				context->id,
+				context->entity,
+				self
+			};
+
+			return getter(instance);
+		};
+	}
+
+	template <class C, typename PropT>
+	auto component_getter(PropT(*getter)(ComponentInstance<const C>, const Scene&))
+	{
+		return [getter](const C* self, const ComponentContext* context) -> PropT {
+			auto instance = ComponentInstance<const C>{
+				context->id,
+				context->entity,
+				self
+			};
+
+			return getter(instance, *context->scene);
+		};
+	}
+
+	template <class C, typename PropT>
+	auto component_setter(void(*setter)(ComponentInstance<C>, PropT))
+	{
+		return [setter](C* self, const ComponentContextMut* context, const PropT* value) {
+			auto instance = ComponentInstance<C>{
+				context->id,
+				context->entity,
+				self
+			};
+
+			setter(instance, *value);
+		};
+	}
+
+	template <class C, typename PropT>
+	auto component_setter(void(*setter)(ComponentInstance<C>, Scene&, PropT))
+	{
+		return [setter](C* self, const ComponentContextMut* context, const PropT* value) {
+			auto instance = ComponentInstance<C>{
+				context->id,
+				context->entity,
+				self
+			};
+
+			setter(instance, *context->scene, *value);
+		};
+	}
 }

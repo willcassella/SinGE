@@ -36,13 +36,13 @@
     <Filter Include="include\Resources">
       <UniqueIdentifier>{eefdaa8e-b134-48f9-9e64-3df81033bce3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\Resources">
+      <UniqueIdentifier>{3fee641b-bb43-436c-b7e4-304cad77d09c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Engine\config.h">
       <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\Components\Transform2D.h">
-      <Filter>include\Components</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine\Scene.h">
       <Filter>include</Filter>
@@ -65,11 +65,17 @@
     <ClInclude Include="include\Engine\Frame.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\Resources\Material.h">
+      <Filter>include\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Resources\Shader.h">
+      <Filter>include\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Transform3D.h">
+      <Filter>include\Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\Components\Transform2D.cpp">
-      <Filter>source\Components</Filter>
-    </ClCompile>
     <ClCompile Include="source\Scene.cpp">
       <Filter>source</Filter>
     </ClCompile>
@@ -81,6 +87,12 @@
     </ClCompile>
     <ClCompile Include="source\Components\Display\StaticMesh.cpp">
       <Filter>source\Components\Display</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Resources\Shader.cpp">
+      <Filter>source\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Transform3D.cpp">
+      <Filter>source\Components</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

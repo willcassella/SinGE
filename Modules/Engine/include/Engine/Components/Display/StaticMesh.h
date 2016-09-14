@@ -23,10 +23,6 @@ namespace sge
 	private:
 
 		std::string _mesh;
-		std::string _material;
-		std::unordered_map<std::string, float> _float_params;
-		std::unordered_map<std::string, Vec2> _vec2_params;
-		std::unordered_map<std::string, Vec3> _vec3_params;
 
 		///////////////////
 		///   Methods   ///
@@ -35,11 +31,6 @@ namespace sge
 		std::string get_mesh() const
 		{
 			return _mesh;
-		}
-
-		std::string get_material() const
-		{
-			return _material;
 		}
 
 		////////////////
@@ -51,26 +42,26 @@ namespace sge
 			SGE_REFLECTED_TYPE;
 		};
 
-		struct SGE_ENGINE_API TMaterialChanged
-		{
-			SGE_REFLECTED_TYPE;
-		};
-
-		struct SGE_ENGINE_API TParamsChanged
-		{
-			SGE_REFLECTED_TYPE;
-		};
-
 		/////////////////////
 		///   Functions   ///
 	public:
 
 		static void set_mesh(ComponentInstance<CStaticMesh> self, Scene& scene, std::string mesh);
+	};
 
-		static void set_material(ComponentInstance<CStaticMesh> self, Scene& scene, std::string material);
+	struct SGE_ENGINE_API CStaticMeshOverrideMaterial
+	{
+		SGE_REFLECTED_TYPE;
+		std::string material;
+	};
 
-		static void set_param(ComponentInstance<CStaticMesh> self, Scene& scene, std::string name, float value);
-
-		static void set_param(ComponentInstance<CStaticMesh> self, Scene& scene, std::string name, Vec2 value);
+	struct SGE_ENGINE_API CStaticMeshMaterialOverrideParameters
+	{
+		SGE_REFLECTED_TYPE;
+		std::unordered_map<std::string, float> _float_params;
+		std::unordered_map<std::string, Vec2> _vec2_params;
+		std::unordered_map<std::string, Vec3> _vec3_params;
+		std::unordered_map<std::string, Vec4> _vec4_params;
+		std::unordered_map<std::string, std::string> _texture_params;
 	};
 }

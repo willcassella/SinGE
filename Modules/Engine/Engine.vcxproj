@@ -98,7 +98,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SGE_ENGINE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4251</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814</DisableSpecificWarnings>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
@@ -110,7 +110,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SGE_ENGINE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4251</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814</DisableSpecificWarnings>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
@@ -124,7 +124,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SGE_ENGINE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4251</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -142,7 +142,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SGE_ENGINE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4251</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -156,18 +156,21 @@
     <ClInclude Include="include\Engine\Component.h" />
     <ClInclude Include="include\Engine\Components\Display\StaticMesh.h" />
     <ClInclude Include="include\Engine\Components\Physics\CubeCollider.h" />
-    <ClInclude Include="include\Engine\Components\Transform2D.h" />
+    <ClInclude Include="include\Engine\Components\Transform3D.h" />
     <ClInclude Include="include\Engine\config.h" />
     <ClInclude Include="include\Engine\Frame.h" />
     <ClInclude Include="include\Engine\Interfaces\ISystem.h" />
+    <ClInclude Include="include\Engine\Resources\Material.h" />
+    <ClInclude Include="include\Engine\Resources\Shader.h" />
     <ClInclude Include="include\Engine\Resources\StaticMesh.h" />
     <ClInclude Include="include\Engine\Scene.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Components\Display\StaticMesh.cpp" />
     <ClCompile Include="source\Components\Physics\CubeCollider.cpp" />
-    <ClCompile Include="source\Components\Transform2D.cpp" />
+    <ClCompile Include="source\Components\Transform3D.cpp" />
     <ClCompile Include="source\Interfaces\ISystem.cpp" />
+    <ClCompile Include="source\Resources\Shader.cpp" />
     <ClCompile Include="source\Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
