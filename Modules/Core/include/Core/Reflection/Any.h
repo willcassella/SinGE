@@ -59,7 +59,7 @@ namespace sge
 		AnyMut(T& value)
 		{
 			_value = &value;
-			_type = &get_type(value);
+			_type = &sge::get_type(value);
 		}
 
 		template <typename T>

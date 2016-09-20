@@ -4,10 +4,10 @@
 
 SGE_REFLECT_TYPE(sge::Vec2)
 .implements<sge::IToString>()
-.property("x", &sge::Vec2::x, &sge::Vec2::x)
-.property("y", &sge::Vec2::y, &sge::Vec2::y)
-.property("length", &sge::Vec2::length, nullptr, PF_TRANSIENT)
-.property("normalized", &sge::Vec2::normalized, nullptr, PF_TRANSIENT);
+.property("x", &sge::Vec2::x, &sge::Vec2::x, PF_SERIALIZED)
+.property("y", &sge::Vec2::y, &sge::Vec2::y, PF_SERIALIZED)
+.property("length", &sge::Vec2::length, nullptr)
+.property("normalized", &sge::Vec2::normalized, nullptr);
 
 namespace sge
 {

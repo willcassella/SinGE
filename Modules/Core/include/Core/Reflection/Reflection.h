@@ -3,8 +3,12 @@
 
 #include <map>
 #include "../STDE/TypeTraits.h"
+#include "../Functional/FunctionView.h"
+#include "Any.h"
 #include "TypeInfo.h"
 #include "InterfaceInfo.h"
+#include "FieldInfo.h"
+#include "PropertyInfo.h"
 
 namespace sge
 {
@@ -22,6 +26,17 @@ namespace sge
 			static const TypeInfo& get_type(const T& value)
 			{
 				return value.get_type();
+			}
+		};
+
+		template <>
+		struct SGE_CORE_API GetType< void >
+		{
+			static const TypeInfo type_info;
+
+			static const TypeInfo& get_type(...)
+			{
+				return type_info;
 			}
 		};
 
@@ -170,6 +185,521 @@ namespace sge
 	{
 		return specialized::GetType<T>::get_type(value);
 	}
+
+	template <typename T>
+	struct TypeInfoBuilder
+	{
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		TypeInfoBuilder(std::string name)
+		{
+			if (std::is_empty<T>::value)
+			{
+				result.size = 0;
+			}
+			else
+			{
+				result.size = sizeof(T);
+			}
+
+			result.name = std::move(name);
+			result.alignment = alignof(T&);
+
+			this->set_init<T>();
+			this->set_copy_init<T>();
+			this->set_move_init<T>();
+			this->set_copy_assign<T>();
+			this->set_move_assign<T>();
+			this->set_drop<T>();
+		}
+
+		//////////////////
+		///   Fields   ///
+	public:
+
+		TypeInfo::Data result;
+
+		///////////////////
+		///   Methods   ///
+	public:
+
+		template <typename BaseT>
+		TypeInfoBuilder&& extends()
+		{
+			static_assert(std::is_base_of<BaseT, T>::value, "The given type is not actually a base of this type.");
+			result.base = &get_type<BaseT>();
+			return std::move(*this);
+		}
+
+		template <typename InterfaceT>
+		TypeInfoBuilder&& implements()
+		{
+			static InterfaceT vtable = InterfaceT::template get_vtable<T>();
+			result.interfaces[&get_interface<InterfaceT>()] = &vtable;
+			return std::move(*this);
+		}
+
+		/* Creates a property with a generic getter and generic setter. */
+		template <typename GetFn, typename SetFn>
+		TypeInfoBuilder&& property(
+			const char* name,
+			GetFn getter,
+			SetFn setter,
+			PropertyFlags flags = PF_NONE)
+		{
+			using GetFnTraits = stde::function_traits<GetFn>;
+			using SetFnTraits = stde::function_traits<SetFn>;
+			using PropT = std::decay_t<typename GetFnTraits::return_type>;
+			using ContextT = std::remove_pointer_t<typename SetFnTraits::arg_types::template at<1>>;
+
+			static_assert(std::is_same<const PropT*, typename SetFnTraits::arg_types::template at<2>>, "Property type differs between getter and setter");
+			static_assert(std::is_same<const ContextT*, typename GetFnTraits::arg_types::template at<1>>, "Context type differs between getter and setter.");
+
+			auto adaptedGetter = adapt_function_getter(getter);
+			auto adaptedSetter = adapt_function_setter(setter);
+			create_property<PropT>(name, adaptedGetter, adaptedSetter, flags, &get_type<ContextT>());
+			return std::move(*this);
+		}
+
+		/* Creates a property with a function getter and no setter. */
+		template <typename GetFn>
+		TypeInfoBuilder&& property(
+			const char* name,
+			GetFn getter,
+			std::nullptr_t /*setter*/,
+			PropertyFlags flags = PF_NONE)
+		{
+			using GetFnTraits = stde::function_traits<GetFn>;
+			using PropT = std::decay_t<typename GetFnTraits::return_type>;
+			using ContextT = std::remove_pointer_t<typename SetFnTraits::arg_types::template at<1>>;
+
+			auto adaptedGetter = adapt_function_getter(getter);
+			create_readonly_property<PropT>(name, adaptedGetter, flags, &get_type<ContextT>());
+			return std::move(*this);
+		}
+
+		/* Creates a property with a method getter and setter. */
+		template <typename GetRetT, typename SetRetT, typename SetArgT>
+		TypeInfoBuilder&& property(
+			const char* name,
+			GetRetT(T::*getter)()const,
+			SetRetT(T::*setter)(SetArgT),
+			PropertyFlags flags = PF_NONE)
+		{
+			using PropT = std::decay_t<GetRetT>;
+			static_assert(std::is_same<PropT, std::decay_t<SetArgT>>::value, "Getter and setter use different property types.");
+
+			auto adaptedGetter = adapt_method_getter(getter);
+			auto adaptedSetter = adapt_method_setter(setter);
+			create_property<PropT>(name, adaptedGetter, adaptedSetter, flags, nullptr);
+			return std::move(*this);
+		}
+
+		/* Creates a property with a method getter and no setter. */
+		template <typename GetRetT>
+		TypeInfoBuilder&& property(
+			const char* name,
+			GetRetT(T::*getter)()const,
+			std::nullptr_t /*setter*/,
+			PropertyFlags flags = PF_NONE)
+		{
+			using PropT = std::decay_t<GetRetT>;
+
+			auto adaptedGetter = adapt_method_getter(getter);
+			create_readonly_property<PropT>(name, adaptedGetter, flags, nullptr);
+			return std::move(*this);
+		}
+
+		/* Creates a property with a method getter and setter, where the getter requires a context. */
+		template <typename GetRetT, typename GetContextT, typename SetRetT, typename SetArgT>
+		TypeInfoBuilder&& property(
+			const char* name,
+			GetRetT(T::*getter)(GetContextT)const,
+			SetRetT(T::*setter)(SetArgT),
+			PropertyFlags flags = PF_NONE)
+		{
+			using PropT = std::decay_t<GetRetT>;
+			using ContextT = std::decay_t<GetContextT>;
+			static_assert(std::is_same<PropT, std::decay_t<SetArgT>>::value, "Getter and setter use different property types.");
+
+			auto adaptedGetter = adapt_method_getter(getter);
+			auto adaptedSetter = adapt_method_setter(setter);
+			create_property<PropT>(name, getter, setter, flags, &get_type<GetContextT>());
+			return std::move(*this);
+		}
+
+		/* Creates a property with a method getter and no setter, where the getter requires a context. */
+		template <typename GetRetT, typename GetContextT>
+		TypeInfoBuilder&& property(
+			const char* name,
+			GetRetT(T::*getter)(GetContextT)const,
+			std::nullptr_t /*setter*/,
+			PropertyFlags flags = PF_NONE)
+		{
+			using PropT = std::decay_t<GetRetT>;
+			using ContextT = std::decay_t<GetContextT>;
+
+			auto adaptedGetter = adapt_method_getter(getter);
+			create_readonly_property<PropT>(name, getter, flags, &get_type<ContextT>());
+			return std::move(*this);
+		}
+
+		/* Creates a property with a method getter and method setter, where the setter requires a context. */
+		template <typename GetRetT, typename SetRetT, typename SetContextT, typename SetArgT>
+		TypeInfoBuilder&& property(
+			const char* name,
+			GetRetT(T::*getter)()const,
+			SetRetT(T::*setter)(SetContextT, SetArgT),
+			PropertyFlags flags = PF_NONE)
+		{
+			using PropT = std::decay_t<GetRetT>;
+			using ContextT = std::decay_t<SetContextT>;
+			static_assert(std::is_same<PropT, std::decay_t<SetArgT>>::value, "Getter and setter use different property types.");
+
+			auto adaptedGetter = adapt_method_getter(getter);
+			auto adaptedSetter = adapt_method_setter(setter);
+			create_property<PropT>(name, adaptedGetter, adaptedSetter, flags, &get_type<ContextT>());
+			return std::move(*this);
+		}
+
+		/* Creates a property with a method getter and method setter, where both require a context. */
+		template <typename GetRetT, typename GetContextT, typename SetRetT, typename SetContextT, typename SetArgT>
+		TypeInfoBuilder&& property(
+			const char* name,
+			GetRetT(T::*getter)(GetContextT)const,
+			SetRetT(T::*setter)(SetContextT, SetArgT),
+			PropertyFlags flags = PF_NONE)
+		{
+			using PropT = std::decay_t<GetRetT>;
+			using ContextT = std::decay_t<GetContextT>;
+			static_assert(std::is_same<PropT, std::decay_t<SetArgT>>::value, "Getter and setter use different property types.");
+			static_assert(std::is_same<ContextT, std::decay_t<SetContextT>>::value, "Getter and setter use different context types.");
+
+			auto adaptedGetter = adapt_method_getter(getter);
+			auto adaptedSetter = adapt_method_setter(setter);
+			create_property<PropT>(name, getter, setter, flags, &get_type<ContextT>());
+			return std::move(*this);
+		}
+
+		/* Registers a field. */
+		template <typename FieldT>
+		TypeInfoBuilder&& field(
+			const char* name,
+			FieldT T::*field,
+			FieldFlags flags = FF_NONE)
+		{
+			create_field(name, field, flags);
+			return std::move(*this);
+		}
+
+		/* Registers a field, and a corresponding property. */
+		template <typename FieldT>
+		TypeInfoBuilder&& field_property(
+			const char* name,
+			FieldT T::*field,
+			FieldFlags fieldFlags = FF_NONE,
+			PropertyFlags propertyFlags = PF_NONE)
+		{
+			create_field(name, field, fieldFlags);
+
+			auto prop = PropertyInfo::create<FieldT>(name, propertyFlags, nullptr);
+			create_field_getter(prop, field);
+			create_field_setter(prop, field);
+			create_field_mutate(prop, field);
+			result.properties.insert(std::make_pair(name, std::move(prop)));
+
+			return std::move(*this);
+		}
+
+		/* Registers a field, and a corresponding readonly property. */
+		template <typename FieldT>
+		TypeInfoBuilder&& field_readonly_property(
+			const char* name,
+			FieldT T::*field,
+			FieldFlags fieldFlags = FF_NONE,
+			PropertyFlags propertyFlags = PF_NONE)
+		{
+			create_field(name, field, fieldFlags);
+
+			auto prop = PropertyInfo::create<FieldT>(name, propertyFlags, nullptr);
+			create_field_getter(prop, field);
+			result.properties.insert(std::make_pair(name, std::move(prop)));
+
+			return std::move(*this);
+		}
+
+	private:
+
+		template <typename FieldT>
+		static std::size_t get_field_offset(FieldT T::*field)
+		{
+			// Bit of a hack, but necessary. If this becomes problematic, I can replace the field offset with a getter/setter std::function pair or something.
+			// Though that would be much less performant.
+			alignas(T&) const char fake[sizeof(T)];
+			const char* pField = &(reinterpret_cast<const T*>(&fake)->*field);
+
+			return pField - &fake;
+		}
+
+		template <typename PropT, typename GetFn, typename SetFn>
+		void create_property(const char* name, GetFn getter, SetFn setter, PropertyFlags flags, const TypeInfo* contextType)
+		{
+			auto prop = PropertyInfo::create<PropT>(name, flags, contextType);
+			create_getter<PropT>(prop, getter);
+			create_setter<PropT>(prop, setter);
+			create_mutate<PropT>(prop, getter, setter);
+
+			result.properties.insert(std::make_pair(name, std::move(prop)));
+		}
+
+		template <typename PropT, typename GetFn>
+		void create_readonly_property(const char* name, GetFn getter, PropertyFlags flags, const TypeInfo* contextType)
+		{
+			auto prop = PropertyInfo::create<PropT>(name, flags, contextType);
+			create_getter<PropT>(prop, getter);
+
+			result.properties.insert(std::make_pair(name, std::move(prop)));
+		}
+
+		template <typename FieldT>
+		void create_field(const char* name, FieldT T::*field, FieldFlags flags)
+		{
+			auto info = FieldInfo::create<FieldT>(name, flags, get_field_offset(field));
+
+			result.fields.insert(std::make_pair(name, std::move(info)));
+		}
+
+		template <typename GetFn>
+		static auto adapt_function_getter(GetFn getter)
+		{
+			using FnTraits = stde::function_traits<GetFn>;
+			using RetT = typename FnTraits::return_type;
+			using PContextT = typename FnTraits::arg_types::template at<1>;
+
+			return [getter](const T* self, const void* context) -> RetT {
+				return getter(self, *static_cast<PContextT>(context));
+			};
+		}
+
+		template <typename RetT>
+		static auto adapt_method_getter(RetT(T::*getter)()const)
+		{
+			return [getter](const T* self, const void* /*context*/) -> RetT {
+				return (self->*getter)();
+			};
+		}
+
+		template <typename RetT, typename ContextArgT>
+		static auto adapt_method_getter(RetT(T::*getter)(ContextArgT)const)
+		{
+			using ContextT = std::decay_t<ContextArgT>;
+
+			return [getter](const T* self, const void* context) -> RetT {
+				return (self->*getter)(*static_cast<const ContextT*>(context));
+			};
+		}
+
+		template <typename SetFn>
+		static auto adapt_function_setter(SetFn setter)
+		{
+			using FnTraits = stde::function_traits<SetFn>;
+			using PContextT = typename FnTraits::arg_types::template at<1>;
+			using PPropT = typename FnTraits::arg_types::template at<2>;
+
+			return [setter](T* self, void* context, PPropT value) -> void {
+				setter(self, static_cast<PContextT>(context), value);
+			};
+		}
+
+		template <typename RetT, typename PropArgT>
+		static auto adapt_method_setter(RetT(T::*setter)(PropArgT))
+		{
+			using PropT = std::decay_t<PropArgT>;
+
+			return [setter](T* self, void* /*context*/, const PropT* value) -> void {
+				(self->*setter)(*value);
+			};
+		}
+
+		template <typename RetT, typename ContextArgT, typename PropArgT>
+		static auto adapt_method_setter(RetT(T::*setter)(ContextArgT, PropArgT))
+		{
+			using ContextT = std::decay_t<ContextArgT>;
+			using PropT = std::decay_t<PropArgT>;
+
+			return [setter](T* self, void* context, const PropT* value) -> void {
+				(self->*setter)(*static_cast<ContextT*>(context), *value);
+			};
+		}
+
+		template <typename PropT, typename GetFn>
+		static void create_getter(PropertyInfo& prop, GetFn getter)
+		{
+			prop.getter = [getter](const void* self, const void* context, PropertyInfo::GetterOutFn out) -> void {
+				const PropT& value = getter(static_cast<const T*>(self), context);
+				out(value);
+			};
+		}
+
+		template <typename PropT, typename SetFn>
+		static void create_setter(PropertyInfo& prop, SetFn setter)
+		{
+			prop.setter = [setter](void* self, void* context, const void* value) -> void {
+				setter(static_cast<T*>(self), context, static_cast<const PropT*>(value));
+			};
+		}
+
+		template <typename PropT, typename GetFn, typename SetFn>
+		static void create_mutate(PropertyInfo& prop, GetFn getter, SetFn setter)
+		{
+			prop.mutate = [getter, setter](void* self, void* context, PropertyInfo::MutatorFn mutator) -> void {
+				PropT prop = getter(static_cast<const T*>(self), context);
+				mutator(prop);
+				setter(static_cast<T*>(self), context, &prop);
+			};
+		}
+
+		template <typename FieldT>
+		static void create_field_getter(PropertyInfo& prop, FieldT T::*field)
+		{
+			prop.getter = [field](const void* self, const void* /*context*/, PropertyInfo::GetterOutFn out) -> void {
+				out(static_cast<const T*>(self)->*field);
+			};
+		}
+
+		template <typename FieldT>
+		static void create_field_setter(PropertyInfo& prop, FieldT T::*field)
+		{
+			prop.setter = [field](void* self, void* /*context*/, const void* value) -> void {
+				static_cast<T*>(self)->*field = *static_cast<const FieldT*>(value);
+			};
+		}
+
+		template <typename FieldT>
+		static void create_field_mutate(PropertyInfo& prop, FieldT T::*field)
+		{
+			prop.mutate = [field](void* self, void* /*context*/, PropertyInfo::MutatorFn mutate) -> void {
+				mutate(static_cast<T*>(self)->*field);
+			};
+		}
+
+		template <typename F>
+		auto set_init() -> std::enable_if_t<std::is_default_constructible<F>::value>
+		{
+			result.init = [](void* addr) {
+				new(addr) F{};
+			};
+		}
+
+		template <typename F>
+		auto set_init() -> std::enable_if_t<!std::is_default_constructible<F>::value>
+		{
+			result.init = nullptr;
+		}
+
+		template <typename F>
+		auto set_copy_init() -> std::enable_if_t<std::is_copy_constructible<F>::value>
+		{
+			result.copy_init = [](void* addr, const void* copy) {
+				new(addr) F{ *static_cast<const F*>(copy) };
+			};
+		}
+
+		template <typename F>
+		auto set_copy_init() -> std::enable_if_t<!std::is_copy_constructible<F>::value>
+		{
+			result.copy_init = nullptr;
+		}
+
+		template <typename F>
+		auto set_move_init() -> std::enable_if_t<std::is_move_constructible<F>::value>
+		{
+			result.move_init = [](void* addr, void* move) {
+				new(addr) T{ std::move(*static_cast<T*>(move)) };
+			};
+		}
+
+		template <typename F>
+		auto set_move_init() -> std::enable_if_t<!std::is_move_constructible<F>::value>
+		{
+			result.move_init = nullptr;
+		}
+
+		template <typename F>
+		auto set_copy_assign() -> std::enable_if_t<std::is_copy_assignable<F>::value>
+		{
+			result.copy_assign = [](void* self, const void* copy) {
+				*static_cast<T*>(self) = *static_cast<const T*>(copy);
+			};
+		}
+
+		template <typename F>
+		auto set_copy_assign() -> std::enable_if_t<!std::is_copy_assignable<F>::value>
+		{
+			result.copy_assign = nullptr;
+		}
+
+		template <typename F>
+		auto set_move_assign() -> std::enable_if_t<std::is_move_assignable<F>::value>
+		{
+			result.move_assign = [](void* self, void* move) {
+				*static_cast<T*>(self) = std::move(*static_cast<T*>(move));
+			};
+		}
+
+		template <typename F>
+		auto set_move_assign() -> std::enable_if_t<!std::is_move_assignable<F>::value>
+		{
+			result.move_assign = nullptr;
+		}
+
+		template <typename F>
+		auto set_drop() -> std::enable_if_t<std::is_destructible<F>::value>
+		{
+			result.drop = [](void* self) {
+				static_cast<T*>(self)->~T();
+			};
+		}
+
+		template <typename F>
+		auto set_drop() -> std::enable_if_t<!std::is_destructible<F>::value>
+		{
+			result.drop = nullptr;
+		}
+	};
+
+	template <class I>
+	struct InterfaceInfoBuilder final
+	{
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		InterfaceInfoBuilder(std::string name)
+		{
+			result.name = std::move(name);
+		}
+
+		//////////////////
+		///   Fields   ///
+	public:
+
+		InterfaceInfo::Data result;
+
+		///////////////////
+		///   Methods   ///
+	public:
+
+		template <typename T>
+		InterfaceInfoBuilder&& implemented_for()
+		{
+			static const I vtable = I::template get_vtable<T>();
+			result.implementations.insert(std::make_pair(&get_type<T>(), &vtable));
+			return std::move(*this);
+		}
+	};
 }
 
 //////////////////

@@ -163,11 +163,11 @@
     <ClInclude Include="include\Core\Math\Vec4.h" />
     <ClInclude Include="include\Core\Memory\Functions.h" />
     <ClInclude Include="include\Core\Reflection\Any.h" />
+    <ClInclude Include="include\Core\Reflection\FieldInfo.h" />
     <ClInclude Include="include\Core\Reflection\InterfaceInfo.h" />
     <ClInclude Include="include\Core\Reflection\PropertyInfo.h" />
     <ClInclude Include="include\Core\Reflection\Reflection.h" />
     <ClInclude Include="include\Core\Reflection\TypeInfo.h" />
-    <ClInclude Include="include\Core\STDE\Macros.h" />
     <ClInclude Include="include\Core\STDE\TMP.h" />
     <ClInclude Include="include\Core\STDE\TypeTraits.h" />
   </ItemGroup>

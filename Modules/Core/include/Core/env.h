@@ -20,7 +20,7 @@
 
 /** Detect OSX. */
 #if defined (__APPLE__)
-#	defined SGE_OS_OSX
+#	define SGE_OS_OSX
 #endif
 
 /** Detect Windows. */
@@ -97,9 +97,3 @@ namespace sge
 
 /** Macro useful for macros that expect to be given an API specification, but can't be given one. */
 #define SGE_NO_API
-
-#ifdef __cplusplus
-#	define SGE_EXTERN_C extern "C"
-#else
-#	define SGE_EXTERN_C
-#endif

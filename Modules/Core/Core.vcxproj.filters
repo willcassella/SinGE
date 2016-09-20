@@ -47,9 +47,6 @@
     <ClInclude Include="include\Core\config.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Core\STDE\Macros.h">
-      <Filter>include\STDE</Filter>
-    </ClInclude>
     <ClInclude Include="include\Core\STDE\TypeTraits.h">
       <Filter>include\STDE</Filter>
     </ClInclude>
@@ -99,6 +96,9 @@
       <Filter>include\Functional</Filter>
     </ClInclude>
     <ClInclude Include="include\Core\Reflection\Any.h">
+      <Filter>include\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Reflection\FieldInfo.h">
       <Filter>include\Reflection</Filter>
     </ClInclude>
   </ItemGroup>
