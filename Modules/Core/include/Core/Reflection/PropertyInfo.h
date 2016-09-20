@@ -49,9 +49,9 @@ namespace sge
 			///   Fields   ///
 		public:
 
-			PropertyFlags flags;
 			const TypeInfo* type;
 			const TypeInfo* context_type;
+			PropertyFlags flags;
 			std::function<void(const void* self, const void* context, GetterOutFn)> getter;
 			std::function<void(void* self, void* context, const void* value)> setter;
 			std::function<void(void* self, void* context, MutatorFn)> mutate;
