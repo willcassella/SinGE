@@ -319,7 +319,7 @@ namespace sge
 
 			auto adaptedGetter = adapt_method_getter(getter);
 			auto adaptedSetter = adapt_method_setter(setter);
-			create_property<PropT>(name, getter, setter, flags, &get_type<GetContextT>());
+			create_property<PropT>(name, getter, setter, flags, &get_type<ContextT>());
 			return std::move(*this);
 		}
 

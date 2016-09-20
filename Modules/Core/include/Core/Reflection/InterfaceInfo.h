@@ -35,7 +35,7 @@ namespace sge
 	public:
 
 		InterfaceInfo(Data data)
-			: _data{ std::move(data) }
+			: _data(std::move(data))
 		{
 		}
 
