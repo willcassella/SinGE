@@ -3,12 +3,9 @@
 
 #include <map>
 #include "../STDE/TypeTraits.h"
-#include "../Functional/FunctionView.h"
 #include "Any.h"
 #include "TypeInfo.h"
 #include "InterfaceInfo.h"
-#include "FieldInfo.h"
-#include "PropertyInfo.h"
 
 namespace sge
 {
@@ -194,6 +191,7 @@ namespace sge
 	public:
 
 		TypeInfoBuilder(std::string name)
+			: result{ std::move(name) }
 		{
 			if (std::is_empty<T>::value)
 			{
@@ -204,7 +202,6 @@ namespace sge
 				result.size = sizeof(T);
 			}
 
-			result.name = std::move(name);
 			result.alignment = alignof(T&);
 
 			this->set_init<T>();
@@ -214,12 +211,6 @@ namespace sge
 			this->set_move_assign<T>();
 			this->set_drop<T>();
 		}
-
-		//////////////////
-		///   Fields   ///
-	public:
-
-		TypeInfo::Data result;
 
 		///////////////////
 		///   Methods   ///
@@ -254,8 +245,10 @@ namespace sge
 			using PropT = std::decay_t<typename GetFnTraits::return_type>;
 			using ContextT = std::remove_pointer_t<typename SetFnTraits::arg_types::template at<1>>;
 
-			static_assert(std::is_same<const PropT*, typename SetFnTraits::arg_types::template at<2>>, "Property type differs between getter and setter");
-			static_assert(std::is_same<const ContextT*, typename GetFnTraits::arg_types::template at<1>>, "Context type differs between getter and setter.");
+			static_assert(std::is_same<const PropT*, typename SetFnTraits::arg_types::template at<2>>::value,
+				"Property type differs between getter and setter");
+			static_assert(std::is_same<const ContextT*, typename GetFnTraits::arg_types::template at<1>>::value,
+				"Context type differs between getter and setter.");
 
 			auto adaptedGetter = adapt_function_getter(getter);
 			auto adaptedSetter = adapt_function_setter(setter);
@@ -273,7 +266,7 @@ namespace sge
 		{
 			using GetFnTraits = stde::function_traits<GetFn>;
 			using PropT = std::decay_t<typename GetFnTraits::return_type>;
-			using ContextT = std::remove_pointer_t<typename SetFnTraits::arg_types::template at<1>>;
+			using ContextT = std::remove_const_t<std::remove_pointer_t<typename GetFnTraits::arg_types::template at<1>>>;
 
 			auto adaptedGetter = adapt_function_getter(getter);
 			create_readonly_property<PropT>(name, adaptedGetter, flags, &get_type<ContextT>());
@@ -404,11 +397,11 @@ namespace sge
 		{
 			create_field(name, field, fieldFlags);
 
-			auto prop = PropertyInfo::create<FieldT>(name, propertyFlags, nullptr);
-			create_field_getter(prop, field);
-			create_field_setter(prop, field);
-			create_field_mutate(prop, field);
-			result.properties.insert(std::make_pair(name, std::move(prop)));
+			auto propData = PropertyInfo::Data{ &get_type<FieldT>(), nullptr, propertyFlags };
+			create_field_getter(propData, field);
+			create_field_setter(propData, field);
+			create_field_mutate(propData, field);
+			result.properties.insert(std::make_pair(name, std::move(propData)));
 
 			return std::move(*this);
 		}
@@ -423,9 +416,9 @@ namespace sge
 		{
 			create_field(name, field, fieldFlags);
 
-			auto prop = PropertyInfo::create<FieldT>(name, propertyFlags, nullptr);
-			create_field_getter(prop, field);
-			result.properties.insert(std::make_pair(name, std::move(prop)));
+			auto propData = PropertyInfo::Data{ &get_type<FieldT>(), nullptr, propertyFlags };
+			create_field_getter(propData, field);
+			result.properties.insert(std::make_pair(name, std::move(propData)));
 
 			return std::move(*this);
 		}
@@ -446,27 +439,27 @@ namespace sge
 		template <typename PropT, typename GetFn, typename SetFn>
 		void create_property(const char* name, GetFn getter, SetFn setter, PropertyFlags flags, const TypeInfo* contextType)
 		{
-			auto prop = PropertyInfo::create<PropT>(name, flags, contextType);
-			create_getter<PropT>(prop, getter);
-			create_setter<PropT>(prop, setter);
-			create_mutate<PropT>(prop, getter, setter);
+			auto propData = PropertyInfo::Data{ &get_type<PropT>(), contextType, flags };
+			propData.getter = create_getter<PropT>(getter);
+			propData.setter = create_setter<PropT>(setter);
+			propData.mutate = create_mutate<PropT>(getter, setter);
 
-			result.properties.insert(std::make_pair(name, std::move(prop)));
+			result.properties.insert(std::make_pair(name, std::move(propData)));
 		}
 
 		template <typename PropT, typename GetFn>
 		void create_readonly_property(const char* name, GetFn getter, PropertyFlags flags, const TypeInfo* contextType)
 		{
-			auto prop = PropertyInfo::create<PropT>(name, flags, contextType);
-			create_getter<PropT>(prop, getter);
+			auto propData = PropertyInfo::Data{ &get_type<PropT>(), contextType, flags };
+			propData.getter = create_getter<PropT>(getter);
 
-			result.properties.insert(std::make_pair(name, std::move(prop)));
+			result.properties.insert(std::make_pair(name, std::move(propData)));
 		}
 
 		template <typename FieldT>
 		void create_field(const char* name, FieldT T::*field, FieldFlags flags)
 		{
-			auto info = FieldInfo::create<FieldT>(name, flags, get_field_offset(field));
+			auto info = FieldInfo{ &get_type<FieldT>(), flags, get_field_offset(field) };
 
 			result.fields.insert(std::make_pair(name, std::move(info)));
 		}
@@ -535,26 +528,26 @@ namespace sge
 		}
 
 		template <typename PropT, typename GetFn>
-		static void create_getter(PropertyInfo& prop, GetFn getter)
+		static auto create_getter(GetFn getter)
 		{
-			prop.getter = [getter](const void* self, const void* context, PropertyInfo::GetterOutFn out) -> void {
+			return [getter](const void* self, const void* context, PropertyInfo::GetterOutFn out) -> void {
 				const PropT& value = getter(static_cast<const T*>(self), context);
 				out(value);
 			};
 		}
 
 		template <typename PropT, typename SetFn>
-		static void create_setter(PropertyInfo& prop, SetFn setter)
+		static auto create_setter(SetFn setter)
 		{
-			prop.setter = [setter](void* self, void* context, const void* value) -> void {
+			return [setter](void* self, void* context, const void* value) -> void {
 				setter(static_cast<T*>(self), context, static_cast<const PropT*>(value));
 			};
 		}
 
 		template <typename PropT, typename GetFn, typename SetFn>
-		static void create_mutate(PropertyInfo& prop, GetFn getter, SetFn setter)
+		static auto create_mutate(GetFn getter, SetFn setter)
 		{
-			prop.mutate = [getter, setter](void* self, void* context, PropertyInfo::MutatorFn mutator) -> void {
+			return [getter, setter](void* self, void* context, PropertyInfo::MutatorFn mutator) -> void {
 				PropT prop = getter(static_cast<const T*>(self), context);
 				mutator(prop);
 				setter(static_cast<T*>(self), context, &prop);
@@ -562,25 +555,25 @@ namespace sge
 		}
 
 		template <typename FieldT>
-		static void create_field_getter(PropertyInfo& prop, FieldT T::*field)
+		static auto create_field_getter(FieldT T::*field)
 		{
-			prop.getter = [field](const void* self, const void* /*context*/, PropertyInfo::GetterOutFn out) -> void {
+			return [field](const void* self, const void* /*context*/, PropertyInfo::GetterOutFn out) -> void {
 				out(static_cast<const T*>(self)->*field);
 			};
 		}
 
 		template <typename FieldT>
-		static void create_field_setter(PropertyInfo& prop, FieldT T::*field)
+		static auto create_field_setter(FieldT T::*field)
 		{
-			prop.setter = [field](void* self, void* /*context*/, const void* value) -> void {
+			return [field](void* self, void* /*context*/, const void* value) -> void {
 				static_cast<T*>(self)->*field = *static_cast<const FieldT*>(value);
 			};
 		}
 
 		template <typename FieldT>
-		static void create_field_mutate(PropertyInfo& prop, FieldT T::*field)
+		static auto create_field_mutate(FieldT T::*field)
 		{
-			prop.mutate = [field](void* self, void* /*context*/, PropertyInfo::MutatorFn mutate) -> void {
+			return [field](void* self, void* /*context*/, PropertyInfo::MutatorFn mutate) -> void {
 				mutate(static_cast<T*>(self)->*field);
 			};
 		}
@@ -588,7 +581,7 @@ namespace sge
 		template <typename F>
 		auto set_init() -> std::enable_if_t<std::is_default_constructible<F>::value>
 		{
-			result.init = [](void* addr) {
+			result.init = [](void* addr) -> void {
 				new(addr) F{};
 			};
 		}
@@ -596,13 +589,12 @@ namespace sge
 		template <typename F>
 		auto set_init() -> std::enable_if_t<!std::is_default_constructible<F>::value>
 		{
-			result.init = nullptr;
 		}
 
 		template <typename F>
 		auto set_copy_init() -> std::enable_if_t<std::is_copy_constructible<F>::value>
 		{
-			result.copy_init = [](void* addr, const void* copy) {
+			result.copy_init = [](void* addr, const void* copy) -> void {
 				new(addr) F{ *static_cast<const F*>(copy) };
 			};
 		}
@@ -610,13 +602,12 @@ namespace sge
 		template <typename F>
 		auto set_copy_init() -> std::enable_if_t<!std::is_copy_constructible<F>::value>
 		{
-			result.copy_init = nullptr;
 		}
 
 		template <typename F>
 		auto set_move_init() -> std::enable_if_t<std::is_move_constructible<F>::value>
 		{
-			result.move_init = [](void* addr, void* move) {
+			result.move_init = [](void* addr, void* move) -> void {
 				new(addr) T{ std::move(*static_cast<T*>(move)) };
 			};
 		}
@@ -624,13 +615,12 @@ namespace sge
 		template <typename F>
 		auto set_move_init() -> std::enable_if_t<!std::is_move_constructible<F>::value>
 		{
-			result.move_init = nullptr;
 		}
 
 		template <typename F>
 		auto set_copy_assign() -> std::enable_if_t<std::is_copy_assignable<F>::value>
 		{
-			result.copy_assign = [](void* self, const void* copy) {
+			result.copy_assign = [](void* self, const void* copy) -> void {
 				*static_cast<T*>(self) = *static_cast<const T*>(copy);
 			};
 		}
@@ -638,13 +628,12 @@ namespace sge
 		template <typename F>
 		auto set_copy_assign() -> std::enable_if_t<!std::is_copy_assignable<F>::value>
 		{
-			result.copy_assign = nullptr;
 		}
 
 		template <typename F>
 		auto set_move_assign() -> std::enable_if_t<std::is_move_assignable<F>::value>
 		{
-			result.move_assign = [](void* self, void* move) {
+			result.move_assign = [](void* self, void* move) -> void {
 				*static_cast<T*>(self) = std::move(*static_cast<T*>(move));
 			};
 		}
@@ -652,13 +641,12 @@ namespace sge
 		template <typename F>
 		auto set_move_assign() -> std::enable_if_t<!std::is_move_assignable<F>::value>
 		{
-			result.move_assign = nullptr;
 		}
 
 		template <typename F>
 		auto set_drop() -> std::enable_if_t<std::is_destructible<F>::value>
 		{
-			result.drop = [](void* self) {
+			result.drop = [](void* self) -> void {
 				static_cast<T*>(self)->~T();
 			};
 		}
@@ -666,8 +654,13 @@ namespace sge
 		template <typename F>
 		auto set_drop() -> std::enable_if_t<!std::is_destructible<F>::value>
 		{
-			result.drop = nullptr;
 		}
+
+		//////////////////
+		///   Fields   ///
+	public:
+
+		TypeInfo::Data result;
 	};
 
 	template <class I>

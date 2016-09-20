@@ -8,6 +8,47 @@ namespace sge
 	template <typename T>
 	const TypeInfo& get_type(const T&);
 
+	struct AnyMut
+	{
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		template <typename T>
+		AnyMut(T& value)
+		{
+			_value = &value;
+			_type = &sge::get_type(value);
+		}
+
+		template <typename T>
+		AnyMut(T&& value) = delete;
+
+		AnyMut(const AnyMut& copy) = default;
+		AnyMut(AnyMut&& move) = default;
+
+		///////////////////
+		///   Methods   ///
+	public:
+
+		void* get_value() const
+		{
+			return _value;
+		}
+
+		const TypeInfo& get_type() const
+		{
+			return *_type;
+		}
+
+		//////////////////
+		///   Fields   ///
+	private:
+
+		void* _value;
+		const TypeInfo* _type;
+	};
+
 	struct Any
 	{
 		////////////////////////
@@ -27,6 +68,11 @@ namespace sge
 		Any(const Any& copy) = default;
 		Any(Any&& move) = default;
 
+		Any(AnyMut any)
+			: _value{ any.get_value() }, _type{ &any.get_type() }
+		{
+		}
+
 		///////////////////
 		///   Methods   ///
 	public:
@@ -41,49 +87,27 @@ namespace sge
 			return *_type;
 		}
 
-		////////////////
-		///   Data   ///
+		//////////////////
+		///   Fields   ///
 	private:
 
 		const void* _value;
 		const TypeInfo* _type;
 	};
 
-	struct AnyMut
+	namespace specialized
 	{
-		////////////////////////
-		///   Constructors   ///
-	public:
-
 		template <typename T>
-		AnyMut(T& value)
+		struct GetType;
+
+		template<>
+		struct GetType< Any >
 		{
-			_value = &value;
-			_type = &sge::get_type(value);
-		}
+		};
 
-		template <typename T>
-		AnyMut(T&& value) = delete;
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		void* get_value() const
+		template <>
+		struct GetType< AnyMut >
 		{
-			return _value;
-		}
-
-		const TypeInfo& get_type() const
-		{
-			return *_type;
-		}
-
-		////////////////
-		///   Data   ///
-	private:
-
-		void* _value;
-		const TypeInfo* _type;
-	};
+		};
+	}
 }

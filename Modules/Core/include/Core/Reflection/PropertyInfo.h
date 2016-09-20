@@ -3,6 +3,7 @@
 
 #include <string>
 #include <functional>
+#include "../Functional/FunctionView.h"
 
 namespace sge
 {
@@ -15,9 +16,6 @@ namespace sge
 	template <typename F>
 	struct FunctionView;
 
-	template <typename T>
-	const TypeInfo& get_type();
-
 	enum PropertyFlags
 	{
 		/* This property has no special flags. */
@@ -26,7 +24,7 @@ namespace sge
 		/* This property should be serialzed. */
 		PF_SERIALIZED = (1<<0),
 
-		/* This property is intended exclusively for this editor, and should not be exposed to scripting. */
+		/* This property is intended exclusively for use by the editor, and should not be exposed to scripting. */
 		PF_EDITOR_ONLY = (1<<1)
 	};
 
@@ -36,48 +34,88 @@ namespace sge
 
 		using MutatorFn = FunctionView<void(AnyMut)>;
 
+		struct Data
+		{
+			////////////////////////
+			///   Constructors   ///
+		public:
+
+			Data(const TypeInfo* type, const TypeInfo* contextType, PropertyFlags flags)
+				: type{ type }, context_type{ contextType }, flags{ flags }
+			{
+			}
+
+			//////////////////
+			///   Fields   ///
+		public:
+
+			PropertyFlags flags;
+			const TypeInfo* type;
+			const TypeInfo* context_type;
+			std::function<void(const void* self, const void* context, GetterOutFn)> getter;
+			std::function<void(void* self, void* context, const void* value)> setter;
+			std::function<void(void* self, void* context, MutatorFn)> mutate;
+		};
+
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		template <typename PropT>
-		static PropertyInfo create(std::string name, PropertyFlags flags, const TypeInfo* contextType)
+		PropertyInfo(Data data)
+			: _data{ std::move(data) }
 		{
-			PropertyInfo result;
-			result.name = std::move(name);
-			result.type = &get_type<PropT>();
-			result.context_type = contextType;
-			result.flags = flags;
-			result.getter = nullptr;
-			result.setter = nullptr;
-			result.mutate = nullptr;
+		}
 
-			return result;
+		///////////////////
+		///   Methods   ///
+	public:
+
+		/* The type of this property. */
+		const TypeInfo& type() const
+		{
+			return *_data.type;
+		}
+
+		/* The context type required for getting and setting this property. */
+		const TypeInfo* context_type()
+		{
+			return _data.context_type;
+		}
+
+		/* Any special flags for this property. */
+		PropertyFlags flags() const
+		{
+			return _data.flags;
+		}
+
+		/* Returns whether this property may be read from, but not written to ('set' or 'mutate'). */
+		bool is_read_only() const
+		{
+			return _data.setter == nullptr;
+		}
+
+		/* Gets the current value of this property, given instance and context data. */
+		void get(const void* self, const void* context, GetterOutFn out) const
+		{
+			_data.getter(self, context, out);
+		}
+
+		/* Sets the current value of this property, given instance and context data. */
+		void set(void* self, void* context, const void* value) const
+		{
+			_data.setter(self, context, value);
+		}
+
+		/* Mutates the property. */
+		void mutate(void* self, void* context, MutatorFn mutator) const
+		{
+			_data.mutate(self, context, mutator);
 		}
 
 		//////////////////
 		///   Fields   ///
-	public:
+	private:
 
-		/* The name of this property. */
-		std::string name;
-
-		/* The type of this property. */
-		const TypeInfo* type;
-
-		/* The context type required for getting and setting this property. */
-		const TypeInfo* context_type;
-
-		/* Any special flags for this property. */
-		PropertyFlags flags;
-
-		/* Gets the current value of this property, given instance and context data. */
-		std::function<void(const void* self, const void* context, GetterOutFn)> getter;
-
-		/* Sets the current value of this property, given instance and context data. */
-		std::function<void(void* self, void* context, const void* value)> setter;
-
-		/* Mutates the property. */
-		std::function<void(void* self, void* context, MutatorFn)> mutate;
+		Data _data;
 	};
 }

@@ -103,9 +103,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\Reflection\TypeInfo.cpp">
-      <Filter>source\Reflection</Filter>
-    </ClCompile>
     <ClCompile Include="source\Math\Vec2.cpp">
       <Filter>source\Math</Filter>
     </ClCompile>

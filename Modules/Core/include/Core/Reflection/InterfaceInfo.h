@@ -12,10 +12,20 @@ namespace sge
 	template <class I>
 	struct InterfaceInfoBuilder;
 
-	struct SGE_CORE_API InterfaceInfo final
+	struct InterfaceInfo final
 	{
 		struct Data
 		{
+			////////////////////////
+			///   Constructors   ///
+		public:
+
+			Data() = default;
+
+			//////////////////
+			///   Fields   ///
+		public:
+
 			std::string name;
 			std::unordered_map<const TypeInfo*, const void*> implementations;
 		};
@@ -25,7 +35,7 @@ namespace sge
 	public:
 
 		InterfaceInfo(Data data)
-			: _data(std::move(data))
+			: _data{ std::move(data) }
 		{
 		}
 

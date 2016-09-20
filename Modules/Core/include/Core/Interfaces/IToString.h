@@ -1,6 +1,7 @@
 // IToString.h
 #pragma once
 
+#include <cstring>
 #include <string>
 #include "../Reflection/Reflection.h"
 
@@ -123,6 +124,11 @@ namespace sge
 		return Impl<IToString, T>::to_string(&value);
 	}
 
+	inline void format_impl(std::string& out, const char* fmt, std::size_t len)
+	{
+		out.append(fmt, len);
+	}
+
 	template <typename T, typename ... Ts>
 	void format_impl(std::string& out, const char* fmt, std::size_t len, const T& t, const Ts& ... ts)
 	{
@@ -138,11 +144,6 @@ namespace sge
 				out += *fmt;
 			}
 		}
-	}
-
-	inline void format_impl(std::string& out, const char* fmt, std::size_t len)
-	{
-		out.append(fmt, len);
 	}
 
 	template <typename ... Ts>

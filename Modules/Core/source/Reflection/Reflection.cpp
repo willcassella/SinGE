@@ -8,8 +8,7 @@ namespace sge
 	template <typename T>
 	TypeInfo::Data build_primitive_type_info(std::string name)
 	{
-		TypeInfo::Data result;
-		result.name = std::move(name);
+		TypeInfo::Data result{ std::move(name) };
 		result.size = sizeof(T);
 		result.alignment = alignof(T);
 		result.init = [](void* self) { *static_cast<T*>(self) = 0; };
@@ -24,9 +23,7 @@ namespace sge
 
 	TypeInfo::Data build_void_type_info()
 	{
-		TypeInfo::Data result;
-		result.name = "void";
-		return result;
+		return{ "void" };
 	}
 
 	namespace specialized

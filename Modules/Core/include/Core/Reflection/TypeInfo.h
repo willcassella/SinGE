@@ -3,7 +3,8 @@
 
 #include <map>
 #include <unordered_map>
-#include "../config.h"
+#include "PropertyInfo.h"
+#include "FieldInfo.h"
 
 namespace sge
 {
@@ -11,22 +12,30 @@ namespace sge
 
 	struct InterfaceInfo;
 
-	struct PropertyInfo;
-
-	struct FieldInfo;
-
 	template <typename T>
 	struct TypeInfoBuilder;
 
-	struct SGE_CORE_API TypeInfo
+	struct TypeInfo
 	{
-		struct SGE_CORE_API Data
+		struct Data
 		{
 			////////////////////////
 			///   Constructors   ///
 		public:
 
-			Data();
+			Data(std::string name)
+				: name{ std::move(name) }
+			{
+				size = 0;
+				alignment = 0;
+				init = nullptr;
+				copy_init = nullptr;
+				move_init = nullptr;
+				copy_assign = nullptr;
+				move_assign = nullptr;
+				drop = nullptr;
+				base = nullptr;
+			}
 
 			//////////////////
 			///   Fields   ///
@@ -166,6 +175,78 @@ namespace sge
 		const TypeInfo* get_base() const
 		{
 			return _data.base;
+		}
+
+		/* Returns an iterator at the first property of this type.
+		* NOTE: This does not include base class properties. */
+		auto properties_begin() const
+		{
+			return _data.properties.begin();
+		}
+
+		/* Returns an iterator after the last property of this type. */
+		auto properties_end() const
+		{
+			return _data.properties.end();
+		}
+
+		/* Searches for a property on this type with the given name.
+		* Returns a pointer to the property if one was found, returns 'null' otherwise. */
+		const PropertyInfo* find_property(const char* name) const
+		{
+			auto prop = _data.properties.find(name);
+
+			if (prop == _data.properties.end())
+			{
+				return nullptr;
+			}
+
+			return &prop->second;
+		}
+
+		/* Searches for a property on this type with the given name, and sets the value.
+		* Returns 'true' if the property was found and set, 'false' otherwise. */
+		bool set_property(const char* name, void* object, void* context, const void* value) const
+		{
+			auto prop = _data.properties.find(name);
+
+			if (prop == _data.properties.end() || prop->second.is_read_only())
+			{
+				return false;
+			}
+
+			prop->second.set(object, context, value);
+			return true;
+		}
+
+		/* Searches for ap property on this type with the given name,and gets the value.
+		* Returns 'true' of the property was found and gotten, 'false' otherwise. */
+		bool get_property(const char* name, const void* object, const void* context, PropertyInfo::GetterOutFn out) const
+		{
+			auto prop = _data.properties.find(name);
+
+			if (prop == _data.properties.end())
+			{
+				return false;
+			}
+
+			prop->second.get(object, context, out);
+			return true;
+		}
+
+		/* Searches for the given property name, and runs the given function in between the getter and setter.
+		* Returns 'true' if the property was found and mutated, 'false' otherwise. */
+		bool mutate_property(const char* name, void* object, void* context, PropertyInfo::MutatorFn mutator) const
+		{
+			auto prop = _data.properties.find(name);
+
+			if (prop == _data.properties.end() || prop->second.is_read_only())
+			{
+				return false;
+			}
+
+			prop->second.mutate(object, context, mutator);
+			return true;
 		}
 
 		//////////////////

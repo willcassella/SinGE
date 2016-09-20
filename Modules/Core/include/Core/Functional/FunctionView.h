@@ -17,10 +17,13 @@ namespace sge
 		FunctionView(F&& func)
 		{
 			_invoker = [](void* f, Args... args) -> Ret {
-				return static_cast<std::remove_reference_t<F>*>(f)(std::forward<Args>(args)...);
+				return (*static_cast<std::remove_reference_t<F>*>(f))(std::forward<Args>(args)...);
 			};
 			_func = &func;
 		}
+
+		FunctionView(const FunctionView& copy) = default;
+		FunctionView(FunctionView&& move) = default;
 
 		///////////////////
 		///   Methods   ///

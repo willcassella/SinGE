@@ -8,9 +8,6 @@ namespace sge
 {
 	struct TypeInfo;
 
-	template <typename T>
-	const TypeInfo& get_type();
-
 	enum FieldFlags
 	{
 		FF_NONE = 0,
@@ -25,38 +22,23 @@ namespace sge
 		FF_READONLY = (1 << 2) | FF_TRANSIENT
 	};
 
-	struct SGE_CORE_API FieldInfo
+	struct FieldInfo
 	{
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		template <typename T>
-		static FieldInfo create(std::string name, FieldFlags flags, std::size_t offset)
+		FieldInfo(const TypeInfo* type, FieldFlags flags, std::size_t offset)
+			: _type{ type }, _flags{ flags }, _offset{ offset }
 		{
-			FieldInfo result;
-			result.name = std::move(name);
-			result.type = &get_type<T>();
-			result.flags = flags;
-			result.offset = offset;
-
-			return result;
 		}
 
 		//////////////////
 		///   Fields   ///
-	public:
+	private:
 
-		/* The name of this field. */
-		std::string name;
-
-		/* The type this field is. */
-		const TypeInfo* type;
-
-		/* Flags assigned to this field. */
-		FieldFlags flags;
-
-		/* The offset of this field within the owning object. */
-		std::size_t offset;
+		const TypeInfo* _type;
+		FieldFlags _flags;
+		std::size_t _offset;
 	};
 }
