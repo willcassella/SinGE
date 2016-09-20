@@ -19,32 +19,32 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{EC7300DC-B09B-4626-80F6-432B5982638F}</ProjectGuid>
-    <RootNamespace>Engine</RootNamespace>
+    <ProjectGuid>{003A4B5A-3C46-43AC-BD34-60DB1F895549}</ProjectGuid>
+    <RootNamespace>CoreTest</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -69,35 +69,30 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(IncludePath)</IncludePath>
     <OutDir>bin\</OutDir>
     <IntDir>build\</IntDir>
-    <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(IncludePath)</IncludePath>
     <OutDir>bin\</OutDir>
     <IntDir>build\</IntDir>
-    <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(IncludePath)</IncludePath>
     <OutDir>bin\</OutDir>
     <IntDir>build\</IntDir>
-    <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(IncludePath)</IncludePath>
     <OutDir>bin\</OutDir>
     <IntDir>build\</IntDir>
-    <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SGE_ENGINE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4251;4814</DisableSpecificWarnings>
     </ClCompile>
     <PostBuildEvent>
@@ -109,7 +104,6 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SGE_ENGINE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4251;4814</DisableSpecificWarnings>
     </ClCompile>
     <PostBuildEvent>
@@ -123,7 +117,6 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SGE_ENGINE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4251;4814</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -141,7 +134,6 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SGE_ENGINE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4251;4814</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -153,31 +145,12 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\Engine\Component.h" />
-    <ClInclude Include="include\Engine\Components\Display\StaticMesh.h" />
-    <ClInclude Include="include\Engine\Components\Physics\CubeCollider.h" />
-    <ClInclude Include="include\Engine\Components\Transform3D.h" />
-    <ClInclude Include="include\Engine\config.h" />
-    <ClInclude Include="include\Engine\Frame.h" />
-    <ClInclude Include="include\Engine\Interfaces\ISystem.h" />
-    <ClInclude Include="include\Engine\Resources\Material.h" />
-    <ClInclude Include="include\Engine\Resources\Shader.h" />
-    <ClInclude Include="include\Engine\Resources\StaticMesh.h" />
-    <ClInclude Include="include\Engine\Scene.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="source\Component.cpp" />
-    <ClCompile Include="source\Components\Display\StaticMesh.cpp" />
-    <ClCompile Include="source\Components\Physics\CubeCollider.cpp" />
-    <ClCompile Include="source\Components\Transform3D.cpp" />
-    <ClCompile Include="source\Interfaces\ISystem.cpp" />
-    <ClCompile Include="source\Resources\Shader.cpp" />
-    <ClCompile Include="source\Scene.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Core\Core.vcxproj">
+    <ProjectReference Include="..\..\Modules\Core\Core.vcxproj">
       <Project>{7023ab4a-7730-4594-a0c7-ddc6da461343}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="source\main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -17,7 +17,7 @@ namespace sge
 	struct SGE_ENGINE_API CStaticMesh
 	{
 		SGE_REFLECTED_TYPE;
-	
+
 		////////////////
 		///   Data   ///
 	private:

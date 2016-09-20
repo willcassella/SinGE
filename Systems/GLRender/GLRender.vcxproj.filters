@@ -9,17 +9,47 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="private">
+      <UniqueIdentifier>{d14e85b7-bea0-4310-a79a-318590c742b8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\GLRender\GLRender.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\GLRender\config.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\GLRender\GLMaterial.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GLRender\GLRenderSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GLRender\GLShader.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GLRender\GLStaticMesh.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GLRender\GLTexture.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="private\glew.h">
+      <Filter>private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\GLRender.cpp">
+    <ClCompile Include="source\GLMaterial.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\GLRenderSystem.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\GLShader.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\GLStaticMesh.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\GLTexture.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

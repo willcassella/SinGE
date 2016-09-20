@@ -12,6 +12,6 @@ namespace sge
 {
 	void CStaticMesh::set_mesh(ComponentInstance<CStaticMesh> self, Scene& scene, std::string mesh)
 	{
-		self.object->_mesh = std::move(mesh);
+		self->_mesh = std::move(mesh);
 	}
 }

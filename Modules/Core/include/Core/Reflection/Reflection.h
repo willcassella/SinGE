@@ -430,10 +430,10 @@ namespace sge
 		{
 			// Bit of a hack, but necessary. If this becomes problematic, I can replace the field offset with a getter/setter std::function pair or something.
 			// Though that would be much less performant.
-			alignas(T&) const char fake[sizeof(T)];
-			const char* pField = &(reinterpret_cast<const T*>(&fake)->*field);
+			alignas(T&) const char fake[sizeof(T)] = {};
+			const char* pField = reinterpret_cast<const char*>(&(reinterpret_cast<const T*>(&fake)->*field));
 
-			return pField - &fake;
+			return pField - &fake[0];
 		}
 
 		template <typename PropT, typename GetFn, typename SetFn>
@@ -472,7 +472,7 @@ namespace sge
 			using PContextT = typename FnTraits::arg_types::template at<1>;
 
 			return [getter](const T* self, const void* context) -> RetT {
-				return getter(self, *static_cast<PContextT>(context));
+				return getter(self, static_cast<PContextT>(context));
 			};
 		}
 

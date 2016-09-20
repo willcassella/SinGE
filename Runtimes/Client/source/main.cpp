@@ -9,9 +9,9 @@
 struct System
 {
 	void func(
-		sge::Scene& scene, 
-		sge::EntityID entity, 
-		sge::comp::With<sge::CTransform3D> tranform, 
+		sge::Scene& scene,
+		sge::EntityID entity,
+		sge::comp::With<sge::CTransform3D> tranform,
 		sge::comp::Without<sge::CStaticMesh> mesh)
 	{
 		std::cout << "Entity " << entity << " meets the requirements." << std::endl;
@@ -26,12 +26,9 @@ void lookAtVec3(sge::Any vec)
 void testReflection()
 {
 	sge::CTransform3D transform;
-	sge::ComponentContext ctx;
-	ctx.entity = sge::WORLD_ENTITY;
-	ctx.id = 5;
-	ctx.scene = nullptr;
+	sge::ComponentContext ctx{ sge::ComponentIdentity{ 5, sge::WORLD_ENTITY } };
 
-	sge::get_type(transform).properties.find("local_position")->second.getter(&transform, &ctx, lookAtVec3);
+	sge::get_type(transform).get_property("local_position", &transform, &ctx, lookAtVec3);
 }
 
 int main()

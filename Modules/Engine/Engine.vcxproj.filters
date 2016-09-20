@@ -94,5 +94,8 @@
     <ClCompile Include="source\Components\Transform3D.cpp">
       <Filter>source\Components</Filter>
     </ClCompile>
+    <ClCompile Include="source\Component.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

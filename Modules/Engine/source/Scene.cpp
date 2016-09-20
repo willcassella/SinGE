@@ -4,13 +4,12 @@
 #include "../include/Engine/Scene.h"
 
 SGE_REFLECT_TYPE(sge::Scene);
-SGE_REFLECT_TYPE(sge::TNewComponent);
 
 namespace sge
 {
 	////////////////////////
 	///   Constructors   ///
-	
+
 	Scene::Scene()
 	{
 		_next_component_id = 1;
@@ -26,7 +25,7 @@ namespace sge
 				auto object = _component_objects.find(component.id);
 				if (object != _component_objects.end())
 				{
-					if (componentType.first->drop != nullptr)
+					if (componentType.first->has_drop())
 					{
 						componentType.first->drop(object->second);
 					}
@@ -109,11 +108,11 @@ namespace sge
 		auto object = _component_objects.find(id);
 		if (object == _component_objects.end())
 		{
-			return{ id, entity->second, object->second };
+			return{ ComponentIdentity{ id, entity->second }, object->second };
 		}
 		else
 		{
-			return{ id, entity->second, nullptr };
+			return{ ComponentIdentity{ id, entity->second }, nullptr };
 		}
 	}
 
@@ -128,11 +127,11 @@ namespace sge
 		auto object = _component_objects.find(id);
 		if (object != _component_objects.end())
 		{
-			return{ id, entity->second, object->second };
+			return{ ComponentIdentity{ id, entity->second }, object->second };
 		}
 		else
 		{
-			return{ id, entity->second, nullptr };
+			return{ ComponentIdentity{ id, entity->second }, nullptr };
 		}
 	}
 
@@ -149,14 +148,14 @@ namespace sge
 		identity.entity = entity;
 		identity.id = _next_component_id++;
 		_component_entities[identity.id] = entity;
-		
+
 		// If the type has a size, allocate memory for it
 		void* buff = nullptr;
-		if (type.size > 0)
+		if (type.size() > 0)
 		{
-			buff = sge::malloc(type.size);
+			buff = sge::malloc(type.size());
 			_component_objects[identity.id] = buff;
-			
+
 			if (object != nullptr)
 			{
 				type.move_init(buff, object);
@@ -181,6 +180,6 @@ namespace sge
 		// Give the componet the 'NewComponent' tag, so that it may be picked up by relevant systems
 		//new_tag(identity.component, TNewComponent{});
 
-		return{ identity.id, identity.entity, buff };
+		return{ identity, buff };
 	}
 }

@@ -6,12 +6,15 @@
 namespace sge
 {
 	SGE_REFLECT_TYPE(sge::CTransform3D)
-	.property("local_position", component_getter(CTransform3D::get_local_position), component_setter(CTransform3D::set_local_position), PF_TRANSIENT)
-	.property("local_scale", component_getter(CTransform3D::get_local_scale), component_setter(CTransform3D::set_local_scale), PF_TRANSIENT)
-	.property("local_rotation", component_getter(CTransform3D::get_local_rotation), component_setter(CTransform3D::set_local_rotation), PF_TRANSIENT)
-	.property("world_position", component_getter(CTransform3D::get_world_position), nullptr, PF_TRANSIENT)
-	.property("world_scale", component_getter(CTransform3D::get_world_scale), nullptr, PF_TRANSIENT)
-	.property("world_rotation", component_getter(CTransform3D::get_world_rotation), nullptr, PF_TRANSIENT);
+	.property("local_position", component_getter(CTransform3D::get_local_position), component_setter(CTransform3D::set_local_position))
+	.property("local_scale", component_getter(CTransform3D::get_local_scale), component_setter(CTransform3D::set_local_scale))
+	.property("local_rotation", component_getter(CTransform3D::get_local_rotation), component_setter(CTransform3D::set_local_rotation))
+	.property("world_position", component_getter(CTransform3D::get_world_position), nullptr)
+	.property("world_scale", component_getter(CTransform3D::get_world_scale), nullptr)
+	.property("world_rotation", component_getter(CTransform3D::get_world_rotation), nullptr)
+	.field("local_position", &CTransform3D::_local_position)
+	.field("local_scale", &CTransform3D::_local_scale)
+	.field("local_rotation", &CTransform3D::_local_rotation);
 
 	SGE_REFLECT_TYPE(sge::CTransform3D::TTransformChanged);
 	SGE_REFLECT_TYPE(sge::CTransform3D::TParentChanged);
