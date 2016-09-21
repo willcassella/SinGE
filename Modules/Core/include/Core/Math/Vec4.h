@@ -46,12 +46,6 @@ namespace sge
 		{
 		}
 
-		////////////////
-		///   Data   ///
-	public:
-
-		Scalar _values[4];
-
 		///////////////////
 		///   Methods   ///
 	public:
@@ -234,5 +228,11 @@ namespace sge
 		{
 			return lhs.x() != rhs.x() || lhs.y() != rhs.y() || lhs.z() != rhs.z() || lhs.w() != rhs.w();
 		}
+
+		//////////////////
+		///   Fields   ///
+	private:
+
+		Scalar _values[4];
 	};
 }

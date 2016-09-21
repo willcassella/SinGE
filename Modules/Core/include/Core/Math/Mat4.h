@@ -220,8 +220,8 @@ namespace sge
 			return !(lhs == rhs);
 		}
 
-		////////////////
-		///   Data   ///
+		//////////////////
+		///   Fields   ///
 	private:
 
 		Scalar _values[4][4];

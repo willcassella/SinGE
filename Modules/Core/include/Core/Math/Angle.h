@@ -77,8 +77,8 @@ namespace sge
 			return{ static_cast<F>(_radians) };
 		}
 
-		////////////////
-		///   Data   ///
+		//////////////////
+		///   Fields   ///
 	private:
 
 		T _radians;

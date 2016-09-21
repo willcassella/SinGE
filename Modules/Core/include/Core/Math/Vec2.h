@@ -25,12 +25,6 @@ namespace sge
 		{
 		}
 
-		////////////////
-		///   Data   ///
-	public:
-
-		Scalar _values[2];
-
 		///////////////////
 		///   Methods   ///
 	public:
@@ -91,8 +85,8 @@ namespace sge
 			return std::acos(Vec2::dot(a.normalized(), b.normalized()));
 		}
 
-		////////////////////////////
-		///   Static Instances   ///
+		///////////////////
+		///   Statics   ///
 	public:
 
 		static const Vec2 zero;
@@ -199,5 +193,11 @@ namespace sge
 		{
 			return lhs.x() != rhs.x() || lhs.y() != rhs.y();
 		}
+
+		//////////////////
+		///   Fields   ///
+	private:
+
+		Scalar _values[2];
 	};
 }

@@ -36,17 +36,8 @@ namespace sge
 			this->_x = normAxis.x() * sinHalfAngle;
 			this->_y = normAxis.y() * sinHalfAngle;
 			this->_z = normAxis.z() * sinHalfAngle;
-			this->_w = std::cos(angle * Scalar { 0.5 });
+			this->_w = std::cos(angle * Scalar{ 0.5 });
 		}
-
-		////////////////
-		///   Data   ///
-	private:
-
-		Scalar _x;
-		Scalar _y;
-		Scalar _z;
-		Scalar _w;
 
 		///////////////////
 		///   Methods   ///
@@ -136,5 +127,14 @@ namespace sge
 		{
 			return lhs.x() != rhs.x() || lhs.y() != rhs.y() || lhs.z() != rhs.z();
 		}
+
+		////////////////
+		///   Data   ///
+	private:
+
+		Scalar _x;
+		Scalar _y;
+		Scalar _z;
+		Scalar _w;
 	};
 }
