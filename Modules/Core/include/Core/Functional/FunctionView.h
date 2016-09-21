@@ -22,6 +22,9 @@ namespace sge
 			_func = &func;
 		}
 
+		template <typename FRet, typename FArgs>
+		FunctionView(FRet(&)(FArgs...)) = delete;
+
 		FunctionView(const FunctionView& copy) = default;
 		FunctionView(FunctionView&& move) = default;
 
