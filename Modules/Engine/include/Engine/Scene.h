@@ -61,7 +61,7 @@ namespace sge
 		ComponentInstance<T> new_component(EntityID entity)
 		{
 			auto instance = this->new_component(entity, sge::get_type<T>(), nullptr);
-			return{ intstance.identity(), static_cast<T*>(instance.object()) };
+			return{ instance.identity(), static_cast<T*>(instance.object()) };
 		}
 
 		ComponentInstance<void> get_component(ComponentID id);
@@ -143,9 +143,9 @@ namespace sge
 				// If the component exists for this entity
 				if (identity.entity == entity)
 				{
-					OptionalComponent<C> result{
+					comp::Optional<C> result{
 						identity,
-						static_cast<C*>(_component_objects[instance.id])
+						static_cast<C*>(_component_objects[identity.id])
 					};
 
 					return select(stde::type_sequence<RestS...>{}, f, entity, prev..., result);

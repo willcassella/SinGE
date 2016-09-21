@@ -122,16 +122,16 @@ namespace sge
 			: _id{ NULL_COMPONENT }
 		{
 		}
-		Handle(Handle<const C> copy)
-			: id{ copy.id() }
+		Handle(const Handle<const C>& copy)
+			: _id{ copy.id() }
 		{
 		}
-		Handle(ComponentInstance<C> instance)
-			: id{ instance.id() }
+		Handle(ComponentInstance<std::remove_const_t<C>> instance)
+			: _id{ instance.id() }
 		{
 		}
 		Handle(ComponentInstance<const C> instance)
-			: id{ instance.id() }
+			: _id{ instance.id() }
 		{
 		}
 
