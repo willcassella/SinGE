@@ -582,7 +582,7 @@ namespace sge
 		auto set_init() -> std::enable_if_t<std::is_default_constructible<F>::value>
 		{
 			result.init = [](void* addr) -> void {
-				new(addr) F{};
+				new(addr) F();
 			};
 		}
 
@@ -595,7 +595,7 @@ namespace sge
 		auto set_copy_init() -> std::enable_if_t<std::is_copy_constructible<F>::value>
 		{
 			result.copy_init = [](void* addr, const void* copy) -> void {
-				new(addr) F{ *static_cast<const F*>(copy) };
+				new(addr) F(*static_cast<const F*>(copy));
 			};
 		}
 
@@ -608,7 +608,7 @@ namespace sge
 		auto set_move_init() -> std::enable_if_t<std::is_move_constructible<F>::value>
 		{
 			result.move_init = [](void* addr, void* move) -> void {
-				new(addr) T{ std::move(*static_cast<T*>(move)) };
+				new(addr) T(std::move(*static_cast<T*>(move)));
 			};
 		}
 
