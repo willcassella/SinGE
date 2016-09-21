@@ -72,25 +72,29 @@
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;C:\sdk\glew-2.0.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\sdk\glew-2.0.0\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;C:\sdk\glew-2.0.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\sdk\glew-2.0.0\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;C:\sdk\glew-2.0.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\sdk\glew-2.0.0\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;C:\sdk\glew-2.0.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\sdk\glew-2.0.0\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -103,6 +107,9 @@
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>glew.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -115,6 +122,9 @@
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>glew.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -129,6 +139,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>glew.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
@@ -147,6 +158,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>glew.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
@@ -154,7 +166,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\GLRender\config.h" />
-    <ClInclude Include="include\GLRender\GLRender.h" />
+    <ClInclude Include="include\GLRender\GLMaterial.h" />
+    <ClInclude Include="include\GLRender\GLRenderSystem.h" />
+    <ClInclude Include="include\GLRender\GLShader.h" />
+    <ClInclude Include="include\GLRender\GLStaticMesh.h" />
+    <ClInclude Include="include\GLRender\GLTexture.h" />
+    <ClInclude Include="private\glew.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\Core\Core.vcxproj">
@@ -165,7 +182,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\GLRender.cpp" />
+    <ClCompile Include="source\GLMaterial.cpp" />
+    <ClCompile Include="source\GLRenderSystem.cpp" />
+    <ClCompile Include="source\GLShader.cpp" />
+    <ClCompile Include="source\GLStaticMesh.cpp" />
+    <ClCompile Include="source\GLTexture.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
