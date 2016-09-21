@@ -18,17 +18,20 @@ struct System
 	}
 };
 
-void lookAtVec3(sge::Any vec)
+void print_vec3(sge::Any vec)
 {
-
+	std::cout << sge::to_string(*static_cast<const sge::Vec3*>(vec.get_value())) << std::endl;
 }
 
 void testReflection()
 {
 	sge::CTransform3D transform;
 	sge::ComponentContext ctx{ sge::ComponentIdentity{ 5, sge::WORLD_ENTITY } };
+	sge::Vec3 target_position{ 5, 6, 7 };
 
-	sge::get_type(transform).get_property("local_position", &transform, &ctx, lookAtVec3);
+	sge::get_type(transform).get_property("local_position", &transform, &ctx, &print_vec3);
+	sge::get_type(transform).set_property("local_position", &transform, &ctx, &target_position);
+	sge::get_type(transform).get_property("local_position", &transform, &ctx, &print_vec3);
 }
 
 int main()

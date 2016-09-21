@@ -18,3 +18,6 @@ add_subdirectory(Modules/Core)
 
 # Add Engine project
 add_subdirectory(Modules/Engine)
+
+# Add Client project
+add_subdirectory(Runtimes/Client)
