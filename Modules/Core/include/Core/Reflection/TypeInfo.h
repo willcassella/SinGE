@@ -17,6 +17,13 @@ namespace sge
 
 	struct TypeInfo
 	{
+		using InitFn = void(void* addr);
+		using CopyInitFn = void(void* addr, const void* copy);
+		using MoveInitFn = void(void* addr, void* move);
+		using CopyAssignFn = void(void* self, const void* copy);
+		using MoveAssignFn = void(void* self, void* move);
+		using DropFn = void(void* self);
+
 		struct Data
 		{
 			////////////////////////
@@ -44,12 +51,12 @@ namespace sge
 			std::string name;
 			size_t size;
 			size_t alignment;
-			void(*init)(void* self);
-			void(*copy_init)(void* self, const void* copy);
-			void(*move_init)(void* self, void* move);
-			void(*copy_assign)(void* self, const void* copy);
-			void(*move_assign)(void* self, void* move);
-			void(*drop)(void* self);
+			InitFn* init;
+			CopyInitFn* copy_init;
+			MoveInitFn* move_init;
+			CopyAssignFn* copy_assign;
+			MoveAssignFn* move_assign;
+			DropFn* drop;
 			const TypeInfo* base;
 			std::unordered_map<const InterfaceInfo*, const void*> interfaces;
 			std::map<std::string, PropertyInfo> properties;
@@ -105,6 +112,12 @@ namespace sge
 			return _data.init != nullptr;
 		}
 
+		/* Returns a pointer to the init function for this type. */
+		InitFn* get_init() const
+		{
+			return _data.init;
+		}
+
 		/* Default-initializes an instance of this type at the given address. */
 		void init(void* self) const
 		{
@@ -115,6 +128,12 @@ namespace sge
 		bool has_copy_init() const
 		{
 			return _data.copy_init != nullptr;
+		}
+
+		/* Returns a pointer to the copy-init function for this type. */
+		CopyInitFn* get_copy_init() const
+		{
+			return _data.copy_init;
 		}
 
 		/* Copy-initializes an instance of this type from the given instance, at the given addess. */
@@ -129,6 +148,12 @@ namespace sge
 			return _data.move_init != nullptr;
 		}
 
+		/* Returns a pointer to the move-init function for this type. */
+		MoveInitFn* get_move_init() const
+		{
+			return _data.move_init;
+		}
+
 		/* Move-initializes an instance of this type from the given instance, at the given address. */
 		void move_init(void* self, void* move) const
 		{
@@ -139,6 +164,12 @@ namespace sge
 		bool has_copy_assign() const
 		{
 			return _data.copy_assign != nullptr;
+		}
+
+		/* Returns a pointer to the copy-assign function for this type. */
+		CopyAssignFn* get_copy_assign() const
+		{
+			return _data.copy_assign;
 		}
 
 		/* Copy-assigns an instance of this type to the given instance. */
@@ -153,6 +184,12 @@ namespace sge
 			return _data.move_assign != nullptr;
 		}
 
+		/* Returns a pointer to the move-assign function for this type. */
+		MoveAssignFn* get_move_assign() const
+		{
+			return _data.move_assign;
+		}
+
 		/* Move-assigns an instance of this tyep from the given instance. */
 		void move_assign(void* self, void* move) const
 		{
@@ -163,6 +200,12 @@ namespace sge
 		bool has_drop() const
 		{
 			return _data.drop != nullptr;
+		}
+
+		/* Returns a pointer to the drop function for this type. */
+		DropFn* get_drop() const
+		{
+			return _data.drop;
 		}
 
 		/* Drops an instance of this type. */

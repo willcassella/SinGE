@@ -24,8 +24,22 @@ namespace sge
 		template <typename T>
 		AnyMut(T&& value) = delete;
 
-		AnyMut(const AnyMut& copy) = default;
-		AnyMut(AnyMut&& move) = default;
+		AnyMut(AnyMut& copy)
+			: _value{ copy._value }, _type{ copy._type }
+		{
+		}
+		AnyMut(const AnyMut& copy)
+			: _value{ copy._value }, _type{ copy._type }
+		{
+		}
+		AnyMut(AnyMut&& move)
+			: _value{ move._value }, _type{ move._type }
+		{
+		}
+		AnyMut(const AnyMut&& move)
+			: _value{ move._value }, _type{ move._type }
+		{
+		}
 
 		///////////////////
 		///   Methods   ///
@@ -65,11 +79,25 @@ namespace sge
 		template <typename T>
 		Any(T&& value) = delete;
 
-		Any(const Any& copy) = default;
-		Any(Any&& move) = default;
-
 		Any(AnyMut any)
 			: _value{ any.get_value() }, _type{ &any.get_type() }
+		{
+		}
+
+		Any(Any& copy)
+			: _value{ copy._value }, _type{ copy._type }
+		{
+		}
+		Any(const Any& copy)
+			: _value{ copy._value }, _type{ copy._type }
+		{
+		}
+		Any(Any&& move)
+			: _value{ move._value }, _type{ move._type }
+		{
+		}
+		Any(const Any&& move)
+			: _value{ move._value }, _type{ move._type }
 		{
 		}
 

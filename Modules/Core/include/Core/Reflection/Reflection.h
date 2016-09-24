@@ -38,6 +38,17 @@ namespace sge
 		};
 
 		template <>
+		struct SGE_CORE_API GetType< bool >
+		{
+			static const TypeInfo type_info;
+
+			static const TypeInfo& get_type(...)
+			{
+				return type_info;
+			}
+		};
+
+		template <>
 		struct SGE_CORE_API GetType < char >
 		{
 			static const TypeInfo type_info;

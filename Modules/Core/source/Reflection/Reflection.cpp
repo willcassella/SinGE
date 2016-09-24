@@ -29,6 +29,7 @@ namespace sge
 	namespace specialized
 	{
 		const TypeInfo GetType<void>::type_info = build_void_type_info();
+		const TypeInfo GetType<bool>::type_info = build_primitive_type_info<bool>("bool");
 		const TypeInfo GetType<char>::type_info = build_primitive_type_info<char>("char");
 		const TypeInfo GetType<byte>::type_info = build_primitive_type_info<byte>("byte");
 		const TypeInfo GetType<int16>::type_info = build_primitive_type_info<int16>("int16");
