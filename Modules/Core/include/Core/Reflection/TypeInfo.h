@@ -1,28 +1,47 @@
 // TypeInfo.h
 #pragma once
 
-#include <map>
-#include <unordered_map>
-#include "PropertyInfo.h"
-#include "FieldInfo.h"
+#include <cstdint>
+#include <string>
+#include <typeinfo>
+#include "../Functional/FunctionView.h"
 
 namespace sge
 {
-	struct TypeInfo;
-
 	struct InterfaceInfo;
+	struct ConstructorInfo;
+	struct PropertyInfo;
+	struct FieldInfo;
 
-	template <typename T>
-	struct TypeInfoBuilder;
+	enum TypeFlags
+	{
+		/**
+		 * \brief This type has no special flags.
+		 */
+		TF_NONE = 0,
+
+		/**
+		 * \brief This type is a native (C++) type.
+		 */
+		TF_NATIVE = (1 << 0),
+
+		/**
+		 * \brief This type is a native (C++) primitive type.
+		 */
+		TF_PRIMITIVE = (1 << 1) | TF_NATIVE,
+
+		/**
+		 * \brief This type may not be constructed by scripts.
+		 */
+		TF_SCRIPT_NOCONSTRUCT = (1 << 2) | TF_NATIVE,
+	};
 
 	struct TypeInfo
 	{
-		using InitFn = void(void* addr);
-		using CopyInitFn = void(void* addr, const void* copy);
-		using MoveInitFn = void(void* addr, void* move);
-		using CopyAssignFn = void(void* self, const void* copy);
-		using MoveAssignFn = void(void* self, void* move);
-		using DropFn = void(void* self);
+		using ConstructorEnumeratorFn = void(std::size_t argc, const ConstructorInfo& ctor);
+		using NamedConstructorEnumeratorFn = void(const std::string& name, const ConstructorInfo& ctor);
+		using PropertyEnumeratorFn = void(const std::string& name, const PropertyInfo& prop);
+		using FieldEnumeratorFn = void(const std::string& name, const FieldInfo& field);
 
 		struct Data
 		{
@@ -31,50 +50,28 @@ namespace sge
 		public:
 
 			Data(std::string name)
-				: name{ std::move(name) }
+				: flags(TF_NONE), name(std::move(name)), size(0), alignment(0), base(nullptr), native_type_info(nullptr)
 			{
-				size = 0;
-				alignment = 0;
-				init = nullptr;
-				copy_init = nullptr;
-				move_init = nullptr;
-				copy_assign = nullptr;
-				move_assign = nullptr;
-				drop = nullptr;
-				base = nullptr;
 			}
 
 			//////////////////
 			///   Fields   ///
 		public:
 
+			TypeFlags flags;
 			std::string name;
-			size_t size;
-			size_t alignment;
-			InitFn* init;
-			CopyInitFn* copy_init;
-			MoveInitFn* move_init;
-			CopyAssignFn* copy_assign;
-			MoveAssignFn* move_assign;
-			DropFn* drop;
+			std::size_t size;
+			std::size_t alignment;
 			const TypeInfo* base;
-			std::unordered_map<const InterfaceInfo*, const void*> interfaces;
-			std::map<std::string, PropertyInfo> properties;
-			std::map<std::string, FieldInfo> fields;
+			const std::type_info* native_type_info;
 		};
 
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		TypeInfo(Data data)
+		explicit TypeInfo(Data data)
 			: _data(std::move(data))
-		{
-		}
-
-		template <typename T>
-		TypeInfo(TypeInfoBuilder<T>&& builder)
-			: TypeInfo{ std::move(builder).result }
 		{
 		}
 
@@ -82,214 +79,204 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		/* Returns the name of this type. */
+		/**
+		 * \brief Returns the flags associated with this type.
+		 */
+		TypeFlags flags() const
+		{
+			return _data.flags;
+		}
+
+		/**
+		 * \brief Returns the name of this type.
+		 */
 		const std::string& name() const
 		{
 			return _data.name;
 		}
 
-		/* Returns the size (in bytes) of this type. */
+		/**
+		 * \brief Returns the size (in bytes) of this type.
+		 */
 		std::size_t size() const
 		{
 			return _data.size;
 		}
 
-		/* Returns whether this type occupies any space. */
-		bool is_empty() const
-		{
-			return size() == 0;
-		}
-
-		/* Returns the alignment requirements of this type. */
+		/**
+		 * \brief Returns the alignment requirements of this type.
+		 */
 		std::size_t alignment() const
 		{
 			return _data.alignment;
 		}
 
-		/* Returns whether this type supports default-initialization. */
-		bool has_init() const
-		{
-			return _data.init != nullptr;
-		}
-
-		/* Returns a pointer to the init function for this type. */
-		InitFn* get_init() const
-		{
-			return _data.init;
-		}
-
-		/* Default-initializes an instance of this type at the given address. */
-		void init(void* self) const
-		{
-			_data.init(self);
-		}
-
-		/* Returns whether this type supports copy-initialization. */
-		bool has_copy_init() const
-		{
-			return _data.copy_init != nullptr;
-		}
-
-		/* Returns a pointer to the copy-init function for this type. */
-		CopyInitFn* get_copy_init() const
-		{
-			return _data.copy_init;
-		}
-
-		/* Copy-initializes an instance of this type from the given instance, at the given addess. */
-		void copy_init(void* self, const void* copy) const
-		{
-			return _data.copy_init(self, copy);
-		}
-
-		/* Returns whether this type supports move-initialization. */
-		bool has_move_init() const
-		{
-			return _data.move_init != nullptr;
-		}
-
-		/* Returns a pointer to the move-init function for this type. */
-		MoveInitFn* get_move_init() const
-		{
-			return _data.move_init;
-		}
-
-		/* Move-initializes an instance of this type from the given instance, at the given address. */
-		void move_init(void* self, void* move) const
-		{
-			_data.move_init(self, move);
-		}
-
-		/* Returns whether this type supports copy-assignment. */
-		bool has_copy_assign() const
-		{
-			return _data.copy_assign != nullptr;
-		}
-
-		/* Returns a pointer to the copy-assign function for this type. */
-		CopyAssignFn* get_copy_assign() const
-		{
-			return _data.copy_assign;
-		}
-
-		/* Copy-assigns an instance of this type to the given instance. */
-		void copy_assign(void* self, const void* copy) const
-		{
-			_data.copy_assign(self, copy);
-		}
-
-		/* Returns whether this type supports move-assignment. */
-		bool has_move_assign() const
-		{
-			return _data.move_assign != nullptr;
-		}
-
-		/* Returns a pointer to the move-assign function for this type. */
-		MoveAssignFn* get_move_assign() const
-		{
-			return _data.move_assign;
-		}
-
-		/* Move-assigns an instance of this tyep from the given instance. */
-		void move_assign(void* self, void* move) const
-		{
-			_data.move_assign(self, move);
-		}
-
-		/* Returns whether this type supports dropping. */
-		bool has_drop() const
-		{
-			return _data.drop != nullptr;
-		}
-
-		/* Returns a pointer to the drop function for this type. */
-		DropFn* get_drop() const
-		{
-			return _data.drop;
-		}
-
-		/* Drops an instance of this type. */
-		void drop(void* self) const
-		{
-			_data.drop(self);
-		}
-
-		/* Returns the base-type of this type (if one exists). */
-		const TypeInfo* get_base() const
+		/**
+		 * \brief Returns a pointer to the base type (if applicable) of this type.
+		 */
+		const TypeInfo* base() const
 		{
 			return _data.base;
 		}
 
-		/* Returns an iterator at the first property of this type.
-		* NOTE: This does not include base class properties. */
-		auto properties_begin() const
+		/**
+		 * \brief Returns whether this type occupies any space.
+		 */
+		bool is_empty() const
 		{
-			return _data.properties.begin();
+			return size() == 0;
 		}
 
-		/* Returns an iterator after the last property of this type. */
-		auto properties_end() const
+		/**
+		 * \brief Returns whether this type is a native (C++) type.
+		 */
+		bool is_native() const
 		{
-			return _data.properties.end();
+			return (_data.flags & TF_NATIVE) != 0;
 		}
 
-		/* Searches for a property on this type with the given name.
-		* Returns a pointer to the property if one was found, returns 'null' otherwise. */
-		const PropertyInfo* find_property(const char* name) const
+		/**
+		 * \brief Returns whether this type is a native (C++) primitive type.
+		 */
+		bool is_primitive() const
 		{
-			auto prop = _data.properties.find(name);
-
-			if (prop == _data.properties.end())
-			{
-				return nullptr;
-			}
-
-			return &prop->second;
+			return (_data.flags & TF_PRIMITIVE) != 0;
 		}
 
-		/* Searches for a property on this type with the given name, and sets the value.
-		* Returns 'true' if the property was found and set, 'false' otherwise. */
-		bool set_property(const char* name, void* object, void* context, const void* value) const
+		/**
+		 * \brief Returns whether this type supports default-initializiation.
+		 */
+		virtual bool has_init() const = 0;
+
+		/**
+		 * \brief Initializes an instance of this type.
+		 * \param addr The address to initialize the instance at.
+		 */
+		virtual void init(void* addr) const = 0;
+
+		/**
+		 * \brief Returns whether this type supports copy-initialization.
+		 */
+		virtual bool has_copy_init() const = 0;
+
+		/**
+		 * \brief Copy-initializes an instance of this type.
+		 * \param addr The address to initialize the instance at.
+		 * \param copy The instance to copy-initialize from.
+		 */
+		virtual void copy_init(void* addr, const void* copy) const = 0;
+
+		/**
+		 * \brief Returns whether this type supports move-initialization.
+		 */
+		virtual bool has_move_init() const = 0;
+
+		/**
+		 * \brief Move-initializes an instance of this type.
+		 * \param addr The address to initialize the instance at.
+		 * \param move The instance to move-initialize from.
+		 */
+		virtual void move_init(void* addr, void* move) const = 0;
+
+		/**
+		 * \brief Returns whether this type supports copy-assignment.
+		 */
+		virtual bool has_copy_assign() const = 0;
+
+		/**
+		 * \brief Copy-assigns an instance of this type.
+		 * \param self The instance to copy-assign to.
+		 * \param copy The instance to copy-assign from.
+		 */
+		virtual void copy_assign(void* self, const void* copy) const = 0;
+
+		/**
+		 * \brief Returns whether this type supports move-assignment.
+		 */
+		virtual bool has_move_assign() const = 0;
+
+		/**
+		 * \brief Move-assigns an instance of this type.
+		 * \param self The instance to move-assign to.
+		 * \param move The instance to move-assign from.
+		 */
+		virtual void move_assign(void* self, void* move) const = 0;
+
+		/**
+		 * \brief Returns whether this type supports dropping (destruction).
+		 */
+		virtual bool has_drop() const = 0;
+
+		/**
+		 * \brief Drops (destroys) an instance of this type.
+		 * \param self The instance to drop.
+		 */
+		virtual void drop(void* self) const = 0;
+
+		/**
+		 * \brief Searches for an unnamed constructor with the given number of arguments on this type.
+		 * \param argc The arity of the constructor to search for.
+		 * \return A pointer to the information for the constructor if found, 'nullptr' if not.
+		 */
+		virtual const ConstructorInfo* find_constructor(std::size_t argc) const = 0;
+
+		/**
+		 * \brief Enumerates all unnamed constructors on this type.
+		 * \param enumerator A function to call with the arity and information for the constructor at each iteration.
+		 */
+		virtual void enumerate_constructors(FunctionView<ConstructorEnumeratorFn> enumerator) const = 0;
+
+		/**
+		 * \brief Searches for a named constructor with the given name on this type.
+		 * \param name The name of the constructor to search for.
+		 * \return A pointer to the information for the constructor if found, 'nullptr' otherwise.
+		 */
+		virtual const ConstructorInfo* find_named_constructor(const char* name) const = 0;
+
+		/**
+		 * \brief Enumerates all named constructors of this type.
+		 * \param enumerator A functoin to call with the name and information for the constructor at each iteration.
+		 */
+		virtual void enumerate_named_constructors(FunctionView<NamedConstructorEnumeratorFn> enumerator) const = 0;
+
+		/**
+		 * \brief Searches for a property with the given name on this type.
+		 * \param name The name of the property to search for.
+		 * \return A pointer to the information for the property if found, 'nullptr' otherwise.
+		 */
+		virtual const PropertyInfo* find_property(const char* name) const = 0;
+
+		/**
+		 * \brief Enumerates all properties of this type.
+		 * \param enumerator A function to call with the name and information for the property at each iteration.
+		 */
+		virtual void enumerate_properties(FunctionView<PropertyEnumeratorFn> enumerator) const = 0;
+
+		/**
+		 * \brief Searches for a field with the given name on this type.
+		 * \param name The name of the field to search for.
+		 * \return A pointer to the information of the field if found, 'nullptr' otherwise.
+		 */
+		virtual const FieldInfo* find_field(const char* name) const = 0;
+
+		/**
+		 * \brief Enumerates all fields of this type.
+		 * \param enumerator A function to call with the name and information of the field at each iteration.
+		 */
+		virtual void enumerate_fields(FunctionView<FieldEnumeratorFn> enumerator) const = 0;
+
+		/////////////////////
+		///   Operators   ///
+	public:
+
+		static friend bool operator==(const TypeInfo& lhs, const TypeInfo& rhs)
 		{
-			auto prop = _data.properties.find(name);
-
-			if (prop == _data.properties.end() || prop->second.is_read_only())
-			{
-				return false;
-			}
-
-			prop->second.set(object, context, value);
-			return true;
+			return &lhs == &rhs ||
+				lhs._data.native_type_info && rhs._data.native_type_info && *lhs._data.native_type_info == *rhs._data.native_type_info;
 		}
-
-		/* Searches for ap property on this type with the given name,and gets the value.
-		* Returns 'true' of the property was found and gotten, 'false' otherwise. */
-		bool get_property(const char* name, const void* object, const void* context, PropertyInfo::GetterOutFn out) const
+		static friend bool operator!=(const TypeInfo& lhs, const TypeInfo& rhs)
 		{
-			auto prop = _data.properties.find(name);
-
-			if (prop == _data.properties.end())
-			{
-				return false;
-			}
-
-			prop->second.get(object, context, out);
-			return true;
-		}
-
-		/* Searches for the given property name, and runs the given function in between the getter and setter.
-		* Returns 'true' if the property was found and mutated, 'false' otherwise. */
-		bool mutate_property(const char* name, void* object, void* context, PropertyInfo::MutatorFn mutator) const
-		{
-			auto prop = _data.properties.find(name);
-
-			if (prop == _data.properties.end() || prop->second.is_read_only())
-			{
-				return false;
-			}
-
-			prop->second.mutate(object, context, mutator);
-			return true;
+			return !(lhs == rhs);
 		}
 
 		//////////////////

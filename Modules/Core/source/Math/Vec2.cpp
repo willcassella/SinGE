@@ -3,11 +3,12 @@
 #include "../../include/Core/Math/Vec2.h"
 
 SGE_REFLECT_TYPE(sge::Vec2)
-.implements<sge::IToString>()
-.property("x", &sge::Vec2::x, &sge::Vec2::x, PF_SERIALIZED)
-.property("y", &sge::Vec2::y, &sge::Vec2::y, PF_SERIALIZED)
-.property("length", &sge::Vec2::length, nullptr)
-.property("normalized", &sge::Vec2::normalized, nullptr);
+.implements<IToString>()
+.constructor<Scalar, Scalar>()
+.property("x", &Vec2::x, &Vec2::x, PF_SERIALIZED)
+.property("y", &Vec2::y, &Vec2::y, PF_SERIALIZED)
+.property("length", &Vec2::length, nullptr)
+.property("normalized", &Vec2::normalized, nullptr);
 
 namespace sge
 {

@@ -41,7 +41,7 @@ namespace sge
 
 		template <class I>
 		InterfaceInfo(InterfaceInfoBuilder<I>&& builder)
-			: InterfaceInfo{ std::move(builder).result }
+			: InterfaceInfo(std::move(builder).interface_data)
 		{
 		}
 

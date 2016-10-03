@@ -1,10 +1,8 @@
 // Reflection.h
 #pragma once
 
-#include <map>
 #include "../STDE/TypeTraits.h"
-#include "Any.h"
-#include "TypeInfo.h"
+#include "NativeTypeInfo.h"
 #include "InterfaceInfo.h"
 
 namespace sge
@@ -15,12 +13,12 @@ namespace sge
 		template <typename T>
 		struct GetType
 		{
-			static const TypeInfo& get_type()
+			static const auto& get_type()
 			{
 				return T::type_info;
 			}
 
-			static const TypeInfo& get_type(const T& value)
+			static const auto& get_type(const T& value)
 			{
 				return value.get_type();
 			}
@@ -29,9 +27,9 @@ namespace sge
 		template <>
 		struct SGE_CORE_API GetType< void >
 		{
-			static const TypeInfo type_info;
+			static const NativeTypeInfo type_info;
 
-			static const TypeInfo& get_type(...)
+			static const NativeTypeInfo& get_type(...)
 			{
 				return type_info;
 			}
@@ -40,9 +38,9 @@ namespace sge
 		template <>
 		struct SGE_CORE_API GetType< bool >
 		{
-			static const TypeInfo type_info;
+			static const NativeTypeInfo type_info;
 
-			static const TypeInfo& get_type(...)
+			static const NativeTypeInfo& get_type(...)
 			{
 				return type_info;
 			}
@@ -51,9 +49,9 @@ namespace sge
 		template <>
 		struct SGE_CORE_API GetType < char >
 		{
-			static const TypeInfo type_info;
+			static const NativeTypeInfo type_info;
 
-			static const TypeInfo& get_type(...)
+			static const NativeTypeInfo& get_type(...)
 			{
 				return type_info;
 			}
@@ -62,9 +60,9 @@ namespace sge
 		template <>
 		struct SGE_CORE_API GetType < byte >
 		{
-			static const TypeInfo type_info;
+			static const NativeTypeInfo type_info;
 
-			static const TypeInfo& get_type(...)
+			static const NativeTypeInfo& get_type(...)
 			{
 				return type_info;
 			}
@@ -73,9 +71,9 @@ namespace sge
 		template <>
 		struct SGE_CORE_API GetType < int16 >
 		{
-			static const TypeInfo type_info;
+			static const NativeTypeInfo type_info;
 
-			static const TypeInfo& get_type(...)
+			static const NativeTypeInfo& get_type(...)
 			{
 				return type_info;
 			}
@@ -84,9 +82,9 @@ namespace sge
 		template <>
 		struct SGE_CORE_API GetType < uint16 >
 		{
-			static const TypeInfo type_info;
+			static const NativeTypeInfo type_info;
 
-			static const TypeInfo& get_type(...)
+			static const NativeTypeInfo& get_type(...)
 			{
 				return type_info;
 			}
@@ -95,9 +93,9 @@ namespace sge
 		template <>
 		struct SGE_CORE_API GetType < int32 >
 		{
-			static const TypeInfo type_info;
+			static const NativeTypeInfo type_info;
 
-			static const TypeInfo& get_type(...)
+			static const NativeTypeInfo& get_type(...)
 			{
 				return type_info;
 			}
@@ -106,9 +104,9 @@ namespace sge
 		template <>
 		struct SGE_CORE_API GetType < uint32 >
 		{
-			static const TypeInfo type_info;
+			static const NativeTypeInfo type_info;
 
-			static const TypeInfo& get_type(...)
+			static const NativeTypeInfo& get_type(...)
 			{
 				return type_info;
 			}
@@ -117,9 +115,9 @@ namespace sge
 		template <>
 		struct SGE_CORE_API GetType < int64 >
 		{
-			static const TypeInfo type_info;
+			static const NativeTypeInfo type_info;
 
-			static const TypeInfo& get_type(...)
+			static const NativeTypeInfo& get_type(...)
 			{
 				return type_info;
 			}
@@ -128,9 +126,9 @@ namespace sge
 		template <>
 		struct SGE_CORE_API GetType < uint64 >
 		{
-			static const TypeInfo type_info;
+			static const NativeTypeInfo type_info;
 
-			static const TypeInfo& get_type(...)
+			static const NativeTypeInfo& get_type(...)
 			{
 				return type_info;
 			}
@@ -139,9 +137,9 @@ namespace sge
 		template <>
 		struct SGE_CORE_API GetType < float >
 		{
-			static const TypeInfo type_info;
+			static const NativeTypeInfo type_info;
 
-			static const TypeInfo& get_type(...)
+			static const NativeTypeInfo& get_type(...)
 			{
 				return type_info;
 			}
@@ -150,9 +148,9 @@ namespace sge
 		template <>
 		struct SGE_CORE_API GetType < double > final
 		{
-			static const TypeInfo type_info;
+			static const NativeTypeInfo type_info;
 
-			static const TypeInfo& get_type(...)
+			static const NativeTypeInfo& get_type(...)
 			{
 				return type_info;
 			}
@@ -161,9 +159,25 @@ namespace sge
 		template <>
 		struct SGE_CORE_API GetType < long double >
 		{
-			static const TypeInfo type_info;
+			static const NativeTypeInfo type_info;
 
-			static const TypeInfo& get_type(...)
+			static const NativeTypeInfo& get_type(...)
+			{
+				return type_info;
+			}
+		};
+
+		template <>
+		struct SGE_CORE_API GetType < std::string >
+		{
+			static const NativeTypeInfo type_info;
+
+			static const NativeTypeInfo& get_type()
+			{
+				return type_info;
+			}
+
+			static const NativeTypeInfo& get_type(const std::string& /*value*/)
 			{
 				return type_info;
 			}
@@ -183,37 +197,55 @@ namespace sge
 	}
 
 	template <typename T>
-	const TypeInfo& get_type()
+	const auto& get_type()
 	{
 		return specialized::GetType<T>::get_type();
 	}
 
 	template <typename T>
-	const TypeInfo& get_type(const T& value)
+	const auto& get_type(const T& value)
 	{
 		return specialized::GetType<T>::get_type(value);
 	}
 
+	template <typename T, typename ... ConvertedArgs>
+	void constructor_wrapper(stde::type_sequence<>, void* addr, const ArgAny* /*args*/, const ConvertedArgs&... realArgs)
+	{
+		new (addr) T(realArgs...);
+	}
+
+	template <typename T, typename ArgT, typename ... ArgTs, typename ... ConvertedArgs>
+	void constructor_wrapper(stde::type_sequence<ArgT, ArgTs...>, void* addr, const ArgAny* args, const ConvertedArgs&... realArgs)
+	{
+		constructor_wrapper<T>(
+			stde::type_sequence<ArgTs...>{},
+			addr,
+			args + 1,
+			realArgs...,
+			args->get<ArgT>());
+	}
+
 	template <typename T>
-	struct TypeInfoBuilder
+	struct NativeTypeInfoBuilder
 	{
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		TypeInfoBuilder(std::string name)
-			: result{ std::move(name) }
+		NativeTypeInfoBuilder(std::string name)
+			: base_type_data(std::move(name))
 		{
 			if (std::is_empty<T>::value)
 			{
-				result.size = 0;
+				base_type_data.size = 0;
 			}
 			else
 			{
-				result.size = sizeof(T);
+				base_type_data.size = sizeof(T);
 			}
 
-			result.alignment = alignof(T&);
+			base_type_data.alignment = alignof(T&);
+			base_type_data.native_type_info = &typeid(T);
 
 			this->set_init<T>();
 			this->set_copy_init<T>();
@@ -227,25 +259,61 @@ namespace sge
 		///   Methods   ///
 	public:
 
+		NativeTypeInfoBuilder&& flags(TypeFlags flags)
+		{
+			base_type_data.flags = flags;
+			return std::move(*this);
+		}
+
 		template <typename BaseT>
-		TypeInfoBuilder&& extends()
+		NativeTypeInfoBuilder&& extends()
 		{
 			static_assert(std::is_base_of<BaseT, T>::value, "The given type is not actually a base of this type.");
-			result.base = &get_type<BaseT>();
+			base_type_data.base = &sge::get_type<BaseT>();
 			return std::move(*this);
 		}
 
 		template <typename InterfaceT>
-		TypeInfoBuilder&& implements()
+		NativeTypeInfoBuilder&& implements()
 		{
 			static InterfaceT vtable = InterfaceT::template get_vtable<T>();
-			result.interfaces[&get_interface<InterfaceT>()] = &vtable;
+			type_data.interfaces[&sge::get_interface<InterfaceT>()] = &vtable;
+			return std::move(*this);
+		}
+
+		template <typename ArgT, typename ... ArgTs>
+		NativeTypeInfoBuilder&& constructor()
+		{
+			ConstructorInfo::Data baseCData;
+			baseCData.arg_types = { &sge::get_type<ArgT>(), &sge::get_type<ArgTs>()... };
+
+			NativeConstructorInfo::Data cData;
+			cData.constructor = [](void* addr, const ArgAny* args) {
+				sge::constructor_wrapper<T>(stde::type_sequence<ArgT, ArgTs...>{}, addr, args);
+			};
+
+			type_data.constructors.insert(std::make_pair(sizeof...(ArgTs)+1, NativeConstructorInfo{ std::move(baseCData), std::move(cData) }));
+			return std::move(*this);
+		}
+
+		template <typename ... ArgTs>
+		NativeTypeInfoBuilder&& named_constructor(const char* name)
+		{
+			ConstructorInfo::Data baseCData;
+			baseCData.arg_types = { &sge::get_type<ArgTs>()... };
+
+			NativeConstructorInfo::Data cData;
+			cData.constructor = [](void* addr, const ArgAny* args) {
+				sge::constructor_wrapper<T>(stde::type_sequence<ArgTs...>{}, addr, args);
+			};
+
+			type_data.named_constructors.insert(std::make_pair(name, NativeConstructorInfo{ std::move(baseCData), std::move(cData) }));
 			return std::move(*this);
 		}
 
 		/* Creates a property with a generic getter and generic setter. */
 		template <typename GetFn, typename SetFn>
-		TypeInfoBuilder&& property(
+		NativeTypeInfoBuilder&& property(
 			const char* name,
 			GetFn getter,
 			SetFn setter,
@@ -263,13 +331,13 @@ namespace sge
 
 			auto adaptedGetter = adapt_function_getter(getter);
 			auto adaptedSetter = adapt_function_setter(setter);
-			create_property<PropT>(name, adaptedGetter, adaptedSetter, flags, &get_type<ContextT>());
+			create_property<PropT>(name, adaptedGetter, adaptedSetter, flags, &sge::get_type<ContextT>());
 			return std::move(*this);
 		}
 
 		/* Creates a property with a function getter and no setter. */
 		template <typename GetFn>
-		TypeInfoBuilder&& property(
+		NativeTypeInfoBuilder&& property(
 			const char* name,
 			GetFn getter,
 			std::nullptr_t /*setter*/,
@@ -280,13 +348,13 @@ namespace sge
 			using ContextT = std::remove_const_t<std::remove_pointer_t<typename GetFnTraits::arg_types::template at<1>>>;
 
 			auto adaptedGetter = adapt_function_getter(getter);
-			create_readonly_property<PropT>(name, adaptedGetter, flags, &get_type<ContextT>());
+			create_readonly_property<PropT>(name, adaptedGetter, flags, &sge::get_type<ContextT>());
 			return std::move(*this);
 		}
 
 		/* Creates a property with a method getter and setter. */
 		template <typename GetRetT, typename SetRetT, typename SetArgT>
-		TypeInfoBuilder&& property(
+		NativeTypeInfoBuilder&& property(
 			const char* name,
 			GetRetT(T::*getter)()const,
 			SetRetT(T::*setter)(SetArgT),
@@ -303,7 +371,7 @@ namespace sge
 
 		/* Creates a property with a method getter and no setter. */
 		template <typename GetRetT>
-		TypeInfoBuilder&& property(
+		NativeTypeInfoBuilder&& property(
 			const char* name,
 			GetRetT(T::*getter)()const,
 			std::nullptr_t /*setter*/,
@@ -318,7 +386,7 @@ namespace sge
 
 		/* Creates a property with a method getter and setter, where the getter requires a context. */
 		template <typename GetRetT, typename GetContextT, typename SetRetT, typename SetArgT>
-		TypeInfoBuilder&& property(
+		NativeTypeInfoBuilder&& property(
 			const char* name,
 			GetRetT(T::*getter)(GetContextT)const,
 			SetRetT(T::*setter)(SetArgT),
@@ -330,13 +398,13 @@ namespace sge
 
 			auto adaptedGetter = adapt_method_getter(getter);
 			auto adaptedSetter = adapt_method_setter(setter);
-			create_property<PropT>(name, getter, setter, flags, &get_type<ContextT>());
+			create_property<PropT>(name, getter, setter, flags, &sge::get_type<ContextT>());
 			return std::move(*this);
 		}
 
 		/* Creates a property with a method getter and no setter, where the getter requires a context. */
 		template <typename GetRetT, typename GetContextT>
-		TypeInfoBuilder&& property(
+		NativeTypeInfoBuilder&& property(
 			const char* name,
 			GetRetT(T::*getter)(GetContextT)const,
 			std::nullptr_t /*setter*/,
@@ -346,13 +414,13 @@ namespace sge
 			using ContextT = std::decay_t<GetContextT>;
 
 			auto adaptedGetter = adapt_method_getter(getter);
-			create_readonly_property<PropT>(name, getter, flags, &get_type<ContextT>());
+			create_readonly_property<PropT>(name, getter, flags, &sge::get_type<ContextT>());
 			return std::move(*this);
 		}
 
 		/* Creates a property with a method getter and method setter, where the setter requires a context. */
 		template <typename GetRetT, typename SetRetT, typename SetContextT, typename SetArgT>
-		TypeInfoBuilder&& property(
+		NativeTypeInfoBuilder&& property(
 			const char* name,
 			GetRetT(T::*getter)()const,
 			SetRetT(T::*setter)(SetContextT, SetArgT),
@@ -364,13 +432,13 @@ namespace sge
 
 			auto adaptedGetter = adapt_method_getter(getter);
 			auto adaptedSetter = adapt_method_setter(setter);
-			create_property<PropT>(name, adaptedGetter, adaptedSetter, flags, &get_type<ContextT>());
+			create_property<PropT>(name, adaptedGetter, adaptedSetter, flags, &sge::get_type<ContextT>());
 			return std::move(*this);
 		}
 
 		/* Creates a property with a method getter and method setter, where both require a context. */
 		template <typename GetRetT, typename GetContextT, typename SetRetT, typename SetContextT, typename SetArgT>
-		TypeInfoBuilder&& property(
+		NativeTypeInfoBuilder&& property(
 			const char* name,
 			GetRetT(T::*getter)(GetContextT)const,
 			SetRetT(T::*setter)(SetContextT, SetArgT),
@@ -383,13 +451,13 @@ namespace sge
 
 			auto adaptedGetter = adapt_method_getter(getter);
 			auto adaptedSetter = adapt_method_setter(setter);
-			create_property<PropT>(name, getter, setter, flags, &get_type<ContextT>());
+			create_property<PropT>(name, getter, setter, flags, &sge::get_type<ContextT>());
 			return std::move(*this);
 		}
 
 		/* Registers a field. */
 		template <typename FieldT>
-		TypeInfoBuilder&& field(
+		NativeTypeInfoBuilder&& field(
 			const char* name,
 			FieldT T::*field,
 			FieldFlags flags = FF_NONE)
@@ -400,7 +468,7 @@ namespace sge
 
 		/* Registers a field, and a corresponding property. */
 		template <typename FieldT>
-		TypeInfoBuilder&& field_property(
+		NativeTypeInfoBuilder&& field_property(
 			const char* name,
 			FieldT T::*field,
 			FieldFlags fieldFlags = FF_NONE,
@@ -408,18 +476,23 @@ namespace sge
 		{
 			create_field(name, field, fieldFlags);
 
-			auto propData = PropertyInfo::Data{ &get_type<FieldT>(), nullptr, propertyFlags };
-			create_field_getter(propData, field);
-			create_field_setter(propData, field);
-			create_field_mutate(propData, field);
-			result.properties.insert(std::make_pair(name, std::move(propData)));
+			PropertyInfo::Data basePropData;
+			basePropData.type = &sge::get_type<FieldT>();
+			basePropData.flags = propertyFlags;
+
+			NativePropertyInfo::Data propData;
+			propData.getter = create_field_getter(field);
+			propData.setter = create_field_setter(field);
+			propData.mutate = create_field_mutate(field);
+
+			type_data.properties.insert(std::make_pair(name, NativePropertyInfo{ std::move(basePropData), std::move(propData) }));
 
 			return std::move(*this);
 		}
 
 		/* Registers a field, and a corresponding readonly property. */
 		template <typename FieldT>
-		TypeInfoBuilder&& field_readonly_property(
+		NativeTypeInfoBuilder&& field_readonly_property(
 			const char* name,
 			FieldT T::*field,
 			FieldFlags fieldFlags = FF_NONE,
@@ -427,9 +500,14 @@ namespace sge
 		{
 			create_field(name, field, fieldFlags);
 
-			auto propData = PropertyInfo::Data{ &get_type<FieldT>(), nullptr, propertyFlags };
+			PropertyInfo::Data basePropData;
+			basePropData.type = &sge::get_type<FieldT>();
+			basePropData.flags = propertyFlags;
+
+			NativePropertyInfo::Data propData;
 			create_field_getter(propData, field);
-			result.properties.insert(std::make_pair(name, std::move(propData)));
+
+			type_data.properties.insert(std::make_pair(name, NativePropertyInfo{ std::move(basePropData), std::move(propData) }));
 
 			return std::move(*this);
 		}
@@ -450,29 +528,42 @@ namespace sge
 		template <typename PropT, typename GetFn, typename SetFn>
 		void create_property(const char* name, GetFn getter, SetFn setter, PropertyFlags flags, const TypeInfo* contextType)
 		{
-			auto propData = PropertyInfo::Data{ &get_type<PropT>(), contextType, flags };
+			PropertyInfo::Data basePropData;
+			basePropData.type = &sge::get_type<PropT>();
+			basePropData.context_type = contextType;
+			basePropData.flags = flags;
+
+			NativePropertyInfo::Data propData;
 			propData.getter = create_getter<PropT>(getter);
 			propData.setter = create_setter<PropT>(setter);
 			propData.mutate = create_mutate<PropT>(getter, setter);
 
-			result.properties.insert(std::make_pair(name, std::move(propData)));
+			type_data.properties.insert(std::make_pair(name, NativePropertyInfo{ std::move(basePropData), std::move(propData) }));
 		}
 
 		template <typename PropT, typename GetFn>
 		void create_readonly_property(const char* name, GetFn getter, PropertyFlags flags, const TypeInfo* contextType)
 		{
-			auto propData = PropertyInfo::Data{ &get_type<PropT>(), contextType, flags };
+			PropertyInfo::Data basePropData;
+			basePropData.type = &sge::get_type<PropT>();
+			basePropData.context_type = contextType;
+			basePropData.flags = flags;
+
+			NativePropertyInfo::Data propData;
 			propData.getter = create_getter<PropT>(getter);
 
-			result.properties.insert(std::make_pair(name, std::move(propData)));
+			type_data.properties.insert(std::make_pair(name, NativePropertyInfo{ std::move(basePropData), std::move(propData) }));
 		}
 
 		template <typename FieldT>
 		void create_field(const char* name, FieldT T::*field, FieldFlags flags)
 		{
-			auto info = FieldInfo{ &get_type<FieldT>(), flags, get_field_offset(field) };
+			FieldInfo::Data fieldData;
+			fieldData.flags = flags;
+			fieldData.type = &sge::get_type<FieldT>();
+			fieldData.offset = get_field_offset(field);
 
-			result.fields.insert(std::make_pair(name, std::move(info)));
+			type_data.fields.insert(std::make_pair(name, std::move(fieldData)));
 		}
 
 		template <typename GetFn>
@@ -592,7 +683,7 @@ namespace sge
 		template <typename F>
 		auto set_init() -> std::enable_if_t<std::is_default_constructible<F>::value>
 		{
-			result.init = [](void* addr) -> void {
+			type_data.init = [](void* addr) -> void {
 				new(addr) F();
 			};
 		}
@@ -605,7 +696,7 @@ namespace sge
 		template <typename F>
 		auto set_copy_init() -> std::enable_if_t<std::is_copy_constructible<F>::value>
 		{
-			result.copy_init = [](void* addr, const void* copy) -> void {
+			type_data.copy_init = [](void* addr, const void* copy) -> void {
 				new(addr) F(*static_cast<const F*>(copy));
 			};
 		}
@@ -618,7 +709,7 @@ namespace sge
 		template <typename F>
 		auto set_move_init() -> std::enable_if_t<std::is_move_constructible<F>::value>
 		{
-			result.move_init = [](void* addr, void* move) -> void {
+			type_data.move_init = [](void* addr, void* move) -> void {
 				new(addr) T(std::move(*static_cast<T*>(move)));
 			};
 		}
@@ -631,7 +722,7 @@ namespace sge
 		template <typename F>
 		auto set_copy_assign() -> std::enable_if_t<std::is_copy_assignable<F>::value>
 		{
-			result.copy_assign = [](void* self, const void* copy) -> void {
+			type_data.copy_assign = [](void* self, const void* copy) -> void {
 				*static_cast<T*>(self) = *static_cast<const T*>(copy);
 			};
 		}
@@ -644,7 +735,7 @@ namespace sge
 		template <typename F>
 		auto set_move_assign() -> std::enable_if_t<std::is_move_assignable<F>::value>
 		{
-			result.move_assign = [](void* self, void* move) -> void {
+			type_data.move_assign = [](void* self, void* move) -> void {
 				*static_cast<T*>(self) = std::move(*static_cast<T*>(move));
 			};
 		}
@@ -657,7 +748,7 @@ namespace sge
 		template <typename F>
 		auto set_drop() -> std::enable_if_t<std::is_destructible<F>::value>
 		{
-			result.drop = [](void* self) -> void {
+			type_data.drop = [](void* self) -> void {
 				static_cast<T*>(self)->~T();
 			};
 		}
@@ -671,7 +762,8 @@ namespace sge
 		///   Fields   ///
 	public:
 
-		TypeInfo::Data result;
+		TypeInfo::Data base_type_data;
+		NativeTypeInfo::Data type_data;
 	};
 
 	template <class I>
@@ -683,14 +775,14 @@ namespace sge
 
 		InterfaceInfoBuilder(std::string name)
 		{
-			result.name = std::move(name);
+			interface_data.name = std::move(name);
 		}
 
 		//////////////////
 		///   Fields   ///
 	public:
 
-		InterfaceInfo::Data result;
+		InterfaceInfo::Data interface_data;
 
 		///////////////////
 		///   Methods   ///
@@ -700,7 +792,7 @@ namespace sge
 		InterfaceInfoBuilder&& implemented_for()
 		{
 			static const I vtable = I::template get_vtable<T>();
-			result.implementations.insert(std::make_pair(&get_type<T>(), &vtable));
+			interface_data.implementations.insert(std::make_pair(&sge::get_type<T>(), &vtable));
 			return std::move(*this);
 		}
 	};
@@ -710,10 +802,10 @@ namespace sge
 ///   Macros   ///
 
 /* Use the macro inside the definition of a type in order for it to be recognized by the reflection system. */
-#define SGE_REFLECTED_TYPE			static const ::sge::TypeInfo type_info; const ::sge::TypeInfo& get_type() const { return type_info; }
+#define SGE_REFLECTED_TYPE			static const ::sge::NativeTypeInfo type_info; const ::sge::NativeTypeInfo& get_type() const { return type_info; }
 
 /* Use this macro in the source file for a type, in order to deine its reflection data. */
-#define SGE_REFLECT_TYPE(TYPE)		const ::sge::TypeInfo TYPE::type_info = ::sge::TypeInfoBuilder<TYPE>(#TYPE)
+#define SGE_REFLECT_TYPE(TYPE)		const ::sge::NativeTypeInfo TYPE::type_info = ::sge::NativeTypeInfoBuilder<TYPE>(#TYPE)
 
 /* Use this macro in the definition of an interface, in order for it to be recorgnized by the reflection system. */
 #define SGE_REFLECTED_INTERFACE			static const ::sge::InterfaceInfo interface_info;

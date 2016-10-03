@@ -9,7 +9,7 @@ namespace sge
 	struct SGE_CORE_API IFromString
 	{
 		SGE_REFLECTED_INTERFACE;
-		SGE_VTABLE_1(IFromString, from_string)
+		SGE_VTABLE_1(IFromString, from_string);
 
 		/////////////////////
 		///   Functions   ///

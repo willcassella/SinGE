@@ -95,7 +95,9 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SGE_CORE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4251;4814</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
@@ -107,7 +109,9 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SGE_CORE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4251;4814</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
@@ -121,7 +125,10 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SGE_CORE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4251;4814</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -139,7 +146,10 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SGE_CORE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4251;4814</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -163,8 +173,12 @@
     <ClInclude Include="include\Core\Math\Vec4.h" />
     <ClInclude Include="include\Core\Memory\Functions.h" />
     <ClInclude Include="include\Core\Reflection\Any.h" />
+    <ClInclude Include="include\Core\Reflection\ConstructorInfo.h" />
     <ClInclude Include="include\Core\Reflection\FieldInfo.h" />
     <ClInclude Include="include\Core\Reflection\InterfaceInfo.h" />
+    <ClInclude Include="include\Core\Reflection\NativeConstructorInfo.h" />
+    <ClInclude Include="include\Core\Reflection\NativePropertyInfo.h" />
+    <ClInclude Include="include\Core\Reflection\NativeTypeInfo.h" />
     <ClInclude Include="include\Core\Reflection\PropertyInfo.h" />
     <ClInclude Include="include\Core\Reflection\Reflection.h" />
     <ClInclude Include="include\Core\Reflection\TypeInfo.h" />
@@ -176,7 +190,10 @@
     <ClCompile Include="source\Interfaces\IToString.cpp" />
     <ClCompile Include="source\Math\Mat4.cpp" />
     <ClCompile Include="source\Math\Quat.cpp" />
-    <ClCompile Include="source\Math\Vec2.cpp" />
+    <ClCompile Include="source\Math\Vec2.cpp">
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreprocessToFile>
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</PreprocessToFile>
+    </ClCompile>
     <ClCompile Include="source\Math\Vec3.cpp" />
     <ClCompile Include="source\Math\Vec4.cpp" />
     <ClCompile Include="source\Memory\Functions.cpp" />

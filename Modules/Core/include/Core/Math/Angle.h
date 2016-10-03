@@ -109,20 +109,20 @@ namespace sge
 		template <typename T>
 		struct GetType< TAngle<T> >
 		{
-			static const TypeInfo type_info;
+			static const NativeTypeInfo type_info;
 
-			static const TypeInfo& get_type()
+			static const NativeTypeInfo& get_type()
 			{
 				return type_info;
 			}
 
-			static const TypeInfo& get_type(const TAngle<T>& /*value*/)
+			static const NativeTypeInfo& get_type(const TAngle<T>& /*value*/)
 			{
 				return type_info;
 			}
 		};
 
 		template <typename T>
-		const TypeInfo GetType<TAngle<T>>::type_info = TypeInfoBuilder<TAngle<T>>("TAngle");
+		const NativeTypeInfo GetType<TAngle<T>>::type_info = NativeTypeInfoBuilder<TAngle<T>>("TAngle");
 	}
 }

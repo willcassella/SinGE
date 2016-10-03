@@ -3,7 +3,8 @@
 #include "../../include/Core/Math/Mat4.h"
 
 SGE_REFLECT_TYPE(sge::Mat4)
-.implements<sge::IToString>();
+.implements<sge::IToString>()
+.property("inverse", &Mat4::inverse, nullptr);
 
 namespace sge
 {

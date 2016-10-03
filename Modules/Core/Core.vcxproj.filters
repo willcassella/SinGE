@@ -101,6 +101,18 @@
     <ClInclude Include="include\Core\Reflection\FieldInfo.h">
       <Filter>include\Reflection</Filter>
     </ClInclude>
+    <ClInclude Include="include\Core\Reflection\ConstructorInfo.h">
+      <Filter>include\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Reflection\NativeTypeInfo.h">
+      <Filter>include\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Reflection\NativePropertyInfo.h">
+      <Filter>include\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Reflection\NativeConstructorInfo.h">
+      <Filter>include\Reflection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Math\Vec2.cpp">

@@ -1,38 +1,37 @@
 // PropertyInfo.h
 #pragma once
 
-#include <string>
-#include <functional>
+#include <utility>
 #include "../Functional/FunctionView.h"
 
 namespace sge
 {
 	struct Any;
-
 	struct AnyMut;
-
 	struct TypeInfo;
-
-	template <typename F>
-	struct FunctionView;
 
 	enum PropertyFlags
 	{
-		/* This property has no special flags. */
+		/**
+		 * \breif This property has no special flags.
+		 */
 		PF_NONE = 0,
 
-		/* This property should be serialzed. */
+		/**
+		 * \breif This property should be serialzed.
+		 */
 		PF_SERIALIZED = (1<<0),
 
-		/* This property is intended exclusively for use by the editor, and should not be exposed to scripting. */
+		/**
+		 * \breif This property is intended exclusively for use by the editor, and should not be exposed to scripting.
+		 */
 		PF_EDITOR_ONLY = (1<<1)
 	};
 
 	struct PropertyInfo
 	{
-		using GetterOutFn = FunctionView<void(Any)>;
-
-		using MutatorFn = FunctionView<void(AnyMut)>;
+		using GetterOutFn = FunctionView<void(Any value)>;
+		using MutatorFn = FunctionView<void(AnyMut value)>;
 
 		struct Data
 		{
@@ -40,8 +39,8 @@ namespace sge
 			///   Constructors   ///
 		public:
 
-			Data(const TypeInfo* type, const TypeInfo* contextType, PropertyFlags flags)
-				: type{ type }, context_type{ contextType }, flags{ flags }
+			Data()
+				: type(nullptr), context_type(nullptr), flags(PF_NONE)
 			{
 			}
 
@@ -52,9 +51,6 @@ namespace sge
 			const TypeInfo* type;
 			const TypeInfo* context_type;
 			PropertyFlags flags;
-			std::function<void(const void* self, const void* context, GetterOutFn)> getter;
-			std::function<void(void* self, void* context, const void* value)> setter;
-			std::function<void(void* self, void* context, MutatorFn)> mutate;
 		};
 
 		////////////////////////
@@ -62,7 +58,7 @@ namespace sge
 	public:
 
 		PropertyInfo(Data data)
-			: _data{ std::move(data) }
+			: _data(std::move(data))
 		{
 		}
 
@@ -70,47 +66,58 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		/* The type of this property. */
+		/**
+		 * \breif The type of this property.
+		 */
 		const TypeInfo& type() const
 		{
 			return *_data.type;
 		}
 
-		/* The context type required for getting and setting this property. */
-		const TypeInfo* context_type()
+		/**
+		 * \breif The context type required for getting and setting this property.
+		 */
+		const TypeInfo* context_type() const
 		{
 			return _data.context_type;
 		}
 
-		/* Any special flags for this property. */
+		/**
+		 * \breif Any special flags for this property.
+		 */
 		PropertyFlags flags() const
 		{
 			return _data.flags;
 		}
 
-		/* Returns whether this property may be read from, but not written to ('set' or 'mutate'). */
-		bool is_read_only() const
-		{
-			return _data.setter == nullptr;
-		}
+		/**
+		 * \breif Whether this property may be read from, but not written to ('set' or 'mutate').
+		 */
+		virtual bool is_read_only() const = 0;
 
-		/* Gets the current value of this property, given instance and context data. */
-		void get(const void* self, const void* context, GetterOutFn out) const
-		{
-			_data.getter(self, context, out);
-		}
+		/**
+		 * \brief Acesses the value of this property.
+		 * \param self The object to access the property on.
+		 * \param context The context object for accessing the property.
+		 * \param out A function to call with the value and type of the property.
+		 */
+		virtual void get(const void* self, const void* context, GetterOutFn out) const = 0;
 
-		/* Sets the current value of this property, given instance and context data. */
-		void set(void* self, void* context, const void* value) const
-		{
-			_data.setter(self, context, value);
-		}
+		/**
+		 * \brief Sets the value of this property.
+		 * \param self The object to set the property on.
+		 * \param context The context object for accessing the property.
+		 * \param value The new value of the property.
+		 */
+		virtual void set(void* self, void* context, const void* value) const = 0;
 
-		/* Mutates the property. */
-		void mutate(void* self, void* context, MutatorFn mutator) const
-		{
-			_data.mutate(self, context, mutator);
-		}
+		/**
+		 * \brief Mutates the value of this property.
+		 * \param self THe object to mutate the property on.
+		 * \param context The context object for accessing the property.
+		 * \param mutator A function to call that will mutate the value of the property.
+		 */
+		virtual void mutate(void* self, void* context, MutatorFn mutator) const = 0;
 
 		//////////////////
 		///   Fields   ///

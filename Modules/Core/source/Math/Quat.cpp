@@ -3,8 +3,10 @@
 #include "../../include/Core/Math/Quat.h"
 
 SGE_REFLECT_TYPE(sge::Quat)
-.implements<sge::IToString>()
-.property("x", &sge::Quat::x, &sge::Quat::x)
-.property("y", &sge::Quat::y, &sge::Quat::y)
-.property("z", &sge::Quat::z, &sge::Quat::z)
-.property("w", &sge::Quat::w, &sge::Quat::w);
+.implements<IToString>()
+.constructor<Vec3, Scalar>()
+.constructor<Scalar, Scalar, Scalar, Scalar>()
+.property("x", &Quat::x, &Quat::x)
+.property("y", &Quat::y, &Quat::y)
+.property("z", &Quat::z, &Quat::z)
+.property("w", &Quat::w, &Quat::w);

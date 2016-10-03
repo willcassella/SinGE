@@ -3,12 +3,15 @@
 #include "../../include/Core/Math/Vec3.h"
 
 SGE_REFLECT_TYPE(sge::Vec3)
-.implements<sge::IToString>()
-.property("x", &sge::Vec3::x, &sge::Vec3::x, PF_SERIALIZED)
-.property("y", &sge::Vec3::y, &sge::Vec3::y, PF_SERIALIZED)
-.property("z", &sge::Vec3::z, &sge::Vec3::z, PF_SERIALIZED)
-.property("length", &sge::Vec3::length, nullptr)
-.property("normalized", &sge::Vec3::normalized, nullptr);
+.implements<IToString>()
+.constructor<Scalar, Scalar, Scalar>()
+.named_constructor<Vec2, Scalar>("xy_z")
+.named_constructor<Scalar, Vec2>("x_yz")
+.property("x", &Vec3::x, &Vec3::x, PF_SERIALIZED)
+.property("y", &Vec3::y, &Vec3::y, PF_SERIALIZED)
+.property("z", &Vec3::z, &Vec3::z, PF_SERIALIZED)
+.property("length", &Vec3::length, nullptr)
+.property("normalized", &Vec3::normalized, nullptr);
 
 namespace sge
 {

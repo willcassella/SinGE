@@ -60,7 +60,7 @@ namespace sge
 		{
 		}
 		FunctionView(const FunctionView&& move)
-			: _invoker{ move._invoker }, _data{ _move.data }
+			: _invoker{ move._invoker }, _data{ move._data }
 		{
 		}
 
