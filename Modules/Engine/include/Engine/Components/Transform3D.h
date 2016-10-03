@@ -2,7 +2,6 @@
 #pragma once
 
 #include <Core/Math/Mat4.h>
-#include "../config.h"
 #include "../Component.h"
 
 namespace sge
@@ -21,37 +20,37 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		static bool has_parent(ComponentInstance<const CTransform3D> self);
+		static bool has_parent(TComponentInstance<const CTransform3D> self);
 
-		static Handle<CTransform3D> get_parent(ComponentInstance<const CTransform3D> self);
+		static TComponentId<CTransform3D> get_parent(TComponentInstance<const CTransform3D> self);
 
-		static void set_parent(ComponentInstance<CTransform3D> self, Scene& scene, Handle<CTransform3D> parent);
+		static void set_parent(TComponentInstance<CTransform3D> self, Frame& frame, TComponentInstance<const CTransform3D> parent);
 
-		static Vec3 get_local_position(ComponentInstance<const CTransform3D> self);
-		
-		static void set_local_position(ComponentInstance<CTransform3D> self, Scene& scene, Vec3 pos);
+		static Vec3 get_local_position(TComponentInstance<const CTransform3D> self);
 
-		static Vec3 get_local_scale(ComponentInstance<const CTransform3D> self);
+		static void set_local_position(TComponentInstance<CTransform3D> self, Frame& frame, Vec3 pos);
 
-		static void set_local_scale(ComponentInstance<CTransform3D> self, Scene& scene, Vec3 scale);
+		static Vec3 get_local_scale(TComponentInstance<const CTransform3D> self);
 
-		static Quat get_local_rotation(ComponentInstance<const CTransform3D> self);
+		static void set_local_scale(TComponentInstance<CTransform3D> self, Frame& frame, Vec3 scale);
 
-		static void set_local_rotation(ComponentInstance<CTransform3D> self, Scene& scene, Quat rot);
+		static Quat get_local_rotation(TComponentInstance<const CTransform3D> self);
 
-		static Mat4 get_local_matrix(ComponentInstance<const CTransform3D> self);
+		static void set_local_rotation(TComponentInstance<CTransform3D> self, Frame& frame, Quat rot);
 
-		static Vec3 get_world_position(ComponentInstance<const CTransform3D> self, const Scene& scene);
+		static Mat4 get_local_matrix(TComponentInstance<const CTransform3D> self);
 
-		static Vec3 get_world_scale(ComponentInstance<const CTransform3D> self, const Scene& scene);
+		static Vec3 get_world_position(TComponentInstance<const CTransform3D> self, const Frame& frame);
 
-		static Quat get_world_rotation(ComponentInstance<const CTransform3D> self, const Scene& scene);
+		static Vec3 get_world_scale(TComponentInstance<const CTransform3D> self, const Frame& frame);
 
-		static Mat4 get_world_matrix(ComponentInstance<const CTransform3D> self, const Scene& scene);
+		static Quat get_world_rotation(TComponentInstance<const CTransform3D> self, const Frame& frame);
+
+		static Mat4 get_world_matrix(TComponentInstance<const CTransform3D> self, const Frame& frame);
 
 	private:
 
-		static Mat4 get_parent_matrix(ComponentInstance<const CTransform3D> self, const Scene& scene);
+		static Mat4 get_parent_matrix(TComponentInstance<const CTransform3D> self, const Frame& frame);
 
 		////////////////
 		///   Data   ///
@@ -60,7 +59,7 @@ namespace sge
 		Vec3 _local_position;
 		Vec3 _local_scale;
 		Quat _local_rotation;
-		Handle<CTransform3D> _parent;
+		TComponentId<CTransform3D> _parent;
 
 		////////////////
 		///   Tags   ///

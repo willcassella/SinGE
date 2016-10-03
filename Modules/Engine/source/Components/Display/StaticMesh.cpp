@@ -7,10 +7,11 @@ SGE_REFLECT_TYPE(sge::CStaticMesh);
 SGE_REFLECT_TYPE(sge::CStaticMesh::TMeshChanged);
 SGE_REFLECT_TYPE(sge::CStaticMeshOverrideMaterial);
 SGE_REFLECT_TYPE(sge::CStaticMeshMaterialOverrideParameters);
+SGE_REFLECT_TYPE(sge::CStaticMeshMaterialOverrideParameters::TParamChanged);
 
 namespace sge
 {
-	void CStaticMesh::set_mesh(ComponentInstance<CStaticMesh> self, Scene& scene, std::string mesh)
+	void CStaticMesh::set_mesh(TComponentInstance<CStaticMesh> self, Frame& frame, std::string mesh)
 	{
 		self->_mesh = std::move(mesh);
 	}

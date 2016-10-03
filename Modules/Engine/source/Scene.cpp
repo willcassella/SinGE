@@ -1,6 +1,7 @@
 // Scene.cpp
 
 #include <Core/Memory/Functions.h>
+#include <Core/Functional/FunctionView.h>
 #include "../include/Engine/Scene.h"
 
 SGE_REFLECT_TYPE(sge::Scene);
@@ -12,34 +13,23 @@ namespace sge
 
 	Scene::Scene()
 	{
-		_next_component_id = 1;
-		_next_entity_id = 2;
+		_current_time = 0;
+		_next_entity_id = 2; // '1' is reserved for WORLD_ENTITY
 	}
 
 	Scene::~Scene()
 	{
-		for (const auto& componentType : _components)
+		for (auto component : _component_objects)
 		{
-			for (auto component : componentType.second)
-			{
-				auto object = _component_objects.find(component.id);
-				if (object != _component_objects.end())
-				{
-					if (componentType.first->has_drop())
-					{
-						componentType.first->drop(object->second);
-					}
-
-					sge::free(object->second);
-				}
-			}
+			component.first.type()->drop(component.second);
+			sge::free(component.second);
 		}
 	}
 
 	///////////////////
 	///   Methods   ///
 
-	EntityID Scene::new_entity()
+	EntityId Scene::new_entity()
 	{
 		auto id = _next_entity_id++;
 		_entity_parents[id] = WORLD_ENTITY;
@@ -47,29 +37,39 @@ namespace sge
 		return id;
 	}
 
-	EntityID Scene::get_entity_parent(EntityID entity) const
+	EntityId Scene::get_entity_parent(EntityId entity) const
 	{
 		auto iter = _entity_parents.find(entity);
-		if (iter != _entity_parents.end())
-		{
-			return iter->second;
-		}
-		else
-		{
-			return NULL_ENTITY;
-		}
+		return iter != _entity_parents.end() ? iter->second : NULL_ENTITY;
 	}
 
-	void Scene::set_entity_parent(EntityID entity, EntityID parent)
+	void Scene::set_entity_parent(EntityId entity, EntityId parent)
 	{
+		// Make sure the target entity actually exists
 		auto iter = _entity_parents.find(entity);
-		if (iter != _entity_parents.end() && _entity_parents.find(parent) != _entity_parents.end())
+		if (iter == _entity_parents.end())
 		{
-			iter->second = parent || WORLD_ENTITY;
+			return;
 		}
+
+		if (parent == NULL_ENTITY || parent == WORLD_ENTITY)
+		{
+			iter->second = WORLD_ENTITY;
+			return;
+		}
+
+		// Make sure the parent entity actually exists
+		auto parentIter = _entity_parents.find(parent);
+		if (parentIter == _entity_parents.end())
+		{
+			return;
+		}
+
+		// TODO: Check for entity parent cycle
+		iter->second = parent;
 	}
 
-	std::string Scene::get_entity_name(EntityID entity) const
+	std::string Scene::get_entity_name(EntityId entity) const
 	{
 		if (entity == WORLD_ENTITY)
 		{
@@ -77,17 +77,10 @@ namespace sge
 		}
 
 		auto iter = _entity_names.find(entity);
-		if (iter != _entity_names.end())
-		{
-			return iter->second;
-		}
-		else
-		{
-			return "";
-		}
+		return iter != _entity_names.end() ? iter->second : "";
 	}
 
-	void Scene::set_entity_name(EntityID entity, std::string name)
+	void Scene::set_entity_name(EntityId entity, std::string name)
 	{
 		if (_entity_parents.find(entity) == _entity_parents.end())
 		{
@@ -97,64 +90,31 @@ namespace sge
 		_entity_names[entity] = std::move(name);
 	}
 
-	ComponentInstance<void> Scene::get_component(ComponentID id)
-	{
-		auto entity = _component_entities.find(id);
-		if (entity == _component_entities.end())
-		{
-			return ComponentInstance<void>::null();
-		}
-
-		auto object = _component_objects.find(id);
-		if (object == _component_objects.end())
-		{
-			return{ ComponentIdentity{ id, entity->second }, object->second };
-		}
-		else
-		{
-			return{ ComponentIdentity{ id, entity->second }, nullptr };
-		}
-	}
-
-	ComponentInstance<const void> Scene::get_component(ComponentID id) const
-	{
-		auto entity = _component_entities.find(id);
-		if (entity == _component_entities.end())
-		{
-			return ComponentInstance<const void>::null();
-		}
-
-		auto object = _component_objects.find(id);
-		if (object != _component_objects.end())
-		{
-			return{ ComponentIdentity{ id, entity->second }, object->second };
-		}
-		else
-		{
-			return{ ComponentIdentity{ id, entity->second }, nullptr };
-		}
-	}
-
-	ComponentInstance<void> Scene::new_component(EntityID entity, const TypeInfo& type, void* object)
+	ComponentInstanceMut Scene::new_component(EntityId entity, const TypeInfo& type, void* object)
 	{
 		// If the entity the component is being added to is the world entity or a non-existant entity, don't do anything
-		if (entity == WORLD_ENTITY || _entity_parents.find(entity) == _entity_parents.end())
+		if (entity == NULL_ENTITY || entity == WORLD_ENTITY || _entity_parents.find(entity) == _entity_parents.end())
 		{
-			return ComponentInstance<void>::null();
+			return ComponentInstanceMut::null();
 		}
 
-		// Create an identity for the component
-		ComponentIdentity identity;
-		identity.entity = entity;
-		identity.id = _next_component_id++;
-		_component_entities[identity.id] = entity;
+		ComponentId id{ entity, type };
+
+		// If this component already exists in the world
+		if (component_exists(id))
+		{
+			return get_component(id);
+		}
+
+		// Add this component to the entity
+		_components[&type].insert(entity);
 
 		// If the type has a size, allocate memory for it
 		void* buff = nullptr;
-		if (type.size() > 0)
+		if (!type.is_empty())
 		{
 			buff = sge::malloc(type.size());
-			_component_objects[identity.id] = buff;
+			_component_objects[id] = buff;
 
 			if (object != nullptr)
 			{
@@ -162,24 +122,122 @@ namespace sge
 			}
 			else
 			{
-				type.init(object);
+				type.init(buff);
 			}
 		}
 
-		// Find a spot for the identity in the array ordered by EntityID
-		auto& typeArray = _components[&type];
-		auto iter = typeArray.cbegin();
-		while (iter != typeArray.cend() && iter->entity < entity)
+		return{ id, buff };
+	}
+
+	bool Scene::component_exists(ComponentId id) const
+	{
+		// Make sure the the type of this component actually exists in the scene
+		auto set = _components.find(id.type());
+		if (set == _components.end())
 		{
-			++iter;
+			return false;
 		}
 
-		// Insert the identity
-		typeArray.insert(iter, identity);
+		// Make sure a component of that type is actually attached to the given entity
+		auto entity = set->second.find(id.entity());
+		if (entity == set->second.end())
+		{
+			return false;
+		}
 
-		// Give the componet the 'NewComponent' tag, so that it may be picked up by relevant systems
-		//new_tag(identity.component, TNewComponent{});
+		return true;
+	}
 
-		return{ identity, buff };
+	ComponentInstanceMut Scene::get_component(ComponentId id)
+	{
+		if (!component_exists(id))
+		{
+			return ComponentInstanceMut::null();
+		}
+
+		// Get the object (if applicable) for this component
+		auto object = _component_objects.find(id);
+		if (object == _component_objects.end())
+		{
+			return{ id, nullptr };
+		}
+
+		return{ id, object->second };
+	}
+
+	ComponentInstance Scene::get_component(ComponentId id) const
+	{
+		if (!component_exists(id))
+		{
+			return ComponentInstanceMut::null();
+		}
+
+		// Get the object (if applicable) for this component
+		auto object = _component_objects.find(id);
+		if (object == _component_objects.end())
+		{
+			return{ id, nullptr };
+		}
+
+		return{ id, object->second };
+	}
+
+	void Scene::run_system(FunctionView<SystemFnMut> system, const TypeInfo** types, std::size_t nTypes)
+	{
+		if (nTypes == 0)
+		{
+			return;
+		}
+
+		auto primaryType = _components.find(types[0]);
+		if (primaryType == _components.end())
+		{
+			return;
+		}
+
+		// Create an array to hold the selected components
+		auto* results = SGE_STACK_ALLOC(ComponentInstanceMut, nTypes);
+
+		// Iter through all entities that the primary component type appears on
+		for (EntityId entity : primaryType->second)
+		{
+			bool satisfied = true;
+			for (std::size_t i = 1; i < nTypes; ++i)
+			{
+				// If this type does not exist in the scene OR this entity does not have an instance of it
+				auto iter = _components.find(types[i]);
+				if (iter == _components.end() || iter->second.find(entity) == iter->second.end())
+				{
+					satisfied = false;
+					break;
+				}
+
+				ComponentId id{ entity, *types[i] };
+				new (results + i) ComponentInstanceMut{ id, get_component_object(id) };
+			}
+
+			// If all further requirements were satisfied
+			if (satisfied)
+			{
+				// Fill in the primary object
+				ComponentId primaryId{ entity, *types[0] };
+				new (results) ComponentInstanceMut{ primaryId, get_component_object(primaryId) };
+
+				// Call the system function
+				Frame frame{ *this, _current_time };
+				system(frame, entity, results);
+			}
+		}
+	}
+
+	void Scene::run_system(FunctionView<SystemFn> system, const TypeInfo** types, std::size_t nTypes) const
+	{
+		// TODO
+	}
+
+	void* Scene::get_component_object(ComponentId id) const
+	{
+		auto iter = _component_objects.find(id);
+		return iter != _component_objects.end() ? iter->second : nullptr;
 	}
 }

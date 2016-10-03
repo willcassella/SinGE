@@ -6,15 +6,15 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CCubeCollider 
+	struct SGE_ENGINE_API CCubeCollider
 	{
 		SGE_REFLECTED_TYPE;
-		
+
 		////////////////
 		///   Tags   ///
 	public:
 
-		struct SGE_ENGINE_API TShapeChanged 
+		struct SGE_ENGINE_API TShapeChanged
 		{
 			SGE_REFLECTED_TYPE;
 		};
@@ -27,12 +27,12 @@ namespace sge
 		{
 			return _shape;
 		}
-		
+
 		void set_shape(struct Frame& frame, Vec2 shape)
 		{
 			_shape = shape;
 		}
-		
+
 		////////////////
 		///   Data   ///
 	private:

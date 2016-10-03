@@ -1,22 +1,19 @@
 // Scene.h
 #pragma once
 
-#include <map>
-#include <vector>
-#include <functional>
-#include <algorithm>
+#include <set>
+#include <unordered_map>
+#include "Frame.h"
 #include "Component.h"
 
 namespace sge
 {
-	struct Frame;
-
 	struct SGE_ENGINE_API Scene
 	{
 		SGE_REFLECTED_TYPE;
 
-		typedef EntityID(*SelectorFn)(void* outComponent, Scene& scene, int i);
-		typedef void(*ProcessorFn)(void* data, EntityID entity, const void** components);
+		using SystemFnMut = void(Frame& frame, EntityId entity, const ComponentInstanceMut* components);
+		using SystemFn = void(const Frame& frame, EntityId entity, const ComponentInstance* components);
 
 		////////////////////////
 		///   Constructors   ///
@@ -34,169 +31,161 @@ namespace sge
 	public:
 
 		/* Creates a new Entity. */
-		EntityID new_entity();
+		EntityId new_entity();
 
 		/* Returns the parent of the given Entity. */
-		EntityID get_entity_parent(EntityID entity) const;
+		EntityId get_entity_parent(EntityId entity) const;
 
-		void set_entity_parent(EntityID entity, EntityID parent);
+		void set_entity_parent(EntityId entity, EntityId parent);
 
-		std::string get_entity_name(EntityID entity) const;
+		std::string get_entity_name(EntityId entity) const;
 
-		void set_entity_name(EntityID entity, std::string name);
+		void set_entity_name(EntityId entity, std::string name);
 
 		/* Creates a new instance of the given type of Component, optionally moving from the provided initial value. */
-		ComponentInstance<void> new_component(EntityID entity, const TypeInfo& type, void* init);
+		ComponentInstanceMut new_component(EntityId entity, const TypeInfo& type, void* init);
 
 		/* Creates a new instance of the given type of Component, moving from the provided initial value. */
 		template <typename T>
-		ComponentInstance<T> new_component(EntityID entity, T&& component)
+		TComponentInstance<T> new_component(EntityId entity, T&& component)
 		{
 			auto instance = this->new_component(entity, sge::get_type(component), &component);
-			return{ instance.identity(), static_cast<T*>(instance.object()) };
+			return{ instance.entity(), static_cast<T*>(instance.object()) };
 		}
 
 		/* Default-constructs a new instance of the given type of Component. */
 		template <typename T>
-		ComponentInstance<T> new_component(EntityID entity)
+		TComponentInstance<T> new_component(EntityId entity)
 		{
 			auto instance = this->new_component(entity, sge::get_type<T>(), nullptr);
-			return{ instance.identity(), static_cast<T*>(instance.object()) };
+			return{ instance.entity(), static_cast<T*>(instance.object()) };
 		}
 
-		ComponentInstance<void> get_component(ComponentID id);
+		bool component_exists(ComponentId id) const;
+
+		ComponentInstanceMut get_component(ComponentId id);
 
 		template <typename T>
-		ComponentInstance<T> get_component(Handle<T> handle)
+		TComponentInstance<T> get_component(TComponentId<T> id)
 		{
-			auto instance = this->get_component(handle.id);
-			return{ instance.identity(), static_cast<T*>(instance.object()) };
+			auto instance = this->get_component(static_cast<ComponentId>(id));
+			return{ instance.entity(), static_cast<T*>(instance.object()) };
 		}
 
-		ComponentInstance<const void> get_component(ComponentID id) const;
+		ComponentInstance get_component(ComponentId id) const;
 
 		template <typename T>
-		ComponentInstance<const T> get_component(Handle<T> handle) const
+		TComponentInstance<const T> get_component(TComponentId<T> id) const
 		{
-			auto instance = this->get_component(handle.id());
-			return{ instance.identity(), static_cast<const T*>(instance.object()) };
+			auto instance = this->get_component(static_cast<ComponentId>(id));
+			return{ instance.entity(), static_cast<const T*>(instance.object()) };
 		}
 
-		template <class System, typename ... Selectors>
-		void run_system(System& system, void(System::*handler)(Scene&, EntityID, Selectors...))
+		/**
+		 * \brief Runs the given system function on all Entities that meet the selection requirements.
+		 * \param system Function to process the entity and components selected.
+		 * \param types An array of required types.
+		 * \param nTypes The number of types passed in.
+		 */
+		void run_system(FunctionView<SystemFnMut> system, const TypeInfo** types, std::size_t nTypes);
+
+		void run_system(FunctionView<SystemFn> system, const TypeInfo** types, std::size_t nTypes) const;
+
+		template <typename Ret, typename ... Components>
+		void run_system(Ret(*system)(Frame&, EntityId, Components...))
 		{
-			auto func = [&](Scene& scene, EntityID entity, Selectors... selectors) {
-				(system.*handler)(scene, entity, selectors...);
+			// Create system wrapper function
+			auto func = [system](Frame& frame, EntityId entity, const ComponentInstanceMut* components) {
+				invoke_system(stde::type_sequence<Components...>{}, frame, entity, components, system);
 			};
-			select(stde::type_sequence<Selectors...>{}, func, WORLD_ENTITY);
+
+			// Create list of component types
+			const TypeInfo* types[sizeof...(Components)];
+			fill_types(stde::type_sequence<Components...>{}, types);
+
+			// Run the system
+			run_system(func, types, sizeof...(Components));
+		}
+
+		template <class System, typename Ret, typename ... Components>
+		void run_system(System& system, void(System::*handler)(Frame&, EntityId, Components...))
+		{
+			// Create the system function
+			auto invoker = [&system, handler](Frame& frame, EntityId entity, Components... components) {
+				(system.*handler)(frame, entity, components...);
+			};
+
+			auto func = [&invoker](Frame& frame, EntityId entity, const ComponentInstanceMut* components) {
+				invoke_system(stde::type_sequence<Components...>{}, frame, entity, components, invoker);
+			};
+
+			// Create the list of component types
+			const TypeInfo* types[sizeof...(Components)];
+			fill_types(stde::type_sequence<Components...>{}, types);
+
+			// Run the system
+			run_system(func, types, sizeof...(Components));
 		}
 
 	private:
 
-		template <typename F, typename C, typename ... RestS, typename ... PrevS>
-		bool select(stde::type_sequence<comp::With<C>, RestS...>, F f, EntityID entity, PrevS ... prev)
+		template <class C, typename ... Cs>
+		static void fill_types(stde::type_sequence<TComponentInstance<C>, Cs...>, const TypeInfo** result)
 		{
-			constexpr bool IS_PRIMARY_SELECTOR = sizeof...(PrevS) == 0;
-			for (auto identity : _components[&sge::get_type<C>()])
-			{
-				// If we've passed the entity
-				if (identity.entity > entity)
-				{
-					// If we're the first selector
-					if (IS_PRIMARY_SELECTOR)
-					{
-						entity = identity.entity;
-					}
-					else
-					{
-						// Can't invoke for this one, but we can keep searching
-						return true;
-					}
-				}
-
-				// Entity found, construct the instance
-				if (identity.entity == entity)
-				{
-					comp::With<C> result{
-						identity,
-						static_cast<C*>(_component_objects[identity.id])
-					};
-
-					bool cont = select(stde::type_sequence<RestS...>{}, f, entity, prev..., result);
-					if (!IS_PRIMARY_SELECTOR)
-					{
-						return cont;
-					}
-				}
-			}
-
-			// No more components of this type, so stop search
-			return false;
+			*result = &sge::get_type<C>();
+			fill_types(stde::type_sequence<Cs...>{}, result + 1);
 		}
 
-		template <typename F, typename C, typename ... RestS, typename ... PrevS>
-		bool select(stde::type_sequence<comp::Optional<C>, RestS...>, F f, EntityID entity, PrevS... prev)
+		static void fill_types(stde::type_sequence<>, const TypeInfo** /*result*/)
 		{
-			static_assert(sizeof...(PrevS) != 0, "You you may not use 'Optional' as the primary selector.");
-			for (auto identity : _components[&sge::get_type<C>()])
-			{
-				// If the component exists for this entity
-				if (identity.entity == entity)
-				{
-					comp::Optional<C> result{
-						identity,
-						static_cast<C*>(_component_objects[identity.id])
-					};
-
-					return select(stde::type_sequence<RestS...>{}, f, entity, prev..., result);
-				}
-			}
-
-			comp::Optional<C> result{
-				NULL_COMPONENT,
-				NULL_ENTITY,
-				nullptr
-			};
-			return select(stde::type_sequence<RestS...>{}, f, entity, prev..., result);
 		}
 
-		template <typename F, typename C, typename ... RestS, typename ... PrevS>
-		bool select(stde::type_sequence<comp::Without<C>>, F f, EntityID entity, PrevS ... prev)
+		template <typename SystemFn, class C, typename ... Cs, typename ... Converted>
+		static void invoke_system(
+			stde::type_sequence<TComponentInstance<C>, Cs...>,
+			Frame& frame,
+			EntityId entity,
+			const ComponentInstanceMut* components,
+			SystemFn system,
+			const Converted&... converted)
 		{
-			static_assert(sizeof...(PrevS) != 0, "You may not use 'Wihout' as the primary selector.");
-			for (auto identity : _components[&sge::get_type<C>()])
-			{
-				// If the component exists for this entity
-				if (identity.entity == entity)
-				{
-					return true;
-				}
-			}
-
-			return select(stde::type_sequence<RestS...>{}, f, entity, prev..., comp::Without<C>{});
+			invoke_system(
+				stde::type_sequence<Cs...>{},
+				frame,
+				entity,
+				components + 1,
+				system,
+				converted...,
+				*static_cast<const TComponentInstance<C>*>(components));
 		}
 
-		template <typename F, typename ... Selectors>
-		bool select(stde::type_sequence<>, F f, EntityID entity, Selectors... selectors)
+		template <typename SystemFn, typename ... Converted>
+		static void invoke_system(
+			stde::type_sequence<>,
+			Frame& frame,
+			EntityId entity,
+			const ComponentInstanceMut* /*components*/,
+			SystemFn system,
+			const Converted&... converted)
 		{
-			f(*this, entity, selectors...);
-			return true;
+			system(frame, entity, converted...);
 		}
+
+		void* get_component_object(ComponentId id) const;
 
 		////////////////
 		///   Data   ///
 	private:
 
-		ComponentID _next_component_id;
-		EntityID _next_entity_id;
-
-		/* Component Data */
-		std::map<ComponentID, EntityID> _component_entities;
-		std::map<ComponentID, void*> _component_objects;
-		std::map<const TypeInfo*, std::vector<ComponentIdentity>> _components;
+		EntityId _next_entity_id;
+		float _current_time;
 
 		/* Entity Data */
-		std::map<EntityID, EntityID> _entity_parents;
-		std::map<EntityID, std::string> _entity_names;
+		std::unordered_map<EntityId, EntityId> _entity_parents;
+		std::unordered_map<EntityId, std::string> _entity_names;
+
+		/* Component Data */
+		std::unordered_map<ComponentId, void*> _component_objects;
+		std::unordered_map<const TypeInfo*, std::set<EntityId>> _components;
 	};
 }

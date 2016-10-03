@@ -15,7 +15,7 @@ namespace sge
 			VERTEX_SHADER,
 			PIXEL_SHADER
 		};
-		
+
 		////////////////////////
 		///   Constructors   ///
 	public:

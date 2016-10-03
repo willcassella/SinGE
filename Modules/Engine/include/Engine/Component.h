@@ -1,104 +1,245 @@
 // Component.h
 #pragma once
 
-#include <tuple>
-#include <Core/STDE/TMP.h>
 #include <Core/Reflection/Reflection.h>
 #include "config.h"
 
 namespace sge
 {
-	struct Scene;
+	struct Frame;
 
-	/* Type used to represent Component Identifiers. */
-	using ComponentID = uint64;
+	/* Uniquely identifies an Entity within a Scene. */
+	using EntityId = uint64;
 
-	/* Type used to represent Entities. */
-	using EntityID = uint64;
+	/* EntityId reserved for non-existant entities. */
+	constexpr EntityId NULL_ENTITY = 0;
 
-	/* ComponentID used for non-existant components. */
-	constexpr ComponentID NULL_COMPONENT = 0;
+	/* EntityId reserved for the World entity. */
+	constexpr EntityId WORLD_ENTITY = 1;
 
-	/* EntityID used for non-existant entities. */
-	constexpr EntityID NULL_ENTITY = 0;
-
-	/* EntityID used for the World entity. */
-	constexpr EntityID WORLD_ENTITY = 1;
-
-	struct ComponentIdentity
+	/* Uniquely identifies a component within a scene. */
+	struct SGE_ENGINE_API ComponentId
 	{
+		SGE_REFLECTED_TYPE;
+
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		ComponentIdentity()
-			: id{ NULL_COMPONENT }, entity{ NULL_ENTITY }
+		ComponentId()
+			: _entity(NULL_ENTITY), _type(nullptr)
 		{
 		}
-		ComponentIdentity(ComponentID id, EntityID entity)
-			: id{ id }, entity{ entity }
+		ComponentId(EntityId entity, const TypeInfo& type)
+			: _entity(entity), _type(&type)
 		{
 		}
 
-		//////////////////
-		///   Fields   ///
+		static ComponentId null()
+		{
+			return{};
+		}
+
+		///////////////////
+		///   Methods   ///
 	public:
 
-		ComponentID id;
-		EntityID entity;
-	};
+		EntityId entity() const
+		{
+			return _entity;
+		}
 
-	template <typename C>
-	struct ComponentInstance
-	{
-		////////////////////////
-		///   Constructors   ///
+		const TypeInfo* type() const
+		{
+			return _type;
+		}
+
+		bool is_null() const
+		{
+			return _entity == NULL_ENTITY;
+		}
+
+		/////////////////////
+		///   Operators   ///
 	public:
 
-		ComponentInstance(ComponentIdentity identity, C* object)
-			: _identity{ identity }, _object{ object }
+		static friend bool operator==(const ComponentId& lhs, const ComponentId& rhs)
 		{
+			return lhs._entity == rhs._entity && lhs._type == rhs._type;
 		}
-
-		ComponentInstance(const ComponentInstance<std::remove_const_t<C>>& instance)
-			: _identity{ instance.identity() }, _object{ instance.object() }
+		static friend bool operator!=(const ComponentId& lhs, const ComponentId& rhs)
 		{
-		}
-
-		static ComponentInstance null()
-		{
-			return{ ComponentIdentity{ NULL_COMPONENT, NULL_ENTITY }, nullptr };
+			return !(lhs == rhs);
 		}
 
 		//////////////////
 		///   Fields   ///
 	private:
 
-		ComponentIdentity _identity;
-		C* _object;
+		EntityId _entity;
+		const TypeInfo* _type;
+	};
+
+	/* Represents an instance of a mutable component. */
+	struct SGE_ENGINE_API ComponentInstanceMut
+	{
+		SGE_REFLECTED_TYPE;
+
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		ComponentInstanceMut(ComponentId id, void* object)
+			: _id(id), _object(object)
+		{
+		}
+
+		static ComponentInstanceMut null()
+		{
+			return{ ComponentId::null(), nullptr };
+		}
 
 		///////////////////
 		///   Methods   ///
 	public:
 
-		ComponentIdentity identity() const
+		ComponentId id() const
 		{
-			return _identity;
+			return _id;
 		}
 
-		ComponentID id() const
+		EntityId entity() const
 		{
-			return _identity.id;
+			return _id.entity();
 		}
 
-		EntityID entity() const
+		const TypeInfo* type() const
 		{
-			return _identity.entity;
+			return _id.type();
+		}
+
+		void* object() const
+		{
+			return _object;
+		}
+
+		bool is_null() const
+		{
+			return _id.is_null();
+		}
+
+		//////////////////
+		///   Fields   ///
+	private:
+
+		ComponentId _id;
+		void* _object;
+	};
+
+	/* Represents an instance of an immutable component. */
+	struct SGE_ENGINE_API ComponentInstance
+	{
+		SGE_REFLECTED_TYPE;
+
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		ComponentInstance(ComponentId id, const void* object)
+			: _id(id), _object(object)
+		{
+		}
+
+		ComponentInstance(const ComponentInstanceMut& instance)
+			: _id(instance.id()), _object(instance.object())
+		{
+		}
+
+		static ComponentInstance null()
+		{
+			return{ ComponentId::null(), nullptr };
+		}
+
+		///////////////////
+		///   Methods   ///
+	public:
+
+		ComponentId id() const
+		{
+			return _id;
+		}
+
+		const TypeInfo* type() const
+		{
+			return _id.type();
+		}
+
+		EntityId entity() const
+		{
+			return _id.entity();
+		}
+
+		const void* object() const
+		{
+			return _object;
+		}
+
+		bool is_null() const
+		{
+			return _id.is_null();
+		}
+
+		//////////////////
+		///   Fields   ///
+	private:
+
+		ComponentId _id;
+		const void* _object;
+	};
+
+	template <class C>
+	struct TComponentId : ComponentId
+	{
+		TComponentId()
+			: ComponentId(NULL_ENTITY, sge::get_type<C>())
+		{
+		}
+		TComponentId(EntityId entity)
+			: ComponentId(entity, sge::get_type<C>())
+		{
+		}
+	};
+
+	/* Provides typed access to a mutable component. */
+	template <class C>
+	struct TComponentInstance : ComponentInstanceMut
+	{
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		TComponentInstance(EntityId entity, C* object)
+			: ComponentInstanceMut(ComponentId{ entity, sge::get_type<C>() }, object)
+		{
+		}
+
+		static TComponentInstance null()
+		{
+			return{ NULL_ENTITY, nullptr };
+		}
+
+		///////////////////
+		///   Methods   ///
+	public:
+
+		TComponentId<C> id() const
+		{
+			return{ entity() };
 		}
 
 		C* object() const
 		{
-			return _object;
+			return static_cast<C*>(ComponentInstanceMut::object());
 		}
 
 		/////////////////////
@@ -107,79 +248,55 @@ namespace sge
 
 		C* operator->() const
 		{
-			return _object;
+			return this->object();
 		}
 	};
 
-	template <typename C>
-	struct Handle
+	/* Provides typed access to an immutable component. */
+	template <class C>
+	struct TComponentInstance< const C > : ComponentInstance
 	{
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		Handle()
-			: _id{ NULL_COMPONENT }
-		{
-		}
-		Handle(const Handle<const C>& copy)
-			: _id{ copy.id() }
-		{
-		}
-		Handle(ComponentInstance<std::remove_const_t<C>> instance)
-			: _id{ instance.id() }
-		{
-		}
-		Handle(ComponentInstance<const C> instance)
-			: _id{ instance.id() }
+		TComponentInstance(EntityId entity, const C* object)
+			: ComponentInstance(ComponentId{ entity, sge::get_type<C>() }, object)
 		{
 		}
 
-		//////////////////
-		///   Fields   ///
-	private:
+		TComponentInstance(const TComponentInstance<C>& instance)
+			: ComponentInstance(instance.id(), instance.object())
+		{
+		}
 
-		ComponentID _id;
+		static TComponentInstance null()
+		{
+			return{ NULL_ENTITY, nullptr };
+		}
 
 		///////////////////
 		///   Methods   ///
 	public:
 
-		ComponentID id() const
+		TComponentId<C> id() const
 		{
-			return _id;
+			return{ entity() };
 		}
 
-		bool is_null() const
+		const C* object() const
 		{
-			return id() == NULL_COMPONENT;
+			return static_cast<const C*>(ComponentInstance::object());
 		}
-	};
 
-	namespace comp
-	{
-		template <typename C>
-		struct With : ComponentInstance<C>
+		/////////////////////
+		///   Operators   ///
+	public:
+
+		const C* operator->() const
 		{
-			using ComponentInstance<C>::ComponentInstance;
-		};
-
-		template <typename C>
-		struct Without
-		{
-		};
-
-		template <typename C>
-		struct Optional : ComponentInstance<C>
-		{
-			using ComponentInstance<C>::ComponentInstance;
-		};
-	}
-
-	/* Tag applied to new components. */
-	struct SGE_ENGINE_API TNewComponent
-	{
-		SGE_REFLECTED_TYPE;
+			return this->object();
+		}
 	};
 
 	/* Context object supplied to component property getters and setters. */
@@ -191,16 +308,16 @@ namespace sge
 		///   Constructors   ///
 	public:
 
-		ComponentContext(ComponentIdentity identity)
-			: _identity{ identity }, _scene{ nullptr }, _c_scene{ nullptr }
+		ComponentContext(ComponentId id)
+			: _id(id), _frame(nullptr), _c_frame(nullptr)
 		{
 		}
-		ComponentContext(ComponentIdentity identity, Scene* scene)
-			: _identity{ identity }, _scene{ scene }, _c_scene{ scene }
+		ComponentContext(ComponentId id, Frame* frame)
+			: _id(id), _frame(frame), _c_frame(frame)
 		{
 		}
-		ComponentContext(ComponentIdentity identity, const Scene* scene)
-			: _identity{ identity }, _scene{ nullptr }, _c_scene{ scene }
+		ComponentContext(ComponentId id, const Frame* frame)
+			: _id(id), _frame(nullptr), _c_frame(frame)
 		{
 		}
 
@@ -211,37 +328,37 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		ComponentIdentity identity() const
+		ComponentId id() const
 		{
-			return _identity;
+			return _id;
 		}
 
-		Scene* scene()
+		Frame* frame()
 		{
-			return _scene;
+			return _frame;
 		}
 
-		const Scene* scene() const
+		const Frame* frame() const
 		{
-			return _c_scene;
+			return _c_frame;
 		}
 
 		//////////////////
 		///   Fields   ///
 	private:
 
-		ComponentIdentity _identity;
-		Scene* _scene;
-		const Scene* _c_scene;
+		ComponentId _id;
+		Frame* _frame;
+		const Frame* _c_frame;
 	};
 
 	/* Wraps a function expecting a component instance into a standard component getter function. */
 	template <class C, typename PropT>
-	auto component_getter(PropT(*getter)(ComponentInstance<const C>))
+	auto component_getter(PropT(*getter)(TComponentInstance<const C>))
 	{
 		return [getter](const C* self, const ComponentContext* context) -> PropT {
-			auto instance = ComponentInstance<const C>{
-				context->identity(),
+			auto instance = TComponentInstance<const C>{
+				context->id().entity(),
 				self
 			};
 
@@ -251,25 +368,25 @@ namespace sge
 
 	/* Wraps a function expecting a component instance and a scene into a standard component getter function. */
 	template <class C, typename PropT>
-	auto component_getter(PropT(*getter)(ComponentInstance<const C>, const Scene&))
+	auto component_getter(PropT(*getter)(TComponentInstance<const C>, const Frame&))
 	{
 		return [getter](const C* self, const ComponentContext* context) -> PropT {
-			auto instance = ComponentInstance<const C>{
-				context->identity(),
+			auto instance = TComponentInstance<const C>{
+				context->id().entity(),
 				self
 			};
 
-			return getter(instance, *context->scene());
+			return getter(instance, *context->frame());
 		};
 	}
 
 	/* Wraps a function expecting a component instance into a standard component setter function. */
 	template <class C, typename RetT, typename PropT>
-	auto component_setter(RetT(*setter)(ComponentInstance<C>, PropT))
+	auto component_setter(RetT(*setter)(TComponentInstance<C>, PropT))
 	{
 		return [setter](C* self, ComponentContext* context, const PropT* value) {
-			auto instance = ComponentInstance<C>{
-				context->identity(),
+			auto instance = TComponentInstance<C>{
+				context->id().entity(),
 				self
 			};
 
@@ -279,15 +396,28 @@ namespace sge
 
 	/* Wraps a function expecting a component instance and a scene into a standard component setter function. */
 	template <class C, typename RetT, typename PropT>
-	auto component_setter(RetT(*setter)(ComponentInstance<C>, Scene&, PropT))
+	auto component_setter(RetT(*setter)(TComponentInstance<C>, Frame&, PropT))
 	{
 		return [setter](C* self, ComponentContext* context, const PropT* value) {
-			auto instance = ComponentInstance<C>{
-				context->identity(),
+			auto instance = TComponentInstance<C>{
+				context->id().entity(),
 				self
 			};
 
-			setter(instance, *context->scene(), *value);
+			setter(instance, *context->frame(), *value);
 		};
 	}
+}
+
+namespace std
+{
+	template <>
+	struct hash< sge::ComponentId >
+	{
+		std::size_t operator()(const sge::ComponentId& key) const
+		{
+			return hash<sge::EntityId>()(key.entity()) ^ hash<const sge::TypeInfo*>()(key.type()) << 1;
+		}
+	};
+
 }
