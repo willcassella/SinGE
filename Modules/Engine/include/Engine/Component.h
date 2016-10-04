@@ -63,11 +63,11 @@ namespace sge
 		///   Operators   ///
 	public:
 
-		static friend bool operator==(const ComponentId& lhs, const ComponentId& rhs)
+		friend bool operator==(const ComponentId& lhs, const ComponentId& rhs)
 		{
 			return lhs._entity == rhs._entity && lhs._type == rhs._type;
 		}
-		static friend bool operator!=(const ComponentId& lhs, const ComponentId& rhs)
+		friend bool operator!=(const ComponentId& lhs, const ComponentId& rhs)
 		{
 			return !(lhs == rhs);
 		}

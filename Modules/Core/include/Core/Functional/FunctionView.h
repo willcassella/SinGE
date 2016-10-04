@@ -1,6 +1,9 @@
 // FunctionView.h
 #pragma once
 
+#include <utility>
+#include <type_traits>
+
 namespace sge
 {
 	template <typename Func>
@@ -48,19 +51,19 @@ namespace sge
 		FunctionView(FRet(&)(FArgs...)) = delete;
 
 		FunctionView(FunctionView& copy)
-			: _invoker{ copy._invoker }, _data{ copy._data }
+			: _invoker(copy._invoker), _data(copy._data)
 		{
 		}
 		FunctionView(const FunctionView& copy)
-			: _invoker{ copy._invoker }, _data{ copy._data }
+			: _invoker(copy._invoker), _data(copy._data)
 		{
 		}
 		FunctionView(FunctionView&& move)
-			: _invoker{ move._invoker }, _data{ move._data }
+			: _invoker(move._invoker), _data(move._data)
 		{
 		}
 		FunctionView(const FunctionView&& move)
-			: _invoker{ move._invoker }, _data{ move._data }
+			: _invoker(move._invoker), _data(move._data)
 		{
 		}
 

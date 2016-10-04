@@ -269,12 +269,12 @@ namespace sge
 		///   Operators   ///
 	public:
 
-		static friend bool operator==(const TypeInfo& lhs, const TypeInfo& rhs)
+		friend bool operator==(const TypeInfo& lhs, const TypeInfo& rhs)
 		{
 			return &lhs == &rhs ||
-				lhs._data.native_type_info && rhs._data.native_type_info && *lhs._data.native_type_info == *rhs._data.native_type_info;
+				(lhs._data.native_type_info && rhs._data.native_type_info && *lhs._data.native_type_info == *rhs._data.native_type_info);
 		}
-		static friend bool operator!=(const TypeInfo& lhs, const TypeInfo& rhs)
+		friend bool operator!=(const TypeInfo& lhs, const TypeInfo& rhs)
 		{
 			return !(lhs == rhs);
 		}
