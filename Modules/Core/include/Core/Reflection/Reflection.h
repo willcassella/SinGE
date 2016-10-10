@@ -1,6 +1,7 @@
 // Reflection.h
 #pragma once
 
+#include "../config.h"
 #include "../STDE/TypeTraits.h"
 #include "NativeTypeInfo.h"
 #include "InterfaceInfo.h"

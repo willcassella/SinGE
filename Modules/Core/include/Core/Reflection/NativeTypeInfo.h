@@ -135,6 +135,11 @@ namespace sge
 			_data.drop(self);
 		}
 
+		std::size_t num_constructors() const override
+		{
+			return _data.constructors.size();
+		}
+
 		const NativeConstructorInfo* find_constructor(std::size_t argc) const override
 		{
 			auto ctor = _data.constructors.find(argc);
@@ -147,6 +152,11 @@ namespace sge
 			{
 				enumerator(ctor.first, ctor.second);
 			}
+		}
+
+		std::size_t num_named_constructors() const override
+		{
+			return _data.named_constructors.size();
 		}
 
 		const NativeConstructorInfo* find_named_constructor(const char* name) const override
@@ -163,6 +173,11 @@ namespace sge
 			}
 		}
 
+		std::size_t num_properties() const override
+		{
+			return _data.properties.size();
+		}
+
 		const NativePropertyInfo* find_property(const char* name) const override
 		{
 			auto prop = _data.properties.find(name);
@@ -175,6 +190,11 @@ namespace sge
 			{
 				enumerator(prop.first, prop.second);
 			}
+		}
+
+		std::size_t num_fields() const override
+		{
+			return _data.fields.size();
 		}
 
 		const FieldInfo* find_field(const char* name) const override

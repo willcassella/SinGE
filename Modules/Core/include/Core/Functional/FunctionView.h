@@ -6,64 +6,72 @@
 
 namespace sge
 {
-	template <typename Func>
+	template <typename Fn>
 	struct FunctionView;
 
-	template <typename Ret, typename ... Args>
-	struct FunctionView< Ret(Args...) >
+	template <typename RetT, typename ... ArgTs>
+	struct FunctionView< RetT(ArgTs...) >
 	{
 	private:
 
-		union InvokerData
+		union UserData
 		{
-			void* lambda;
-			Ret(*func)(Args...);
+			void* state;
+			RetT(*func)(ArgTs...);
 		};
+		using Function = RetT(UserData, ArgTs...);
 
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		/* Creates a FunctionView from a lambda/function pointer.
-		* NOTE: This form allows lambdas and function pointers that do not exactly match the signature of this FunctionView.*/
-		template <typename F>
-		FunctionView(F&& lambda)
+		/* Explicitly initializes this FunctionView with a state pointer and function pointer. */
+		FunctionView(void* state, Function* func)
 		{
-			_invoker = [](InvokerData data, Args... args) -> Ret {
-				return (*static_cast<std::remove_reference_t<F>*>(data.lambda))(std::forward<Args>(args)...);
-			};
-			_data.lambda = &lambda;
+			_data.state = state;
+			_func = func;
 		}
 
 		/* Creates a FunctionView from a function reference.
 		* NOTE: This form only supports function references that exactly match the signature for this FunctionView.
 		* If that is not desireable, just use the normal function pointer syntax ('&func' instead of 'func'). */
-		FunctionView(Ret(&func)(Args...))
+		FunctionView(RetT(&func)(ArgTs...))
 		{
-			_invoker = [](InvokerData data, Args... args) -> Ret {
-				return data.func(std::forward<Args>(args)...);
-			};
 			_data.func = &func;
+			_func = [](UserData data, ArgTs... args) -> RetT {
+				return data.func(std::forward<ArgTs>(args)...);
+			};
+		}
+
+		/* Creates a FunctionView from a lambda/function pointer.
+		* NOTE: This form allows lambdas and function pointers that do not exactly match the signature of this FunctionView.*/
+		template <typename Fn>
+		FunctionView(Fn&& lambda)
+		{
+			_data.state = &lambda;
+			_func = [](UserData data, ArgTs... args) -> RetT {
+				return (*static_cast<std::remove_reference_t<Fn>*>(data.state))(std::forward<ArgTs>(args)...);
+			};
 		}
 
 		/* You may not use a function reference that does not exactly match the signature of this FunctionView (use a function pointer instead). */
-		template <typename FRet, typename ... FArgs>
-		FunctionView(FRet(&)(FArgs...)) = delete;
+		template <typename FRetT, typename ... FArgTs>
+		FunctionView(FRetT(&)(FArgTs...)) = delete;
 
 		FunctionView(FunctionView& copy)
-			: _invoker(copy._invoker), _data(copy._data)
+			: _data(copy._data), _func(copy._func)
 		{
 		}
 		FunctionView(const FunctionView& copy)
-			: _invoker(copy._invoker), _data(copy._data)
+			: _data(copy._data), _func(copy._func)
 		{
 		}
 		FunctionView(FunctionView&& move)
-			: _invoker(move._invoker), _data(move._data)
+			: _data(move._data), _func()
 		{
 		}
 		FunctionView(const FunctionView&& move)
-			: _invoker(move._invoker), _data(move._data)
+			: _data(move._data), _func(move._func)
 		{
 		}
 
@@ -71,25 +79,25 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		Ret invoke(Args... args) const
+		RetT invoke(ArgTs... args) const
 		{
-			return _invoker(_data, std::forward<Args>(args)...);
+			return _func(_data, std::forward<ArgTs>(args)...);
 		}
 
 		/////////////////////
 		///   Operators   ///
 	public:
 
-		Ret operator()(Args... args) const
+		RetT operator()(ArgTs... args) const
 		{
-			return invoke(std::forward<Args>(args)...);
+			return _func(_data, std::forward<ArgTs>(args)...);
 		}
 
 		////////////////
 		///   Data   ///
 	private:
 
-		Ret(*_invoker)(InvokerData, Args...);
-		InvokerData _data;
+		UserData _data;
+		Function* _func;
 	};
 }

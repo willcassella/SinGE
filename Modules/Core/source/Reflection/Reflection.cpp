@@ -9,6 +9,7 @@ namespace sge
 	NativeTypeInfo build_primitive_type_info(std::string name)
 	{
 		TypeInfo::Data base_type_data{ std::move(name) };
+		base_type_data.flags = TF_PRIMITIVE;
 		base_type_data.size = sizeof(T);
 		base_type_data.alignment = alignof(T);
 

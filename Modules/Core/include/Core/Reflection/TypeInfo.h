@@ -50,7 +50,12 @@ namespace sge
 		public:
 
 			Data(std::string name)
-				: flags(TF_NONE), name(std::move(name)), size(0), alignment(0), base(nullptr), native_type_info(nullptr)
+				: flags(TF_NONE),
+				name(std::move(name)),
+				size(0),
+				alignment(0),
+				base(nullptr),
+				native_type_info(nullptr)
 			{
 			}
 
@@ -73,6 +78,15 @@ namespace sge
 		explicit TypeInfo(Data data)
 			: _data(std::move(data))
 		{
+			// Generate hash code
+			if (_data.native_type_info != nullptr)
+			{
+				_hash_code = _data.native_type_info->hash_code();
+			}
+			else
+			{
+				_hash_code = std::hash<std::string>{}(_data.name);
+			}
 		}
 
 		///////////////////
@@ -109,6 +123,14 @@ namespace sge
 		std::size_t alignment() const
 		{
 			return _data.alignment;
+		}
+
+		/**
+		 * \breif Returns a hash code for this type.
+		 */
+		std::size_t hash_code() const
+		{
+			return _hash_code;
 		}
 
 		/**
@@ -214,6 +236,12 @@ namespace sge
 		virtual void drop(void* self) const = 0;
 
 		/**
+		* \brief Returns the number of constructors for this type. This will match the number of calls to 'enumerator'
+		* within 'enumerate_constructors'.
+		*/
+		virtual std::size_t num_constructors() const = 0;
+
+		/**
 		 * \brief Searches for an unnamed constructor with the given number of arguments on this type.
 		 * \param argc The arity of the constructor to search for.
 		 * \return A pointer to the information for the constructor if found, 'nullptr' if not.
@@ -227,6 +255,12 @@ namespace sge
 		virtual void enumerate_constructors(FunctionView<ConstructorEnumeratorFn> enumerator) const = 0;
 
 		/**
+		* \brief Returns the number of named constructors for this type. This will match the number of calls to 'enumerator'
+		* within 'enumerate_constructors'.
+		*/
+		virtual std::size_t num_named_constructors() const = 0;
+
+		/**
 		 * \brief Searches for a named constructor with the given name on this type.
 		 * \param name The name of the constructor to search for.
 		 * \return A pointer to the information for the constructor if found, 'nullptr' otherwise.
@@ -235,9 +269,15 @@ namespace sge
 
 		/**
 		 * \brief Enumerates all named constructors of this type.
-		 * \param enumerator A functoin to call with the name and information for the constructor at each iteration.
+		 * \param enumerator A function to call with the name and information for the constructor at each iteration.
 		 */
 		virtual void enumerate_named_constructors(FunctionView<NamedConstructorEnumeratorFn> enumerator) const = 0;
+
+		/**
+		 * \brief Returns the number of properties on this type. This will match the number of calls to 'enumerator'
+		 * within 'enumerate_properties'.
+		 */
+		virtual std::size_t num_properties() const = 0;
 
 		/**
 		 * \brief Searches for a property with the given name on this type.
@@ -253,9 +293,15 @@ namespace sge
 		virtual void enumerate_properties(FunctionView<PropertyEnumeratorFn> enumerator) const = 0;
 
 		/**
+		 * \brief Returns the number of fields on this type. This will match the number of calls to 'enumerator'
+		 * within 'enumerate_fields'.
+		 */
+		virtual std::size_t num_fields() const = 0;
+
+		/**
 		 * \brief Searches for a field with the given name on this type.
 		 * \param name The name of the field to search for.
-		 * \return A pointer to the information of the field if found, 'nullptr' otherwise.
+		 * \return A pointer to the information for the field if found, 'nullptr' otherwise.
 		 */
 		virtual const FieldInfo* find_field(const char* name) const = 0;
 
@@ -284,5 +330,6 @@ namespace sge
 	private:
 
 		Data _data;
+		std::size_t _hash_code;
 	};
 }

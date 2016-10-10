@@ -3,7 +3,6 @@
 
 #include <unordered_map>
 #include <string>
-#include "../config.h"
 
 namespace sge
 {

@@ -113,7 +113,7 @@ namespace sge
 
 		/**
 		 * \brief Mutates the value of this property.
-		 * \param self THe object to mutate the property on.
+		 * \param self The object to mutate the property on.
 		 * \param context The context object for accessing the property.
 		 * \param mutator A function to call that will mutate the value of the property.
 		 */

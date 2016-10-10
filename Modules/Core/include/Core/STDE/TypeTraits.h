@@ -4,7 +4,7 @@
 #include <type_traits>
 #include "TMP.h"
 
-namespace stde 
+namespace stde
 {
 	/* Copies the const qualifier from 'FromT' to 'ToT' */
 	template <typename FromT, typename ToT>
