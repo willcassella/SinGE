@@ -113,6 +113,9 @@ xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
     <Link>
       <AdditionalDependencies>glew.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 GLRender</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -131,6 +134,9 @@ xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
     <Link>
       <AdditionalDependencies>glew.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 GLRender</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -154,6 +160,9 @@ xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d
 xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 GLRender</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -177,6 +186,9 @@ xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d
 xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 GLRender</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\GLRender\config.h" />
