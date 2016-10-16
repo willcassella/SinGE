@@ -17,8 +17,8 @@ namespace sge
 		glAttachShader(_id, vShader);
 		glAttachShader(_id, fShader);
 		glBindAttribLocation(_id, POSITION_ATTRIB_LOCATION, POSITION_ATTRIB_NAME);
-		glBindAttribLocation(_id, NORMAL_ATTRIB_LOCATION, NORMAL_ATTRIB_NAME);
-		glBindAttribLocation(_id, TEXCOORD_ATTRIB_LOCATION, TEXCOORD_ATTRIB_NAME);
+		//glBindAttribLocation(_id, NORMAL_ATTRIB_LOCATION, NORMAL_ATTRIB_NAME);
+		//glBindAttribLocation(_id, TEXCOORD_ATTRIB_LOCATION, TEXCOORD_ATTRIB_NAME);
 		glLinkProgram(_id);
 
 		// Make sure program successfully linked
@@ -54,7 +54,12 @@ namespace sge
 		: _id(move._id),
 		_model(move._model),
 		_view(move._view),
-		_projection(move._projection)
+		_projection(move._projection),
+		_float_params(std::move(move)._float_params),
+		_vec2_params(std::move(move)._vec2_params),
+		_vec3_params(std::move(move)._vec3_params),
+		_vec4_params(std::move(move)._vec4_params),
+		_texture_params(std::move(move)._texture_params)
 	{
 		move._id = 0;
 	}
@@ -94,9 +99,24 @@ namespace sge
 		{
 			glActiveTexture(texIndex);
 			glBindTexture(GL_TEXTURE_2D, param.second);
-			glUniform1i(param.first, texIndex);
+			glUniform1i(param.first, texIndex - GL_TEXTURE0);
 			texIndex += 1;
 		}
+	}
+
+	void GLMaterial::set_model_matrix(const Mat4& model) const
+	{
+		glUniformMatrix4fv(_model, 1, GL_FALSE, model.vec());
+	}
+
+	void GLMaterial::set_view_matrix(const Mat4& view) const
+	{
+		glUniformMatrix4fv(_view, 1, GL_FALSE, view.vec());
+	}
+
+	void GLMaterial::set_projection_matrix(const Mat4& projection) const
+	{
+		glUniformMatrix4fv(_projection, 1, GL_FALSE, projection.vec());
 	}
 
 	void GLMaterial::override_params(GLRenderSystem::State& renderState, const Material::ParamTable& params, GLuint& texIndex) const

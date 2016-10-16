@@ -188,9 +188,9 @@ namespace sge
 		glBindFramebuffer(GL_FRAMEBUFFER, _state->gbuffer_framebuffer);
 		glDrawBuffers(NUM_DRAW_BUFFERS, DRAW_BUFFERS);
 
-		// Clear the GBuffer
-		glEnable(GL_DEPTH_TEST);
-		glDisable(GL_BLEND);
+		//// Clear the GBuffer
+		//glEnable(GL_DEPTH_TEST);
+		//glDisable(GL_BLEND);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Create matrices
@@ -212,7 +212,7 @@ namespace sge
 
 			hasCamera = true;
 			view = CTransform3D::get_world_matrix(transform, frame).inverse();
-			proj = camera->get_projection_matrix((float)this->_state->width / this->_state->height);
+			proj = camera->get_projection_matrix((float)this->_state->height / this->_state->width);
 		});
 
 		// If no camera was found, return
@@ -227,7 +227,7 @@ namespace sge
 			EntityId entity,
 			TComponentInstance<const CTransform3D> transform,
 			TComponentInstance<const CStaticMesh> staticMesh)
-		{
+		{			
 			// Get the model matrix
 			auto model = CTransform3D::get_world_matrix(transform, frame);
 
@@ -237,13 +237,13 @@ namespace sge
 
 			// Bind the mesh and material
 			mesh.bind();
-			GLuint texIndex = 0;
+			GLuint texIndex = GL_TEXTURE0;
 			material.bind(texIndex);
 
 			// Upload transformation matrices
-			glUniformMatrix4fv(GLMaterial::MODEL_UNIFORM_LOCATION, 1, GL_FALSE, model.vec());
-			glUniformMatrix4fv(GLMaterial::VIEW_UNIFORM_LOCATION, 1, GL_FALSE, view.vec());
-			glUniformMatrix4fv(GLMaterial::PROJ_UNIFORM_LOCATION, 1, GL_FALSE, proj.vec());
+			material.set_model_matrix(model);
+			material.set_view_matrix(view);
+			material.set_projection_matrix(proj);
 
 			// Draw the mesh
 			glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());

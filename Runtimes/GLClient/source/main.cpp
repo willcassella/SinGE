@@ -46,7 +46,7 @@ int main()
 	auto cameraEnt = scene.new_entity();
 	scene.new_component<sge::CPerspectiveCamera>(cameraEnt);
 	auto cameraPos = scene.new_component<sge::CTransform3D>(cameraEnt);
-	sge::CTransform3D::set_local_position(cameraPos, initFrame, sge::Vec3{ 0, 0, 0 });
+	sge::CTransform3D::set_local_position(cameraPos, initFrame, sge::Vec3{ 0, 2, 3 });
 
 	// Create a render system
 	sge::GLRenderSystem renderSystem{ window_width, window_height };

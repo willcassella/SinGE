@@ -1,6 +1,7 @@
 // GLMaterial.h
 #pragma once
 
+#include <Core/Math/Mat4.h>
 #include <Engine/Resources/Material.h>
 #include "../include/GLRender/GLRenderSystem.h"
 #include "GLTexture2D.h"
@@ -43,6 +44,12 @@ namespace sge
 		}
 
 		void bind(GLuint& texIndex) const;
+
+		void set_model_matrix(const Mat4& model) const;
+
+		void set_view_matrix(const Mat4& view) const;
+
+		void set_projection_matrix(const Mat4& projection) const;
 
 		void override_params(GLRenderSystem::State& renderState, const Material::ParamTable& params, GLuint& texIndex) const;
 

@@ -67,10 +67,10 @@ namespace sge
 			const auto depth = zMax - zMin;
 
 			return Mat4{
-				2 * zMin / width, 0, (xMax + xMin) / width, 0,
-				0, 2 * zMin / height, (yMax + yMin) / height, 0,
-				0, 0, -(zMax + zMin) / depth, -2 * zMax*zMin / depth,
-				0, 0, -1, 0 };
+				2*zMin/width,	0,				(xMax+xMin)/width,		0,
+				0,				2*zMin/height,	(yMax+yMin)/height,		0,
+				0,				0,				-(zMax+zMin)/depth,		-2*zMax*zMin/depth,
+				0,				0,				-1,						0 };
 		}
 
 		/** Generates a perspective projection matrix with the following horizontal FOV */
@@ -97,10 +97,10 @@ namespace sge
 			const auto depth = zMax - zMin;
 
 			return Mat4{
-				2 / width, 0, 0, -(xMax + xMin) / width,
-				0, 2 / height, 0, -(yMax + yMin) / height,
-				0, 0, -2 / depth, -(zMax + zMin) / depth,
-				0, 0, 0, 1 };
+				2/width,	0,			0,			-(xMax+xMin)/width,
+				0,			2/height,	0,			-(yMax+yMin)/height,
+				0,			0,			-2/depth,	-(zMax+zMin)/depth,
+				0,			0,			0,			1 };
 		}
 
 		/** Generates a transformation matrix representing a translation */
@@ -109,7 +109,7 @@ namespace sge
 			return Mat4{
 				1, 0, 0, vec.x(),
 				0, 1, 0, vec.y(),
-				0, 0, 1, vec.x(),
+				0, 0, 1, vec.z(),
 				0, 0, 0, 1 };
 		}
 
@@ -117,10 +117,10 @@ namespace sge
 		static Mat4 scale(const Vec3& vec)
 		{
 			return Mat4{
-				vec.x(), 0, 0, 0,
-				0, vec.y(), 0, 0,
-				0, 0, vec.z(), 0,
-				0, 0, 0, 1 };
+				vec.x(),	0,			0,			0,
+				0,			vec.y(),	0,			0,
+				0,			0,			vec.z(),	0,
+				0,			0,			0,			1 };
 		}
 
 		/** Generates a transformation matrix representing a rotation */
@@ -133,10 +133,10 @@ namespace sge
 			w = rot.w();
 
 			return Mat4{
-				1 - 2 * y*y - 2 * z*z, 2 * x*y + 2 * z*w, 2 * x*z - 2 * y*w, 0,
-				2 * x*y - 2 * z*w, 1 - 2 * x*x - 2 * z*z, 2 * y*z + 2 * x*w, 0,
-				2 * x*z + 2 * y*w, 2 * y*z - 2 * x*w, 1 - 2 * x*x - 2 * y*y, 0,
-				0, 0, 0, 1 };
+				1-2*y*y-2*z*z,		2*x*y+2*z*w,		2*x*z-2*y*w,		0,
+				2*x*y-2*z*w,		1-2*x*x-2*z*z,		2*y*z+2*x*w,		0,
+				2*x*z+2*y*w,		2*y*z-2*x*w,		1-2*x*x-2*y*y,		0,
+				0,					0,					0,					1 };
 		}
 
 		/** Gets the value at the specified column and row */
