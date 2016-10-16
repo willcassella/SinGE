@@ -1,49 +1,96 @@
 // Any.h
 #pragma once
 
-#include "../env.h"
+#include <utility>
+#include "../Util/InterfaceUtils.h"
 
 namespace sge
 {
 	struct TypeInfo;
 
 	template <typename T>
-	const auto& get_type(const T&);
+	const auto& get_type();
 
-	struct AnyMut
+	template <typename I>
+	struct AnyImpl
+	{
+		////////////////////////
+		///   Constructors   ///
+	protected:
+
+		AnyImpl(const I& impl)
+			: _impl(&impl)
+		{
+		}
+
+		///////////////////
+		///   Methods   ///
+	protected:
+
+		const I& impl() const
+		{
+			return *_impl;
+		}
+
+		//////////////////
+		///   Fields   ///
+	private:
+
+		const I* _impl;
+	};
+
+	template <typename ... Is>
+	struct AnyMut : AnyImpl<Is>...
 	{
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		AnyMut(void* value, const TypeInfo& type)
-			: _value(value), _type(&type)
+		AnyMut(const TypeInfo& type, void* object, const Is& ... impls)
+			: AnyImpl<Is>(impls)...,
+			_type(&type),
+			_object(object)
 		{
 		}
 
 		template <typename T>
 		AnyMut(T& value)
-			: _value(&value), _type(&sge::get_type(value))
+			: AnyImpl<Is>(Is::template get_impl<T>())...,
+			_type(&get_type(value)),
+			_object(&value)
 		{
 		}
 
-		template <typename T>
-		AnyMut(T&& value) = delete;
+		template <typename ... OtherIs>
+		AnyMut(AnyMut<OtherIs...> other)
+			: AnyImpl<Is>(other)...,
+			_type(&other.type()),
+			_object(other.object())
+		{
+		}
 
 		AnyMut(AnyMut& copy)
-			: _value(copy._value), _type(copy._type)
+			: AnyImpl<Is>(copy)...,
+			_type(copy._type),
+			_object(copy._object)
 		{
 		}
 		AnyMut(const AnyMut& copy)
-			: _value(copy._value), _type(copy._type)
+			: AnyImpl<Is>(copy)...,
+			_type(copy._type),
+			_object(copy._object)
 		{
 		}
 		AnyMut(AnyMut&& move)
-			: _value(move._value), _type(move._type)
+			: AnyImpl<Is>(move)...,
+			_type(move._type),
+			_object(move._object)
 		{
 		}
 		AnyMut(const AnyMut&& move)
-			: _value(move._value), _type(move._type)
+			: AnyImpl<Is>(move)...,
+			_type(move._type),
+			_object(move._object)
 		{
 		}
 
@@ -51,63 +98,108 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		void* get_value() const
-		{
-			return _value;
-		}
-
-		const TypeInfo& get_type() const
+		const TypeInfo& type() const
 		{
 			return *_type;
+		}
+
+		void* object() const
+		{
+			return _object;
+		}
+
+		template <typename I>
+		const I& impl() const
+		{
+			return this->AnyImpl<I>::impl();
+		}
+
+		template <typename Ret, typename I, typename ... ArgTs, typename ... ActualArgTs>
+		Ret call(Ret(*I::*member)(SelfMut, ArgTs...), ActualArgTs&& ... args) const
+		{
+			return (this->AnyImpl<I>::impl().*member)(SelfMut{ _object }, std::forward<ActualArgTs>(args)...);
+		}
+
+		template <typename Ret, typename I, typename ... ArgTs, typename ... ActualArgTs>
+		Ret call(Ret(*I::*member)(Self, ArgTs...), ActualArgTs&& ... args) const
+		{
+			return (this->AnyImpl<I>::impl().*member)(Self{ _object }, std::forward<ActualArgTs>(args)...);
+		}
+
+		template <typename Ret, typename I, typename ... ArgTs, typename ... ActualArgTs>
+		Ret call(Ret(*I::*member)(ArgTs...), ActualArgTs&& ... args) const
+		{
+			return (this->AnyImpl<I>::impl().*member)(std::forward<ActualArgTs>(args)...);
 		}
 
 		//////////////////
 		///   Fields   ///
 	private:
 
-		void* _value;
 		const TypeInfo* _type;
+		void* _object;
 	};
 
-	struct Any
+	template <typename ... Is>
+	struct Any : AnyImpl<Is>...
 	{
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		Any(const void* value, const TypeInfo& type)
-			: _value(value), _type(&type)
+		Any(const TypeInfo& type, const void* object, const Is& ... impls)
+			: AnyImpl<Is>(impls)...,
+			_type(&type),
+			_object(object)
 		{
 		}
 
 		template <typename T>
 		Any(const T& value)
-			: _value(&value), _type(&sge::get_type(value))
+			: AnyImpl<Is>(Is::template get_impl<T>())...,
+			_type(&get_type(value)),
+			_object(&value)
 		{
 		}
 
-		template <typename T>
-		Any(T&& value) = delete;
+		template <typename ... OtherIs>
+		Any(AnyMut<OtherIs...> other)
+			: AnyImpl<Is>(other)...,
+			_type(&other.type()),
+			_object(other.object())
+		{
+		}
 
-		Any(AnyMut any)
-			: _value(any.get_value()), _type(&any.get_type())
+		template <typename ... OtherIs>
+		Any(Any<OtherIs...> other)
+			: AnyImpl<Is>(other)...,
+			_type(&other.type()),
+			_object(other.object())
 		{
 		}
 
 		Any(Any& copy)
-			: _value(copy._value), _type(copy._type)
+			: AnyImpl<Is>(copy)...,
+			_type(copy._type),
+			_object(copy._object)
 		{
 		}
 		Any(const Any& copy)
-			: _value(copy._value), _type(copy._type)
+			: AnyImpl<Is>(copy)...,
+			_type(copy._type),
+			_object(copy._object)
 		{
 		}
 		Any(Any&& move)
-			: _value(move._value), _type(move._type)
+			: AnyImpl<Is>(move)...,
+			_type(move._type),
+			_object(move._object)
 		{
 		}
 		Any(const Any&& move)
-			: _value(move._value), _type(move._type)
+			: AnyImpl<Is>(move)...,
+			_type(move._type),
+			_object(move._object)
 		{
 		}
 
@@ -115,226 +207,33 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		const void* get_value() const
-		{
-			return _value;
-		}
-
-		const TypeInfo& get_type() const
+		const TypeInfo& type() const
 		{
 			return *_type;
 		}
 
+		const void* object() const
+		{
+			return _object;
+		}
+
+		template <typename Ret, typename I, typename ... ArgTs, typename ... ActualArgTs>
+		Ret call(Ret(*I::*member)(Self, ArgTs...), ActualArgTs&& ... args) const
+		{
+			return (this->AnyImpl<I>::impl().*member)(Self{ _object }, std::forward<ActualArgTs>(args)...);
+		}
+
+		template <typename Ret, typename I, typename ... ArgTs, typename ... ActualArgTs>
+		Ret call(Ret(*I::*member)(ArgTs...), ActualArgTs&& ... args)
+		{
+			return (this->AnyImpl<I>::impl().*member)(std::forward<ActualArgTs>(args)...);
+		}
+
 		//////////////////
 		///   Fields   ///
 	private:
 
-		const void* _value;
 		const TypeInfo* _type;
+		const void* _object;
 	};
-
-	struct ArgAny
-	{
-		union Storage
-		{
-			bool b;
-			char i8;
-			byte u8;
-			int16 i16;
-			uint16 u16;
-			int32 i32;
-			uint32 u32;
-			int64 i64;
-			uint64 u64;
-			float f;
-			double d;
-			long double ld;
-			const void* obj;
-		};
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		template <typename T>
-		const T& get() const
-		{
-			return *static_cast<const T*>(_value.obj);
-		}
-
-		template <typename T>
-		void set(const T& obj)
-		{
-			_value.obj = &obj;
-		}
-
-		template <typename T>
-		void set(const T&& obj) = delete;
-
-		template <typename T>
-		void set(T* ptr)
-		{
-			_value.obj = ptr;
-		}
-
-		template <typename T>
-		void set(const T* ptr)
-		{
-			_value.obj = ptr;
-		}
-
-		void set(bool value)
-		{
-			_value.b = value;
-		}
-
-		void set(char value)
-		{
-			_value.i8 = value;
-		}
-
-		void set(byte value)
-		{
-			_value.u8 = value;
-		}
-
-		void set(int16 value)
-		{
-			_value.i16 = value;
-		}
-
-		void set(uint16 value)
-		{
-			_value.u16 = value;
-		}
-
-		void set(int32 value)
-		{
-			_value.i32 = value;
-		}
-
-		void set(uint32 value)
-		{
-			_value.u32 = value;
-		}
-
-		void set(int64 value)
-		{
-			_value.i64 = value;
-		}
-
-		void set(uint64 value)
-		{
-			_value.u64 = value;
-		}
-
-		void set(float value)
-		{
-			_value.f = value;
-		}
-
-		void set(double value)
-		{
-			_value.d = value;
-		}
-
-		void set(long double value)
-		{
-			_value.ld = value;
-		}
-
-		//////////////////
-		///   Fields   ///
-	private:
-
-		Storage _value;
-	};
-
-	template <>
-	inline const bool& ArgAny::get() const
-	{
-		return _value.b;
-	}
-
-	template <>
-	inline const char& ArgAny::get() const
-	{
-		return _value.i8;
-	}
-
-	template <>
-	inline const byte& ArgAny::get() const
-	{
-		return _value.u8;
-	}
-
-	template <>
-	inline const int16& ArgAny::get() const
-	{
-		return _value.i16;
-	}
-
-	template <>
-	inline const uint16& ArgAny::get() const
-	{
-		return _value.u16;
-	}
-
-	template <>
-	inline const int32& ArgAny::get() const
-	{
-		return _value.i32;
-	}
-
-	template <>
-	inline const uint32& ArgAny::get() const
-	{
-		return _value.u32;
-	}
-
-	template <>
-	inline const int64& ArgAny::get() const
-	{
-		return _value.i64;
-	}
-
-	template <>
-	inline const uint64& ArgAny::get() const
-	{
-		return _value.u64;
-	}
-
-	template <>
-	inline const float& ArgAny::get() const
-	{
-		return _value.f;
-	}
-
-	template <>
-	inline const double& ArgAny::get() const
-	{
-		return _value.d;
-	}
-
-	template <>
-	inline const long double& ArgAny::get() const
-	{
-		return _value.ld;
-	}
-
-	namespace specialized
-	{
-		template <typename T>
-		struct GetType;
-
-		template<>
-		struct GetType< Any >
-		{
-		};
-
-		template <>
-		struct GetType< AnyMut >
-		{
-		};
-	}
 }

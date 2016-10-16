@@ -2,7 +2,9 @@
 #pragma once
 
 #include <cstring>
+#include <cassert>
 #include <string>
+#include "../Util/InterfaceUtils.h"
 #include "../Reflection/Reflection.h"
 
 namespace sge
@@ -10,155 +12,181 @@ namespace sge
 	struct SGE_CORE_API IToString
 	{
 		SGE_REFLECTED_INTERFACE;
-		SGE_VTABLE_1(IToString, to_string);
+		SGE_INTERFACE_1(IToString, to_string)
 
 		/////////////////////
 		///   Functions   ///
 	public:
 
-		std::string(*to_string)(const void* self);
+		std::string(*to_string)(Self self);
 	};
 
 	template <typename T>
 	struct Impl< IToString, T >
 	{
-		static std::string to_string(const void* self)
+		static std::string to_string(Self self)
 		{
-			return static_cast<const T*>(self)->to_string();
+			return self.as<T>()->to_string();
+		}
+	};
+
+	template <>
+	struct Impl< IToString, int8 >
+	{
+		static std::string to_string(Self self)
+		{
+			assert(!self.null());
+			return std::to_string(*self.as<int8>());
 		}
 	};
 
 	template <>
 	struct Impl< IToString, byte >
 	{
-		static std::string to_string(const void* self)
+		static std::string to_string(Self self)
 		{
-			return std::to_string(*static_cast<const byte*>(self));
+			assert(!self.null());
+			return std::to_string(*self.as<byte>());
 		}
 	};
 
 	template <>
 	struct Impl< IToString, int16 >
 	{
-		static std::string to_string(const void* self)
+		static std::string to_string(Self self)
 		{
-			return std::to_string(*static_cast<const int16*>(self));
+			assert(!self.null());
+			return std::to_string(*self.as<int16>());
 		}
 	};
 
 	template <>
 	struct Impl< IToString, uint16 >
 	{
-		static std::string to_string(const void* self)
+		static std::string to_string(Self self)
 		{
-			return std::to_string(*static_cast<const uint16*>(self));
+			assert(!self.null());
+			return std::to_string(*self.as<uint16>());
 		}
 	};
 
 	template <>
 	struct Impl< IToString, int32 >
 	{
-		static std::string to_string(const void* self)
+		static std::string to_string(Self self)
 		{
-			return std::to_string(*static_cast<const int32*>(self));
+			assert(!self.null());
+			return std::to_string(*self.as<int32>());
 		}
 	};
 
 	template <>
 	struct Impl< IToString, uint32 >
 	{
-		static std::string to_string(const void* self)
+		static std::string to_string(Self self)
 		{
-			return std::to_string(*static_cast<const uint32*>(self));
+			assert(!self.null());
+			return std::to_string(*self.as<uint32>());
 		}
 	};
 
 	template <>
 	struct Impl< IToString, int64 >
 	{
-		static std::string to_string(const void* self)
+		static std::string to_string(Self self)
 		{
-			return std::to_string(*static_cast<const int64*>(self));
+			assert(!self.null());
+			return std::to_string(*self.as<int64>());
 		}
 	};
 
 	template <>
 	struct Impl< IToString, uint64 >
 	{
-		static std::string to_string(const void* self)
+		static std::string to_string(Self self)
 		{
-			return std::to_string(*static_cast<const uint64*>(self));
+			assert(!self.null());
+			return std::to_string(*self.as<uint64>());
 		}
 	};
 
 	template <>
 	struct Impl< IToString, float >
 	{
-		static std::string to_string(const void* self)
+		static std::string to_string(Self self)
 		{
-			return std::to_string(*static_cast<const float*>(self));
+			assert(!self.null());
+			return std::to_string(*self.as<float>());
 		}
 	};
 
 	template <>
 	struct Impl< IToString, double >
 	{
-		static std::string to_string(const void* self)
+		static std::string to_string(Self self)
 		{
-			return std::to_string(*static_cast<const double*>(self));
+			assert(!self.null());
+			return std::to_string(*self.as<double>());
 		}
 	};
 
 	template <>
 	struct Impl< IToString, long double >
 	{
-		static std::string to_string(const void* self)
+		static std::string to_string(Self self)
 		{
-			return std::to_string(*static_cast<const long double*>(self));
+			assert(!self.null());
+			return std::to_string(*self.as<long double>());
 		}
 	};
 
-	template <typename T>
-	std::string to_string(const T& value)
+	template <>
+	struct Impl< IToString, char* >
 	{
-		return Impl<IToString, T>::to_string(&value);
-	}
-
-	inline void format_impl(std::string& out, const char* fmt, std::size_t len)
-	{
-		out.append(fmt, len);
-	}
-
-	template <typename T, typename ... Ts>
-	void format_impl(std::string& out, const char* fmt, std::size_t len, const T& t, const Ts& ... ts)
-	{
-		for (; len > 0; ++fmt, --len)
+		static std::string to_string(Self self)
 		{
-			if (*fmt == '@')
-			{
-				out += to_string(t);
-				return format_impl(out, fmt + 1, len - 1, ts...);
-			}
-			else
-			{
-				out += *fmt;
-			}
+			assert(!self.null());
+			return *self.as<char*>();
 		}
-	}
+	};
 
-	template <typename ... Ts>
-	std::string format(const char* fmt, const Ts& ... ts)
+	template <>
+	struct Impl< IToString, const char* >
 	{
-		std::string result;
-		format_impl(result, fmt, std::strlen(fmt), ts...);
-		return result;
-	}
+		static std::string to_string(Self self)
+		{
+			assert(!self.null());
+			return *self.as<const char*>();
+		}
+	};
 
-	template <typename ... Ts>
-	std::string format(const std::string& fmt, const Ts& ... ts)
+	template <std::size_t Size>
+	struct Impl< IToString, char[Size] >
 	{
-		std::string result;
-		format_impl(result, fmt.c_str(), fmt.length(), ts...);
-		return result;
-	}
+		static std::string to_string(Self self)
+		{
+			assert(!self.null());
+			return *self.as<char[Size]>();
+		};
+	};
+
+	template <std::size_t Size>
+	struct Impl< IToString, const char[Size] >
+	{
+		static std::string to_string(Self self)
+		{
+			assert(!self.null());
+			return *self.as<const char[Size]>();
+		}
+	};
+
+	template <>
+	struct Impl< IToString, std::string >
+	{
+		static std::string to_string(Self self)
+		{
+			assert(!self.null());
+			return *self.as<std::string>();
+		}
+	};
 }

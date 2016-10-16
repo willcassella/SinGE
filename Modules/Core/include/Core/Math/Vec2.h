@@ -4,7 +4,7 @@
 #include <cmath>
 #include <string>
 #include "../Reflection/Reflection.h"
-#include "../Interfaces/IToString.h"
+#include "../Util/StringUtils.h"
 
 namespace sge
 {
@@ -44,6 +44,11 @@ namespace sge
 		void y(Scalar y)
 		{
 			_values[1] = y;
+		}
+
+		const Scalar* vec() const
+		{
+			return _values;
 		}
 
 		/** Formats this Vec2 as a String */

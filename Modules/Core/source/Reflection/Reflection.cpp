@@ -1,6 +1,6 @@
 // Reflection.cpp
 
-#include "../../include/Core/Reflection/Reflection.h"
+#include "../../include/Core/Reflection/ReflectionBuilder.h"
 
 namespace sge
 {
@@ -39,7 +39,7 @@ namespace sge
 	{
 		const NativeTypeInfo GetType<void>::type_info = build_void_type_info();
 		const NativeTypeInfo GetType<bool>::type_info = build_primitive_type_info<bool>("bool");
-		const NativeTypeInfo GetType<char>::type_info = build_primitive_type_info<char>("char");
+		const NativeTypeInfo GetType<int8>::type_info = build_primitive_type_info<int8>("int8");
 		const NativeTypeInfo GetType<byte>::type_info = build_primitive_type_info<byte>("byte");
 		const NativeTypeInfo GetType<int16>::type_info = build_primitive_type_info<int16>("int16");
 		const NativeTypeInfo GetType<uint16>::type_info = build_primitive_type_info<uint16>("uint16");

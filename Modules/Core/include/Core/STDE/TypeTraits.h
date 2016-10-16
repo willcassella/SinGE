@@ -34,7 +34,8 @@ namespace stde
 	{
 		using return_type = Ret;
 		using self_type = void;
-		using arg_types = type_sequence<Args...>;
+		using arg_types = sge::tmp::list<Args...>;
+		static constexpr std::size_t arity = sizeof...(Args);
 	};
 
 	template <class T, typename Ret, typename ... Args>
@@ -42,7 +43,7 @@ namespace stde
 	{
 		using return_type = Ret;
 		using self_type = T;
-		using arg_types = type_sequence<Args...>;
+		using arg_types = sge::tmp::list<Args...>;
 		static constexpr std::size_t arity = sizeof...(Args);
 	};
 
@@ -51,7 +52,7 @@ namespace stde
 	{
 		using return_type = Ret;
 		using self_type = const T;
-		using arg_types = type_sequence<Args...>;
+		using arg_types = sge::tmp::list<Args...>;
 		static constexpr std::size_t arity = sizeof...(Args);
 	};
 

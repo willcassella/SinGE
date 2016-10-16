@@ -59,6 +59,7 @@ namespace sge
 {
 	// bool is still bool
 	// char is still char (ONLY used for characters, prefer 'Char')
+	using int8 = std::int8_t;
 	using byte = std::uint8_t;
 	using int16 = std::int16_t;
 	using uint16 = std::uint16_t;

@@ -16,19 +16,15 @@ namespace sge
 		FF_NONE = 0,
 
 		/**
-		 * \brief This field is part of the public interface of the type, and may be accessed by scripts and the editor.
+		 * \breif This field should not be serialized by the 'to_archive' and 'from_archive' functions.
+		 * \note This only applies to types using the default ToArchive and FromArchive implementations.
 		 */
-		FF_PUBLIC = (1 << 0),
-
-		/**
-		 * \breif This field is not serialized by the 'to_archive' and 'from_archive' functions. (By default, all fields are).
-		 */
-		FF_TRANSIENT = (1 << 1),
+		FF_TRANSIENT = (1 << 0),
 
 		/**
 		 * \breif This field should not be written to.
 		 */
-		FF_READONLY = (1 << 2) | FF_TRANSIENT
+		FF_READONLY = (1 << 1) | FF_TRANSIENT
 	};
 
 	struct FieldInfo
@@ -95,9 +91,9 @@ namespace sge
 		 * \param self The instance to access the field on.
 		 * \return A pointer the field.
 		 */
-		Any get(const void* self) const
+		Any<> get(const void* self) const
 		{
-			return{ static_cast<const char*>(self) + _data.offset, *_data.type };
+			return{ *_data.type, static_cast<const char*>(self) + _data.offset };
 		}
 
 		/**
@@ -105,9 +101,9 @@ namespace sge
 		 * \param self The instance to access the field on.
 		 * \return A pointer to the field.
 		 */
-		AnyMut get(void* self) const
+		AnyMut<> get(void* self) const
 		{
-			return{ static_cast<char*>(self) + _data.offset, *_data.type };
+			return{ *_data.type, static_cast<char*>(self) + _data.offset };
 		}
 
 		//////////////////

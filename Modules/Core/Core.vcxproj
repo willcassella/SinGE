@@ -173,6 +173,7 @@
     <ClInclude Include="include\Core\Math\Vec4.h" />
     <ClInclude Include="include\Core\Memory\Functions.h" />
     <ClInclude Include="include\Core\Reflection\Any.h" />
+    <ClInclude Include="include\Core\Reflection\ArgAny.h" />
     <ClInclude Include="include\Core\Reflection\ConstructorInfo.h" />
     <ClInclude Include="include\Core\Reflection\FieldInfo.h" />
     <ClInclude Include="include\Core\Reflection\InterfaceInfo.h" />
@@ -181,9 +182,12 @@
     <ClInclude Include="include\Core\Reflection\NativeTypeInfo.h" />
     <ClInclude Include="include\Core\Reflection\PropertyInfo.h" />
     <ClInclude Include="include\Core\Reflection\Reflection.h" />
+    <ClInclude Include="include\Core\Reflection\ReflectionBuilder.h" />
     <ClInclude Include="include\Core\Reflection\TypeInfo.h" />
     <ClInclude Include="include\Core\STDE\TMP.h" />
     <ClInclude Include="include\Core\STDE\TypeTraits.h" />
+    <ClInclude Include="include\Core\Util\InterfaceUtils.h" />
+    <ClInclude Include="include\Core\Util\StringUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Interfaces\IFromString.cpp" />

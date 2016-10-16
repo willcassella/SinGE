@@ -3,11 +3,10 @@
 
 #include <utility>
 #include "../Functional/FunctionView.h"
+#include "Any.h"
 
 namespace sge
 {
-	struct Any;
-	struct AnyMut;
 	struct TypeInfo;
 
 	enum PropertyFlags
@@ -18,20 +17,15 @@ namespace sge
 		PF_NONE = 0,
 
 		/**
-		 * \breif This property should be serialzed.
-		 */
-		PF_SERIALIZED = (1<<0),
-
-		/**
 		 * \breif This property is intended exclusively for use by the editor, and should not be exposed to scripting.
 		 */
-		PF_EDITOR_ONLY = (1<<1)
+		PF_EDITOR_ONLY = (1<<0)
 	};
 
 	struct PropertyInfo
 	{
-		using GetterOutFn = FunctionView<void(Any value)>;
-		using MutatorFn = FunctionView<void(AnyMut value)>;
+		using GetterOutFn = FunctionView<void(Any<> value)>;
+		using MutatorFn = FunctionView<void(AnyMut<> value)>;
 
 		struct Data
 		{
