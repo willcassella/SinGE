@@ -17,22 +17,28 @@
     <ClInclude Include="include\GLRender\config.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\GLRender\GLMaterial.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\GLRender\GLRenderSystem.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\GLRender\GLShader.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\GLRender\GLStaticMesh.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\GLRender\GLTexture.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="private\glew.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\GLRenderSystemState.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\GLMaterial.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\GLShader.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\GLStaticMesh.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\RenderQueue.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\GLTexture2D.h">
       <Filter>private</Filter>
     </ClInclude>
   </ItemGroup>
@@ -49,7 +55,10 @@
     <ClCompile Include="source\GLStaticMesh.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="source\GLTexture.cpp">
+    <ClCompile Include="source\GLTexture2D.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\GLRenderSystemState.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

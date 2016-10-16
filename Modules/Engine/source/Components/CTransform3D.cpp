@@ -1,6 +1,7 @@
-// Transform3D.cpp
+// CTransform3D.cpp
 
-#include "../../include/Engine/Components/Transform3D.h"
+#include <Core/Reflection/ReflectionBuilder.h>
+#include "../../include/Engine/Components/CTransform3D.h"
 #include "../../include/Engine/Scene.h"
 
 namespace sge
@@ -19,9 +20,9 @@ namespace sge
 	SGE_REFLECT_TYPE(sge::CTransform3D::TTransformChanged);
 	SGE_REFLECT_TYPE(sge::CTransform3D::TParentChanged);
 
-
 	CTransform3D::CTransform3D()
 	{
+		_local_scale = { 1, 1, 1 };
 	}
 
 	bool CTransform3D::has_parent(TComponentInstance<const CTransform3D> self)
@@ -113,6 +114,11 @@ namespace sge
 		{
 			return /*get_parent_matrix(self, scene) **/ get_local_rotation(self); // TODO
 		}
+	}
+
+	Mat4 CTransform3D::get_world_matrix(TComponentInstance<const CTransform3D> self, const Frame& frame)
+	{
+		return get_parent_matrix(self, frame) * get_local_matrix(self);
 	}
 
 	Mat4 CTransform3D::get_parent_matrix(TComponentInstance<const CTransform3D> self, const Frame& frame)

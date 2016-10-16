@@ -2,23 +2,37 @@
 #pragma once
 
 #include <vector>
-#include <Core/Math/Vec3.h>
-#include "../config.h"
+#include "Material.h"
 
 namespace sge
 {
 	struct SGE_ENGINE_API StaticMesh
 	{
+		SGE_REFLECTED_TYPE;
+
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		StaticMesh();
+
 		///////////////////
 		///   Methods   ///
 	public:
 
-		std::size_t get_num_vertices() const
+		void load(std::istream& file, std::size_t end);
+
+		std::size_t num_vertices() const
 		{
 			return _vertex_positions.size();
 		}
 
-		const Vec3* get_vertex_positions() const
+		std::size_t num_uv_maps() const
+		{
+			return 1;
+		}
+
+		const Vec3* vertex_positions() const
 		{
 			if (_vertex_positions.empty())
 			{
@@ -28,7 +42,7 @@ namespace sge
 			return &_vertex_positions.front();
 		}
 
-		const Vec3* get_vertex_normals() const
+		const Vec3* vertex_normals() const
 		{
 			if (_vertex_normals.empty())
 			{
@@ -38,14 +52,27 @@ namespace sge
 			return &_vertex_normals.front();
 		}
 
-		////////////////
-		///   Data   ///
+		const Vec2* uv_map_0() const
+		{
+			return _uv_map_0.data();
+		}
+
+		//////////////////
+		///   Fields   ///
 	private:
 
 		std::vector<Vec3> _vertex_positions;
 		std::vector<Vec3> _vertex_normals;
-		std::vector<Vec2> _uv_map_1;
-		std::vector<Vec2> _uv_map_2;
-		std::vector<Vec2> _uv_map_3;
+		std::vector<Vec2> _uv_map_0;
+	};
+
+	struct SGE_ENGINE_API StaticMeshAsset
+	{
+		//////////////////
+		///   Fields   ///
+	public:
+
+		std::string mesh;
+		std::string material;
 	};
 }

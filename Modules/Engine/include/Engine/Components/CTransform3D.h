@@ -1,4 +1,4 @@
-// Transform3D.h
+// CTransform3D.h
 #pragma once
 
 #include <Core/Math/Mat4.h>
@@ -52,8 +52,8 @@ namespace sge
 
 		static Mat4 get_parent_matrix(TComponentInstance<const CTransform3D> self, const Frame& frame);
 
-		////////////////
-		///   Data   ///
+		//////////////////
+		///   Fields   ///
 	private:
 
 		Vec3 _local_position;

@@ -13,11 +13,13 @@ if(${UNIX})
 	find_package(PkgConfig REQUIRED)
 endif()
 
-# Add Core project
+# Add Modules
 add_subdirectory(Modules/Core)
-
-# Add Engine project
+add_subdirectory(Modules/Resource)
 add_subdirectory(Modules/Engine)
 
-# Add Client project
-add_subdirectory(Runtimes/Client)
+# Add Systems required for GLClient
+add_subdirectory(Systems/GLRender)
+
+# Add GLClient project
+add_subdirectory(Runtimes/GLClient)

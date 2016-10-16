@@ -1,5 +1,6 @@
 // Scene.cpp
 
+#include <Core/Reflection/ReflectionBuilder.h>
 #include <Core/Memory/Functions.h>
 #include <Core/Functional/FunctionView.h>
 #include "../include/Engine/Scene.h"
@@ -8,9 +9,6 @@ SGE_REFLECT_TYPE(sge::Scene);
 
 namespace sge
 {
-	////////////////////////
-	///   Constructors   ///
-
 	Scene::Scene()
 	{
 		_current_time = 0;
@@ -182,38 +180,55 @@ namespace sge
 		return{ id, object->second };
 	}
 
-	void Scene::run_system(FunctionView<SystemFnMut> system, const TypeInfo** types, std::size_t nTypes)
+	void Scene::run_system(FunctionView<SystemFnMut> system, const TypeInfo** types, std::size_t numTypes)
 	{
-		if (nTypes == 0)
+		impl_run_system<ComponentInstanceMut>(*this, system, types, numTypes);
+	}
+
+	void Scene::run_system(FunctionView<SystemFn> system, const TypeInfo** types, std::size_t numTypes) const
+	{
+		impl_run_system<ComponentInstance>(*this, system, types, numTypes);
+	}
+
+	void* Scene::get_component_object(ComponentId id) const
+	{
+		auto iter = _component_objects.find(id);
+		return iter != _component_objects.end() ? iter->second : nullptr;
+	}
+
+	template <typename InstanceT, typename SelfT, typename SystemT>
+	void Scene::impl_run_system(SelfT& self, SystemT system, const TypeInfo** types, std::size_t numTypes)
+	{
+		if (numTypes == 0)
 		{
 			return;
 		}
 
-		auto primaryType = _components.find(types[0]);
-		if (primaryType == _components.end())
+		auto primaryType = self._components.find(types[0]);
+		if (primaryType == self._components.end())
 		{
 			return;
 		}
 
 		// Create an array to hold the selected components
-		auto* results = SGE_STACK_ALLOC(ComponentInstanceMut, nTypes);
+		auto* results = SGE_STACK_ALLOC(InstanceT, numTypes);
 
 		// Iter through all entities that the primary component type appears on
 		for (EntityId entity : primaryType->second)
 		{
 			bool satisfied = true;
-			for (std::size_t i = 1; i < nTypes; ++i)
+			for (std::size_t i = 1; i < numTypes; ++i)
 			{
 				// If this type does not exist in the scene OR this entity does not have an instance of it
-				auto iter = _components.find(types[i]);
-				if (iter == _components.end() || iter->second.find(entity) == iter->second.end())
+				auto iter = self._components.find(types[i]);
+				if (iter == self._components.end() || iter->second.find(entity) == iter->second.end())
 				{
 					satisfied = false;
 					break;
 				}
 
 				ComponentId id{ entity, *types[i] };
-				new (results + i) ComponentInstanceMut{ id, get_component_object(id) };
+				new (results + i) InstanceT{ id, self.get_component_object(id) };
 			}
 
 			// If all further requirements were satisfied
@@ -221,23 +236,12 @@ namespace sge
 			{
 				// Fill in the primary object
 				ComponentId primaryId{ entity, *types[0] };
-				new (results) ComponentInstanceMut{ primaryId, get_component_object(primaryId) };
+				new (results) InstanceT{ primaryId, self.get_component_object(primaryId) };
 
 				// Call the system function
-				Frame frame{ *this, _current_time };
+				Frame frame{ self, self._current_time };
 				system(frame, entity, results);
 			}
 		}
-	}
-
-	void Scene::run_system(FunctionView<SystemFn> system, const TypeInfo** types, std::size_t nTypes) const
-	{
-		// TODO
-	}
-
-	void* Scene::get_component_object(ComponentId id) const
-	{
-		auto iter = _component_objects.find(id);
-		return iter != _component_objects.end() ? iter->second : nullptr;
 	}
 }

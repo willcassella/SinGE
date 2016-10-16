@@ -1,6 +1,7 @@
-// CubeCollider.cpp
+// CCubeCollider.cpp
 
-#include "../../../include/Engine/Components/Physics/CubeCollider.h"
+#include <Core/Reflection/ReflectionBuilder.h>
+#include "../../../include/Engine/Components/Physics/CCubeCollider.h"
 #include "../../../include/Engine/Component.h"
 
 SGE_REFLECT_TYPE(sge::CCubeCollider);

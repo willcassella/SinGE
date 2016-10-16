@@ -82,90 +82,105 @@ namespace sge
 		}
 
 		/**
-		 * \brief Runs the given system function on all Entities that meet the selection requirements.
-		 * \param system Function to process the entity and components selected.
-		 * \param types An array of required types.
-		 * \param nTypes The number of types passed in.
-		 */
-		void run_system(FunctionView<SystemFnMut> system, const TypeInfo** types, std::size_t nTypes);
+		* \brief Runs the given system function on all Entities that meet the selection requirements.
+		* \param system Function to process the entity and components selected.
+		* \param types An array of required types.
+		* \param nTypes The number of types passed in.
+		*/
+		void run_system(FunctionView<SystemFnMut> system, const TypeInfo** types, std::size_t numTypes);
 
-		void run_system(FunctionView<SystemFn> system, const TypeInfo** types, std::size_t nTypes) const;
+		void run_system(FunctionView<SystemFn> system, const TypeInfo** types, std::size_t numTypes) const;
 
-		template <typename Ret, typename ... Components>
-		void run_system(Ret(*system)(Frame&, EntityId, Components...))
+		template <typename SystemFn>
+		void run_system(SystemFn& lambda)
 		{
-			// Create system wrapper function
-			auto func = [system](Frame& frame, EntityId entity, const ComponentInstanceMut* components) {
-				invoke_system(stde::type_sequence<Components...>{}, frame, entity, components, system);
-			};
-
-			// Create list of component types
-			const TypeInfo* types[sizeof...(Components)];
-			fill_types(stde::type_sequence<Components...>{}, types);
+			using FnTraits = stde::function_traits<SystemFn>;
+			using component_list = tmp::cdr<tmp::cdr<typename FnTraits::arg_types>>;
 
 			// Run the system
-			run_system(func, types, sizeof...(Components));
+			static_run_system(component_list{}, *this, lambda);
+		}
+
+		template <typename SystemFn>
+		void run_system(SystemFn& lambda) const
+		{
+			using FnTraits = stde::function_traits<SystemFn>;
+			using component_list = tmp::cdr<tmp::cdr<typename FnTraits::arg_types>>;
+
+			// Run the system
+			static_run_system(component_list{}, *this, lambda);
 		}
 
 		template <class System, typename Ret, typename ... Components>
-		void run_system(System& system, void(System::*handler)(Frame&, EntityId, Components...))
+		void run_system(System& system, Ret(System::*func)(Frame&, EntityId, Components...))
 		{
-			// Create the system function
-			auto invoker = [&system, handler](Frame& frame, EntityId entity, Components... components) {
-				(system.*handler)(frame, entity, components...);
+			// Create a wrapper function
+			auto wrapper = [&system, func](Frame& frame, EntityId entity, Components... components) {
+				(system.*func)(frame, entity, components...);
 			};
-
-			auto func = [&invoker](Frame& frame, EntityId entity, const ComponentInstanceMut* components) {
-				invoke_system(stde::type_sequence<Components...>{}, frame, entity, components, invoker);
-			};
-
-			// Create the list of component types
-			const TypeInfo* types[sizeof...(Components)];
-			fill_types(stde::type_sequence<Components...>{}, types);
 
 			// Run the system
-			run_system(func, types, sizeof...(Components));
+			static_run_system(tmp::list<Components...>{}, *this, wrapper);
+		}
+
+		template <class System, typename Ret, typename ... Components>
+		void run_system(System& system, Ret(System::*func)(const Frame& EntityId, Components...)) const
+		{
+			// Create a wrapper function
+			auto wrapper = [&system, func](const Frame& frame, EntityId entity, Components... components) {
+				(system.*func)(frame, entity, components...);
+			};
+
+			// Run the system
+			static_run_system(tmp::list<Components...>{}, *this, wrapper);
 		}
 
 	private:
 
-		template <class C, typename ... Cs>
-		static void fill_types(stde::type_sequence<TComponentInstance<C>, Cs...>, const TypeInfo** result)
+		template <typename SelfT, typename SystemFn, typename ... ComponentTs>
+		static void static_run_system(tmp::list<ComponentTs...>, SelfT& self, SystemFn& system)
 		{
-			*result = &sge::get_type<C>();
-			fill_types(stde::type_sequence<Cs...>{}, result + 1);
+			// Create wrapper function
+			auto invoker = [&system](auto& frame, EntityId entity, const auto* components) {
+				invoke_system(tmp::list<ComponentTs...>{}, frame, entity, components, system);
+			};
+
+			// Create the array of component types
+			const TypeInfo* types[] = { &sge::get_type<typename ComponentTs::ComponentT>()... };
+
+			// Run the system
+			self.run_system(invoker, types, sizeof...(ComponentTs));
 		}
 
-		static void fill_types(stde::type_sequence<>, const TypeInfo** /*result*/)
-		{
-		}
+		template <typename InstanceT, typename SelfT, typename SystemT>
+		static void impl_run_system(SelfT& self, SystemT system, const TypeInfo** types, std::size_t numTypes);
 
-		template <typename SystemFn, class C, typename ... Cs, typename ... Converted>
+		template <typename FrameT, typename CT, typename SystemT, class FrontT, typename ... Rest, typename ... Converted>
 		static void invoke_system(
-			stde::type_sequence<TComponentInstance<C>, Cs...>,
-			Frame& frame,
+			tmp::list<TComponentInstance<FrontT>, Rest...>,
+			FrameT& frame,
 			EntityId entity,
-			const ComponentInstanceMut* components,
-			SystemFn system,
+			const CT* components,
+			SystemT& system,
 			const Converted&... converted)
 		{
 			invoke_system(
-				stde::type_sequence<Cs...>{},
+				tmp::list<Rest...>{},
 				frame,
 				entity,
 				components + 1,
 				system,
 				converted...,
-				*static_cast<const TComponentInstance<C>*>(components));
+				*static_cast<const TComponentInstance<FrontT>*>(components));
 		}
 
-		template <typename SystemFn, typename ... Converted>
+		template <typename FrameT, typename SystemT, typename ... Converted>
 		static void invoke_system(
-			stde::type_sequence<>,
-			Frame& frame,
+			tmp::list<>,
+			FrameT& frame,
 			EntityId entity,
-			const ComponentInstanceMut* /*components*/,
-			SystemFn system,
+			const void* /*components*/,
+			SystemT& system,
 			const Converted&... converted)
 		{
 			system(frame, entity, converted...);
@@ -173,8 +188,8 @@ namespace sge
 
 		void* get_component_object(ComponentId id) const;
 
-		////////////////
-		///   Data   ///
+		//////////////////
+		///   Fields   ///
 	private:
 
 		EntityId _next_entity_id;

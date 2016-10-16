@@ -1,10 +1,7 @@
-// StaticMesh.h
+// CStaticMesh.h
 #pragma once
 
-#include <string>
-#include <unordered_map>
-#include <Core/Math/Vec2.h>
-#include <Core/Math/Vec4.h>
+#include "../../Resources/Material.h"
 #include "../../Component.h"
 
 namespace sge
@@ -17,9 +14,14 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		std::string get_mesh() const
+		const std::string& mesh() const
 		{
 			return _mesh;
+		}
+
+		const std::string& material() const
+		{
+			return _material;
 		}
 
 		////////////////
@@ -35,13 +37,20 @@ namespace sge
 		///   Functions   ///
 	public:
 
+		static std::string get_mesh(TComponentInstance<const CStaticMesh> self);
+
 		static void set_mesh(TComponentInstance<CStaticMesh> self, Frame& frame, std::string mesh);
+
+		static std::string get_material(TComponentInstance<const CStaticMesh> self);
+
+		static void set_material(TComponentInstance<CStaticMesh> self, Frame& frame, std::string material);
 
 		//////////////////
 		///   Fields   ///
 	private:
 
 		std::string _mesh;
+		std::string _material;
 	};
 
 	struct SGE_ENGINE_API CStaticMeshOverrideMaterial
@@ -65,43 +74,41 @@ namespace sge
 		static void set_param(
 			TComponentInstance<CStaticMeshMaterialOverrideParameters> self,
 			Frame& frame,
-			const char* name,
+			std::string name,
 			float value);
 
 		/* Sets a Vec2 param value. */
 		static void set_param(
 			TComponentInstance<CStaticMeshMaterialOverrideParameters> self,
 			Frame& frame,
-			const char* name,
+			std::string name,
 			Vec2 value);
 
 		/* Sets a Vec3 param value. */
 		static void set_param(
 			TComponentInstance<CStaticMeshMaterialOverrideParameters> self,
 			Frame& frame,
-			const char* name,
+			std::string name,
 			Vec3 value);
 
 		/* Sets a Vec4 param value. */
 		static void set_param(
 			TComponentInstance<CStaticMeshMaterialOverrideParameters> self,
 			Frame& frame,
-			const char* name,
+			std::string name,
 			Vec4 value);
 
 		/* Sets a texture param value. */
 		static void set_param(
 			TComponentInstance<CStaticMeshMaterialOverrideParameters> self,
 			Frame& frame,
-			const char* name,
+			std::string name,
 			std::string value);
 
+		//////////////////
+		///   Fields   ///
 	private:
 
-		std::unordered_map<std::string, float> _float_params;
-		std::unordered_map<std::string, Vec2> _vec2_params;
-		std::unordered_map<std::string, Vec3> _vec3_params;
-		std::unordered_map<std::string, Vec4> _vec4_params;
-		std::unordered_map<std::string, std::string> _texture_params;
+		Material::ParamTable _param_table;
 	};
 }

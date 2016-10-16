@@ -1,4 +1,4 @@
-// CubeCollider.h
+// CCubeCollider.h
 #pragma once
 
 #include <Core/Math/Vec2.h>
@@ -33,8 +33,8 @@ namespace sge
 			_shape = shape;
 		}
 
-		////////////////
-		///   Data   ///
+		//////////////////
+		///   Fields   ///
 	private:
 
 		Vec2 _shape;

@@ -8,39 +8,40 @@ namespace sge
 {
 	struct SGE_ENGINE_API Shader
 	{
-		SGE_REFLECTED_TYPE;
-
-		enum class Type
-		{
-			VERTEX_SHADER,
-			PIXEL_SHADER
-		};
-
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		Shader(Type type, std::string source);
+		Shader();
+		Shader(std::string source);
 
 		///////////////////
 		///   Methods   ///
 	public:
 
-		Type get_shader_type() const
-		{
-			return _type;
-		}
+		void load(std::istream& file, std::size_t end);
 
-		const std::string& get_source() const
+		const std::string& source() const
 		{
 			return _source;
 		}
 
-		////////////////
-		///   Data   ///
+		//////////////////
+		///   Fields   ///
 	private:
 
-		Type _type;
 		std::string _source;
+	};
+
+	struct VertexShader : Shader
+	{
+		SGE_REFLECTED_TYPE;
+		using Shader::Shader;
+	};
+
+	struct PixelShader : Shader
+	{
+		SGE_REFLECTED_TYPE;
+		using Shader::Shader;
 	};
 }

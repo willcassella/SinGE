@@ -1,29 +1,47 @@
-// GLRender.cpp - Copyright 2013-2016 Will Cassella, All Rights Reserved
+// GLRenderSystem.cpp
 
-#include <Core/IO/Console.h>
-#include <Engine/Components/Rendering/StaticMeshComponent.h>
-#include <Engine/Components/Rendering/CameraComponent.h>
-#include "glew.h"
-#include "../include/GLRender/GLRenderSystem.h"
-#include "../include/GLRender/GLTexture.h"
-#include "../include/GLRender/GLShader.h"
-#include "../include/GLRender/GLMaterial.h"
-#include "../include/GLRender/GLStaticMesh.h"
+#include <iostream>
+#include <Core/Reflection/ReflectionBuilder.h>
+#include <Engine/Components/CTransform3D.h>
+#include <Engine/Components/Display/CStaticMesh.h>
+#include <Engine/Components/Display/CCamera.h>
+#include <Engine/Scene.h>
+#include "../private/GLRenderSystemState.h"
 
-namespace willow
+SGE_REFLECT_TYPE(sge::GLRenderSystem);
+
+namespace sge
 {
-	static_assert(!std::is_same<Scalar, long double>::value, "The renderer does not yet support 'long double' as a Scalar type.");
-	static_assert(std::is_same<BufferID, GLuint>::value, "BufferID does not match GLuint.");
-	static_assert(std::is_same<GLValue, GLuint>::value, "GLValue does not match GLuint.");
-	static_assert(std::is_same<GLInteger, GLint>::value, "GLInteger does not match GLint.");
+	static void create_gbuffer_layer(
+		GLuint layer,
+		GLenum attachment,
+		GLsizei width,
+		GLsizei height,
+		GLenum internalFormat,
+		GLenum format,
+		GLenum type)
+	{
+		glBindTexture(GL_TEXTURE_2D, layer);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, nullptr);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, layer, 0);
+	}
 
-	////////////////////////
-	///   Constructors   ///
+	static constexpr GLenum GBUFFER_DEPTH_ATTACHMENT = GL_DEPTH_ATTACHMENT;
+	static constexpr GLenum GBUFFER_POSITION_ATTACHMENT = GL_COLOR_ATTACHMENT0;
+	static constexpr GLenum GBUFFER_NORMAL_ATTACHMENT = GL_COLOR_ATTACHMENT1;
+	static constexpr GLenum GBUFFER_DIFFUSE_ATTACHMENT = GL_COLOR_ATTACHMENT2;
+	static constexpr GLenum GBUFFER_SPECULAR_ATTACHMENT = GL_COLOR_ATTACHMENT3;
 
 	GLRenderSystem::GLRenderSystem(uint32 width, uint32 height)
 	{
-		_width = width;
-		_height = height;
+		_state = std::make_unique<GLRenderSystem::State>();
+
+		_state->width = static_cast<GLsizei>(width);
+		_state->height = static_cast<GLsizei>(height);
 
 		// Initialize GLEW
 		glewExperimental = GL_TRUE;
@@ -34,160 +52,122 @@ namespace willow
 		glClearColor(0, 0, 0, 1);
 		glClearDepth(1.f);
 		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_CULL_FACE);
+		//glEnable(GL_CULL_FACE);
 		glDisable(GL_STENCIL_TEST);
-		glLineWidth(1.5f);
 
 		// Get the default framebuffer
-		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &_defaultFrameBuffer);
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &_state->default_framebuffer);
 
 		// Create a framebuffer for deferred rendering (GBuffer)
-		glGenFramebuffers(1, &_gBuffer);
-		glBindFramebuffer(GL_FRAMEBUFFER, _gBuffer);
+		glGenFramebuffers(1, &_state->gbuffer_framebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, _state->gbuffer_framebuffer);
+		glGenTextures(GBufferLayer::NUM_LAYERS, _state->gbuffer_layers.data());
 
-		// Create a depth buffer for the GBuffer
-		glGenTextures(1, &_depthBuffer);
-		glBindTexture(GL_TEXTURE_2D, _depthBuffer);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32, width, height, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nullptr); // 1 32-bit unsigned integer component for depth
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _depthBuffer, 0);
+		// Create gbuffer depth layer
+		create_gbuffer_layer(
+			_state->gbuffer_layers[GBufferLayer::DEPTH],
+			GBUFFER_DEPTH_ATTACHMENT,
+			_state->width,
+			_state->height,
+			GL_DEPTH_COMPONENT32,
+			GL_DEPTH_COMPONENT,
+			GL_UNSIGNED_INT);
 
-		// Create a position buffer for the GBuffer
-		glGenTextures(1, &_positionBuffer);
-		glBindTexture(GL_TEXTURE_2D, _positionBuffer);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, nullptr); // 3 32-bit floating point components for position
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _positionBuffer, 0);
+		// Create gbuffer position layer
+		create_gbuffer_layer(
+			_state->gbuffer_layers[GBufferLayer::POSITION],
+			GBUFFER_POSITION_ATTACHMENT,
+			_state->width,
+			_state->height,
+			GL_RGB32F,
+			GL_RGB,
+			GL_FLOAT);
 
-		// Create a diffuse buffer for the GBuffer
-		glGenTextures(1, &_diffuseBuffer);
-		glBindTexture(GL_TEXTURE_2D, _diffuseBuffer);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr); // 4 8-bit unsigned integer components for diffuse
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, _diffuseBuffer, 0);
+		// Create gbuffer normal layer
+		create_gbuffer_layer(
+			_state->gbuffer_layers[GBufferLayer::NORMAL],
+			GBUFFER_NORMAL_ATTACHMENT,
+			_state->width,
+			_state->height,
+			GL_RGB32F,
+			GL_RGB,
+			GL_FLOAT);
 
-		// Create a normal buffer for the GBuffer
-		glGenTextures(1, &_normalBuffer);
-		glBindTexture(GL_TEXTURE_2D, _normalBuffer);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width, height, 0, GL_RGB, GL_FLOAT, nullptr); // 3 32-bit floating point components for normal
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, _normalBuffer, 0);
+		// Create gbuffer diffuse layer
+		create_gbuffer_layer(
+			_state->gbuffer_layers[GBufferLayer::DIFFUSE],
+			GBUFFER_DIFFUSE_ATTACHMENT,
+			_state->width,
+			_state->height,
+			GL_RGBA8,
+			GL_RGBA,
+			GL_UNSIGNED_BYTE);
 
-		// Create a specular buffer for the GBuffer
-		glGenTextures(1, &_specularBuffer);
-		glBindTexture(GL_TEXTURE_2D, _specularBuffer);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, nullptr); // 1 32-bit floating point component for specular
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3, GL_TEXTURE_2D, _specularBuffer, 0);
-
-		// Create a metallic buffer for the GBuffer
-		glGenTextures(1, &_metallicBuffer);
-		glBindTexture(GL_TEXTURE_2D, _metallicBuffer);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, nullptr); // 1 32-bit floating point component for metallic
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT4, GL_TEXTURE_2D, _metallicBuffer, 0);
-
-		// Create a roughness buffer for the GBuffer
-		glGenTextures(1, &_roughnessBuffer);
-		glBindTexture(GL_TEXTURE_2D, _roughnessBuffer);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, nullptr); // 1 32-bit floating point component for roughness
-		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT5, GL_TEXTURE_2D, _roughnessBuffer, 0);
+		// Create gbuffer specular layer
+		create_gbuffer_layer(
+			_state->gbuffer_layers[GBufferLayer::SPECULAR],
+			GBUFFER_SPECULAR_ATTACHMENT,
+			_state->width,
+			_state->height,
+			GL_R32F,
+			GL_RED,
+			GL_FLOAT);
 
 		// Make sure the GBuffer was constructed successfully
-		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 		{
-			Console::WriteLine("GBuffer created successfully");
-		}
-		else
-		{
-			Console::WriteLine("Error creating the GBuffer");
+			std::cerr << "GLRenderSystem: Error creating GBuffer." << std::endl;
 		}
 
-		// Create a VAO for screen quad
-		glGenVertexArrays(1, &_screenQuadVAO);
-		glBindVertexArray(_screenQuadVAO);
-
-		// Create and upload a VBO for screen quad
-		glGenBuffers(1, &_screenQuadVBO);
-		glBindBuffer(GL_ARRAY_BUFFER, _screenQuadVBO);
-		float screenQuadData[] = {
-			-1.f, 1.f, 0.f, 1.f, // Top-left point
-			-1.f, -1.f, 0.f, 0.f, // Bottom-left point
-			1.f, -1.f, 1.f, 0.f, // Bottom-right point
-			1.f, 1.f, 1.f, 1.f // Top-right point
+		constexpr float QUAD_VERTEX_DATA[] = {
+			-1.f, 1.f, 1.f, 0.f,	// Top-left point
+			-1.f, -1.f, 0.f, 0.f,	// Bottom-left point
+			1.f, -1.f, 0.f, 1.f,	// Bottom-right point
+			1.f, 1.f, 1.f, 1.f, 	// Top-right point
 		};
-		glBufferData(GL_ARRAY_BUFFER, sizeof(screenQuadData), screenQuadData, GL_STATIC_DRAW);
+
+		// Create a VAO for sprite
+		glGenVertexArrays(1, &_state->sprite_vao);
+		glBindVertexArray(_state->sprite_vao);
+
+		// Create a VBO for the sprite quad and upload data
+		glGenBuffers(1, &_state->sprite_vbo);
+		glBindBuffer(GL_ARRAY_BUFFER, _state->sprite_vbo);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(QUAD_VERTEX_DATA), QUAD_VERTEX_DATA, GL_STATIC_DRAW);
+
+		// Vertex specification
+		glEnableVertexAttribArray(GLMaterial::POSITION_ATTRIB_LOCATION);
+		glEnableVertexAttribArray(GLMaterial::TEXCOORD_ATTRIB_LOCATION);
+		glVertexAttribPointer(GLMaterial::POSITION_ATTRIB_LOCATION, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, nullptr);
+		glVertexAttribPointer(GLMaterial::TEXCOORD_ATTRIB_LOCATION, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(sizeof(float) * 2));
 
 		// Create and upload a shader program for the screen quad
-		Shader vShader("EngineContent/shaders/viewport.vert");
-		Shader fShader("EngineContent/shaders/viewport.frag");
-		GLShader glVShader{ vShader };
-		GLShader glFShader{ fShader };
-		_screenQuadProgram = glCreateProgram();
-		glAttachShader(_screenQuadProgram, glVShader.get_id());
-		glAttachShader(_screenQuadProgram, glFShader.get_id());
-		glLinkProgram(_screenQuadProgram);
-		glDetachShader(_screenQuadProgram, glVShader.get_id());
-		glDetachShader(_screenQuadProgram, glFShader.get_id());
+		GLShader screenVShader{ GL_VERTEX_SHADER, "engine_content/shaders/viewport.vert" };
+		GLShader screenFShader{ GL_FRAGMENT_SHADER, "engine_content/shaders/viewport.frag" };
+		_state->screen_quad_program = glCreateProgram();
+		glAttachShader(_state->screen_quad_program, screenVShader.id());
+		glAttachShader(_state->screen_quad_program, screenFShader.id());
 
-		// Specify shader data
-		GLint positionAttrib = glGetAttribLocation(_screenQuadProgram, "vPosition");
-		glEnableVertexAttribArray(positionAttrib);
-		glVertexAttribPointer(positionAttrib, 2, GL_FLOAT, false, sizeof(float) * 4, nullptr);
+		// Bind vertex attributes
+		glBindAttribLocation(_state->screen_quad_program, GLMaterial::POSITION_ATTRIB_LOCATION, GLMaterial::POSITION_ATTRIB_NAME);
+		glBindAttribLocation(_state->screen_quad_program, GLMaterial::TEXCOORD_ATTRIB_LOCATION, GLMaterial::TEXCOORD_ATTRIB_NAME);
 
-		GLint coordinateAttrib = glGetAttribLocation(_screenQuadProgram, "vTexCoord");
-		glEnableVertexAttribArray(coordinateAttrib);
-		glVertexAttribPointer(coordinateAttrib, 2, GL_FLOAT, false, sizeof(float) * 4, (void*)(sizeof(float) * 2));
+		// Link the program and detach shaders
+		glLinkProgram(_state->screen_quad_program);
+		glDetachShader(_state->screen_quad_program, screenVShader.id());
+		glDetachShader(_state->screen_quad_program, screenFShader.id());
 
-		glUseProgram(_screenQuadProgram);
-		glUniform1i(glGetUniformLocation(_screenQuadProgram, "positionBuffer"), 0);
-		glUniform1i(glGetUniformLocation(_screenQuadProgram, "diffuseBuffer"), 1);
-		glUniform1i(glGetUniformLocation(_screenQuadProgram, "normalBuffer"), 2);
-		glUniform1i(glGetUniformLocation(_screenQuadProgram, "specularBuffer"), 3);
+		glUseProgram(_state->screen_quad_program);
+		glUniform1i(glGetUniformLocation(_state->screen_quad_program, "position_buffer"), 0);
+		glUniform1i(glGetUniformLocation(_state->screen_quad_program, "normal_buffer"), 1);
+		glUniform1i(glGetUniformLocation(_state->screen_quad_program, "diffuse_buffer"), 2);
+		glUniform1i(glGetUniformLocation(_state->screen_quad_program, "specular_buffer"), 3);
 
 		auto error = glGetError();
-		if (error != 0)
+		if (error != GL_NO_ERROR)
 		{
-			Console::WriteLine("An error occurred during startup: @", error);
+			std::cerr << "GLRenderSystem: An error occurred during startup - " << error << std::endl;
 		}
-
-		/// DEBUG DRAW CODE
-		glGenVertexArrays(1, &_lineVAO);
-		glBindVertexArray(_lineVAO);
-		
-		glGenBuffers(1, &_lineBuffer);
-		Shader lineVShader{ "EngineContent/shaders/line.vert" };
-		Shader lineFShader{ "EngineContent/shaders/line.frag" };
-		GLShader glLineVShader{ lineVShader };
-		GLShader glLineFShader{ lineFShader };
-		_lineProgram = glCreateProgram();
-		glAttachShader(_lineProgram, glLineVShader.get_id());
-		glAttachShader(_lineProgram, glLineFShader.get_id());
-		glLinkProgram(_lineProgram);
-		glDetachShader(_lineProgram, glLineVShader.get_id());
-		glDetachShader(_lineProgram, glLineFShader.get_id());
 	}
 
 	GLRenderSystem::~GLRenderSystem()
@@ -195,180 +175,101 @@ namespace willow
 		// Todo
 	}
 
-	///////////////////
-	///   Methods   ///
-
-	void GLRenderSystem::render_world(const willow::World& world, uint32 views)
+	void GLRenderSystem::render_frame(const Frame& frame)
 	{
+		constexpr GLenum DRAW_BUFFERS[] = {
+			GBUFFER_POSITION_ATTACHMENT,
+			GBUFFER_NORMAL_ATTACHMENT,
+			GBUFFER_DIFFUSE_ATTACHMENT,
+			GBUFFER_SPECULAR_ATTACHMENT };
+		constexpr GLsizei NUM_DRAW_BUFFERS = sizeof(DRAW_BUFFERS) / sizeof(GLenum);
+
 		// Bind the GBuffer and its sub-buffers for drawing
-		glBindFramebuffer(GL_FRAMEBUFFER, _gBuffer);
-		const GLuint drawBuffers[] = { GL_COLOR_ATTACHMENT0 /*position*/, GL_COLOR_ATTACHMENT1 /*diffuse*/, GL_COLOR_ATTACHMENT2 /*normal*/, GL_COLOR_ATTACHMENT3 /*specular*/ };
-		glDrawBuffers(4, drawBuffers);
+		glBindFramebuffer(GL_FRAMEBUFFER, _state->gbuffer_framebuffer);
+		glDrawBuffers(NUM_DRAW_BUFFERS, DRAW_BUFFERS);
 
 		// Clear the GBuffer
 		glEnable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// Get all cameras in the world
-		auto cameras = world.enumerate_objects<CameraComponent>();
-		auto meshes = world.enumerate_objects<StaticMeshComponent>();
+		// Create matrices
+		bool hasCamera = false;
+		Mat4 view;
+		Mat4 proj;
 
-		// Render each camera
-		for (auto camera : cameras)
+		// Get the first camera in the frame
+		frame.scene().run_system([&](
+			const Frame&,
+			EntityId entity,
+			TComponentInstance<const CTransform3D> transform,
+			TComponentInstance<const CPerspectiveCamera> camera)
 		{
-			// Calculate frame proportions
-			const GLint frameX = 0;
-			const GLint frameY = this->_height / views * static_cast<int32>(camera->orientation);
-			const GLsizei frameWidth = this->_width;
-			const GLsizei frameHeight = this->_height / views;
-
-			// Create viewport
-			glViewport(frameX, frameY, frameWidth, frameHeight);
-			
-			// Create matrices
-			const Mat4 view = camera->get_entity().get_transformation_matrix().Inverse();
-			const Mat4 proj = camera->get_perspective_matrix(static_cast<float>(frameWidth) / frameHeight);
-
-			// Render each StaticMeshComponent in the World
-			for (auto staticMesh : meshes)
+			if (hasCamera)
 			{
-				if (!staticMesh->visible)
-					continue;
-
-				Mat4 model = staticMesh->get_entity().get_transformation_matrix();
-
-				// Bind the mesh and material
-				auto& mesh = find_static_mesh(staticMesh->mesh);
-				mesh.bind();
-				find_material(staticMesh->material).bind(*this, staticMesh->instance_params);
-
-				// Upload transformation matrices
-				glUniformMatrix4fv(0, 1, false, (const float*)&model);
-				glUniformMatrix4fv(1, 1, false, (const float*)&view);
-				glUniformMatrix4fv(2, 1, false, (const float*)&proj);
-
-				// Note: Because I kind of messed up my StaticMesh structure (ie, vertices are tied to specific UV coordinates)
-				// I'm gonna be using GLDrawArrays for now, instead of GLDrawElements.
-				// Luckily, I wasn't actually taking advantage of GLDrawElements before, so all the old mesh files still work
-				glDrawArrays(GL_TRIANGLES, 0, mesh.get_num_vertices());
+				return;
 			}
 
-			// Render debug lines
-			glBindVertexArray(_lineVAO);
-			glUseProgram(_lineProgram);
-			glBindBuffer(GL_ARRAY_BUFFER, _lineBuffer);
+			hasCamera = true;
+			view = CTransform3D::get_world_matrix(transform, frame).inverse();
+			proj = camera->get_projection_matrix((float)this->_state->width / this->_state->height);
+		});
 
-			{
-				Array<Vec3> points(_debugLines.Size() * 2);
-
-				for (const auto& line : _debugLines)
-				{
-					points.Add(line.start);
-					points.Add(line.color);
-					points.Add(line.end);
-					points.Add(line.color);
-				}
-
-				_debugLines.Clear();
-
-				if (!points.IsEmpty())
-				{
-					auto linePos = glGetAttribLocation(_lineProgram, "vPosition");
-					glEnableVertexAttribArray(linePos);
-					glVertexAttribPointer(linePos, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3) * 2, nullptr);
-
-					auto lineColor = glGetAttribLocation(_lineProgram, "vColor");
-					glEnableVertexAttribArray(lineColor);
-					glVertexAttribPointer(lineColor, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3) * 2, (void*)sizeof(Vec3));
-
-					glUniformMatrix4fv(0, 1, false, (const float*)&view);
-					glUniformMatrix4fv(1, 1, false, (const float*)&proj);
-					glBufferData(GL_ARRAY_BUFFER, points.Size() * sizeof(Vec3), points.CArray(), GL_DYNAMIC_DRAW);
-					glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(points.Size()));
-				}
-			}
+		// If no camera was found, return
+		if (!hasCamera)
+		{
+			return;
 		}
 
-		glViewport(0, 0, _width, _height);
+		// Render each static mesh in the world
+		frame.scene().run_system([&](
+			const Frame&,
+			EntityId entity,
+			TComponentInstance<const CTransform3D> transform,
+			TComponentInstance<const CStaticMesh> staticMesh)
+		{
+			// Get the model matrix
+			auto model = CTransform3D::get_world_matrix(transform, frame);
+
+			// Get the mesh and material
+			const auto& mesh = this->_state->find_static_mesh(staticMesh->mesh());
+			const auto& material = this->_state->find_material(staticMesh->material());
+
+			// Bind the mesh and material
+			mesh.bind();
+			GLuint texIndex = 0;
+			material.bind(texIndex);
+
+			// Upload transformation matrices
+			glUniformMatrix4fv(GLMaterial::MODEL_UNIFORM_LOCATION, 1, GL_FALSE, model.vec());
+			glUniformMatrix4fv(GLMaterial::VIEW_UNIFORM_LOCATION, 1, GL_FALSE, view.vec());
+			glUniformMatrix4fv(GLMaterial::PROJ_UNIFORM_LOCATION, 1, GL_FALSE, proj.vec());
+
+			// Draw the mesh
+			glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
+		});
 
 		// Bind the default framebuffer for drawing
-		glBindFramebuffer(GL_FRAMEBUFFER, _defaultFrameBuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, _state->default_framebuffer);
 
 		// Clear the frame
-		glEnable(GL_BLEND);
-		glDisable(GL_DEPTH_TEST);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Bind the screen quad
-		glBindVertexArray(_screenQuadVAO);
-		glUseProgram(_screenQuadProgram);
+		glBindVertexArray(_state->sprite_vao);
+		glUseProgram(_state->screen_quad_program);
 
 		// Bind the GBuffer's sub-buffers as textures for reading
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, _positionBuffer);
+		glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::POSITION]);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, _diffuseBuffer);
+		glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::NORMAL]);
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, _normalBuffer);
+		glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::DIFFUSE]);
 		glActiveTexture(GL_TEXTURE3);
-		glBindTexture(GL_TEXTURE_2D, _specularBuffer);
+		glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::SPECULAR]);
 
 		// Draw the screen quad
 		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-	}
-
-	void GLRenderSystem::draw_debug_line(const DebugLine& line)
-	{
-		_debugLines.Add(line);
-	}
-
-	GLShader& GLRenderSystem::find_shader(ResourceHandle<Shader> handle)
-	{
-		if (auto pShader = _shaders.Find(handle.get_id()))
-		{
-			return *pShader;
-		}
-		else
-		{
-			return _shaders.Insert(handle.get_id(), GLShader(*ResourceManager::get_resource(handle)));
-		}
-	}
-
-	GLTexture& GLRenderSystem::find_texture(ResourceHandle<Texture> handle)
-	{
-		if (auto pTexture = _textures.Find(handle.get_id()))
-		{
-			return *pTexture;
-		}
-		else
-		{
-			return _textures.Insert(handle.get_id(), GLTexture(*ResourceManager::get_resource(handle)));
-		}
-	}
-
-	GLMaterial& GLRenderSystem::find_material(ResourceHandle<Material> handle)
-	{
-		if (auto pMaterial = _materials.Find(handle.get_id()))
-		{
-			return *pMaterial;
-		}
-		else
-		{
-			return _materials.Insert(handle.get_id(), GLMaterial(*this, *ResourceManager::get_resource(handle)));
-		}
-	}
-
-	GLStaticMesh& GLRenderSystem::find_static_mesh(ResourceHandle<StaticMesh> handle)
-	{
-		if (auto pMesh = _staticMeshes.Find(handle.get_id()))
-		{
-			return *pMesh;
-		}
-		else
-		{
-			return _staticMeshes.Insert(handle.get_id(), GLStaticMesh(*ResourceManager::get_resource(handle)));
-		}
 	}
 }

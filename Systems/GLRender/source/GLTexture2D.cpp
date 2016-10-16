@@ -1,18 +1,14 @@
-// GLTexture.cpp - Copyright 2013-2016 Will Cassella, All Rights Reserved
+// GLTexture2D.cpp
 
-#include "glew.h"
-#include "../include/GLRender/GLTexture.h"
+#include "../private/GLTexture2D.h"
 
-namespace willow
+namespace sge
 {
-	////////////////////////
-	///   Constructors   ///
-
-	GLTexture::GLTexture(const Texture& image)
+	GLTexture2D::GLTexture2D(const Texture& texture)
 	{
 		// Create and bind the buffer
-		glGenTextures(1, &this->_id);
-		glBindTexture(GL_TEXTURE_2D, this->_id);
+		glGenTextures(1, &_id);
+		glBindTexture(GL_TEXTURE_2D, _id);
 
 		// Set wrapping parameters to repeat
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -26,18 +22,28 @@ namespace willow
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 8.f);
 
 		// Load the image
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, image.get_width(), image.get_height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, image.get_bitmap());
+		glTexImage2D(
+			GL_TEXTURE_2D,
+			0,
+			GL_RGBA8,
+			texture.image.get_width(),
+			texture.image.get_height(),
+			0,
+			GL_BGRA,
+			GL_UNSIGNED_BYTE,
+			texture.image.get_bitmap());
+
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 
-	GLTexture::GLTexture(GLTexture&& move)
+	GLTexture2D::GLTexture2D(GLTexture2D&& move)
+		: _id(move._id)
 	{
-		this->_id = move._id;
 		move._id = 0;
 	}
 
-	GLTexture::~GLTexture()
+	GLTexture2D::~GLTexture2D()
 	{
-		glDeleteTextures(1, &this->_id);
+		glDeleteTextures(1, &_id);
 	}
 }

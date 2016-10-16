@@ -214,6 +214,8 @@ namespace sge
 	template <class C>
 	struct TComponentInstance : ComponentInstanceMut
 	{
+		using ComponentT = C;
+
 		////////////////////////
 		///   Constructors   ///
 	public:
@@ -256,6 +258,8 @@ namespace sge
 	template <class C>
 	struct TComponentInstance< const C > : ComponentInstance
 	{
+		using ComponentT = const C;
+
 		////////////////////////
 		///   Constructors   ///
 	public:

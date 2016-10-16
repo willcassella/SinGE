@@ -16,8 +16,13 @@ namespace sge
 		///   Constructors   ///
 	public:
 
+		Frame(const Scene& scene, float time)
+			: _scene(nullptr), _c_scene(&scene), _time(time)
+		{
+		}
+
 		Frame(Scene& scene, float time)
-			: _scene(&scene), _time(time)
+			: _scene(&scene), _c_scene(&scene), _time(time)
 		{
 		}
 
@@ -32,7 +37,7 @@ namespace sge
 
 		const Scene& scene() const
 		{
-			return *_scene;
+			return *_c_scene;
 		}
 
 		float time() const
@@ -45,6 +50,7 @@ namespace sge
 	private:
 
 		Scene* _scene;
+		const Scene* _c_scene;
 		float _time;
 	};
 }

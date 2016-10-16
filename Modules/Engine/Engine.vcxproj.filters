@@ -47,17 +47,11 @@
     <ClInclude Include="include\Engine\Scene.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Engine\Components\Physics\CubeCollider.h">
-      <Filter>include\Components\Physics</Filter>
-    </ClInclude>
     <ClInclude Include="include\Engine\Interfaces\ISystem.h">
       <Filter>include\Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine\Component.h">
       <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\Components\Display\StaticMesh.h">
-      <Filter>include\Components\Display</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine\Resources\StaticMesh.h">
       <Filter>include\Resources</Filter>
@@ -71,7 +65,19 @@
     <ClInclude Include="include\Engine\Resources\Shader.h">
       <Filter>include\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="include\Engine\Components\Transform3D.h">
+    <ClInclude Include="include\Engine\Resources\Texture.h">
+      <Filter>include\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Display\CCamera.h">
+      <Filter>include\Components\Display</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Display\CStaticMesh.h">
+      <Filter>include\Components\Display</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Physics\CCubeCollider.h">
+      <Filter>include\Components\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\CTransform3D.h">
       <Filter>include\Components</Filter>
     </ClInclude>
   </ItemGroup>
@@ -79,26 +85,38 @@
     <ClCompile Include="source\Scene.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="source\Components\Physics\CubeCollider.cpp">
-      <Filter>source\Components\Physics</Filter>
-    </ClCompile>
     <ClCompile Include="source\Interfaces\ISystem.cpp">
       <Filter>source\Interfaces</Filter>
     </ClCompile>
-    <ClCompile Include="source\Components\Display\StaticMesh.cpp">
-      <Filter>source\Components\Display</Filter>
-    </ClCompile>
     <ClCompile Include="source\Resources\Shader.cpp">
       <Filter>source\Resources</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Components\Transform3D.cpp">
-      <Filter>source\Components</Filter>
     </ClCompile>
     <ClCompile Include="source\Component.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\Frame.cpp">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Resources\StaticMesh.cpp">
+      <Filter>source\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Resources\Texture.cpp">
+      <Filter>source\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Resources\Material.cpp">
+      <Filter>source\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Display\CCamera.cpp">
+      <Filter>source\Components\Display</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Display\CStaticMesh.cpp">
+      <Filter>source\Components\Display</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Physics\CCubeCollider.cpp">
+      <Filter>source\Components\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\CTransform3D.cpp">
+      <Filter>source\Components</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

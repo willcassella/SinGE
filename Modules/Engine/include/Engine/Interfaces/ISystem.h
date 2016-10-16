@@ -11,7 +11,7 @@ namespace sge
 	struct SGE_ENGINE_API ISystem final
 	{
 		SGE_REFLECTED_INTERFACE;
-		SGE_VTABLE_1(ISystem, init_selectors);
+		SGE_INTERFACE_1(ISystem, init_selectors);
 
 		/////////////////////
 		///   Functions   ///

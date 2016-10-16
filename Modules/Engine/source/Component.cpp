@@ -1,5 +1,6 @@
 // Component.cpp
 
+#include <Core/Reflection/ReflectionBuilder.h>
 #include "../include/Engine/Component.h"
 
 SGE_REFLECT_TYPE(sge::ComponentId);
