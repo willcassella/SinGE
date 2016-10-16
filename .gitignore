@@ -1,0 +1,6 @@
+.vscode/
+
+*.suo
+*.VC.db
+*.VC.opendb
+*.user
