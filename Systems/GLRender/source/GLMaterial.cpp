@@ -17,8 +17,8 @@ namespace sge
 		glAttachShader(_id, vShader);
 		glAttachShader(_id, fShader);
 		glBindAttribLocation(_id, POSITION_ATTRIB_LOCATION, POSITION_ATTRIB_NAME);
-		//glBindAttribLocation(_id, NORMAL_ATTRIB_LOCATION, NORMAL_ATTRIB_NAME);
-		//glBindAttribLocation(_id, TEXCOORD_ATTRIB_LOCATION, TEXCOORD_ATTRIB_NAME);
+		glBindAttribLocation(_id, NORMAL_ATTRIB_LOCATION, NORMAL_ATTRIB_NAME);
+		glBindAttribLocation(_id, TEXCOORD_ATTRIB_LOCATION, TEXCOORD_ATTRIB_NAME);
 		glLinkProgram(_id);
 
 		// Make sure program successfully linked

@@ -188,9 +188,9 @@ namespace sge
 		glBindFramebuffer(GL_FRAMEBUFFER, _state->gbuffer_framebuffer);
 		glDrawBuffers(NUM_DRAW_BUFFERS, DRAW_BUFFERS);
 
-		//// Clear the GBuffer
-		//glEnable(GL_DEPTH_TEST);
-		//glDisable(GL_BLEND);
+		// Clear the GBuffer
+		glEnable(GL_DEPTH_TEST);
+		glDisable(GL_BLEND);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// Create matrices
@@ -227,7 +227,7 @@ namespace sge
 			EntityId entity,
 			TComponentInstance<const CTransform3D> transform,
 			TComponentInstance<const CStaticMesh> staticMesh)
-		{			
+		{
 			// Get the model matrix
 			auto model = CTransform3D::get_world_matrix(transform, frame);
 

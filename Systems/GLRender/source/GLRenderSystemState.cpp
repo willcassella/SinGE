@@ -56,15 +56,10 @@ namespace sge
 		auto iter = static_meshes.find(path);
 		if (iter == static_meshes.end())
 		{
-			// Open a file to load the mesh from
-			std::ifstream file{ path, std::ios::binary };
-			file.seekg(0, std::ios::end);
-			std::size_t end = file.tellg();
-			file.seekg(0);
 
 			// Load the mesh from the file
 			StaticMesh staticMesh;
-			staticMesh.load(file, end);
+			staticMesh.load(path);
 
 			// Create a GLStaticMesh from that mesh
 			GLStaticMesh mesh{ staticMesh };

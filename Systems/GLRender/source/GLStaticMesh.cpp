@@ -25,20 +25,20 @@ namespace sge
 		glVertexAttribPointer(GLMaterial::POSITION_ATTRIB_LOCATION, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3), nullptr);
 
 		// Upload normal buffer
-		//glBindBuffer(GL_ARRAY_BUFFER, this->normal_buffer());
-		//glBufferData(GL_ARRAY_BUFFER, _num_vertices * sizeof(Vec3), mesh.vertex_positions(), GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, this->normal_buffer());
+		glBufferData(GL_ARRAY_BUFFER, _num_vertices * sizeof(Vec3), mesh.vertex_positions(), GL_STATIC_DRAW);
 
 		// Define vertex normal specification
-		//glEnableVertexAttribArray(GLMaterial::NORMAL_ATTRIB_LOCATION);
-		//glVertexAttribPointer(GLMaterial::NORMAL_ATTRIB_LOCATION, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3), nullptr);
+		glEnableVertexAttribArray(GLMaterial::NORMAL_ATTRIB_LOCATION);
+		glVertexAttribPointer(GLMaterial::NORMAL_ATTRIB_LOCATION, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3), nullptr);
 
 		// Upload uv data
-		//glBindBuffer(GL_ARRAY_BUFFER, this->uv_buffer());
-		//glBufferData(GL_ARRAY_BUFFER, _num_vertices * sizeof(Vec2), mesh.uv_map_0(), GL_STATIC_DRAW);
+		glBindBuffer(GL_ARRAY_BUFFER, this->uv_buffer());
+		glBufferData(GL_ARRAY_BUFFER, _num_vertices * sizeof(Vec2), mesh.uv_map_0(), GL_STATIC_DRAW);
 
 		// Define vertex uv specification
-		//glEnableVertexAttribArray(GLMaterial::TEXCOORD_ATTRIB_LOCATION);
-		//glVertexAttribPointer(GLMaterial::TEXCOORD_ATTRIB_LOCATION, 2, GL_FLOAT, GL_FALSE, sizeof(Vec2), nullptr);
+		glEnableVertexAttribArray(GLMaterial::TEXCOORD_ATTRIB_LOCATION);
+		glVertexAttribPointer(GLMaterial::TEXCOORD_ATTRIB_LOCATION, 2, GL_FLOAT, GL_FALSE, sizeof(Vec2), nullptr);
 
 		glBindVertexArray(0);
 	}

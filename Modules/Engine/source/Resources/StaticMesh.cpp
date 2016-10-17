@@ -20,15 +20,17 @@ namespace sge
 	{
 	}
 
-	void StaticMesh::load(std::istream& file, std::size_t end)
+	void StaticMesh::load(const std::string& path)
 	{
+		auto file = fopen(path.c_str(), "rb");
+
 		// Get the number of vertices
 		uint32 numVerts = 0;
-		file.read((char*)&numVerts, sizeof(uint32));
+		fread(&numVerts, sizeof(uint32), 1, file);
 
 		// Read in vertices
 		auto* buff = (OldVertex*)calloc(sizeof(OldVertex), numVerts);
-		file.read((char*)buff, numVerts);
+		fread(buff, sizeof(OldVertex), numVerts, file);
 
 		// Reserve space for vertices
 		_vertex_positions.reserve(numVerts);
@@ -44,5 +46,6 @@ namespace sge
 		}
 
 		free(buff);
+		fclose(file);
 	}
 }

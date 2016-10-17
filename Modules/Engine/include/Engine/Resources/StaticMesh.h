@@ -20,7 +20,7 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		void load(std::istream& file, std::size_t end);
+		void load(const std::string& path);
 
 		std::size_t num_vertices() const
 		{
