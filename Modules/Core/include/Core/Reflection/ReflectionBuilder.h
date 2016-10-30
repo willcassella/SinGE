@@ -85,7 +85,22 @@ namespace sge
 			baseCData.arg_types = { &sge::get_type<ArgT>(), &sge::get_type<ArgTs>()... };
 
 			NativeConstructorInfo::Data cData;
-			cData.constructor = [](void* addr, const ArgAny* args) {
+			cData.constructor = [](void* addr, const ArgAny* args) -> void {
+				sge::constructor_wrapper<T>(tmp::list<ArgT, ArgTs...>{}, addr, args);
+			};
+
+			type_data.constructors.insert(std::make_pair(sizeof...(ArgTs)+1, NativeConstructorInfo{ std::move(baseCData), std::move(cData) }));
+			return std::move(*this);
+		}
+
+		template <typename ArgT, typename ... ArgTs>
+		NativeTypeInfoBuilder&& constructor(T(*constructor)(ArgTs...))
+		{
+			ConstructorInfo::Data baseCData;
+			baseCData.arg_types = { &sge::get_type<ArgT>(), &sge::get_type<ArgTs>()... };
+
+			NativeConstructorInfo::Data cData;
+			cData.constructor = [constructor](void* addr, const ArgAny* args) -> void {
 				sge::constructor_wrapper<T>(tmp::list<ArgT, ArgTs...>{}, addr, args);
 			};
 
@@ -100,7 +115,22 @@ namespace sge
 			baseCData.arg_types = { &sge::get_type<ArgTs>()... };
 
 			NativeConstructorInfo::Data cData;
-			cData.constructor = [](void* addr, const ArgAny* args) {
+			cData.constructor = [](void* addr, const ArgAny* args) -> void {
+				sge::constructor_wrapper<T>(tmp::list<ArgTs...>{}, addr, args);
+			};
+
+			type_data.named_constructors.insert(std::make_pair(name, NativeConstructorInfo{ std::move(baseCData), std::move(cData) }));
+			return std::move(*this);
+		}
+
+		template <typename ... ArgTs>
+		NativeTypeInfoBuilder&& named_constructor(const char* name, T(*constructor)(ArgTs...))
+		{
+			ConstructorInfo::Data baseCData;
+			baseCData.arg_types = { &sge::get_type<ArgTs>()... };
+
+			NativeConstructorInfo::Data cData;
+			cData.constructor = [constructor](void* addr, const ArgAny* args) -> void {
 				sge::constructor_wrapper<T>(tmp::list<ArgTs...>{}, addr, args);
 			};
 
@@ -591,8 +621,6 @@ namespace sge
 			interface_data.implementations.insert(std::make_pair(&sge::get_type<T>(), &I::template get_impl<T>()));
 			return std::move(*this);
 		}
-
-
 	};
 }
 
