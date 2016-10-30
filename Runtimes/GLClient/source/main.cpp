@@ -8,8 +8,8 @@
 #include <Engine/Components/Display/CStaticMesh.h>
 #include <GLRender/GLRenderSystem.h>
 
-constexpr sge::uint32 window_width = 1280;
-constexpr sge::uint32 window_height = 720;
+constexpr sge::uint32 window_width = 3000;
+constexpr sge::uint32 window_height = 2000;
 
 int main()
 {
@@ -56,6 +56,11 @@ int main()
 	{
 		// Draw the scene
 		renderSystem.render_frame(initFrame);
+
+		scene.run_system([](sge::Frame& frame, sge::EntityId, sge::TComponentInstance<sge::CTransform3D> transform, sge::TComponentInstance<sge::CPerspectiveCamera>)
+		{
+			sge::CTransform3D::set_local_position(transform, frame, sge::CTransform3D::get_local_position(transform) + sge::Vec3{ 0, 0, -0.01 });
+		});
 
 		// Swap front and back buffers
 		glfwSwapBuffers(window);
