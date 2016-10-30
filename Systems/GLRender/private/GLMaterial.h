@@ -13,15 +13,15 @@ namespace sge
 		static constexpr GLint POSITION_ATTRIB_LOCATION = 0;
 		static constexpr GLint NORMAL_ATTRIB_LOCATION = 1;
 		static constexpr GLint TEXCOORD_ATTRIB_LOCATION = 2;
-		static constexpr CString POSITION_ATTRIB_NAME = "v_position";
-		static constexpr CString NORMAL_ATTRIB_NAME = "v_normal";
-		static constexpr CString TEXCOORD_ATTRIB_NAME = "v_texcoord";
+		static constexpr const char* POSITION_ATTRIB_NAME = "v_position";
+		static constexpr const char* NORMAL_ATTRIB_NAME = "v_normal";
+		static constexpr const char* TEXCOORD_ATTRIB_NAME = "v_texcoord";
 		static constexpr GLint MODEL_UNIFORM_LOCATION = 0;
 		static constexpr GLint VIEW_UNIFORM_LOCATION = 1;
 		static constexpr GLint PROJ_UNIFORM_LOCATION = 2;
-		static constexpr CString MODEL_UNIFORM_NAME = "model";
-		static constexpr CString VIEW_UNIFORM_NAME = "view";
-		static constexpr CString PROJ_UNIFORM_NAME = "proj";
+		static constexpr const char* MODEL_UNIFORM_NAME = "model";
+		static constexpr const char* VIEW_UNIFORM_NAME = "view";
+		static constexpr const char* PROJ_UNIFORM_NAME = "proj";
 		using Id = GLuint;
 
 		////////////////////////

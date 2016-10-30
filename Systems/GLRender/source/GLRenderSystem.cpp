@@ -52,7 +52,7 @@ namespace sge
 		glClearColor(0, 0, 0, 1);
 		glClearDepth(1.f);
 		glEnable(GL_DEPTH_TEST);
-		//glEnable(GL_CULL_FACE);
+		glEnable(GL_CULL_FACE);
 		glDisable(GL_STENCIL_TEST);
 
 		// Get the default framebuffer
@@ -158,10 +158,11 @@ namespace sge
 		glDetachShader(_state->screen_quad_program, screenFShader.id());
 
 		glUseProgram(_state->screen_quad_program);
-		glUniform1i(glGetUniformLocation(_state->screen_quad_program, "position_buffer"), 0);
-		glUniform1i(glGetUniformLocation(_state->screen_quad_program, "normal_buffer"), 1);
-		glUniform1i(glGetUniformLocation(_state->screen_quad_program, "diffuse_buffer"), 2);
-		glUniform1i(glGetUniformLocation(_state->screen_quad_program, "specular_buffer"), 3);
+		glUniform1i(glGetUniformLocation(_state->screen_quad_program, "depth_buffer"), 0);
+		glUniform1i(glGetUniformLocation(_state->screen_quad_program, "position_buffer"), 1);
+		glUniform1i(glGetUniformLocation(_state->screen_quad_program, "normal_buffer"), 2);
+		glUniform1i(glGetUniformLocation(_state->screen_quad_program, "diffuse_buffer"), 3);
+		glUniform1i(glGetUniformLocation(_state->screen_quad_program, "specular_buffer"), 4);
 
 		auto error = glGetError();
 		if (error != GL_NO_ERROR)
@@ -261,12 +262,14 @@ namespace sge
 
 		// Bind the GBuffer's sub-buffers as textures for reading
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::POSITION]);
+		glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::DEPTH]);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::NORMAL]);
+		glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::POSITION]);
 		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::DIFFUSE]);
+		glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::NORMAL]);
 		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::DIFFUSE]);
+		glActiveTexture(GL_TEXTURE4);
 		glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::SPECULAR]);
 
 		// Draw the screen quad
