@@ -8,8 +8,6 @@ namespace sge
 {
 	struct NativeConstructorInfo final : ConstructorInfo
 	{
-		using Fn = void(void* addr, const ArgAny* args);
-
 		struct Data
 		{
 			////////////////////////
@@ -25,7 +23,7 @@ namespace sge
 			///   Fields   ///
 		public:
 
-			Fn* constructor;
+			std::function<void(void* addr, const ArgAny* args)> constructor;
 		};
 
 		////////////////////////

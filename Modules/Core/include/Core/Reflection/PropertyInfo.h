@@ -61,7 +61,7 @@ namespace sge
 	public:
 
 		/**
-		 * \breif The type of this property.
+		 * \brief The type of this property.
 		 */
 		const TypeInfo& type() const
 		{
@@ -69,7 +69,15 @@ namespace sge
 		}
 
 		/**
-		 * \breif The context type required for getting and setting this property.
+		 * \brief Whether this property requires a context.
+		 */
+		bool requires_context() const
+		{
+			return _data.context_type != nullptr;
+		}
+
+		/**
+		 * \brief The context type required for getting and setting this property.
 		 */
 		const TypeInfo* context_type() const
 		{
@@ -77,7 +85,7 @@ namespace sge
 		}
 
 		/**
-		 * \breif Any special flags for this property.
+		 * \brief Any special flags for this property.
 		 */
 		PropertyFlags flags() const
 		{
