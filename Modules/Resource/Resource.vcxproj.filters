@@ -9,6 +9,15 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
+    <Filter Include="include\Archives">
+      <UniqueIdentifier>{455af515-187e-420f-8f43-e5b26f5a995b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Archives">
+      <UniqueIdentifier>{57e0c19c-9015-4d1b-a07a-3694720c6a3f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="private">
+      <UniqueIdentifier>{aa12fe1e-ff77-4474-b47e-4127ec161a05}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Resource\Image.h">
@@ -17,10 +26,25 @@
     <ClInclude Include="include\Resource\config.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Resource\Archives\JsonArchive.h">
+      <Filter>include\Archives</Filter>
+    </ClInclude>
+    <ClInclude Include="private\JsonArchiveWriter.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Resource\Archives\BinaryArchive.h">
+      <Filter>include\Archives</Filter>
+    </ClInclude>
+    <ClInclude Include="private\JsonArchiveReader.h">
+      <Filter>private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Image.cpp">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Archives\JsonArchive.cpp">
+      <Filter>source\Archives</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

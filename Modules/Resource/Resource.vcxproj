@@ -72,28 +72,28 @@
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(ProjectDir)packages\FreeImage\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(ProjectDir)packages\FreeImage\include;$(ProjectDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDIr)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(ProjectDir)packages\FreeImage\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(ProjectDir)packages\FreeImage\include;$(ProjectDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDIr)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(ProjectDir)packages\FreeImage\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(ProjectDir)packages\FreeImage\include;$(ProjectDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDIr)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(ProjectDir)packages\FreeImage\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(ProjectDir)packages\FreeImage\include;$(ProjectDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDIr)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -101,7 +101,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SGE_RESOURCE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SGE_RESOURCE_BUILD;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FloatingPointModel>Fast</FloatingPointModel>
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
     </ClCompile>
@@ -121,7 +121,7 @@ xcopy "$(ProjectDIr)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Solutio
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SGE_RESOURCE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SGE_RESOURCE_BUILD;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FloatingPointModel>Fast</FloatingPointModel>
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
     </ClCompile>
@@ -143,7 +143,7 @@ xcopy "$(ProjectDIr)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Solutio
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SGE_RESOURCE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SGE_RESOURCE_BUILD;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FloatingPointModel>Fast</FloatingPointModel>
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
@@ -168,7 +168,7 @@ xcopy "$(ProjectDIr)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Solutio
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>SGE_RESOURCE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SGE_RESOURCE_BUILD;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FloatingPointModel>Fast</FloatingPointModel>
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
@@ -192,10 +192,15 @@ xcopy "$(ProjectDIr)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Solutio
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Resource\Archives\BinaryArchive.h" />
+    <ClInclude Include="include\Resource\Archives\JsonArchive.h" />
     <ClInclude Include="include\Resource\config.h" />
     <ClInclude Include="include\Resource\Image.h" />
+    <ClInclude Include="private\JsonArchiveReader.h" />
+    <ClInclude Include="private\JsonArchiveWriter.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\Archives\JsonArchive.cpp" />
     <ClCompile Include="source\Image.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
