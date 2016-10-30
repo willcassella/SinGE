@@ -158,17 +158,6 @@ namespace sge
 		};
 
 		template <>
-		struct SGE_CORE_API GetType < long double >
-		{
-			static const NativeTypeInfo type_info;
-
-			static const NativeTypeInfo& get_type(...)
-			{
-				return type_info;
-			}
-		};
-
-		template <>
 		struct SGE_CORE_API GetType < std::string >
 		{
 			static const NativeTypeInfo type_info;

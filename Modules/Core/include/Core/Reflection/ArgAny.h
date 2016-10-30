@@ -10,7 +10,7 @@ namespace sge
 		union Storage
 		{
 			bool b;
-			char i8;
+			int8 i8;
 			byte u8;
 			int16 i16;
 			uint16 u16;
@@ -20,7 +20,6 @@ namespace sge
 			uint64 u64;
 			float f;
 			double d;
-			long double ld;
 			const void* obj;
 		};
 
@@ -60,7 +59,7 @@ namespace sge
 			_value.b = value;
 		}
 
-		void set(char value)
+		void set(int8 value)
 		{
 			_value.i8 = value;
 		}
@@ -110,11 +109,6 @@ namespace sge
 			_value.d = value;
 		}
 
-		void set(long double value)
-		{
-			_value.ld = value;
-		}
-
 		//////////////////
 		///   Fields   ///
 	private:
@@ -129,7 +123,7 @@ namespace sge
 	}
 
 	template <>
-	inline const char& ArgAny::get() const
+	inline const int8& ArgAny::get() const
 	{
 		return _value.i8;
 	}
@@ -186,11 +180,5 @@ namespace sge
 	inline const double& ArgAny::get() const
 	{
 		return _value.d;
-	}
-
-	template <>
-	inline const long double& ArgAny::get() const
-	{
-		return _value.ld;
 	}
 }

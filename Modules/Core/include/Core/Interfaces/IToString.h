@@ -31,6 +31,23 @@ namespace sge
 	};
 
 	template <>
+	struct Impl< IToString, bool >
+	{
+		static std::string to_string(Self self)
+		{
+			assert(!self.null());
+			if (*self.as<bool>())
+			{
+				return "true";
+			}
+			else
+			{
+				return "false";
+			}
+		}
+	};
+
+	template <>
 	struct Impl< IToString, int8 >
 	{
 		static std::string to_string(Self self)
@@ -41,12 +58,12 @@ namespace sge
 	};
 
 	template <>
-	struct Impl< IToString, byte >
+	struct Impl< IToString, uint8 >
 	{
 		static std::string to_string(Self self)
 		{
 			assert(!self.null());
-			return std::to_string(*self.as<byte>());
+			return std::to_string(*self.as<uint8>());
 		}
 	};
 
@@ -127,16 +144,6 @@ namespace sge
 		{
 			assert(!self.null());
 			return std::to_string(*self.as<double>());
-		}
-	};
-
-	template <>
-	struct Impl< IToString, long double >
-	{
-		static std::string to_string(Self self)
-		{
-			assert(!self.null());
-			return std::to_string(*self.as<long double>());
 		}
 	};
 

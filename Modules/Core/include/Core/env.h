@@ -60,25 +60,19 @@ namespace sge
 	// bool is still bool
 	// char is still char (ONLY used for characters, prefer 'Char')
 	using int8 = std::int8_t;
-	using byte = std::uint8_t;
+	using uint8 = std::uint8_t;
 	using int16 = std::int16_t;
 	using uint16 = std::uint16_t;
 	using int32 = std::int32_t;
 	using uint32 = std::uint32_t;
 	using int64 = std::int64_t;
 	using uint64 = std::uint64_t;
+	using byte = uint8;
 	// float is still float (prefer 'Scalar')
 	// double is still double (prefer 'Scalar')
-	// long double is still long double (prefer 'Scalar')
 
 	/** The default type used for scalar values. */
 	using Scalar = float;
-
-	/** The type of character used for strings. */
-	using Char = char;
-
-	/** A c-style string of characters. */
-	using CString = const Char*;
 }
 
 //////////////////

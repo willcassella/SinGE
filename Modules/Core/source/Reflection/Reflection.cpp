@@ -40,7 +40,7 @@ namespace sge
 		const NativeTypeInfo GetType<void>::type_info = build_void_type_info();
 		const NativeTypeInfo GetType<bool>::type_info = build_primitive_type_info<bool>("bool");
 		const NativeTypeInfo GetType<int8>::type_info = build_primitive_type_info<int8>("int8");
-		const NativeTypeInfo GetType<byte>::type_info = build_primitive_type_info<byte>("byte");
+		const NativeTypeInfo GetType<uint8>::type_info = build_primitive_type_info<uint8>("uint8");
 		const NativeTypeInfo GetType<int16>::type_info = build_primitive_type_info<int16>("int16");
 		const NativeTypeInfo GetType<uint16>::type_info = build_primitive_type_info<uint16>("uint16");
 		const NativeTypeInfo GetType<int32>::type_info = build_primitive_type_info<int32>("int32");
@@ -49,7 +49,6 @@ namespace sge
 		const NativeTypeInfo GetType<uint64>::type_info = build_primitive_type_info<uint64>("uint64");
 		const NativeTypeInfo GetType<float>::type_info = build_primitive_type_info<float>("float");
 		const NativeTypeInfo GetType<double>::type_info = build_primitive_type_info<double>("double");
-		const NativeTypeInfo GetType<long double>::type_info = build_primitive_type_info<long double>("long double");
 
 		const NativeTypeInfo GetType<std::string>::type_info = NativeTypeInfoBuilder<std::string>("sge::String");
 	}

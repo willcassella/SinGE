@@ -89,18 +89,6 @@ namespace sge
 		}
 	};
 
-	template <>
-	struct Impl< IFromString, long double >
-	{
-		static std::size_t from_string(SelfMut self, const std::string& str)
-		{
-			assert(!self.null());
-			std::size_t index;
-			*self.as<long double>() = std::stold(str, &index);
-			return index;
-		}
-	};
-
 	template <typename T>
 	std::size_t from_string(T& self, const std::string& str)
 	{
