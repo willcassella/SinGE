@@ -5,6 +5,8 @@
 #include <string>
 #include "../Reflection/Reflection.h"
 #include "../Util/StringUtils.h"
+#include "../Interfaces/IToArchive.h"
+#include "../Interfaces/IFromArchive.h"
 
 namespace sge
 {
@@ -57,6 +59,18 @@ namespace sge
 			return format("<@, @>", x(), y());
 		}
 
+		/* Serializes the state of this Vec2 to an archive. */
+		void to_archive(ArchiveWriter& writer) const
+		{
+			writer.typed_array(_values, 2);
+		}
+
+		/* Deserializes the state of this Vec2 from an archive. */
+		void from_archive(const ArchiveReader& reader)
+		{
+			reader.typed_array(_values, 2);
+		}
+
 		/** Returns the length of this vector */
 		Scalar length() const
 		{
@@ -70,11 +84,11 @@ namespace sge
 
 			if (len != 0)
 			{
-				return Vec2{ x()/len, y()/len };
+				return Vec2{ x() / len, y() / len };
 			}
 			else
 			{
-				return Vec2::zero;
+				return Vec2::zero();
 			}
 		}
 
@@ -94,9 +108,18 @@ namespace sge
 		///   Statics   ///
 	public:
 
-		static const Vec2 zero;
-		static const Vec2 up;
-		static const Vec2 right;
+		static Vec2 zero()
+		{
+			return{ 0, 0 };
+		}
+		static Vec2 up()
+		{
+			return{ 0, 1 };
+		}
+		static Vec2 right()
+		{
+			return{ 1, 0 };
+		}
 
 		/////////////////////
 		///   Operators   ///

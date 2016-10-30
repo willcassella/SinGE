@@ -70,6 +70,18 @@ namespace sge
 			return format("<@, @, @>", x(), y(), z());
 		}
 
+		/* Serializes the state of this Vec3 to an archive. */
+		void to_archive(ArchiveWriter& writer) const
+		{
+			writer.typed_array(_values, 3);
+		}
+
+		/* Deserializes the state of this Vec3 from an archive. */
+		void from_archive(const ArchiveReader& reader)
+		{
+			reader.typed_array(_values, 3);
+		}
+
 		/** Returns the length of this vector */
 		Scalar length() const
 		{
@@ -87,7 +99,7 @@ namespace sge
 			}
 			else
 			{
-				return Vec3::zero;
+				return Vec3::zero();
 			}
 		}
 
@@ -122,10 +134,22 @@ namespace sge
 		///   Static Instances   ///
 	public:
 
-		static const Vec3 zero;
-		static const Vec3 up;
-		static const Vec3 forward;
-		static const Vec3 right;
+		static Vec3 zero()
+		{
+			return{ 0, 0, 0 };
+		}
+		static Vec3 up()
+		{
+			return{ 0, 1, 0 };
+		}
+		static Vec3 forward()
+		{
+			return{ 0, 0, -1 };
+		}
+		static Vec3 right()
+		{
+			return{ 1, 0, 0 };
+		}
 
 		/////////////////////
 		///   Operators   ///

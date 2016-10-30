@@ -94,6 +94,18 @@ namespace sge
 			return format("<@, @, @, @>", x(), y(), z(), w());
 		}
 
+		/* Serializes the state of this Vec4 to an archive. */
+		void to_archive(ArchiveWriter& writer) const
+		{
+			writer.typed_array(_values, 4);
+		}
+
+		/* Deserializes the state of this Vec4 from an archive. */
+		void from_archive(const ArchiveReader& reader)
+		{
+			reader.typed_array(_values, 4);
+		}
+
 		/** Returns the length of this vector */
 		Scalar length() const
 		{
@@ -111,7 +123,7 @@ namespace sge
 			}
 			else
 			{
-				return Vec4::zero;
+				return Vec4::zero();
 			}
 		}
 
@@ -131,7 +143,10 @@ namespace sge
 		///   Static Instances   ///
 	public:
 
-		static const Vec4 zero;
+		static Vec4 zero()
+		{
+			return{ 0, 0, 0, 0 };
+		}
 
 		/////////////////////
 		///   Operators   ///

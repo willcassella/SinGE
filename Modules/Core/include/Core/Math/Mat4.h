@@ -50,6 +50,18 @@ namespace sge
 				_values[0][3], _values[1][3], _values[2][3], _values[3][3]);
 		}
 
+		/* Serializes the state of this Mat4 to an archive. */
+		void to_archive(ArchiveWriter& writer) const
+		{
+			writer.typed_array(_values[0], 16);
+		}
+
+		/* Deserializes the state of this Mat4 from an archive. */
+		void from_archive(const ArchiveReader& reader)
+		{
+			reader.typed_array(_values[0], 16);
+		}
+
 		/** Returns the inverse of this matrix */
 		Mat4 inverse() const;
 

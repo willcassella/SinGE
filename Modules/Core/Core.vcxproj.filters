@@ -42,6 +42,9 @@
     <Filter Include="include\Util">
       <UniqueIdentifier>{7b06bd35-a9b6-4e6c-9f3c-0944c1dbaf53}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\IO">
+      <UniqueIdentifier>{f62532fb-bb6a-4009-97d0-bc468f051789}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Core\include\Core\env.h">
@@ -128,6 +131,21 @@
     <ClInclude Include="include\Core\Util\InterfaceUtils.h">
       <Filter>include\Util</Filter>
     </ClInclude>
+    <ClInclude Include="include\Core\IO\ArchiveWriter.h">
+      <Filter>include\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Interfaces\IToArchive.h">
+      <Filter>include\Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\IO\ArchiveReader.h">
+      <Filter>include\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Interfaces\IFromArchive.h">
+      <Filter>include\Interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\IO\Archive.h">
+      <Filter>include\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Math\Vec2.cpp">
@@ -156,6 +174,12 @@
     </ClCompile>
     <ClCompile Include="source\Math\Mat4.cpp">
       <Filter>source\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IToArchive.cpp">
+      <Filter>source\Interfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IFromArchive.cpp">
+      <Filter>source\Interfaces</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

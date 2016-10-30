@@ -5,6 +5,8 @@
 
 SGE_REFLECT_TYPE(sge::Quat)
 .implements<IToString>()
+.implements<IToArchive>()
+.implements<IFromArchive>()
 .constructor<Vec3, Scalar>()
 .constructor<Scalar, Scalar, Scalar, Scalar>()
 .named_constructor<Vec3, Scalar>("axis_angle")

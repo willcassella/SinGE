@@ -4,7 +4,9 @@
 #include "../../include/Core/Reflection/ReflectionBuilder.h"
 
 SGE_REFLECT_TYPE(sge::Mat4)
-.implements<sge::IToString>()
+.implements<IToString>()
+.implements<IToArchive>()
+.implements<IFromArchive>()
 .property("inverse", &Mat4::inverse, nullptr);
 
 namespace sge

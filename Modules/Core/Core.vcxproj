@@ -163,8 +163,13 @@
     <ClInclude Include="..\Core\include\Core\env.h" />
     <ClInclude Include="include\Core\config.h" />
     <ClInclude Include="include\Core\Functional\FunctionView.h" />
+    <ClInclude Include="include\Core\Interfaces\IFromArchive.h" />
     <ClInclude Include="include\Core\Interfaces\IFromString.h" />
+    <ClInclude Include="include\Core\Interfaces\IToArchive.h" />
     <ClInclude Include="include\Core\Interfaces\IToString.h" />
+    <ClInclude Include="include\Core\IO\Archive.h" />
+    <ClInclude Include="include\Core\IO\ArchiveReader.h" />
+    <ClInclude Include="include\Core\IO\ArchiveWriter.h" />
     <ClInclude Include="include\Core\Math\Angle.h" />
     <ClInclude Include="include\Core\Math\Mat4.h" />
     <ClInclude Include="include\Core\Math\Quat.h" />
@@ -190,7 +195,9 @@
     <ClInclude Include="include\Core\Util\StringUtils.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\Interfaces\IFromArchive.cpp" />
     <ClCompile Include="source\Interfaces\IFromString.cpp" />
+    <ClCompile Include="source\Interfaces\IToArchive.cpp" />
     <ClCompile Include="source\Interfaces\IToString.cpp" />
     <ClCompile Include="source\Math\Mat4.cpp" />
     <ClCompile Include="source\Math\Quat.cpp" />
