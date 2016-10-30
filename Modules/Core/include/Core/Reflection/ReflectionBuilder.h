@@ -45,12 +45,12 @@ namespace sge
 			base_type_data.alignment = alignof(T&);
 			base_type_data.native_type_info = &typeid(T);
 
-			this->set_init<T>();
-			this->set_copy_init<T>();
-			this->set_move_init<T>();
-			this->set_copy_assign<T>();
-			this->set_move_assign<T>();
-			this->set_drop<T>();
+			this->template set_init<T>();
+			this->template set_copy_init<T>();
+			this->template set_move_init<T>();
+			this->template set_copy_assign<T>();
+			this->template set_move_assign<T>();
+			this->template set_drop<T>();
 		}
 
 		///////////////////
