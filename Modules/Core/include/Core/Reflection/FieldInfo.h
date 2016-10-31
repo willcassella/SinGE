@@ -16,13 +16,13 @@ namespace sge
 		FF_NONE = 0,
 
 		/**
-		 * \breif This field should not be serialized by the 'to_archive' and 'from_archive' functions.
+		 * \brief This field should not be serialized by the 'to_archive' and 'from_archive' functions.
 		 * \note This only applies to types using the default ToArchive and FromArchive implementations.
 		 */
 		FF_TRANSIENT = (1 << 0),
 
 		/**
-		 * \breif This field should not be written to.
+		 * \brief This field should not be written to.
 		 */
 		FF_READONLY = (1 << 1) | FF_TRANSIENT
 	};
@@ -63,7 +63,7 @@ namespace sge
 	public:
 
 		/**
-		 * \breif Returns the flags assigned to this field.
+		 * \brief Returns the flags assigned to this field.
 		 */
 		FieldFlags flags() const
 		{
@@ -71,7 +71,7 @@ namespace sge
 		}
 
 		/**
-		 * \breif Returns the type of this field.
+		 * \brief Returns the type of this field.
 		 */
 		const TypeInfo& type() const
 		{
@@ -79,7 +79,7 @@ namespace sge
 		}
 
 		/**
-		 * \breif Returns the offset of this field from the base object pointer.
+		 * \brief Returns the offset of this field from the base object pointer.
 		 */
 		std::size_t offset() const
 		{
