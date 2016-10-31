@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <GLFW/glfw3.h>
+#include <Resource/Archives/JsonArchive.h>
 #include <Engine/Scene.h>
 #include <Engine/Components/CTransform3D.h>
 #include <Engine/Components/Display/CCamera.h>
@@ -35,18 +36,12 @@ int main()
 	// Create a scene
 	sge::Scene scene;
 	sge::Frame initFrame{ scene, 0 };
+	sge::register_builtin_components(scene);
 
-	// Create a mesh object
-	auto meshEnt = scene.new_entity();
-	scene.new_component<sge::CTransform3D>(meshEnt);
-	auto meshComp = scene.new_component<sge::CStaticMesh>(meshEnt);
-	sge::CStaticMesh::set_mesh(meshComp, initFrame, "game_content/spawn_pad.wmesh");
-
-	// Create a camera object
-	auto cameraEnt = scene.new_entity();
-	scene.new_component<sge::CPerspectiveCamera>(cameraEnt);
-	auto cameraPos = scene.new_component<sge::CTransform3D>(cameraEnt);
-	sge::CTransform3D::set_local_position(cameraPos, initFrame, sge::Vec3{ 0, 2, 3 });
+	// Load the scene
+	sge::JsonArchive archive;
+	archive.load("scene.json");
+	archive.deserialize_root(scene);
 
 	// Create a render system
 	sge::GLRenderSystem renderSystem{ window_width, window_height };
