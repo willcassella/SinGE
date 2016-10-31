@@ -3,6 +3,7 @@
 
 #include <Core/Reflection/Reflection.h>
 #include "config.h"
+#include "Component.h"
 
 namespace sge
 {
@@ -49,8 +50,15 @@ namespace sge
 		///   Fields   ///
 	private:
 
+		/* Scene information. */
 		Scene* _scene;
 		const Scene* _c_scene;
 		float _time;
+
+		/* The frame this frame appears within. */
+		const Frame* _outer;
+
+		/* Tags generated this frame. */
+		std::unordered_map<const TypeInfo*, std::pair<ComponentInstance, const void*>> _tags;
 	};
 }

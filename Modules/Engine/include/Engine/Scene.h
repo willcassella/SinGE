@@ -30,10 +30,8 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		/* Creates a new Entity. */
 		EntityId new_entity();
 
-		/* Returns the parent of the given Entity. */
 		EntityId get_entity_parent(EntityId entity) const;
 
 		void set_entity_parent(EntityId entity, EntityId parent);
@@ -42,10 +40,8 @@ namespace sge
 
 		void set_entity_name(EntityId entity, std::string name);
 
-		/* Creates a new instance of the given type of Component, optionally moving from the provided initial value. */
 		ComponentInstanceMut new_component(EntityId entity, const TypeInfo& type, void* init);
 
-		/* Creates a new instance of the given type of Component, moving from the provided initial value. */
 		template <typename T>
 		TComponentInstance<T> new_component(EntityId entity, T&& component)
 		{
@@ -53,7 +49,6 @@ namespace sge
 			return{ instance.entity(), static_cast<T*>(instance.object()) };
 		}
 
-		/* Default-constructs a new instance of the given type of Component. */
 		template <typename T>
 		TComponentInstance<T> new_component(EntityId entity)
 		{
@@ -81,12 +76,6 @@ namespace sge
 			return{ instance.entity(), static_cast<const T*>(instance.object()) };
 		}
 
-		/**
-		* \brief Runs the given system function on all Entities that meet the selection requirements.
-		* \param system Function to process the entity and components selected.
-		* \param types An array of required types.
-		* \param nTypes The number of types passed in.
-		*/
 		void run_system(FunctionView<SystemFnMut> system, const TypeInfo** types, std::size_t numTypes);
 
 		void run_system(FunctionView<SystemFn> system, const TypeInfo** types, std::size_t numTypes) const;
