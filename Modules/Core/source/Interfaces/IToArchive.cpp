@@ -6,7 +6,7 @@
 SGE_REFLECT_INTERFACE(sge::IToArchive)
 .implemented_for<bool>()
 .implemented_for<int8>()
-.implemented_for<byte>()
+.implemented_for<uint8>()
 .implemented_for<int16>()
 .implemented_for<uint16>()
 .implemented_for<int32>()

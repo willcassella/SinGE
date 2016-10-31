@@ -11,7 +11,7 @@ namespace sge
 		{
 			bool b;
 			int8 i8;
-			byte u8;
+			uint8 u8;
 			int16 i16;
 			uint16 u16;
 			int32 i32;
@@ -64,7 +64,7 @@ namespace sge
 			_value.i8 = value;
 		}
 
-		void set(byte value)
+		void set(uint8 value)
 		{
 			_value.u8 = value;
 		}
@@ -129,7 +129,7 @@ namespace sge
 	}
 
 	template <>
-	inline const byte& ArgAny::get() const
+	inline const uint8& ArgAny::get() const
 	{
 		return _value.u8;
 	}

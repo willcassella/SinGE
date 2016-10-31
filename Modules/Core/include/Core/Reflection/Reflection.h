@@ -59,7 +59,7 @@ namespace sge
 		};
 
 		template <>
-		struct SGE_CORE_API GetType < byte >
+		struct SGE_CORE_API GetType < uint8 >
 		{
 			static const NativeTypeInfo type_info;
 
