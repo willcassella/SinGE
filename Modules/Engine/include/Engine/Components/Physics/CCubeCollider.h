@@ -2,7 +2,7 @@
 #pragma once
 
 #include <Core/Math/Vec2.h>
-#include "../../config.h"
+#include "../../Component.h"
 
 namespace sge
 {
@@ -14,7 +14,7 @@ namespace sge
 		///   Tags   ///
 	public:
 
-		struct SGE_ENGINE_API TShapeChanged
+		struct SGE_ENGINE_API FShapeChanged
 		{
 			SGE_REFLECTED_TYPE;
 		};
@@ -23,15 +23,17 @@ namespace sge
 		////   Methods   ///
 	public:
 
-		Vec2 get_shape() const
+		Vec2 shape() const
 		{
 			return _shape;
 		}
 
-		void set_shape(struct Frame& frame, Vec2 shape)
+		void shape(Vec2 shape)
 		{
 			_shape = shape;
 		}
+
+		static void set_shape(TComponentInstance<CCubeCollider> self, Frame& frame, Vec2 shape);
 
 		//////////////////
 		///   Fields   ///

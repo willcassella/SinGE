@@ -17,8 +17,8 @@ namespace sge
 	.field("local_scale", &CTransform3D::_local_scale)
 	.field("local_rotation", &CTransform3D::_local_rotation);
 
-	SGE_REFLECT_TYPE(sge::CTransform3D::TTransformChanged);
-	SGE_REFLECT_TYPE(sge::CTransform3D::TParentChanged);
+	SGE_REFLECT_TYPE(sge::CTransform3D::FTransformChanged);
+	SGE_REFLECT_TYPE(sge::CTransform3D::FParentChanged);
 
 	CTransform3D::CTransform3D()
 	{

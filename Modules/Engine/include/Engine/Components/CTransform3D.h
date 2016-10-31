@@ -65,12 +65,12 @@ namespace sge
 		///   Tags   ///
 	public:
 
-		struct SGE_ENGINE_API TTransformChanged
+		struct SGE_ENGINE_API FTransformChanged
 		{
 			SGE_REFLECTED_TYPE;
 		};
 
-		struct SGE_ENGINE_API TParentChanged
+		struct SGE_ENGINE_API FParentChanged
 		{
 			SGE_REFLECTED_TYPE;
 		};
