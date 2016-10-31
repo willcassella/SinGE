@@ -225,7 +225,7 @@ namespace sge
 		template <typename T>
 		bool pull_array_element(std::size_t i, T& out) const
 		{
-			return this->get_array_element(i, [&](const ArchiveReader& elementReader) {
+			return this->array_element(i, [&](const ArchiveReader& elementReader) {
 				from_archive(out, elementReader);
 			});
 		}
@@ -260,7 +260,7 @@ namespace sge
 		template <typename T>
 		bool pull_object_member(const char* name, T& out) const
 		{
-			return this->get_object_member(name, [&](const ArchiveReader& memberReader) {
+			return this->object_member(name, [&](const ArchiveReader& memberReader) {
 				from_archive(out, memberReader);
 			});
 		}
