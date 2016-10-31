@@ -197,6 +197,24 @@ namespace sge
 	{
 		return specialized::GetType<T>::get_type(value);
 	}
+
+	template <typename I>
+	const I* get_vtable(const TypeInfo& type)
+	{
+		const auto& interf = get_interface<I>();
+
+		// See if this type has defined an implementation for this interface
+		const I* impl = static_cast<const I*>(type.get_implementation(interf));
+
+		if (impl)
+		{
+			return impl;
+		}
+
+		// See if this interface has defined an implementation for this class
+		impl = static_cast<const I*>(interf.get_implementation(type));
+		return impl;
+	}
 }
 
 //////////////////

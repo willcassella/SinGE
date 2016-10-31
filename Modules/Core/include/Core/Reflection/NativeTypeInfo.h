@@ -169,7 +169,7 @@ namespace sge
 		{
 			for (const auto& ctor : _data.named_constructors)
 			{
-				enumerator(ctor.first, ctor.second);
+				enumerator(ctor.first.c_str(), ctor.second);
 			}
 		}
 
@@ -188,7 +188,7 @@ namespace sge
 		{
 			for (const auto& prop : _data.properties)
 			{
-				enumerator(prop.first, prop.second);
+				enumerator(prop.first.c_str(), prop.second);
 			}
 		}
 
@@ -207,8 +207,14 @@ namespace sge
 		{
 			for (const auto& field : _data.fields)
 			{
-				enumerator(field.first, field.second);
+				enumerator(field.first.c_str(), field.second);
 			}
+		}
+
+		const void* get_implementation(const InterfaceInfo& interf) const override
+		{
+			auto iter = _data.interfaces.find(&interf);
+			return iter == _data.interfaces.end() ? nullptr : iter->second;
 		}
 
 		//////////////////

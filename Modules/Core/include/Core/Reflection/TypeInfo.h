@@ -39,9 +39,9 @@ namespace sge
 	struct TypeInfo
 	{
 		using ConstructorEnumeratorFn = void(std::size_t argc, const ConstructorInfo& ctor);
-		using NamedConstructorEnumeratorFn = void(const std::string& name, const ConstructorInfo& ctor);
-		using PropertyEnumeratorFn = void(const std::string& name, const PropertyInfo& prop);
-		using FieldEnumeratorFn = void(const std::string& name, const FieldInfo& field);
+		using NamedConstructorEnumeratorFn = void(const char* name, const ConstructorInfo& ctor);
+		using PropertyEnumeratorFn = void(const char* name, const PropertyInfo& prop);
+		using FieldEnumeratorFn = void(const char* name, const FieldInfo& field);
 
 		struct Data
 		{
@@ -310,6 +310,14 @@ namespace sge
 		 * \param enumerator A function to call with the name and information of the field at each iteration.
 		 */
 		virtual void enumerate_fields(FunctionView<FieldEnumeratorFn> enumerator) const = 0;
+
+		/**
+		 * \brief Returns a pointer to the vtable object created for this type for the specified interface.
+		 * In general you should use the global 'get_vtable' function, as it will search implementations on the type, as well as on the interface.
+		 * \param interf The interface to find the vtable for.
+		 * \return A pointer to the vtable object, which may be null if this type has not implemented the interface.
+		 */
+		virtual const void* get_implementation(const InterfaceInfo& interf) const = 0;
 
 		/////////////////////
 		///   Operators   ///
