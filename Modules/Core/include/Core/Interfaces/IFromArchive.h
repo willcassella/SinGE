@@ -160,4 +160,33 @@ namespace sge
 	{
 		Impl<IFromArchive, T>::from_archive(&value, reader);
 	}
+
+	template <typename T>
+	void fields_from_archive(T& value, const ArchiveReader& reader)
+	{
+		reader.enumerate_object_members([&](const char* name, const ArchiveReader& fieldReader)
+		{
+			// Search for the field being assigned
+			const auto* field = get_type<T>().find_field(name);
+
+			// If the field doesn't exist, or it's not meant to be written to
+			if (!field || (field->flags() & FF_READONLY))
+			{
+				return;
+			}
+
+			// Get the FromArchive vtable for this field
+			const auto* fieldImpl = get_vtable<IFromArchive>(field->type());
+
+			// If this field type doesn't support deserialization, continue
+			if (!fieldImpl)
+			{
+				return;
+			}
+
+			// Deserialize the field
+			auto* fieldValue = field->get(&value).object();
+			fieldImpl->from_archive(fieldValue, fieldReader);
+		});
+	}
 }

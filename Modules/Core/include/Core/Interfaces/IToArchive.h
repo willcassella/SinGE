@@ -154,4 +154,34 @@ namespace sge
 	{
 		Impl<IToArchive, T>::to_archive(&value, writer);
 	}
+
+	template <typename T>
+	void fields_to_archive(const T& value, ArchiveWriter& writer)
+	{
+		get_type<T>().enumerate_fields([&](const char* name, const FieldInfo& field)
+		{
+			// If this field isn't meant to be serialized, continue
+			if (field.flags() & FF_TRANSIENT)
+			{
+				return;
+			}
+
+			// Get the ToArchive implementation for this field
+			const auto* fieldImpl = get_vtable<IToArchive>(field.type());
+
+			// If this field type doesn't support serialization, continue
+			if (!fieldImpl)
+			{
+				return;
+			}
+
+			// Get the value of the field
+			auto* fieldValue = field.get(&value).object();
+
+			// Serialize the field
+			writer.add_object_member(name, [=](ArchiveWriter& fieldWriter) {
+				fieldImpl->to_archive(fieldValue, fieldWriter);
+			});
+		});
+	}
 }
