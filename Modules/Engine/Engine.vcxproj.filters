@@ -39,6 +39,12 @@
     <Filter Include="source\Resources">
       <UniqueIdentifier>{3fee641b-bb43-436c-b7e4-304cad77d09c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Components\Logic">
+      <UniqueIdentifier>{899f1a01-9ae5-4ea7-8758-f8c2aa05b65b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Logic">
+      <UniqueIdentifier>{3bad39d5-0763-4da3-8072-008017cf6066}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Engine\config.h">
@@ -80,6 +86,12 @@
     <ClInclude Include="include\Engine\Components\CTransform3D.h">
       <Filter>include\Components</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\Components\Physics\CVelocity.h">
+      <Filter>include\Components\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Logic\CInput.h">
+      <Filter>include\Components\Logic</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Scene.cpp">
@@ -117,6 +129,12 @@
     </ClCompile>
     <ClCompile Include="source\Components\CTransform3D.cpp">
       <Filter>source\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Logic\CInput.cpp">
+      <Filter>source\Logic</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Physics\CVelocity.cpp">
+      <Filter>source\Components\Physics</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

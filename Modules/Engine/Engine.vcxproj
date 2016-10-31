@@ -101,6 +101,7 @@
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
@@ -115,6 +116,7 @@
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
@@ -166,8 +168,10 @@
     <ClInclude Include="include\Engine\Component.h" />
     <ClInclude Include="include\Engine\Components\Display\CCamera.h" />
     <ClInclude Include="include\Engine\Components\Display\CStaticMesh.h" />
+    <ClInclude Include="include\Engine\Components\Logic\CInput.h" />
     <ClInclude Include="include\Engine\Components\Physics\CCubeCollider.h" />
     <ClInclude Include="include\Engine\Components\CTransform3D.h" />
+    <ClInclude Include="include\Engine\Components\Physics\CVelocity.h" />
     <ClInclude Include="include\Engine\config.h" />
     <ClInclude Include="include\Engine\Frame.h" />
     <ClInclude Include="include\Engine\Interfaces\ISystem.h" />
@@ -181,8 +185,10 @@
     <ClCompile Include="source\Component.cpp" />
     <ClCompile Include="source\Components\Display\CCamera.cpp" />
     <ClCompile Include="source\Components\Display\CStaticMesh.cpp" />
+    <ClCompile Include="source\Components\Logic\CInput.cpp" />
     <ClCompile Include="source\Components\Physics\CCubeCollider.cpp" />
     <ClCompile Include="source\Components\CTransform3D.cpp" />
+    <ClCompile Include="source\Components\Physics\CVelocity.cpp" />
     <ClCompile Include="source\Frame.cpp" />
     <ClCompile Include="source\Interfaces\ISystem.cpp" />
     <ClCompile Include="source\Resources\Material.cpp" />
