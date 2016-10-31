@@ -73,28 +73,28 @@
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(ProjectDir)packages\glew-2.0.0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)packages\glew-2.0.0\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)packages\glew-2.0.0\lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(ProjectDir)packages\glew-2.0.0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)packages\glew-2.0.0\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)packages\glew-2.0.0\lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(ProjectDir)packages\glew-2.0.0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)packages\glew-2.0.0\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)packages\glew-2.0.0\lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(ProjectDir)packages\glew-2.0.0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)packages\glew-2.0.0\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)packages\glew-2.0.0\lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -104,14 +104,13 @@
       <PreprocessorDefinitions>SGE_GLRENDER_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d
 xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>glew.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 GLRender</Command>
@@ -125,14 +124,13 @@ xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
       <PreprocessorDefinitions>SGE_GLRENDER_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d
 xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
     </PostBuildEvent>
     <Link>
-      <AdditionalDependencies>glew.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 GLRender</Command>
@@ -148,13 +146,12 @@ xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
       <PreprocessorDefinitions>SGE_GLRENDER_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glew.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d
@@ -174,13 +171,12 @@ xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
       <PreprocessorDefinitions>SGE_GLRENDER_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glew.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d
