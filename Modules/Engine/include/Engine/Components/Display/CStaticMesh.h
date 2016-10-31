@@ -6,7 +6,7 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CStaticMesh
+	struct SGE_ENGINE_API CStaticMesh : BasicComponent<CStaticMesh>
 	{
 		SGE_REFLECTED_TYPE;
 

@@ -2,11 +2,14 @@
 #pragma once
 
 #include <Core/Reflection/Reflection.h>
+#include <Core/Interfaces/IToArchive.h>
+#include <Core/Interfaces/IFromArchive.h>
 #include "config.h"
 
 namespace sge
 {
 	struct Frame;
+	struct Scene;
 
 	/* Uniquely identifies an Entity within a Scene. */
 	using EntityId = uint64;
@@ -303,6 +306,27 @@ namespace sge
 		}
 	};
 
+	/* Convenience class that components may (but are not required to) inherit from. */
+	template <class C>
+	struct BasicComponent
+	{
+		///////////////////
+		///   Methods   ///
+	public:
+
+		/* Serializes the state of this component to an archive. */
+		void to_archive(ArchiveWriter& writer) const
+		{
+			fields_to_archive(static_cast<const C&>(*this), writer);
+		}
+
+		/* Deserializes the state of this component from an archive. */
+		void from_archive(const ArchiveReader& reader)
+		{
+			fields_from_archive(static_cast<C&>(*this), reader);
+		}
+	};
+
 	/* Context object supplied to component property getters and setters. */
 	struct SGE_ENGINE_API ComponentContext
 	{
@@ -411,6 +435,12 @@ namespace sge
 			setter(instance, *context->frame(), *value);
 		};
 	}
+
+	/**
+	 * \brief Registers all builtin engine component types.
+	 * \param scene The scene to register the component types with.
+	 */
+	SGE_ENGINE_API void register_builtin_components(Scene& scene);
 }
 
 namespace std

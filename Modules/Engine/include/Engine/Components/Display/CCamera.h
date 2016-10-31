@@ -2,11 +2,11 @@
 #pragma once
 
 #include <Core/Math/Mat4.h>
-#include "../../config.h"
+#include "../../Component.h"
 
 namespace sge
 {
-	struct SGE_ENGINE_API CPerspectiveCamera
+	struct SGE_ENGINE_API CPerspectiveCamera : BasicComponent<CPerspectiveCamera>
 	{
 		SGE_REFLECTED_TYPE;
 
@@ -34,7 +34,7 @@ namespace sge
 		float z_max;
 	};
 
-	struct SGE_ENGINE_API COrthographicCamera
+	struct SGE_ENGINE_API COrthographicCamera : BasicComponent<CPerspectiveCamera>
 	{
 		SGE_REFLECTED_TYPE;
 

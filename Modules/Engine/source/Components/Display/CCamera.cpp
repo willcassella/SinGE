@@ -4,11 +4,15 @@
 #include "../../../include/Engine/Components/Display/CCamera.h"
 
 SGE_REFLECT_TYPE(sge::CPerspectiveCamera)
+.implements<IToArchive>()
+.implements<IFromArchive>()
 .field_property("h_fov", &CPerspectiveCamera::h_fov)
 .field_property("z_min", &CPerspectiveCamera::z_min)
 .field_property("z_max", &CPerspectiveCamera::z_max);
 
 SGE_REFLECT_TYPE(sge::COrthographicCamera)
+.implements<IToArchive>()
+.implements<IFromArchive>()
 .field_property("scale", &COrthographicCamera::scale);
 
 namespace sge

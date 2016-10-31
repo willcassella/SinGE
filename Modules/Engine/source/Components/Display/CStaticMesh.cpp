@@ -5,8 +5,12 @@
 #include "../../../include/Engine/Scene.h"
 
 SGE_REFLECT_TYPE(sge::CStaticMesh)
+.implements<IToArchive>()
+.implements<IFromArchive>()
 .property("mesh", component_getter(CStaticMesh::get_mesh), component_setter(CStaticMesh::set_mesh))
-.property("material", component_getter(CStaticMesh::get_material), component_setter(CStaticMesh::set_material));
+.property("material", component_getter(CStaticMesh::get_material), component_setter(CStaticMesh::set_material))
+.field("mesh", &CStaticMesh::_mesh)
+.field("material", &CStaticMesh::_material);
 
 SGE_REFLECT_TYPE(sge::CStaticMesh::TMeshChanged);
 SGE_REFLECT_TYPE(sge::CStaticMeshOverrideMaterial);

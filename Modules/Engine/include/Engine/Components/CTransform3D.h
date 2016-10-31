@@ -6,7 +6,7 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CTransform3D
+	struct SGE_ENGINE_API CTransform3D : BasicComponent<CTransform3D>
 	{
 		SGE_REFLECTED_TYPE;
 

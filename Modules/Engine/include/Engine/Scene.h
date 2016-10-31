@@ -30,6 +30,18 @@ namespace sge
 		///   Methods   ///
 	public:
 
+		void to_archive(ArchiveWriter& writer) const;
+
+		void from_archive(const ArchiveReader& reader);
+
+		void register_component_type(const TypeInfo& type);
+
+		template <class C>
+		void register_component_type()
+		{
+			register_component_type(sge::get_type<C>());
+		}
+
 		EntityId new_entity();
 
 		EntityId get_entity_parent(EntityId entity) const;
@@ -191,5 +203,8 @@ namespace sge
 		/* Component Data */
 		std::unordered_map<ComponentId, void*> _component_objects;
 		std::unordered_map<const TypeInfo*, std::set<EntityId>> _components;
+
+		/* Map of component types registered with this scene. */
+		std::unordered_map<std::string, const TypeInfo*> _component_types;
 	};
 }

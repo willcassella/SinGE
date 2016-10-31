@@ -7,6 +7,8 @@
 namespace sge
 {
 	SGE_REFLECT_TYPE(sge::CTransform3D)
+	.implements<IToArchive>()
+	.implements<IFromArchive>()
 	.property("local_position", component_getter(CTransform3D::get_local_position), component_setter(CTransform3D::set_local_position))
 	.property("local_scale", component_getter(CTransform3D::get_local_scale), component_setter(CTransform3D::set_local_scale))
 	.property("local_rotation", component_getter(CTransform3D::get_local_rotation), component_setter(CTransform3D::set_local_rotation))
