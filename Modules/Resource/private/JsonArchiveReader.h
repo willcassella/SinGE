@@ -254,7 +254,7 @@ namespace sge
 			JsonArchiveReader memberReader{ iter->value };
 			func(memberReader);
 
-			return false;
+			return true;
 		}
 
 	private:
