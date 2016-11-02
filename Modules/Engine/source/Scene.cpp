@@ -4,6 +4,7 @@
 #include <Core/Memory/Functions.h>
 #include <Core/Functional/FunctionView.h>
 #include "../include/Engine/Scene.h"
+#include "Core/Util/StringUtils.h"
 
 SGE_REFLECT_TYPE(sge::Scene)
 .implements<IToArchive>()
@@ -39,10 +40,11 @@ namespace sge
 		{
 			for (auto entity : this->_entity_parents)
 			{
-				entityListWriter.add_array_element([&](ArchiveWriter& entityWriter)
+				entityListWriter.add_object_member(
+					to_string(entity.first).c_str(),
+					[&](ArchiveWriter& entityWriter)
 				{
 					// Write the entity id and parent id
-					entityWriter.push_object_member("id", entity.first);
 					entityWriter.push_object_member("parent", entity.second);
 
 					// See if the entity has a name
@@ -64,19 +66,18 @@ namespace sge
 				// Add the component type name as a field
 				componentListWriter.add_object_member(componentType.first->name().c_str(), [&](ArchiveWriter& componentTypeWriter)
 				{
+					// Get the vtable for the 'ToArchive' interface
+					const auto* toArchive = get_vtable<IToArchive>(*componentType.first);
+
+					// Serialize each instance of the component
 					for (auto componentEntity : componentType.second)
 					{
-						componentTypeWriter.add_array_element([&](ArchiveWriter& componentWriter)
+						componentTypeWriter.add_object_member(
+							to_string(componentEntity).c_str(),
+							[&](ArchiveWriter& componentWriter)
 						{
-							componentWriter.push_object_member("entity", componentEntity);
-							componentWriter.add_object_member("object", [&](ArchiveWriter& valueWriter)
-							{
-								const auto* vtable = get_vtable<IToArchive>(*componentType.first);
-								const auto* object = this->get_component_object(ComponentId{ componentEntity, *componentType.first });
-
-								// Serialize the component value
-								vtable->to_archive(object, valueWriter);
-							});
+							const auto* object = this->get_component_object(ComponentId{ componentEntity, *componentType.first });
+							toArchive->to_archive(object, componentWriter);
 						});
 					}
 				});
@@ -86,29 +87,62 @@ namespace sge
 
 	void Scene::from_archive(const ArchiveReader& reader)
 	{
-		reader.pull_object_member("next_entity_id", _next_entity_id);
+		decltype(_entity_parents) entities;
+		decltype(_entity_names) entityNames;
 
 		// Deserialize all entities
 		reader.object_member("entities", [&](const ArchiveReader& entityListReader)
 		{
-			entityListReader.enumerate_array_elements([&](std::size_t /*i*/, const ArchiveReader& entityReader)
+			// Get the number of entities up front
+			std::size_t numEntities = 0;
+			entityListReader.object_num_members(numEntities);
+			entities.reserve(numEntities);
+
+			// Load all entities
+			entityListReader.enumerate_object_members([&](const char* id, const ArchiveReader& entityReader)
 			{
 				// Get the entities ID and Parent
 				EntityId entity = NULL_ENTITY, parent = WORLD_ENTITY;
-				entityReader.pull_object_member("id", entity);
+				entity = std::strtoull(id, nullptr, 10);
 				entityReader.pull_object_member("parent", parent);
 
+				// Make sure the entity fields are valid
+				if (entity == NULL_ENTITY || entity == WORLD_ENTITY || parent == NULL_ENTITY)
+				{
+					return;
+				}
+
 				// Add the entity to the world
-				_entity_parents.insert(std::make_pair(entity, parent));
+				entities.insert(std::make_pair(entity, parent));
 
 				// Get the entity's name
 				std::string name;
 				if (entityReader.pull_object_member("name", name))
 				{
-					this->_entity_names.insert(std::make_pair(entity, std::move(name)));
+					entityNames.insert(std::make_pair(entity, std::move(name)));
 				}
 			});
 		});
+
+		// Validate entity-parent relationships
+		for (auto entity : entities)
+		{
+			// World entity is a valid parent
+			if (entity.second == WORLD_ENTITY)
+			{
+				continue;
+			}
+
+			// Otherwise, the parent has to be a valid entity
+			auto iter = entities.find(entity.second);
+			if (iter == entities.end())
+			{
+				return;
+			}
+		}
+
+		decltype(_components) components;
+		decltype(_component_objects) componentObjects;
 
 		// Deserialize all components
 		reader.object_member("components", [&](const ArchiveReader& componentListReader)
@@ -123,24 +157,67 @@ namespace sge
 					return;
 				}
 
-				// Get the component instances
-				componentTypeReader.enumerate_array_elements([&](std::size_t /*i*/, const ArchiveReader& componentReader)
+				// Get the vtable for 'FromArchive' for this type
+				const auto* fromArchive = get_vtable<IFromArchive>(*typeIter->second);
+
+				// Create containers for instances and objects
+				std::set<EntityId> instanceEntities;
+
+				// Load all instances
+				componentTypeReader.enumerate_object_members([&](const char* entity, const ArchiveReader& componentReader)
 				{
-					EntityId entity = NULL_ENTITY;
-					componentReader.pull_object_member("entity", entity);
+					// Get the entity id
+					EntityId entityId = NULL_ENTITY;
+					entityId = std::strtoull(entity, nullptr, 10);
 
-					// Allocate an instance of the component
-					auto instance = this->new_component(entity, *typeIter->second, nullptr);
-
-					componentReader.object_member("object", [&](const ArchiveReader& componentValueReader)
+					// Validate the entity id (it may not be the null entity, world entity, or an entity that already exists for this type)
+					if (entityId == NULL_ENTITY ||
+						entityId == WORLD_ENTITY ||
+						instanceEntities.find(entityId) != instanceEntities.end())
 					{
-						// Deserialize the component
-						const auto* impl = get_vtable<IFromArchive>(*typeIter->second);
-						impl->from_archive(instance.object(), componentValueReader);
-					});
+						return;
+					}
+
+					// Add the entity to the set
+					instanceEntities.insert(entityId);
+
+					// Create an instance of the entity
+					auto* buff = std::malloc(typeIter->second->size());
+					typeIter->second->init(buff);
+
+					// Add the component object to the scene
+					componentObjects.insert(std::make_pair(ComponentId{ entityId, *typeIter->second }, buff));
+
+					// Deserialize it
+					fromArchive->from_archive(buff, componentReader);
 				});
+
+				// Insert the entity set
+				components.insert(std::make_pair(typeIter->second, std::move(instanceEntities)));
 			});
 		});
+
+		// Validate component entities
+		for (const auto& componentType : components)
+		{
+			for (auto entity : componentType.second)
+			{
+				// Make sure the entity actually exists
+				auto iter = entities.find(entity);
+				if (iter == entities.end())
+				{
+					return;
+				}
+			}
+		}
+
+		// Add data to the scene
+		_entity_parents = std::move(entities);
+		_entity_names = std::move(entityNames);
+		_components = std::move(components);
+		_component_objects = std::move(componentObjects);
+
+		reader.pull_object_member("next_entity_id", _next_entity_id);
 	}
 
 	void Scene::register_component_type(const TypeInfo& type)
