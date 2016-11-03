@@ -60,4 +60,20 @@ namespace sge
 
 		std::fclose(file);
 	}
+
+	std::string JsonArchive::dump_string() const
+	{
+		rapidjson::StringBuffer buffer;
+		buffer.Clear();
+
+		rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+		_data->doc.Accept(writer);
+
+		return buffer.GetString();
+	}
+
+	void JsonArchive::parse_string(const char* str)
+	{
+		_data->doc.Parse(str);
+	}
 }

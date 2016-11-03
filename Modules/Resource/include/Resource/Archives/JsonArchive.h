@@ -31,6 +31,10 @@ namespace sge
 
 		void load(const char* path);
 
+		std::string dump_string() const;
+
+		void parse_string(const char* str);
+
 		template <typename T>
 		void serialize_root(const T& value)
 		{
