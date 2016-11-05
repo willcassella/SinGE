@@ -36,6 +36,8 @@ namespace sge
 
 		void register_component_type(const TypeInfo& type);
 
+		const TypeInfo* get_component_type(const char* typeName) const;
+
 		template <class C>
 		void register_component_type()
 		{

@@ -225,6 +225,12 @@ namespace sge
 		_component_types.insert(std::make_pair(type.name(), &type));
 	}
 
+	const TypeInfo* Scene::get_component_type(const char* typeName) const
+	{
+		auto iter = _component_types.find(typeName);
+		return iter == _component_types.end() ? nullptr : iter->second;
+	}
+
 	EntityId Scene::new_entity()
 	{
 		auto id = _next_entity_id++;
