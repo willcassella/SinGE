@@ -69,25 +69,25 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(ProjectDir)packages\asio\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)packages\asio\include\;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(ProjectDir)packages\asio\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)packages\asio\include\;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(ProjectDir)packages\asio\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)packages\asio\include\;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(ProjectDir)packages\asio\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)packages\asio\include\;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
@@ -103,6 +103,9 @@
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 asio</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -115,6 +118,9 @@
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 asio</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -133,6 +139,9 @@
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 asio</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -151,6 +160,9 @@
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 asio</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\EditorServerSystem\config.h" />

@@ -1,20 +1,30 @@
 # URL Configuration
-$project = $args[0]
-$release = "dependencies-v0.1"
-$url = "https://github.com/willcassella/SinGE/releases/download/" + $release + "/" + $project + ".zip"
+$packageDir = $args[0] # Directory to save packages to
+$release = $args[1] # Package release to download from
 
-# Check if we've alredy downloaded packages
-if (Test-Path "packages")
+Write-Output "Scanning packages..."
+
+# Enumerate the list of packages
+foreach ($package in $args[2..$args.Length])
 {
-    echo "Packages already up to date"
-    exit
+    $packagePath = $packageDir + $package
+
+    # Check if we've already downloaded the package
+    if (Test-Path $packagePath)
+    {
+        Write-Output ("Package {0} up to date." -f $package)
+        continue
+    }
+
+    $temp = [System.IO.Path]::GetTempFileName() + ".zip"
+
+    # Download the package
+    Write-Output ("Downloading package {0}..." -f $package)
+    $url = "https://github.com/willcassella/SinGE/releases/download/{0}/{1}.zip" -f $release, $package
+    Invoke-WebRequest $url -outfile $temp
+
+    # Extract the package
+    Write-Output ("Extracting package {0}..." -f $package)
+    Expand-Archive $temp -dest $packagePath
+    Remove-Item $temp
 }
-
-echo "Downloading packages..."
-
-# Download the packages file
-wget $url -outfile "packages.zip"
-Expand-Archive "packages.zip" -dest "packages"
-Remove-Item "packages.zip"
-
-echo "Package download complete"

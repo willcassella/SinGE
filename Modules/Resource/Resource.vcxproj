@@ -72,29 +72,29 @@
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(ProjectDir)packages\FreeImage\include;$(ProjectDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDIr)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)packages\FreeImage\include;$(SolutionDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(ProjectDir)packages\FreeImage\include;$(ProjectDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDIr)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)packages\FreeImage\include;$(SolutionDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(ProjectDir)packages\FreeImage\include;$(ProjectDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDIr)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)packages\FreeImage\include;$(SolutionDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>.\bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>.\build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(ProjectDir)packages\FreeImage\include;$(ProjectDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDIr)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)packages\FreeImage\include;$(SolutionDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -107,13 +107,13 @@
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d
-xcopy "$(ProjectDIr)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
+xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>FreeImage.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 Resource</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 FreeImage rapidjson</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -127,13 +127,13 @@ xcopy "$(ProjectDIr)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Solutio
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d
-xcopy "$(ProjectDIr)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
+xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>FreeImage.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 Resource</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 FreeImage rapidjson</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -155,10 +155,10 @@ xcopy "$(ProjectDIr)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Solutio
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d
-xcopy "$(ProjectDIr)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
+xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 Resource</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 FreeImage rapidjson</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -180,10 +180,10 @@ xcopy "$(ProjectDIr)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Solutio
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d
-xcopy "$(ProjectDIr)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
+xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 Resource</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 FreeImage rapidjson</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

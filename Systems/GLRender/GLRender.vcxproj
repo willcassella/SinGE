@@ -72,29 +72,29 @@
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(ProjectDir)packages\glew-2.0.0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)packages\glew-2.0.0\lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)packages\glew-2.0.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)packages\glew-2.0.0\lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(ProjectDir)packages\glew-2.0.0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)packages\glew-2.0.0\lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)packages\glew-2.0.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)packages\glew-2.0.0\lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(ProjectDir)packages\glew-2.0.0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)packages\glew-2.0.0\lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)packages\glew-2.0.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)packages\glew-2.0.0\lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(ProjectDir)packages\glew-2.0.0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)packages\glew-2.0.0\lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)packages\glew-2.0.0\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)packages\glew-2.0.0\lib\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -113,7 +113,7 @@ xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
       <AdditionalDependencies>glew32.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 GLRender</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 glew-2.0.0</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -133,7 +133,7 @@ xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
       <AdditionalDependencies>glew32.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 GLRender</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 glew-2.0.0</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -158,7 +158,7 @@ xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
 xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 GLRender</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 glew-2.0.0</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -183,7 +183,7 @@ xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
 xcopy "$(ProjectDir)content" "$(SolutionDir)engine_content\" /y /d /e</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 GLRender</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 glew-2.0.0</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
