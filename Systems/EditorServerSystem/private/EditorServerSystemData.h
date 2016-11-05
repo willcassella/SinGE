@@ -2,8 +2,8 @@
 #pragma once
 
 #include <queue>
+#include <iostream>
 #include <asio.hpp>
-#include <Core/Memory/Functions.h>
 #include <Resource/Archives/JsonArchive.h>
 #include "../include/EditorServerSystem/EditorServerSystem.h"
 #include "EditorPacket.h"
@@ -13,6 +13,7 @@ namespace sge
 	using asio::ip::tcp;
 
 	struct EditorServerSession
+	: std::enable_shared_from_this<EditorServerSession>
 	{
 		////////////////////////
 		///   Constructors   ///
@@ -24,13 +25,17 @@ namespace sge
 			_in_content_length(0)
 		{
 		}
+		~EditorServerSession()
+		{
+			std::cout << "Session successfully closed." << std::endl;
+		}
 
 		//////////////////
 		///   Events   ///
 	public:
 
 		/* Sends the entire state of the scene. */
-		void do_send_scene()
+		void async_send_scene()
 		{
 			// Create a Json archive for the scene
 			JsonArchive archive;
@@ -41,63 +46,116 @@ namespace sge
 			_out_change_queue.push(EditorPacket::encode_packet(content.c_str(), content.size()));
 
 			// Send it
-			do_send_change();
+			async_send_change();
 		}
 
 		/* Sends a change to the client. */
-		void do_send_change()
+		void async_send_change()
 		{
 			asio::async_write(socket, asio::buffer(_out_change_queue.front(), _out_change_queue.front()->size()),
-				[this](const std::error_code& error, std::size_t /*bytes*/)
+				[self = shared_from_this()](const std::error_code& error, std::size_t /*bytes*/)
 			{
 				if (!error)
 				{
 					// Get rid of the packet
-					EditorPacket::free(this->_out_change_queue.front());
-					this->_out_change_queue.pop();
+					EditorPacket::free(self->_out_change_queue.front());
+					self->_out_change_queue.pop();
 
 					// If we have more to send, go again
-					if (!this->_out_change_queue.empty())
+					if (!self->_out_change_queue.empty())
 					{
-						this->do_send_change();
+						self->async_send_change();
 					}
 				}
 				else
 				{
-					this->socket.close();
+					self->close_session();
 				}
 			});
 		}
 
-		/* Handles a change received from the client. */
-		void do_receive_change_header()
+		/* Handles a change received from the client, reads the number of bytes to receive. */
+		void async_receive_change_header()
 		{
 			asio::async_read(socket, asio::buffer(&_in_content_length, sizeof(EditorPacket::ContentLength_t)),
-				[this](const std::error_code& error, std::size_t len)
+				[self = shared_from_this()](const std::error_code& error, std::size_t len)
 			{
-				// Allocate space for content
-				this->_in_content.assign(_in_content_length, 0);
+				if (!error)
+				{
+					// Allocate space for content
+					self->_in_content.assign(self->_in_content_length, 0);
 
-				// Read content
-				this->do_receive_change();
+					// Read content
+					self->async_receive_change();
+				}
+				else
+				{
+					self->close_session();
+				}
 			});
 		}
 
-		void do_receive_change()
+		/* Handles a change received from the client, reads the JSON body of the packet. */
+		void async_receive_change()
 		{
 			asio::async_read(socket, asio::buffer(_in_content),
-				[this](const std::error_code& error, std::size_t len)
+				[self = shared_from_this()](const std::error_code& error, std::size_t len)
 			{
-				// Deserialze the string
-				JsonArchive archive;
-				archive.parse_string(_in_content.c_str());
+				if (!error)
+				{
+					// Deserialze the string
+					JsonArchive archive;
+					archive.parse_string(self->_in_content.c_str());
 
-				// Apply changes to scene
-				archive.deserialize_root(*this->_scene);
+					// Read the change
+					auto* scene = self->_scene; // MSVC BUG WORKAROUND?
+					archive.get_root([scene](const ArchiveReader& reader)
+					{
+						// Handle component modifications
+						reader.object_member("component_mod", [scene](const ArchiveReader& modReader)
+						{
+							// Enumerate types of components changed
+							modReader.enumerate_object_members([scene](const char* typeName, const ArchiveReader& typeReader)
+							{
+								auto* type = scene->get_component_type(typeName);
+								if (!type)
+								{
+									return;
+								}
 
-				// Prepare for new changes
-				this->do_receive_change_header();
+								auto* fromArchive = get_vtable<IFromArchive>(*type);
+
+								// Enumerate the EntityIds of components changed
+								typeReader.enumerate_object_members([=](const char* entityId, const ArchiveReader& instanceReader)
+								{
+									// Get the component Id
+									ComponentId id{ std::strtoull(entityId, nullptr, 10), *type };
+
+									// Find the component
+									auto instance = scene->get_component(id);
+
+									// Deserialize it
+									fromArchive->from_archive(instance.object(), instanceReader);
+								});
+							});
+						});
+					});
+
+					// Prepare for new changes
+					self->async_receive_change_header();
+				}
+				else
+				{
+					self->close_session();
+				}
 			});
+		}
+
+		/* Closes a session with the client. */
+		void close_session()
+		{
+			std::cout << "Closing session with " << socket.remote_endpoint() << std::endl;
+			socket.close();
 		}
 
 		//////////////////
@@ -131,7 +189,7 @@ namespace sge
 		{
 			asio::post(io, [this]()
 			{
-				this->do_connection();
+				this->async_connection();
 			});
 		}
 
@@ -139,22 +197,21 @@ namespace sge
 		///   Events   ///
 	private:
 
-		void do_connection()
+		void async_connection()
 		{
 			// Create a session for the connection
-			_pending_session = std::make_unique<EditorServerSession>(io, *_scene);
-			_acceptor.async_accept(_pending_session->socket, [this](const std::error_code& error)
+			auto session = std::make_shared<EditorServerSession>(io, *_scene);
+			_acceptor.async_accept(session->socket,
+				[this, session](const std::error_code& error)
 			{
-				// Set this as an active session
-				auto* session = this->_pending_session.get();
-				this->_active_sessions.push_back(std::move(this->_pending_session));
-
 				// Prepare for a new connection
-				this->do_connection();
+				this->async_connection();
+
+				std::cout << "Session opened with " << session->socket.remote_endpoint() << std::endl;
 
 				// Start the session
-				session->do_send_scene();
-				//session->do_receive_change();
+				session->async_send_scene();
+				session->async_receive_change();
 			});
 		}
 
@@ -168,7 +225,5 @@ namespace sge
 
 		Scene* _scene;
 		tcp::acceptor _acceptor;
-		std::unique_ptr<EditorServerSession> _pending_session;
-		std::vector<std::unique_ptr<EditorServerSession>> _active_sessions;
 	};
 }
