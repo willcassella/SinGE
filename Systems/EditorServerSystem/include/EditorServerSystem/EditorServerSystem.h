@@ -20,7 +20,7 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		void serve();
+		void serve(int milliseconds);
 
 		//////////////////
 		///   Fields   ///

@@ -1,5 +1,6 @@
 // EditorServerSystem.cpp
 
+#include <chrono>
 #include <Core/Reflection/ReflectionBuilder.h>
 #include <Resource/Archives/JsonArchive.h>
 #include "../private/EditorServerSystemData.h"
@@ -17,8 +18,8 @@ namespace sge
 	{
 	}
 
-	void EditorServerSystem::serve()
+	void EditorServerSystem::serve(int milliseconds)
 	{
-		_data->io.run();
+		_data->io.run_for(asio::chrono::milliseconds{ milliseconds });
 	}
 }
