@@ -29,7 +29,7 @@ namespace sge
 			_node.SetNull();
 		}
 
-		void value(bool value) override
+		void boolean(bool value) override
 		{
 			_node.SetBool(value);
 		}
@@ -84,7 +84,7 @@ namespace sge
 			_node.SetDouble(value);
 		}
 
-		void value(const char* str, std::size_t len) override
+		void string(const char* str, std::size_t len) override
 		{
 			_node.SetString(str, static_cast<rapidjson::SizeType>(len), _allocator);
 		}

@@ -27,7 +27,7 @@ namespace sge
 		 * \brief Sets this archive node as a value of type boolean.
 		 * \param value The value to set.
 		 */
-		virtual void value(bool value) = 0;
+		virtual void boolean(bool value) = 0;
 
 		/**
 		 * \brief Sets this archive node as a value of type int8.
@@ -94,7 +94,7 @@ namespace sge
 		 * \param str The string value.
 		 * \param len The length of the string.
 		 */
-		virtual void value(const char* str, std::size_t len) = 0;
+		virtual void string(const char* str, std::size_t len) = 0;
 
 		/**
 		 * \brief Sets this archive node as an array of all type bool.

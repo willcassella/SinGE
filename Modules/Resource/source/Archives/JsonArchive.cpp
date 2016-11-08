@@ -36,7 +36,7 @@ namespace sge
 		func(rootWriter);
 	}
 
-	void JsonArchive::save(const char* path) const
+	bool JsonArchive::to_file(const char* path) const
 	{
 		std::FILE* file = std::fopen(path, "wb");
 		char writeBuffer[65536];
@@ -47,21 +47,27 @@ namespace sge
 		_data->doc.Accept(writer);
 
 		std::fclose(file);
+		return true;
 	}
 
-	void JsonArchive::load(const char* path)
+	bool JsonArchive::from_file(const char* path)
 	{
 		std::FILE* file = std::fopen(path, "rb");
-		char readBuffer[65536];
+		if (!file)
+		{
+			return false;
+		}
 
+		char readBuffer[65536];
 		rapidjson::FileReadStream in(file, readBuffer, sizeof(readBuffer));
 
 		_data->doc.ParseStream<0, rapidjson::UTF8<>, rapidjson::FileReadStream>(in);
 
 		std::fclose(file);
+		return true;
 	}
 
-	std::string JsonArchive::dump_string() const
+	std::string JsonArchive::to_string() const
 	{
 		rapidjson::StringBuffer buffer;
 		buffer.Clear();
@@ -72,7 +78,7 @@ namespace sge
 		return buffer.GetString();
 	}
 
-	void JsonArchive::parse_string(const char* str)
+	void JsonArchive::from_string(const char* str)
 	{
 		_data->doc.Parse(str);
 	}

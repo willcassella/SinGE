@@ -2,6 +2,7 @@
 
 #include "../../include/Core/Reflection/ReflectionBuilder.h"
 #include "../../include/Core/Interfaces/IToArchive.h"
+#include "../../include/Core/IO/Archive.h"
 
 SGE_REFLECT_INTERFACE(sge::IToArchive)
 .implemented_for<bool>()

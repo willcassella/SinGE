@@ -28,9 +28,19 @@ namespace sge
 			return _node.IsNull();
 		}
 
-		bool value(bool& out) const override
+		bool is_boolean() const override
+		{
+			return _node.IsBool();
+		}
+
+		bool boolean(bool& out) const override
 		{
 			return impl_value<bool, &rapidjson::Value::IsBool, &rapidjson::Value::GetBool>(out);
+		}
+
+		bool is_value() const override
+		{
+			return _node.IsNumber();
 		}
 
 		bool value(int8& out) const override
@@ -83,7 +93,12 @@ namespace sge
 			return impl_value<double, &rapidjson::Value::IsDouble, &rapidjson::Value::GetDouble>(out);
 		}
 
-		bool value(const char*& outStr, std::size_t& outLen) const override
+		bool is_string() const override
+		{
+			return _node.IsString();
+		}
+
+		bool string(const char*& outStr, std::size_t& outLen) const override
 		{
 			if (!_node.IsString())
 			{

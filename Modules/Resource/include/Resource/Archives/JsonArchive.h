@@ -2,13 +2,12 @@
 #pragma once
 
 #include <memory>
-#include <Core/IO/ArchiveWriter.h>
-#include <Core/IO/ArchiveReader.h>
+#include <Core/IO/Archive.h>
 #include "../config.h"
 
 namespace sge
 {
-	struct SGE_RESOURCE_API JsonArchive
+	class SGE_RESOURCE_API JsonArchive final : public Archive
 	{
 		struct Data;
 
@@ -23,33 +22,17 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		void set_root(FunctionView<void(ArchiveWriter& rootWriter)> func);
+		void set_root(FunctionView<void(ArchiveWriter& rootWriter)> func) override;
 
-		void get_root(FunctionView<void(const ArchiveReader& rootReader)> func) const;
+		void get_root(FunctionView<void(const ArchiveReader& rootReader)> func) const override;
 
-		void save(const char* path) const;
+		bool to_file(const char* path) const override;
 
-		void load(const char* path);
+		bool from_file(const char* path) override;
 
-		std::string dump_string() const;
+		std::string to_string() const;
 
-		void parse_string(const char* str);
-
-		template <typename T>
-		void serialize_root(const T& value)
-		{
-			this->set_root([&](ArchiveWriter& rootWriter) {
-				to_archive(value, rootWriter);
-			});
-		}
-
-		template <typename T>
-		void deserialize_root(T& value) const
-		{
-			this->get_root([&](const ArchiveReader& rootReader) {
-				from_archive(value, rootReader);
-			});
-		}
+		void from_string(const char* str);
 
 		//////////////////
 		///   Fields   ///

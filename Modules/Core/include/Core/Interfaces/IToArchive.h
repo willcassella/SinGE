@@ -2,6 +2,8 @@
 #pragma once
 
 #include <cassert>
+#include <map>
+#include <unordered_map>
 #include "../Util/InterfaceUtils.h"
 #include "../Reflection/Reflection.h"
 #include "../IO/ArchiveWriter.h"
@@ -35,7 +37,7 @@ namespace sge
 		static void to_archive(Self self, ArchiveWriter& writer)
 		{
 			assert(!self.null());
-			writer.value(*self.as<bool>());
+			writer.boolean(*self.as<bool>());
 		}
 	};
 
@@ -145,7 +147,57 @@ namespace sge
 		static void to_archive(Self self, ArchiveWriter& writer)
 		{
 			assert(!self.null());
-			writer.value(self.as<std::string>()->c_str(), self.as<std::string>()->size());
+			writer.string(self.as<std::string>()->c_str(), self.as<std::string>()->size());
+		}
+	};
+
+	template <typename KeyT, typename T, typename HasherT, typename KeyEqT, typename AllocT>
+	struct Impl< IToArchive, std::unordered_map<KeyT, T, HasherT, KeyEqT, AllocT> >
+	{
+		static void to_archive(Self self, ArchiveWriter& writer)
+		{
+			assert(!self.null());
+
+			for (const auto& entry : *self->as<std::unordered_map<KeyT, HasherT, KeyEqT, AllocT>>())
+			{
+				writer.add_array_element([&entry](ArchiveWriter& entryWriter)
+				{
+					writer.push_object_member("key", entry.first);
+					writer.push_object_member("value", entry.second);
+				});
+			}
+		}
+	};
+
+	template <typename T, typename HasherT, typename KeyEqT, typename AllocT>
+	struct Impl< IToArchive, std::unordered_map<std::string, T, HasherT, KeyEqT, AllocT> >
+	{
+		static void to_archive(Self self, ArchiveWriter& writer)
+		{
+			assert(!self.null());
+
+			for (const auto& entry : *self->as<std::unordered_map<std::string, HasherT, KeyEqT, AllocT>>())
+			{
+				writer.push_object_member(entry.first.c_str(), entry.second);
+			}
+		}
+	};
+
+	template <typename KeyT, typename T, typename CompT, typename AllocT>
+	struct Impl< IToArchive, std::map<KeyT, T, CompT, AllocT> >
+	{
+		static void to_archive(Self self, ArchiveWriter& writer)
+		{
+			assert(!self.null());
+
+			for (const auto& entry : *self->as<std::map<KeyT, T, CompT, AllocT>>())
+			{
+				writer.add_array_element([&entry](ArchiveWriter& entryWriter)
+				{
+					writer.push_object_member("key", entry.first);
+					writer.push_object_member("value", entry.second);
+				});
+			}
 		}
 	};
 

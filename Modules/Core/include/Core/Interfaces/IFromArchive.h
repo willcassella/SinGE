@@ -35,7 +35,7 @@ namespace sge
 		static void from_archive(SelfMut self, const ArchiveReader& reader)
 		{
 			assert(!self.null());
-			reader.value(*self.as<bool>());
+			reader.boolean(*self.as<bool>());
 		}
 	};
 
@@ -148,7 +148,7 @@ namespace sge
 			const char* str = nullptr;
 			std::size_t len = 0;
 
-			if (reader.value(str, len))
+			if (reader.string(str, len))
 			{
 				self.as<std::string>()->assign(str, len);
 			}

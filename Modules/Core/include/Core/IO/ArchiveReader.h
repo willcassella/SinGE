@@ -23,11 +23,21 @@ namespace sge
 		virtual bool null() const = 0;
 
 		/**
-		 * \brief Trys to get a value of type bool out of this node.
+		 * \brief Returns whether this node contains a boolean value.
+		 */
+		virtual bool is_boolean() const = 0;
+
+		/**
+		 * \brief Trys to get a boolean value out of this node.
 		 * \param out The value to assign to, if this node holds a value of type bool.
 		 * \return Whether the given value was assigned to.
 		 */
-		virtual bool value(bool& out) const = 0;
+		virtual bool boolean(bool& out) const = 0;
+
+		/**
+		* \brief Returns whether this node contains a numeric value.
+		*/
+		virtual bool is_value() const = 0;
 
 		/**
 		 * \brief Trys to get a value of type int8 out of this node.
@@ -100,12 +110,17 @@ namespace sge
 		virtual bool value(double& out) const = 0;
 
 		/**
+		 * \brief Returns whether this node contains a value of type 'string'.
+		 */
+		virtual bool is_string() const = 0;
+
+		/**
 		 * \brief Trys to get a string value out of this node.
 		 * \param outStr A pointer to assign the address of the first character of the string to, if this node contains a string.
 		 * \param outLen A value to assign the length of the string to, if this node contains a string.
 		 * \return Whether the given values were assigned to.
 		 */
-		virtual bool value(const char*& outStr, std::size_t& outLen) const = 0;
+		virtual bool string(const char*& outStr, std::size_t& outLen) const = 0;
 
 		/**
 		 * \brief Trys to get the size of the array this node holds.

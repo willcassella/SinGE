@@ -35,14 +35,14 @@ namespace sge
 		 * \param path The path to the file to load this archive from.
 		 * \return Whether the operation succeeded.
 		 */
-		virtual bool load(const char* path) = 0;
+		virtual bool from_file(const char* path) = 0;
 
 		/**
 		 * \brief Trys to save this archive to a file.
 		 * \param path The path to the file to save this archive to.
 		 * \return Whether the operation succeeded.
 		 */
-		virtual bool save(const char* path) const = 0;
+		virtual bool to_file(const char* path) const = 0;
 
 		/**
 		 * \brief Serializes the given value to the root node of this archive.
@@ -63,7 +63,7 @@ namespace sge
 		template <typename T>
 		void deserialize_root(T& rootValue) const
 		{
-			get_root([&](ArchiveReader& rootReader) {
+			get_root([&](const ArchiveReader& rootReader) {
 				from_archive(rootValue, rootReader);
 			});
 		}
