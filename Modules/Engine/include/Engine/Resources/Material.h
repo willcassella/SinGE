@@ -13,6 +13,14 @@ namespace sge
 
 		struct ParamTable
 		{
+			///////////////////
+			///   Methods   ///
+		public:
+
+			void to_archive(ArchiveWriter& writer) const;
+
+			void from_archive(const ArchiveReader& reader);
+
 			//////////////////
 			///   Fields   ///
 		public:
@@ -24,15 +32,13 @@ namespace sge
 			std::unordered_map<std::string, std::string> texture_params;
 		};
 
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		Material(const std::string& path);
-
 		///////////////////
 		///   Methods   ///
 	public:
+
+		void to_archive(ArchiveWriter& writer) const;
+
+		void from_archive(const ArchiveReader& reader);
 
 		const std::string& vertex_shader() const
 		{
