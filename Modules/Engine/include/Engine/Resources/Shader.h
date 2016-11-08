@@ -8,18 +8,11 @@ namespace sge
 {
 	struct SGE_ENGINE_API Shader
 	{
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		Shader();
-		Shader(std::string source);
-
 		///////////////////
 		///   Methods   ///
 	public:
 
-		void load(std::istream& file, std::size_t end);
+		void from_file(std::istream& file, std::size_t end);
 
 		const std::string& source() const
 		{
@@ -36,12 +29,10 @@ namespace sge
 	struct VertexShader : Shader
 	{
 		SGE_REFLECTED_TYPE;
-		using Shader::Shader;
 	};
 
 	struct PixelShader : Shader
 	{
 		SGE_REFLECTED_TYPE;
-		using Shader::Shader;
 	};
 }

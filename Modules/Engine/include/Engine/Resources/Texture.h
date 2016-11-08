@@ -1,7 +1,7 @@
 // Texture.h
 #pragma once
 
-#include <Resource/Image.h>
+#include <Resource/Resources/Image.h>
 #include "../config.h"
 
 namespace sge

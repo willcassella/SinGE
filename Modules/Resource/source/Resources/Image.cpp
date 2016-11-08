@@ -2,7 +2,7 @@
 
 #include <FreeImage.h>
 #include <Core/Reflection/ReflectionBuilder.h>
-#include "../include/Resource/Image.h"
+#include "../../include/Resource/Resources/Image.h"
 
 SGE_REFLECT_TYPE(sge::Image);
 

@@ -20,7 +20,9 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		void load(const std::string& path);
+		void to_archive(ArchiveWriter& writer) const;
+
+		void from_file(const std::string& path);
 
 		std::size_t num_vertices() const
 		{
@@ -72,7 +74,7 @@ namespace sge
 		///   Fields   ///
 	public:
 
-		std::string mesh;
+		std::string lod0;
 		std::string material;
 	};
 }

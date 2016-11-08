@@ -2,7 +2,7 @@
 #pragma once
 
 #include <Core/Reflection/Reflection.h>
-#include "config.h"
+#include "../config.h"
 
 struct FIBITMAP;
 
