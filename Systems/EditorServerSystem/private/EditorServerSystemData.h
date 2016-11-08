@@ -42,7 +42,7 @@ namespace sge
 			archive.serialize_root(*_scene);
 
 			// Create a packet and add it to the queue
-			auto content = archive.dump_string();
+			auto content = archive.to_string();
 			_out_change_queue.push(EditorPacket::encode_packet(content.c_str(), content.size()));
 
 			// Send it
@@ -105,7 +105,7 @@ namespace sge
 				{
 					// Deserialze the string
 					JsonArchive archive;
-					archive.parse_string(self->_in_content.c_str());
+					archive.from_string(self->_in_content.c_str());
 
 					// Read the change
 					auto* scene = self->_scene; // MSVC BUG WORKAROUND?

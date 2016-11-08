@@ -38,7 +38,7 @@ int main()
 
 	// Load the scene
 	sge::JsonArchive archive;
-	archive.load("scene.json");
+	archive.from_file("scene.json");
 	archive.deserialize_root(scene);
 
 	// Create a render system

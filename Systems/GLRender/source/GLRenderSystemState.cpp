@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <Resource/Archives/JsonArchive.h>
 #include <Core/Util/StringUtils.h>
 #include "../private/GLRenderSystemState.h"
 
@@ -42,7 +43,13 @@ namespace sge
 		auto iter = materials.find(path);
 		if (iter == materials.end())
 		{
-			GLMaterial material{ *this, Material{ path } };
+			// Load the material
+			JsonArchive archive;
+			archive.from_file(path.c_str());
+			Material mat;
+			archive.deserialize_root(mat);
+
+			GLMaterial material{ *this, mat };
 			return materials.insert(std::make_pair(std::move(path), std::move(material))).first->second;
 		}
 		else
@@ -56,10 +63,9 @@ namespace sge
 		auto iter = static_meshes.find(path);
 		if (iter == static_meshes.end())
 		{
-
 			// Load the mesh from the file
 			StaticMesh staticMesh;
-			staticMesh.load(path);
+			staticMesh.from_file(path);
 
 			// Create a GLStaticMesh from that mesh
 			GLStaticMesh mesh{ staticMesh };
