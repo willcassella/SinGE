@@ -123,19 +123,18 @@ namespace sge
 									return;
 								}
 
-								auto* fromArchive = get_vtable<IFromArchive>(*type);
-
 								// Enumerate the EntityIds of components changed
 								typeReader.enumerate_object_members([=](const char* entityId, const ArchiveReader& instanceReader)
 								{
 									// Get the component Id
 									ComponentId id{ std::strtoull(entityId, nullptr, 10), *type };
 
-									// Find the component
-									auto instance = scene->get_component(id);
-
-									// Deserialize it
-									fromArchive->from_archive(instance.object(), instanceReader);
+									// Process the component and deserialize it
+									scene->process_single_mut(id.entity(), &type, 1,
+										[&instanceReader](ProcessingFrame&, EntityId, auto comp)
+									{
+										comp[0]->from_archive(instanceReader);
+									});
 								});
 							});
 						});
