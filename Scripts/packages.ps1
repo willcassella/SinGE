@@ -12,7 +12,7 @@ foreach ($package in $args[2..$args.Length])
     # Check if we've already downloaded the package
     if (Test-Path $packagePath)
     {
-        Write-Output ("Package {0} up to date." -f $package)
+        Write-Output ("Package {0} is up to date." -f $package)
         continue
     }
 
@@ -21,7 +21,8 @@ foreach ($package in $args[2..$args.Length])
     # Download the package
     Write-Output ("Downloading package {0}..." -f $package)
     $url = "https://github.com/willcassella/SinGE/releases/download/{0}/{1}.zip" -f $release, $package
-    Invoke-WebRequest $url -outfile $temp
+    $web = New-Object net.webclient
+    $web.DownloadFile($url, $temp)
 
     # Extract the package
     Write-Output ("Extracting package {0}..." -f $package)
