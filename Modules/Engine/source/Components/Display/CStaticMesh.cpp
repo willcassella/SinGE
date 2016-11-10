@@ -5,38 +5,71 @@
 #include "../../../include/Engine/Scene.h"
 
 SGE_REFLECT_TYPE(sge::CStaticMesh)
-.implements<IToArchive>()
-.implements<IFromArchive>()
-.property("mesh", component_getter(CStaticMesh::get_mesh), component_setter(CStaticMesh::set_mesh))
-.property("material", component_getter(CStaticMesh::get_material), component_setter(CStaticMesh::set_material))
-.field("mesh", &CStaticMesh::_mesh)
-.field("material", &CStaticMesh::_material);
+.property("mesh", &CStaticMesh::mesh, &CStaticMesh::mesh)
+.property("material", &CStaticMesh::material, &CStaticMesh::material);
 
-SGE_REFLECT_TYPE(sge::CStaticMesh::TMeshChanged);
+SGE_REFLECT_TYPE(sge::CStaticMesh::FMeshChanged);
+SGE_REFLECT_TYPE(sge::CStaticMesh::FMaterialChanged);
 SGE_REFLECT_TYPE(sge::CStaticMeshOverrideMaterial);
 SGE_REFLECT_TYPE(sge::CStaticMeshMaterialOverrideParameters);
 SGE_REFLECT_TYPE(sge::CStaticMeshMaterialOverrideParameters::TParamChanged);
 
 namespace sge
 {
-	std::string CStaticMesh::get_mesh(TComponentInstance<const CStaticMesh> self)
+	struct CStaticMesh::Data
 	{
-		return self->_mesh;
+		///////////////////
+		///   Methods   ///
+	public:
+
+		void to_archive(ArchiveWriter& writer) const
+		{
+			writer.push_object_member("mesh", mesh);
+			writer.push_object_member("material", material);
+		}
+
+		void from_archive(const ArchiveReader& reader)
+		{
+			reader.pull_object_member("mesh", mesh);
+			reader.pull_object_member("material", material);
+		}
+
+		//////////////////
+		///   Fields   ///
+	public:
+
+		std::string mesh;
+		std::string material;
+	};
+
+	CStaticMesh::CStaticMesh(ProcessingFrame& pframe, EntityId entity, Data& data)
+		: TComponentInterface<sge::CStaticMesh>(pframe, entity),
+		_data(&data)
+	{
 	}
 
-	void CStaticMesh::set_mesh(TComponentInstance<CStaticMesh> self, Frame& frame, std::string mesh)
+	void CStaticMesh::register_type(Scene& scene)
 	{
-		self->_mesh = std::move(mesh);
+		scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CStaticMesh, Data>>());
 	}
 
-	std::string CStaticMesh::get_material(TComponentInstance<const CStaticMesh> self)
+	const std::string& CStaticMesh::mesh() const
 	{
-		return self->_mesh;
+		return _data->mesh;
 	}
 
-	void CStaticMesh::set_material(TComponentInstance<CStaticMesh> self, Frame& frame, std::string material)
+	void CStaticMesh::mesh(std::string mesh)
 	{
-		self->_material = std::move(material);
+		_data->mesh = std::move(mesh);
 	}
 
+	const std::string& CStaticMesh::material() const
+	{
+		return _data->material;
+	}
+
+	void CStaticMesh::material(std::string material)
+	{
+		_data->material = std::move(material);
+	}
 }

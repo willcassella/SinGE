@@ -6,60 +6,67 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CStaticMesh : BasicComponent<CStaticMesh>
+	/* Component applied to entities that should render a static mesh. */
+	struct SGE_ENGINE_API CStaticMesh : TComponentInterface<CStaticMesh>
 	{
 		SGE_REFLECTED_TYPE;
+		struct Data;
+
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		CStaticMesh(ProcessingFrame& pframe, EntityId entity, Data& data);
 
 		///////////////////
 		///   Methods   ///
 	public:
 
-		const std::string& mesh() const
-		{
-			return _mesh;
-		}
+		static void register_type(Scene& scene);
 
-		const std::string& material() const
-		{
-			return _material;
-		}
+		const std::string& mesh() const;
+
+		void mesh(std::string mesh);
+
+		const std::string& material() const;
+
+		void material(std::string material);
 
 		////////////////
 		///   Tags   ///
 	public:
 
-		struct SGE_ENGINE_API TMeshChanged
+		struct SGE_ENGINE_API FMeshChanged
 		{
 			SGE_REFLECTED_TYPE;
 		};
 
-		/////////////////////
-		///   Functions   ///
-	public:
-
-		static std::string get_mesh(TComponentInstance<const CStaticMesh> self);
-
-		static void set_mesh(TComponentInstance<CStaticMesh> self, Frame& frame, std::string mesh);
-
-		static std::string get_material(TComponentInstance<const CStaticMesh> self);
-
-		static void set_material(TComponentInstance<CStaticMesh> self, Frame& frame, std::string material);
+		struct SGE_ENGINE_API FMaterialChanged
+		{
+			SGE_REFLECTED_TYPE;
+		};
 
 		//////////////////
 		///   Fields   ///
 	private:
 
-		std::string _mesh;
-		std::string _material;
+		Data* _data;
 	};
 
-	struct SGE_ENGINE_API CStaticMeshOverrideMaterial
+	/* Component applied to entities with a 'CStaticMesh' component, to override the default material for that mesh. */
+	struct SGE_ENGINE_API CStaticMeshOverrideMaterial : TComponentInterface<CStaticMeshOverrideMaterial>
 	{
 		SGE_REFLECTED_TYPE;
+
+		//////////////////
+		///   Fields   ///
+	public:
+
 		std::string material;
 	};
 
-	struct SGE_ENGINE_API CStaticMeshMaterialOverrideParameters
+	/* Component applied to entities with a 'CStaticMesh' component, to override the default material parameters for that mesh. */
+	struct SGE_ENGINE_API CStaticMeshMaterialOverrideParameters : TComponentInterface<CStaticMeshMaterialOverrideParameters>
 	{
 		SGE_REFLECTED_TYPE;
 
@@ -68,42 +75,24 @@ namespace sge
 			SGE_REFLECTED_TYPE;
 		};
 
+		///////////////////
+		///   Methods   ///
 	public:
 
 		/* Sets a float param value. */
-		static void set_param(
-			TComponentInstance<CStaticMeshMaterialOverrideParameters> self,
-			Frame& frame,
-			std::string name,
-			float value);
+		void set_param(std::string name, float value);
 
 		/* Sets a Vec2 param value. */
-		static void set_param(
-			TComponentInstance<CStaticMeshMaterialOverrideParameters> self,
-			Frame& frame,
-			std::string name,
-			Vec2 value);
+		void set_param(std::string name, Vec2 value);
 
 		/* Sets a Vec3 param value. */
-		static void set_param(
-			TComponentInstance<CStaticMeshMaterialOverrideParameters> self,
-			Frame& frame,
-			std::string name,
-			Vec3 value);
+		void set_param(std::string name, Vec3 value);
 
 		/* Sets a Vec4 param value. */
-		static void set_param(
-			TComponentInstance<CStaticMeshMaterialOverrideParameters> self,
-			Frame& frame,
-			std::string name,
-			Vec4 value);
+		void set_param(std::string name, Vec4 value);
 
 		/* Sets a texture param value. */
-		static void set_param(
-			TComponentInstance<CStaticMeshMaterialOverrideParameters> self,
-			Frame& frame,
-			std::string name,
-			std::string value);
+		void set_param(std::string name, std::string value);
 
 		//////////////////
 		///   Fields   ///

@@ -2,32 +2,96 @@
 
 #include <Core/Reflection/ReflectionBuilder.h>
 #include "../../../include/Engine/Components/Display/CCamera.h"
+#include "../../../include/Engine/Scene.h"
 
 SGE_REFLECT_TYPE(sge::CPerspectiveCamera)
-.implements<IToArchive>()
-.implements<IFromArchive>()
-.field_property("h_fov", &CPerspectiveCamera::h_fov)
-.field_property("z_min", &CPerspectiveCamera::z_min)
-.field_property("z_max", &CPerspectiveCamera::z_max);
-
-SGE_REFLECT_TYPE(sge::COrthographicCamera)
-.implements<IToArchive>()
-.implements<IFromArchive>()
-.field_property("scale", &COrthographicCamera::scale);
+.property("h_fov", &CPerspectiveCamera::h_fov, &CPerspectiveCamera::h_fov)
+.property("z_min", &CPerspectiveCamera::z_min, &CPerspectiveCamera::z_min)
+.property("z_max", &CPerspectiveCamera::z_max, &CPerspectiveCamera::z_max);
 
 namespace sge
 {
-	CPerspectiveCamera::CPerspectiveCamera()
-		: h_fov(degrees(90.f)),
-		z_min(0.1),
-		z_max(100)
+	struct CPerspectiveCamera::Data
+	{
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		Data()
+			: h_fov(degrees(90.f)),
+			z_min(0.1f),
+			z_max(100.f)
+		{
+		}
+
+		///////////////////
+		///   Methods   ///
+	public:
+
+		void to_archive(ArchiveWriter& writer) const
+		{
+			writer.push_object_member("z_min", z_min);
+			writer.push_object_member("z_max", z_max);
+		}
+
+		void from_archive(const ArchiveReader& reader)
+		{
+			reader.pull_object_member("z_min", z_min);
+			reader.pull_object_member("z_max", z_max);
+		}
+
+		//////////////////
+		///   Fields   ///
+	public:
+
+		Angle h_fov;
+		float z_min;
+		float z_max;
+	};
+
+	CPerspectiveCamera::CPerspectiveCamera(ProcessingFrame& pframe, EntityId entity, Data& data)
+		: TComponentInterface<sge::CPerspectiveCamera>(pframe, entity),
+		_data(&data)
 	{
 	}
 
-	COrthographicCamera::COrthographicCamera()
-		: scale(10),
-		z_min(0.1),
-		z_max(100)
+	void CPerspectiveCamera::register_type(Scene& scene)
 	{
+		scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CPerspectiveCamera, Data>>());
+	}
+
+	Angle CPerspectiveCamera::h_fov() const
+	{
+		return _data->h_fov;
+	}
+
+	void CPerspectiveCamera::h_fov(Angle angle)
+	{
+		_data->h_fov = angle;
+	}
+
+	float CPerspectiveCamera::z_min() const
+	{
+		return _data->z_min;
+	}
+
+	void CPerspectiveCamera::z_min(float zMin)
+	{
+		_data->z_min = zMin;
+	}
+
+	float CPerspectiveCamera::z_max() const
+	{
+		return _data->z_max;
+	}
+
+	void CPerspectiveCamera::z_max(float zMax)
+	{
+		_data->z_max = zMax;
+	}
+
+	Mat4 CPerspectiveCamera::get_projection_matrix(float screenRatio) const
+	{
+		return Mat4::perspective_projection_hfov(_data->h_fov, screenRatio, _data->z_min, _data->z_max);
 	}
 }

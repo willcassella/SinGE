@@ -6,9 +6,10 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CCubeCollider
+	struct SGE_ENGINE_API CCubeCollider : TComponentInterface<CCubeCollider>
 	{
 		SGE_REFLECTED_TYPE;
+		struct Data;
 
 		////////////////
 		///   Tags   ///
@@ -23,22 +24,14 @@ namespace sge
 		////   Methods   ///
 	public:
 
-		Vec2 shape() const
-		{
-			return _shape;
-		}
+		Vec2 shape() const;
 
-		void shape(Vec2 shape)
-		{
-			_shape = shape;
-		}
-
-		static void set_shape(TComponentInstance<CCubeCollider> self, Frame& frame, Vec2 shape);
+		void shape(Vec2 shape);
 
 		//////////////////
 		///   Fields   ///
 	private:
 
-		Vec2 _shape;
+		Data* _data;
 	};
 }

@@ -1,6 +1,8 @@
 // Component.h
 #pragma once
 
+#include <set>
+#include <Core/Util/StringUtils.h>
 #include <Core/Reflection/Reflection.h>
 #include <Core/Interfaces/IToArchive.h>
 #include <Core/Interfaces/IFromArchive.h>
@@ -8,8 +10,11 @@
 
 namespace sge
 {
-	struct Frame;
 	struct Scene;
+	struct ProcessingFrame;
+
+	template <class C>
+	struct TComponentId;
 
 	/* Uniquely identifies an Entity within a Scene. */
 	using EntityId = uint64;
@@ -35,6 +40,12 @@ namespace sge
 		}
 		ComponentId(EntityId entity, const TypeInfo& type)
 			: _entity(entity), _type(&type)
+		{
+		}
+
+		template <class C>
+		ComponentId(TComponentId<C> id)
+			: _entity(id.entity()), _type(id.is_null() ? nullptr : &sge::get_type<C>())
 		{
 		}
 
@@ -83,358 +94,204 @@ namespace sge
 		const TypeInfo* _type;
 	};
 
-	/* Represents an instance of a mutable component. */
-	struct SGE_ENGINE_API ComponentInstanceMut
-	{
-		SGE_REFLECTED_TYPE;
-
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		ComponentInstanceMut(ComponentId id, void* object)
-			: _id(id), _object(object)
-		{
-		}
-
-		static ComponentInstanceMut null()
-		{
-			return{ ComponentId::null(), nullptr };
-		}
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		ComponentId id() const
-		{
-			return _id;
-		}
-
-		EntityId entity() const
-		{
-			return _id.entity();
-		}
-
-		const TypeInfo* type() const
-		{
-			return _id.type();
-		}
-
-		void* object() const
-		{
-			return _object;
-		}
-
-		bool is_null() const
-		{
-			return _id.is_null();
-		}
-
-		//////////////////
-		///   Fields   ///
-	private:
-
-		ComponentId _id;
-		void* _object;
-	};
-
-	/* Represents an instance of an immutable component. */
-	struct SGE_ENGINE_API ComponentInstance
-	{
-		SGE_REFLECTED_TYPE;
-
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		ComponentInstance(ComponentId id, const void* object)
-			: _id(id), _object(object)
-		{
-		}
-
-		ComponentInstance(const ComponentInstanceMut& instance)
-			: _id(instance.id()), _object(instance.object())
-		{
-		}
-
-		static ComponentInstance null()
-		{
-			return{ ComponentId::null(), nullptr };
-		}
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		ComponentId id() const
-		{
-			return _id;
-		}
-
-		const TypeInfo* type() const
-		{
-			return _id.type();
-		}
-
-		EntityId entity() const
-		{
-			return _id.entity();
-		}
-
-		const void* object() const
-		{
-			return _object;
-		}
-
-		bool is_null() const
-		{
-			return _id.is_null();
-		}
-
-		//////////////////
-		///   Fields   ///
-	private:
-
-		ComponentId _id;
-		const void* _object;
-	};
-
 	template <class C>
-	struct TComponentId : ComponentId
+	struct TComponentId
 	{
+		////////////////////////
+		///   Constructors   ///
+	public:
+
 		TComponentId()
-			: ComponentId(NULL_ENTITY, sge::get_type<C>())
+			: _entity(NULL_ENTITY)
 		{
 		}
 		TComponentId(EntityId entity)
-			: ComponentId(entity, sge::get_type<C>())
+			: _entity(entity)
 		{
-		}
-	};
-
-	/* Provides typed access to a mutable component. */
-	template <class C>
-	struct TComponentInstance : ComponentInstanceMut
-	{
-		using ComponentT = C;
-
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		TComponentInstance(EntityId entity, C* object)
-			: ComponentInstanceMut(ComponentId{ entity, sge::get_type<C>() }, object)
-		{
-		}
-
-		static TComponentInstance null()
-		{
-			return{ NULL_ENTITY, nullptr };
 		}
 
 		///////////////////
 		///   Methods   ///
 	public:
 
-		TComponentId<C> id() const
+		EntityId entity() const
 		{
-			return{ entity() };
+			return _entity;
 		}
 
-		C* object() const
+		const TypeInfo* type() const
 		{
-			return static_cast<C*>(ComponentInstanceMut::object());
+			return &sge::get_type<C>();
 		}
 
-		/////////////////////
-		///   Operators   ///
-	public:
-
-		C* operator->() const
+		bool is_null() const
 		{
-			return this->object();
-		}
-	};
-
-	/* Provides typed access to an immutable component. */
-	template <class C>
-	struct TComponentInstance< const C > : ComponentInstance
-	{
-		using ComponentT = const C;
-
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		TComponentInstance(EntityId entity, const C* object)
-			: ComponentInstance(ComponentId{ entity, sge::get_type<C>() }, object)
-		{
-		}
-
-		TComponentInstance(const TComponentInstance<C>& instance)
-			: ComponentInstance(instance.id(), instance.object())
-		{
-		}
-
-		static TComponentInstance null()
-		{
-			return{ NULL_ENTITY, nullptr };
-		}
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		TComponentId<C> id() const
-		{
-			return{ entity() };
-		}
-
-		const C* object() const
-		{
-			return static_cast<const C*>(ComponentInstance::object());
-		}
-
-		/////////////////////
-		///   Operators   ///
-	public:
-
-		const C* operator->() const
-		{
-			return this->object();
-		}
-	};
-
-	/* Convenience class that components may (but are not required to) inherit from. */
-	template <class C>
-	struct BasicComponent
-	{
-		///////////////////
-		///   Methods   ///
-	public:
-
-		/* Serializes the state of this component to an archive. */
-		void to_archive(ArchiveWriter& writer) const
-		{
-			fields_to_archive(static_cast<const C&>(*this), writer);
-		}
-
-		/* Deserializes the state of this component from an archive. */
-		void from_archive(const ArchiveReader& reader)
-		{
-			fields_from_archive(static_cast<C&>(*this), reader);
-		}
-	};
-
-	/* Context object supplied to component property getters and setters. */
-	struct SGE_ENGINE_API ComponentContext
-	{
-		SGE_REFLECTED_TYPE;
-
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		ComponentContext(ComponentId id)
-			: _id(id), _frame(nullptr), _c_frame(nullptr)
-		{
-		}
-		ComponentContext(ComponentId id, Frame* frame)
-			: _id(id), _frame(frame), _c_frame(frame)
-		{
-		}
-		ComponentContext(ComponentId id, const Frame* frame)
-			: _id(id), _frame(nullptr), _c_frame(frame)
-		{
-		}
-
-		ComponentContext(const ComponentContext& copy) = delete;
-		ComponentContext& operator=(const ComponentContext& copy) = delete;
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		ComponentId id() const
-		{
-			return _id;
-		}
-
-		Frame* frame()
-		{
-			return _frame;
-		}
-
-		const Frame* frame() const
-		{
-			return _c_frame;
+			return _entity == NULL_ENTITY;
 		}
 
 		//////////////////
 		///   Fields   ///
 	private:
 
-		ComponentId _id;
-		Frame* _frame;
-		const Frame* _c_frame;
+		EntityId _entity;
 	};
 
-	/* Wraps a function expecting a component instance into a standard component getter function. */
-	template <class C, typename PropT>
-	auto component_getter(PropT(*getter)(TComponentInstance<const C>))
+	class SGE_ENGINE_API ComponentInterface
 	{
-		return [getter](const C* self, const ComponentContext* context) -> PropT {
-			auto instance = TComponentInstance<const C>{
-				context->id().entity(),
-				self
-			};
+		////////////////////////
+		///   Constructors   ///
+	public:
 
-			return getter(instance);
-		};
-	}
+		ComponentInterface(ProcessingFrame& pframe, EntityId entity)
+			: _pframe(&pframe),
+			_entity(entity)
+		{
+		}
 
-	/* Wraps a function expecting a component instance and a scene into a standard component getter function. */
-	template <class C, typename PropT>
-	auto component_getter(PropT(*getter)(TComponentInstance<const C>, const Frame&))
+		///////////////////
+		///   Methods   ///
+	public:
+
+		EntityId entity() const
+		{
+			return _entity;
+		}
+
+		ComponentId id() const
+		{
+			return{ _entity, get_type() };
+		}
+
+		virtual const TypeInfo& get_type() const = 0;
+
+		virtual void from_archive(const ArchiveReader& reader);
+
+	protected:
+
+		ProcessingFrame& processing_frame() const
+		{
+			return *_pframe;
+		}
+
+		//////////////////
+		///   Fields   ///
+	private:
+
+		ProcessingFrame* _pframe;
+		EntityId _entity;
+	};
+
+	template <class ComponentT>
+	class TComponentInterface : public ComponentInterface
 	{
-		return [getter](const C* self, const ComponentContext* context) -> PropT {
-			auto instance = TComponentInstance<const C>{
-				context->id().entity(),
-				self
-			};
+		////////////////////////
+		///   Constructors   ///
+	public:
 
-			return getter(instance, *context->frame());
-		};
-	}
+		TComponentInterface(ProcessingFrame& pframe, EntityId entity)
+			: ComponentInterface(pframe, entity)
+		{
+		}
 
-	/* Wraps a function expecting a component instance into a standard component setter function. */
-	template <class C, typename RetT, typename PropT>
-	auto component_setter(RetT(*setter)(TComponentInstance<C>, PropT))
+		///////////////////
+		///   Methods   ///
+	public:
+
+		TComponentId<ComponentT> id() const
+		{
+			return{ this->entity() };
+		}
+	};
+
+	class SGE_ENGINE_API ComponentContainer
 	{
-		return [setter](C* self, ComponentContext* context, const PropT* value) {
-			auto instance = TComponentInstance<C>{
-				context->id().entity(),
-				self
-			};
+		////////////////////////
+		///   Constructors   ///
+	public:
 
-			setter(instance, *value);
-		};
-	}
+		virtual ~ComponentContainer() = default;
 
-	/* Wraps a function expecting a component instance and a scene into a standard component setter function. */
-	template <class C, typename RetT, typename PropT>
-	auto component_setter(RetT(*setter)(TComponentInstance<C>, Frame&, PropT))
+		///////////////////
+		///   Methods   ///
+	public:
+
+		virtual void to_archive(ArchiveWriter& writer) const = 0;
+
+		virtual void from_archive(const ArchiveReader& reader) = 0;
+
+		virtual void create_component(EntityId entity) = 0;
+
+		virtual bool create_interface(ProcessingFrame& pframe, EntityId entity, void* addr) = 0;
+
+		//////////////////
+		///   Fields   ///
+	public:
+
+		std::set<EntityId> entities;
+	};
+
+	template <class ComponentT, typename ComponentDataT>
+	class BasicComponentContainer final : public ComponentContainer
 	{
-		return [setter](C* self, ComponentContext* context, const PropT* value) {
-			auto instance = TComponentInstance<C>{
-				context->id().entity(),
-				self
-			};
+		///////////////////
+		///   Methods   ///
+	public:
 
-			setter(instance, *context->frame(), *value);
-		};
-	}
+		void to_archive(ArchiveWriter& writer) const override
+		{
+			for (const auto& instance : instances)
+			{
+				writer.add_object_member(sge::to_string(instance.first).c_str(),
+					[&value = instance.second](ArchiveWriter& instanceWriter)
+				{
+					sge::to_archive(value, instanceWriter);
+				});
+			}
+		}
+
+		void from_archive(const ArchiveReader& reader) override
+		{
+			reader.enumerate_object_members([this](const char* entityIdStr, const auto& instanceReader)
+			{
+				EntityId entity = std::strtoull(entityIdStr, nullptr, 10);
+
+				// See if this instance already exists
+				auto iter = this->instances.find(entity);
+				if (iter == this->instances.end())
+				{
+					// If not, create one
+					iter = instances.insert(std::make_pair(entity, ComponentDataT{})).first;
+					entities.insert(entity);
+				}
+
+				sge::from_archive(iter->second, instanceReader);
+			});
+		}
+
+		void create_component(EntityId entity) override
+		{
+			instances.insert(std::make_pair(entity, ComponentDataT{}));
+			entities.insert(entity);
+		}
+
+		bool create_interface(ProcessingFrame& pframe, EntityId entity, void* addr) override
+		{
+			auto data = instances.find(entity);
+			if (data == instances.end())
+			{
+				return false;
+			}
+
+			new (addr) ComponentT{ pframe, entity, data->second };
+			return true;
+		}
+
+		//////////////////
+		///   Fields   ///
+	public:
+
+		std::unordered_map<EntityId, ComponentDataT> instances;
+	};
 
 	/**
 	 * \brief Registers all builtin engine component types.
@@ -453,5 +310,4 @@ namespace std
 			return hash<sge::EntityId>()(key.entity()) ^ hash<const sge::TypeInfo*>()(key.type()) << 1;
 		}
 	};
-
 }

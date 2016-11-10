@@ -62,9 +62,6 @@
     <ClInclude Include="include\Engine\Resources\StaticMesh.h">
       <Filter>include\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="include\Engine\Frame.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\Engine\Resources\Material.h">
       <Filter>include\Resources</Filter>
     </ClInclude>
@@ -92,6 +89,9 @@
     <ClInclude Include="include\Engine\Components\Logic\CInput.h">
       <Filter>include\Components\Logic</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\ProcessingFrame.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Scene.cpp">
@@ -104,9 +104,6 @@
       <Filter>source\Resources</Filter>
     </ClCompile>
     <ClCompile Include="source\Component.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Frame.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\Resources\StaticMesh.cpp">
@@ -135,6 +132,9 @@
     </ClCompile>
     <ClCompile Include="source\Components\Physics\CVelocity.cpp">
       <Filter>source\Components\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ProcessingFrame.cpp">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

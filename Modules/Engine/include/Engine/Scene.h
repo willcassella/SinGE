@@ -1,10 +1,10 @@
 // Scene.h
 #pragma once
 
-#include <set>
+#include <array>
+#include <memory>
 #include <unordered_map>
-#include "Frame.h"
-#include "Component.h"
+#include "ProcessingFrame.h"
 
 namespace sge
 {
@@ -12,8 +12,8 @@ namespace sge
 	{
 		SGE_REFLECTED_TYPE;
 
-		using SystemFnMut = void(Frame& frame, EntityId entity, const ComponentInstanceMut* components);
-		using SystemFn = void(const Frame& frame, EntityId entity, const ComponentInstance* components);
+		using ProcessMutFn = void(ProcessingFrameMut& pframe, EntityId entity, ComponentInterface* const components[]);
+		using ProcessFn = void(ProcessingFrame& pframe, EntityId entity, const ComponentInterface* const components[]);
 
 		////////////////////////
 		///   Constructors   ///
@@ -34,15 +34,9 @@ namespace sge
 
 		void from_archive(const ArchiveReader& reader);
 
-		void register_component_type(const TypeInfo& type);
+		void register_component_type(const TypeInfo& type, std::unique_ptr<ComponentContainer> container);
 
 		const TypeInfo* get_component_type(const char* typeName) const;
-
-		template <class C>
-		void register_component_type()
-		{
-			register_component_type(sge::get_type<C>());
-		}
 
 		EntityId new_entity();
 
@@ -54,142 +48,172 @@ namespace sge
 
 		void set_entity_name(EntityId entity, std::string name);
 
-		ComponentInstanceMut new_component(EntityId entity, const TypeInfo& type, void* init);
+		ComponentId new_component(EntityId entity, const TypeInfo& type);
 
-		template <typename T>
-		TComponentInstance<T> new_component(EntityId entity, T&& component)
+		void process_entities_mut(const TypeInfo* const types[], std::size_t numTypes, FunctionView<ProcessMutFn> processFn);
+
+		void process_entities(const TypeInfo* const types[], std::size_t numTypes, FunctionView<ProcessFn> processFn) const;
+
+		void process_single_mut(EntityId entity, const TypeInfo* const types[], std::size_t numTypes, FunctionView<ProcessMutFn> processFn);
+
+		void process_single(EntityId entity, const TypeInfo* const types[], std::size_t numTypes, FunctionView<ProcessFn> processFn) const;
+
+		template <typename ProcessFnT>
+		void process_entities_mut(ProcessFnT& processFn)
 		{
-			auto instance = this->new_component(entity, sge::get_type(component), &component);
-			return{ instance.entity(), static_cast<T*>(instance.object()) };
+			using FnTraits = stde::function_traits<ProcessFnT>;
+			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
+
+			// Run the process functions
+			auto adapted = adapt_process_fn(ComponentList{}, processFn);
+			process_entities_mut(adapted.first.data(), ComponentList::size(), adapted.second);
 		}
 
-		template <typename T>
-		TComponentInstance<T> new_component(EntityId entity)
+		template <typename ProcessFnT>
+		void process_entities(ProcessFnT& processFn) const
 		{
-			auto instance = this->new_component(entity, sge::get_type<T>(), nullptr);
-			return{ instance.entity(), static_cast<T*>(instance.object()) };
+			using FnTraits = stde::function_traits<ProcessFnT>;
+			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
+
+			// Run the process function
+			auto adapted = adapt_process_fn(ComponentList{}, processFn);
+			process_entities(adapted.first.data(), ComponentList::size(), adapted.second);
 		}
 
-		bool component_exists(ComponentId id) const;
-
-		ComponentInstanceMut get_component(ComponentId id);
-
-		template <typename T>
-		TComponentInstance<T> get_component(TComponentId<T> id)
+		template <typename ProcessFnT>
+		void process_single_mut(EntityId entity, ProcessFnT& processFn)
 		{
-			auto instance = this->get_component(static_cast<ComponentId>(id));
-			return{ instance.entity(), static_cast<T*>(instance.object()) };
+			using FnTraits = stde::function_traits<ProcessFnT>;
+			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
+
+			// Run the processing function
+			auto adapted = adapt_process_fn(ComponentList{}, processFn);
+			process_single_mut(entity, adapted.first.data(), ComponentList::size(), adapted.second);
 		}
 
-		ComponentInstance get_component(ComponentId id) const;
-
-		template <typename T>
-		TComponentInstance<const T> get_component(TComponentId<T> id) const
+		template <typename ProcessFnT>
+		void process_single(EntityId entity, ProcessFnT& processFn)
 		{
-			auto instance = this->get_component(static_cast<ComponentId>(id));
-			return{ instance.entity(), static_cast<const T*>(instance.object()) };
+			using FnTraits = stde::function_traits<ProcessFnT>;
+			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
+
+			// Run the processing function
+			auto adapted = adapt_process_fn(ComponentList{}, processFn);
+			process_single(entity, adapted.first.data(), ComponentList::size(), adapted.second);
 		}
 
-		void run_system(FunctionView<SystemFnMut> system, const TypeInfo** types, std::size_t numTypes);
-
-		void run_system(FunctionView<SystemFn> system, const TypeInfo** types, std::size_t numTypes) const;
-
-		template <typename SystemFn>
-		void run_system(SystemFn& lambda)
+		template <class T, typename Ret, class ... ComponentTs>
+		void process_entities_mut(T& outer, Ret(T::*processFn)(ProcessingFrameMut&, EntityId, ComponentTs...))
 		{
-			using FnTraits = stde::function_traits<SystemFn>;
-			using component_list = tmp::cdr<tmp::cdr<typename FnTraits::arg_types>>;
+			using ComponentList = tmp::list<ComponentTs...>;
 
-			// Run the system
-			static_run_system(component_list{}, *this, lambda);
-		}
-
-		template <typename SystemFn>
-		void run_system(SystemFn& lambda) const
-		{
-			using FnTraits = stde::function_traits<SystemFn>;
-			using component_list = tmp::cdr<tmp::cdr<typename FnTraits::arg_types>>;
-
-			// Run the system
-			static_run_system(component_list{}, *this, lambda);
-		}
-
-		template <class System, typename Ret, typename ... Components>
-		void run_system(System& system, Ret(System::*func)(Frame&, EntityId, Components...))
-		{
 			// Create a wrapper function
-			auto wrapper = [&system, func](Frame& frame, EntityId entity, Components... components) {
-				(system.*func)(frame, entity, components...);
+			auto wrapper = [&outer, processFn](ProcessingFrameMut& pframe, EntityId entity, ComponentTs ... components) {
+				(outer.*processFn)(pframe, entity, components...);
 			};
 
-			// Run the system
-			static_run_system(tmp::list<Components...>{}, *this, wrapper);
+			// Run the processing function
+			auto adapted = adapt_process_fn(ComponentList{}, wrapper);
+			process_entities_mut(adapted.first.data(), ComponentList::size(), adapted.second);
 		}
 
-		template <class System, typename Ret, typename ... Components>
-		void run_system(System& system, Ret(System::*func)(const Frame& EntityId, Components...)) const
+		template <class T, typename Ret, typename ... ComponentTs>
+		void process_entities(T& outer, Ret(T::*processFn)(ProcessingFrame&, EntityId, ComponentTs...)) const
 		{
+			using ComponentList = tmp::list<ComponentTs...>;
+
 			// Create a wrapper function
-			auto wrapper = [&system, func](const Frame& frame, EntityId entity, Components... components) {
-				(system.*func)(frame, entity, components...);
+			auto wrapper = [&outer, processFn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) {
+				(outer.*processFn)(pframe, entity, components...);
 			};
 
-			// Run the system
-			static_run_system(tmp::list<Components...>{}, *this, wrapper);
+			// Run the processing function
+			auto adapted = adapt_process_fn(ComponentList{}, wrapper);
+			process_entities(adapted.first.data(), ComponentList::size(), adapted.second);
+		}
+
+		template <class T, typename Ret, class ... ComponentTs>
+		void process_single_mut(EntityId entity, T& outer, Ret(T::*processFn)(ProcessingFrameMut&, EntityId, ComponentTs...))
+		{
+			using ComponentList = tmp::list<ComponentTs...>;
+
+			// Create a wrapper function
+			auto wrapper = [&outer, processFn](ProcessingFrameMut& pframe, EntityId entity, ComponentTs ... components) -> void {
+				(outer.*processFn)(pframe, entity, components...);
+			};
+
+			// Run the processing function
+			auto adapted = adapt_process_fn(ComponentList{}, wrapper);
+			process_single_mut(entity, adapted.first.data(), ComponentList::size(), adapted.second);
+		}
+
+		template <class T, typename Ret, class ... ComponentTs>
+		void process_single(EntityId entity, T& outer, Ret(T::*processFn)(ProcessingFrame&, EntityId, ComponentTs...)) const
+		{
+			using ComponentList = tmp::list<ComponentTs...>;
+
+			// Create a wrapper function
+			auto wrapper = [&outer, processFn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) -> void {
+				(outer.*processFn)(pframe, entity, components...);
+			};
+
+			// Run the processing function
+			auto adapted = adapt_process_fn(ComponentList{}, wrapper);
+			process_single(entity, adapted.first.data(), ComponentList::size(), adapted.second);
 		}
 
 	private:
 
-		template <typename SelfT, typename SystemFn, typename ... ComponentTs>
-		static void static_run_system(tmp::list<ComponentTs...>, SelfT& self, SystemFn& system)
+		template <typename ... ComponentTs, typename ProcessFnT>
+		static auto adapt_process_fn(tmp::list<ComponentTs...>, ProcessFnT& processFn)
 		{
+			// Create the array of component types
+			std::array<const TypeInfo*, sizeof...(ComponentTs)> types = { &sge::get_type<ComponentTs>()... };
+
 			// Create wrapper function
-			auto invoker = [&system](auto& frame, EntityId entity, const auto* components) {
-				invoke_system(tmp::list<ComponentTs...>{}, frame, entity, components, system);
+			auto invoker = [&processFn](auto& pframe, EntityId entity, auto components) {
+				invoke_process_fn(tmp::list<ComponentTs...>{}, processFn, pframe, entity, components);
 			};
 
-			// Create the array of component types
-			const TypeInfo* types[] = { &sge::get_type<typename ComponentTs::ComponentT>()... };
-
-			// Run the system
-			self.run_system(invoker, types, sizeof...(ComponentTs));
+			return std::make_pair(types, invoker);
 		}
 
-		template <typename InstanceT, typename SelfT, typename SystemT>
-		static void impl_run_system(SelfT& self, SystemT system, const TypeInfo** types, std::size_t numTypes);
-
-		template <typename FrameT, typename CT, typename SystemT, class FrontT, typename ... Rest, typename ... Converted>
-		static void invoke_system(
-			tmp::list<TComponentInstance<FrontT>, Rest...>,
-			FrameT& frame,
+		template <typename ProcessFnT, typename PFrameT, typename ComponentIT, class FrontCT, class ... RestCTs, class ... ConvertedCTs>
+		static void invoke_process_fn(
+			tmp::list<FrontCT, RestCTs...>,
+			ProcessFnT& processFn,
+			PFrameT& pframe,
 			EntityId entity,
-			const CT* components,
-			SystemT& system,
-			const Converted&... converted)
+			const ComponentIT* components,
+			ConvertedCTs&... converted)
 		{
-			invoke_system(
-				tmp::list<Rest...>{},
-				frame,
+			invoke_process_fn(
+				tmp::list<RestCTs...>{},
+				processFn,
+				pframe,
 				entity,
 				components + 1,
-				system,
 				converted...,
-				*static_cast<const TComponentInstance<FrontT>*>(components));
+				*static_cast<std::remove_reference_t<FrontCT>*>(*components));
 		}
 
-		template <typename FrameT, typename SystemT, typename ... Converted>
-		static void invoke_system(
+		template <typename ProcessFnT, typename PFrameT, typename ComponentIT, class ... ConvertedCTs>
+		static void invoke_process_fn(
 			tmp::list<>,
-			FrameT& frame,
+			ProcessFnT& processFn,
+			PFrameT& pframe,
 			EntityId entity,
-			const void* /*components*/,
-			SystemT& system,
-			const Converted&... converted)
+			const ComponentIT* /*components*/,
+			ConvertedCTs&... converted)
 		{
-			system(frame, entity, converted...);
+			processFn(pframe, entity, converted...);
 		}
 
-		void* get_component_object(ComponentId id) const;
+		template <typename PFrameT, typename SelfT, typename ProcessFnT>
+		static void impl_process_entities(SelfT& self, const TypeInfo* const types[], std::size_t numTypes, ProcessFnT& processFn);
+
+		template <typename PFrameT, typename SelfT, typename ProcessFnT>
+		static void impl_process_single(SelfT& self, EntityId entity, const TypeInfo* const types[], std::size_t numTypes, ProcessFnT& processFn);
 
 		//////////////////
 		///   Fields   ///
@@ -203,8 +227,7 @@ namespace sge
 		std::unordered_map<EntityId, std::string> _entity_names;
 
 		/* Component Data */
-		std::unordered_map<ComponentId, void*> _component_objects;
-		std::unordered_map<const TypeInfo*, std::set<EntityId>> _components;
+		std::unordered_map<const TypeInfo*, std::unique_ptr<ComponentContainer>> _components;
 
 		/* Map of component types registered with this scene. */
 		std::unordered_map<std::string, const TypeInfo*> _component_types;

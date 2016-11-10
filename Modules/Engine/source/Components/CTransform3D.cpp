@@ -1,138 +1,191 @@
 // CTransform3D.cpp
 
+#include <unordered_map>
 #include <Core/Reflection/ReflectionBuilder.h>
 #include "../../include/Engine/Components/CTransform3D.h"
 #include "../../include/Engine/Scene.h"
 
 namespace sge
 {
+	struct CTransform3D::Data
+	{
+		///////////////////
+		///   Methods   ///
+	public:
+
+		void to_archive(ArchiveWriter& writer) const
+		{
+			writer.push_object_member("local_position", local_position);
+			writer.push_object_member("local_scale", local_scale);
+			writer.push_object_member("local_rotation", local_rotation);
+			writer.push_object_member("parent", parent);
+		}
+
+		void from_archive(const ArchiveReader& reader)
+		{
+			reader.pull_object_member("local_position", local_position);
+			reader.pull_object_member("local_scale", local_scale);
+			reader.pull_object_member("local_rotation", local_rotation);
+			reader.pull_object_member("parent", parent);
+		}
+
+		//////////////////
+		///   Fields   ///
+	public:
+
+		Vec3 local_position = Vec3::zero();
+		Vec3 local_scale = Vec3{1.f, 1.f, 1.f};
+		Quat local_rotation = Quat{};
+		EntityId parent = WORLD_ENTITY;
+	};
+
 	SGE_REFLECT_TYPE(sge::CTransform3D)
-	.implements<IToArchive>()
-	.implements<IFromArchive>()
-	.property("local_position", component_getter(CTransform3D::get_local_position), component_setter(CTransform3D::set_local_position))
-	.property("local_scale", component_getter(CTransform3D::get_local_scale), component_setter(CTransform3D::set_local_scale))
-	.property("local_rotation", component_getter(CTransform3D::get_local_rotation), component_setter(CTransform3D::set_local_rotation))
-	.property("world_position", component_getter(CTransform3D::get_world_position), nullptr)
-	.property("world_scale", component_getter(CTransform3D::get_world_scale), nullptr)
-	.property("world_rotation", component_getter(CTransform3D::get_world_rotation), nullptr)
-	.field("local_position", &CTransform3D::_local_position)
-	.field("local_scale", &CTransform3D::_local_scale)
-	.field("local_rotation", &CTransform3D::_local_rotation);
+	.property("local_position", &CTransform3D::get_local_position, &CTransform3D::set_local_position)
+	.property("local_scale", &CTransform3D::get_local_scale, &CTransform3D::set_local_scale)
+	.property("local_rotation", &CTransform3D::get_local_rotation, &CTransform3D::set_local_rotation)
+	.property("world_position", &CTransform3D::get_world_position, nullptr)
+	.property("world_scale", &CTransform3D::get_world_scale, nullptr)
+	.property("world_rotation", &CTransform3D::get_world_rotation, nullptr);
 
 	SGE_REFLECT_TYPE(sge::CTransform3D::FTransformChanged);
 	SGE_REFLECT_TYPE(sge::CTransform3D::FParentChanged);
 
-	CTransform3D::CTransform3D()
+	CTransform3D::CTransform3D(ProcessingFrame& pframe, EntityId entity, Data& data)
+		: TComponentInterface<sge::CTransform3D>(pframe, entity),
+		_data(&data)
 	{
-		_local_scale = { 1, 1, 1 };
+		_applied_parent_changed_tag = false;
+		_applied_transform_changed_tag = false;
 	}
 
-	bool CTransform3D::has_parent(TComponentInstance<const CTransform3D> self)
+	void CTransform3D::register_type(Scene& scene)
 	{
-		return !self->_parent.is_null();
+		scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CTransform3D, Data>>());
 	}
 
-	TComponentId<CTransform3D> CTransform3D::get_parent(TComponentInstance<const CTransform3D> self)
+	bool CTransform3D::has_parent() const
 	{
-		return self->_parent;
+		return _data->parent != WORLD_ENTITY;
 	}
 
-	void CTransform3D::set_parent(TComponentInstance<CTransform3D> self, Frame& frame, TComponentInstance<const CTransform3D> parent)
+	TComponentId<CTransform3D> CTransform3D::get_parent() const
 	{
-		self->_parent = parent.id();
+		return _data->parent;
 	}
 
-	Vec3 CTransform3D::get_local_position(TComponentInstance<const CTransform3D> self)
+	void CTransform3D::set_parent(const CTransform3D& parent)
 	{
-		return self->_local_position;
+		_data->parent = parent.entity();
+		if (!_applied_parent_changed_tag)
+		{
+			processing_frame().create_tag<FParentChanged>(this->id());
+			_applied_parent_changed_tag = true;
+		}
 	}
 
-	void CTransform3D::set_local_position(TComponentInstance<CTransform3D> self, Frame& frame, Vec3 pos)
+	Vec3 CTransform3D::get_local_position() const
 	{
-		self->_local_position = pos;
+		return _data->local_position;
 	}
 
-	Vec3 CTransform3D::get_local_scale(TComponentInstance<const CTransform3D> self)
+	void CTransform3D::set_local_position(Vec3 pos)
 	{
-		return self->_local_scale;
+		_data->local_position = pos;
+		apply_transform_changed_tag();
 	}
 
-	void CTransform3D::set_local_scale(TComponentInstance<CTransform3D> self, Frame& frame, Vec3 scale)
+	Vec3 CTransform3D::get_local_scale() const
 	{
-		self->_local_scale = scale;
+		return _data->local_scale;
 	}
 
-	Quat CTransform3D::get_local_rotation(TComponentInstance<const CTransform3D> self)
+	void CTransform3D::set_local_scale(Vec3 scale)
 	{
-		return self->_local_rotation;
+		_data->local_scale = scale;
+		apply_transform_changed_tag();
 	}
 
-	void CTransform3D::set_local_rotation(TComponentInstance<CTransform3D> self, Frame& frame, Quat rot)
+	Quat CTransform3D::get_local_rotation() const
 	{
-		self->_local_rotation = rot;
+		return _data->local_rotation;
 	}
 
-	Mat4 CTransform3D::get_local_matrix(TComponentInstance<const CTransform3D> self)
+	void CTransform3D::set_local_rotation(Quat rot)
+	{
+		_data->local_rotation = rot;
+		apply_transform_changed_tag();
+	}
+
+	Mat4 CTransform3D::get_local_matrix() const
 	{
 		Mat4 result;
-		result *= Mat4::scale(self->_local_scale);
-		result *= Mat4::rotate(self->_local_rotation);
-		result *= Mat4::translation(self->_local_position);
+		result *= Mat4::scale(_data->local_scale);
+		result *= Mat4::rotate(_data->local_rotation);
+		result *= Mat4::translation(_data->local_position);
 
 		return result;
 	}
 
-	Vec3 CTransform3D::get_world_position(TComponentInstance<const CTransform3D> self, const Frame& frame)
+	Vec3 CTransform3D::get_world_position() const
 	{
-		if (has_parent(self))
+		if (!this->has_parent())
 		{
-			return get_local_position(self);
+			return get_local_position();
 		}
 		else
 		{
-			return get_parent_matrix(self, frame) * get_local_position(self);
+			return get_parent_matrix() * get_local_position();
 		}
 	}
 
-	Vec3 CTransform3D::get_world_scale(TComponentInstance<const CTransform3D> self, const Frame& frame)
+	Vec3 CTransform3D::get_world_scale() const
 	{
-		if (has_parent(self))
+		if (has_parent())
 		{
-			return get_local_scale(self);
+			return get_local_scale();
 		}
 		else
 		{
-			return get_parent_matrix(self, frame) * get_local_scale(self);
+			return get_parent_matrix() * get_local_scale();
 		}
 	}
 
-	Quat CTransform3D::get_world_rotation(TComponentInstance<const CTransform3D> self, const Frame& frame)
+	Quat CTransform3D::get_world_rotation() const
 	{
-		if (has_parent(self))
+		if (has_parent())
 		{
-			return get_local_rotation(self);
+			return get_local_rotation();
 		}
 		else
 		{
-			return /*get_parent_matrix(self, scene) **/ get_local_rotation(self); // TODO
+			return /*get_parent_matrix(self, scene) **/ get_local_rotation(); // TODO
 		}
 	}
 
-	Mat4 CTransform3D::get_world_matrix(TComponentInstance<const CTransform3D> self, const Frame& frame)
+	Mat4 CTransform3D::get_world_matrix() const
 	{
-		return get_parent_matrix(self, frame) * get_local_matrix(self);
+		return get_parent_matrix() * get_local_matrix();
 	}
 
-	Mat4 CTransform3D::get_parent_matrix(TComponentInstance<const CTransform3D> self, const Frame& frame)
+	Mat4 CTransform3D::get_parent_matrix() const
 	{
-		if (has_parent(self))
+		if (has_parent())
 		{
-			auto parent = frame.scene().get_component(self->_parent);
-			return get_parent_matrix(parent, frame);
+			//auto parent = frame.scene().get_component(self->_parent);
+			//return get_parent_matrix(parent, frame);
 		}
-		else
+		//else
 		{
 			return Mat4{};
+		}
+	}
+
+	void CTransform3D::apply_transform_changed_tag()
+	{
+		if (!_applied_transform_changed_tag)
+		{
+			processing_frame().create_tag<FTransformChanged>(this->id());
+			_applied_transform_changed_tag = true;
 		}
 	}
 }

@@ -3,8 +3,8 @@
 #include <Core/Reflection/ReflectionBuilder.h>
 #include <Core/Memory/Functions.h>
 #include <Core/Functional/FunctionView.h>
+#include <Core/Util/StringUtils.h>
 #include "../include/Engine/Scene.h"
-#include "Core/Util/StringUtils.h"
 
 SGE_REFLECT_TYPE(sge::Scene)
 .implements<IToArchive>()
@@ -20,11 +20,6 @@ namespace sge
 
 	Scene::~Scene()
 	{
-		for (auto component : _component_objects)
-		{
-			component.first.type()->drop(component.second);
-			sge::free(component.second);
-		}
 	}
 
 	///////////////////
@@ -40,8 +35,7 @@ namespace sge
 		{
 			for (auto entity : this->_entity_parents)
 			{
-				entityListWriter.add_object_member(
-					to_string(entity.first).c_str(),
+				entityListWriter.add_object_member(to_string(entity.first).c_str(),
 					[&](ArchiveWriter& entityWriter)
 				{
 					// Write the entity id and parent id
@@ -64,22 +58,11 @@ namespace sge
 			for (const auto& componentType : this->_components)
 			{
 				// Add the component type name as a field
-				componentListWriter.add_object_member(componentType.first->name().c_str(), [&](ArchiveWriter& componentTypeWriter)
+				componentListWriter.add_object_member(componentType.first->name().c_str(),
+					[container = componentType.second.get()](ArchiveWriter& componentTypeWriter)
 				{
-					// Get the vtable for the 'ToArchive' interface
-					const auto* toArchive = get_vtable<IToArchive>(*componentType.first);
-
-					// Serialize each instance of the component
-					for (auto componentEntity : componentType.second)
-					{
-						componentTypeWriter.add_object_member(
-							to_string(componentEntity).c_str(),
-							[&](ArchiveWriter& componentWriter)
-						{
-							const auto* object = this->get_component_object(ComponentId{ componentEntity, *componentType.first });
-							toArchive->to_archive(object, componentWriter);
-						});
-					}
+					// Serialize all the instances
+					container->to_archive(componentTypeWriter);
 				});
 			}
 		});
@@ -141,9 +124,6 @@ namespace sge
 			}
 		}
 
-		decltype(_components) components;
-		decltype(_component_objects) componentObjects;
-
 		// Deserialize all components
 		reader.object_member("components", [&](const ArchiveReader& componentListReader)
 		{
@@ -157,72 +137,25 @@ namespace sge
 					return;
 				}
 
-				// Get the vtable for 'FromArchive' for this type
-				const auto* fromArchive = get_vtable<IFromArchive>(*typeIter->second);
+				// Clear the entities
+				auto storageIter = _components.find(typeIter->second);
 
-				// Create containers for instances and objects
-				std::set<EntityId> instanceEntities;
-
-				// Load all instances
-				componentTypeReader.enumerate_object_members([&](const char* entity, const ArchiveReader& componentReader)
-				{
-					// Get the entity id
-					EntityId entityId = NULL_ENTITY;
-					entityId = std::strtoull(entity, nullptr, 10);
-
-					// Validate the entity id (it may not be the null entity, world entity, or an entity that already exists for this type)
-					if (entityId == NULL_ENTITY ||
-						entityId == WORLD_ENTITY ||
-						instanceEntities.find(entityId) != instanceEntities.end())
-					{
-						return;
-					}
-
-					// Add the entity to the set
-					instanceEntities.insert(entityId);
-
-					// Create an instance of the entity
-					auto* buff = std::malloc(typeIter->second->size());
-					typeIter->second->init(buff);
-
-					// Add the component object to the scene
-					componentObjects.insert(std::make_pair(ComponentId{ entityId, *typeIter->second }, buff));
-
-					// Deserialize it
-					fromArchive->from_archive(buff, componentReader);
-				});
-
-				// Insert the entity set
-				components.insert(std::make_pair(typeIter->second, std::move(instanceEntities)));
+				// Deserialize the storage object
+				storageIter->second->from_archive(componentTypeReader);
 			});
 		});
-
-		// Validate component entities
-		for (const auto& componentType : components)
-		{
-			for (auto entity : componentType.second)
-			{
-				// Make sure the entity actually exists
-				auto iter = entities.find(entity);
-				if (iter == entities.end())
-				{
-					return;
-				}
-			}
-		}
 
 		// Add data to the scene
 		_entity_parents = std::move(entities);
 		_entity_names = std::move(entityNames);
-		_components = std::move(components);
-		_component_objects = std::move(componentObjects);
 
 		reader.pull_object_member("next_entity_id", _next_entity_id);
 	}
 
-	void Scene::register_component_type(const TypeInfo& type)
+	void Scene::register_component_type(const TypeInfo& type, std::unique_ptr<ComponentContainer> container)
 	{
 		_component_types.insert(std::make_pair(type.name(), &type));
+		_components.insert(std::make_pair(&type, std::move(container)));
 	}
 
 	const TypeInfo* Scene::get_component_type(const char* typeName) const
@@ -292,116 +225,46 @@ namespace sge
 		_entity_names[entity] = std::move(name);
 	}
 
-	ComponentInstanceMut Scene::new_component(EntityId entity, const TypeInfo& type, void* object)
+	ComponentId Scene::new_component(EntityId entity, const TypeInfo& type)
 	{
 		// If the entity the component is being added to is the world entity or a non-existant entity, don't do anything
 		if (entity == NULL_ENTITY || entity == WORLD_ENTITY || _entity_parents.find(entity) == _entity_parents.end())
 		{
-			return ComponentInstanceMut::null();
+			return ComponentId::null();
 		}
 
 		ComponentId id{ entity, type };
 
-		// If this component already exists in the world
-		if (component_exists(id))
-		{
-			return get_component(id);
-		}
+		// Get the storage object
+		auto& storage = _components[&type];
 
-		// Add this component to the entity
-		_components[&type].insert(entity);
-
-		// If the type has a size, allocate memory for it
-		void* buff = nullptr;
-		if (!type.is_empty())
-		{
-			buff = sge::malloc(type.size());
-			_component_objects[id] = buff;
-
-			if (object != nullptr)
-			{
-				type.move_init(buff, object);
-			}
-			else
-			{
-				type.init(buff);
-			}
-		}
-
-		return{ id, buff };
+		// Create an instance of the component
+		storage->create_component(entity);
+		return id;
 	}
 
-	bool Scene::component_exists(ComponentId id) const
+	void Scene::process_entities_mut(const TypeInfo* const types[], std::size_t numTypes, FunctionView<ProcessMutFn> processFn)
 	{
-		// Make sure the the type of this component actually exists in the scene
-		auto set = _components.find(id.type());
-		if (set == _components.end())
-		{
-			return false;
-		}
-
-		// Make sure a component of that type is actually attached to the given entity
-		auto entity = set->second.find(id.entity());
-		if (entity == set->second.end())
-		{
-			return false;
-		}
-
-		return true;
+		impl_process_entities<ProcessingFrameMut>(*this, types, numTypes, processFn);
 	}
 
-	ComponentInstanceMut Scene::get_component(ComponentId id)
+	void Scene::process_entities(const TypeInfo* const types[], std::size_t numTypes, FunctionView<ProcessFn> processFn) const
 	{
-		if (!component_exists(id))
-		{
-			return ComponentInstanceMut::null();
-		}
-
-		// Get the object (if applicable) for this component
-		auto object = _component_objects.find(id);
-		if (object == _component_objects.end())
-		{
-			return{ id, nullptr };
-		}
-
-		return{ id, object->second };
+		impl_process_entities<ProcessingFrame>(*this, types, numTypes, processFn);
 	}
 
-	ComponentInstance Scene::get_component(ComponentId id) const
+	void Scene::process_single_mut(EntityId entity, const TypeInfo* const types[], std::size_t numTypes, FunctionView<ProcessMutFn> processFn)
 	{
-		if (!component_exists(id))
-		{
-			return ComponentInstanceMut::null();
-		}
-
-		// Get the object (if applicable) for this component
-		auto object = _component_objects.find(id);
-		if (object == _component_objects.end())
-		{
-			return{ id, nullptr };
-		}
-
-		return{ id, object->second };
+		impl_process_single<ProcessingFrameMut>(*this, entity, types, numTypes, processFn);
 	}
 
-	void Scene::run_system(FunctionView<SystemFnMut> system, const TypeInfo** types, std::size_t numTypes)
+	void Scene::process_single(EntityId entity, const TypeInfo* const types[], std::size_t numTypes, FunctionView<ProcessFn> processFn) const
 	{
-		impl_run_system<ComponentInstanceMut>(*this, system, types, numTypes);
+		impl_process_single<ProcessingFrame>(*this, entity, types, numTypes, processFn);
 	}
 
-	void Scene::run_system(FunctionView<SystemFn> system, const TypeInfo** types, std::size_t numTypes) const
-	{
-		impl_run_system<ComponentInstance>(*this, system, types, numTypes);
-	}
-
-	void* Scene::get_component_object(ComponentId id) const
-	{
-		auto iter = _component_objects.find(id);
-		return iter != _component_objects.end() ? iter->second : nullptr;
-	}
-
-	template <typename InstanceT, typename SelfT, typename SystemT>
-	void Scene::impl_run_system(SelfT& self, SystemT system, const TypeInfo** types, std::size_t numTypes)
+	template <typename PFrameT, typename SelfT, typename ProcessFnT>
+	void Scene::impl_process_entities(SelfT& self, const TypeInfo* const types[], std::size_t numTypes, ProcessFnT& processFn)
 	{
 		if (numTypes == 0)
 		{
@@ -414,38 +277,87 @@ namespace sge
 			return;
 		}
 
-		// Create an array to hold the selected components
-		auto* results = SGE_STACK_ALLOC(InstanceT, numTypes);
+		// Create a processing frame
+		PFrameT pframe{ self };
 
-		// Iter through all entities that the primary component type appears on
-		for (EntityId entity : primaryType->second)
+		// Create the array of component interfaces
+		ComponentInterface** interfaceArray = SGE_STACK_ALLOC(ComponentInterface*, numTypes);
+
+		// Fill the interface array
+		for (std::size_t i = 0; i < numTypes; ++i)
+		{
+			interfaceArray[i] = reinterpret_cast<ComponentInterface*>(SGE_STACK_ALLOC(byte, types[i]->size()));
+		}
+
+		// Iterate through all entities that the primary component type appears on
+		for (EntityId entity : primaryType->second->entities)
 		{
 			bool satisfied = true;
 			for (std::size_t i = 1; i < numTypes; ++i)
 			{
-				// If this type does not exist in the scene OR this entity does not have an instance of it
+				// If this type does not exist in the scene
 				auto iter = self._components.find(types[i]);
-				if (iter == self._components.end() || iter->second.find(entity) == iter->second.end())
+				if (iter == self._components.end())
 				{
 					satisfied = false;
 					break;
 				}
 
-				ComponentId id{ entity, *types[i] };
-				new (results + i) InstanceT{ id, self.get_component_object(id) };
+				// Try to create the component interface
+				if (!iter->second->create_interface(pframe, entity, interfaceArray[i]))
+				{
+					satisfied = false;
+					break;
+				}
 			}
 
 			// If all further requirements were satisfied
 			if (satisfied)
 			{
-				// Fill in the primary object
-				ComponentId primaryId{ entity, *types[0] };
-				new (results) InstanceT{ primaryId, self.get_component_object(primaryId) };
+				// Create the primary component interface
+				primaryType->second->create_interface(pframe, entity, interfaceArray[0]);
 
-				// Call the system function
-				Frame frame{ self, self._current_time };
-				system(frame, entity, results);
+				// Call the processing function
+				processFn(pframe, entity, interfaceArray);
 			}
 		}
+	}
+
+	template <typename PFrameT, typename SelfT, typename ProcessFnT>
+	void Scene::impl_process_single(SelfT& self, EntityId entity, const TypeInfo* const types[], std::size_t numTypes, ProcessFnT& processFn)
+	{
+		if (numTypes == 0)
+		{
+			return;
+		}
+
+		// Create a processing frame
+		PFrameT pframe{ self };
+
+		// Create the array of component interfaces
+		ComponentInterface** interfaceArray = SGE_STACK_ALLOC(ComponentInterface*, numTypes);
+
+		// Fill the interface array
+		for (std::size_t i = 0; i < numTypes; ++i)
+		{
+			// Make sure this type is supported by the scene
+			auto typeIter = self._components.find(types[i]);
+			if (typeIter == self._components.end())
+			{
+				return;
+			}
+
+			// Allocate space for the component interface object
+			interfaceArray[i] = reinterpret_cast<ComponentInterface*>(SGE_STACK_ALLOC(byte, types[i]->size()));
+
+			// Try to get the component interface from the entity
+			if (!typeIter->second->create_interface(pframe, entity, interfaceArray[i]))
+			{
+				return;
+			}
+		}
+
+		// Call the processing function
+		processFn(pframe, entity, interfaceArray);
 	}
 }

@@ -6,50 +6,41 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CPerspectiveCamera : BasicComponent<CPerspectiveCamera>
+	struct SGE_ENGINE_API CPerspectiveCamera : TComponentInterface<CPerspectiveCamera>
 	{
 		SGE_REFLECTED_TYPE;
+		struct Data;
 
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		CPerspectiveCamera();
+		CPerspectiveCamera(ProcessingFrame& pframe, EntityId entity, Data& data);
 
 		///////////////////
 		///   Methods   ///
 	public:
 
-		Mat4 get_projection_matrix(float screenRatio) const
-		{
-			return Mat4::perspective_projection_hfov(h_fov, screenRatio, z_min, z_max);
-		}
+		static void register_type(Scene& scene);
+
+		Angle h_fov() const;
+
+		void h_fov(Angle angle);
+
+		float z_min() const;
+
+		void z_min(float zMin);
+
+		float z_max() const;
+
+		void z_max(float zMax);
+
+		Mat4 get_projection_matrix(float screenRatio) const;
 
 		//////////////////
 		///   Fields   ///
-	public:
+	private:
 
-		Angle h_fov;
-		float z_min;
-		float z_max;
-	};
-
-	struct SGE_ENGINE_API COrthographicCamera : BasicComponent<CPerspectiveCamera>
-	{
-		SGE_REFLECTED_TYPE;
-
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		COrthographicCamera();
-
-		///////////////////
-		///   Fields   ///
-	public:
-
-		float scale;
-		float z_min;
-		float z_max;
+		Data* _data;
 	};
 }
