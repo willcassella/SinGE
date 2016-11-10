@@ -69,25 +69,25 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <OutDir>bin\</OutDir>
     <IntDir>build\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <OutDir>bin\</OutDir>
     <IntDir>build\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <OutDir>bin\</OutDir>
     <IntDir>build\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <OutDir>bin\</OutDir>
     <IntDir>build\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
@@ -183,6 +183,9 @@
     </ProjectReference>
     <ProjectReference Include="..\..\Modules\Engine\Engine.vcxproj">
       <Project>{ec7300dc-b09b-4626-80f6-432b5982638f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Modules\JavaScript\JavaScript.vcxproj">
+      <Project>{7e8f42a0-2b5a-4a25-879c-1a8bb3b2a363}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\Modules\Resource\Resource.vcxproj">
       <Project>{2254997d-f816-4644-9b73-bbab5f035212}</Project>

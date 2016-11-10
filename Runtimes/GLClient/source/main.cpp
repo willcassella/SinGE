@@ -2,11 +2,12 @@
 
 #include <iostream>
 #include <GLFW/glfw3.h>
+#include <Core/Math/Vec4.h>
 #include <Resource/Archives/JsonArchive.h>
 #include <Engine/Scene.h>
 #include <Engine/Components/CTransform3D.h>
 #include <Engine/Components/Display/CCamera.h>
-#include <Engine/Components/Display/CStaticMesh.h>
+#include <JavaScript/JavaScriptEngine.h>
 #include <GLRender/GLRenderSystem.h>
 
 constexpr sge::uint32 window_width = 1920;
@@ -43,6 +44,13 @@ int main()
 
 	// Create a render system
 	sge::GLRenderSystem renderSystem{ window_width, window_height };
+
+	// Create a JavaScript system
+	sge::JavaScriptEngine jsEngine{ scene };
+	jsEngine.register_type(sge::Vec2::type_info);
+	jsEngine.register_type(sge::Vec3::type_info);
+	jsEngine.register_type(sge::Vec4::type_info);
+	jsEngine.load_script("main.js");
 
 	// Loop until the user closes the window
 	while (!glfwWindowShouldClose(window))
