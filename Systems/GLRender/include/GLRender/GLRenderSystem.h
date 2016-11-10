@@ -7,7 +7,7 @@
 
 namespace sge
 {
-	struct Frame;
+	struct Scene;
 
 	struct SGE_GLRENDER_API GLRenderSystem
 	{
@@ -25,7 +25,7 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		void render_frame(const Frame& frame);
+		void render_scene(const Scene& scene);
 
 		////////////////
 		///   Data   ///

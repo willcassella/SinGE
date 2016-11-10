@@ -176,7 +176,7 @@ namespace sge
 		// Todo
 	}
 
-	void GLRenderSystem::render_frame(const Frame& frame)
+	void GLRenderSystem::render_scene(const Scene& scene)
 	{
 		constexpr GLenum DRAW_BUFFERS[] = {
 			GBUFFER_POSITION_ATTACHMENT,
@@ -200,11 +200,8 @@ namespace sge
 		Mat4 proj;
 
 		// Get the first camera in the frame
-		frame.scene().run_system([&](
-			const Frame&,
-			EntityId entity,
-			TComponentInstance<const CTransform3D> transform,
-			TComponentInstance<const CPerspectiveCamera> camera)
+		scene.process_entities(
+			[&](const ProcessingFrame&, EntityId entity, const CTransform3D& transform, const CPerspectiveCamera& camera)
 		{
 			if (hasCamera)
 			{
@@ -212,8 +209,8 @@ namespace sge
 			}
 
 			hasCamera = true;
-			view = CTransform3D::get_world_matrix(transform, frame).inverse();
-			proj = camera->get_projection_matrix((float)this->_state->height / this->_state->width);
+			view = transform.get_world_matrix().inverse();
+			proj = camera.get_projection_matrix((float)this->_state->height / this->_state->width);
 		});
 
 		// If no camera was found, return
@@ -223,18 +220,15 @@ namespace sge
 		}
 
 		// Render each static mesh in the world
-		frame.scene().run_system([&](
-			const Frame&,
-			EntityId entity,
-			TComponentInstance<const CTransform3D> transform,
-			TComponentInstance<const CStaticMesh> staticMesh)
+		scene.process_entities(
+			[&](const ProcessingFrame&, EntityId entity, const CTransform3D& transform, const CStaticMesh& staticMesh)
 		{
 			// Get the model matrix
-			auto model = CTransform3D::get_world_matrix(transform, frame);
+			auto model = transform.get_world_matrix();
 
 			// Get the mesh and material
-			const auto& mesh = this->_state->find_static_mesh(staticMesh->mesh());
-			const auto& material = this->_state->find_material(staticMesh->material());
+			const auto& mesh = this->_state->find_static_mesh(staticMesh.mesh());
+			const auto& material = this->_state->find_material(staticMesh.material());
 
 			// Bind the mesh and material
 			mesh.bind();
