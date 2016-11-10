@@ -224,7 +224,7 @@ namespace sge
 		}
 
 		template <typename Ret, typename I, typename ... ArgTs, typename ... ActualArgTs>
-		Ret call(Ret(*I::*member)(ArgTs...), ActualArgTs&& ... args)
+		Ret call(Ret(*I::*member)(ArgTs...), ActualArgTs&& ... args) const
 		{
 			return (this->AnyImpl<I>::impl().*member)(std::forward<ActualArgTs>(args)...);
 		}
