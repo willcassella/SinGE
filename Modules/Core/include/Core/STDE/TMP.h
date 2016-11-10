@@ -10,6 +10,10 @@ namespace sge
 		template <typename ... T>
 		struct list
 		{
+			static constexpr std::size_t size()
+			{
+				return sizeof...(T);
+			}
 		};
 
 		namespace impl
