@@ -16,7 +16,7 @@ namespace sge
 		{
 			static const auto& get_type()
 			{
-				return T::type_info;
+				return std::decay_t<T>::type_info;
 			}
 
 			static const auto& get_type(const T& value)

@@ -67,7 +67,7 @@ namespace sge
 		{
 		}
 		FunctionView(FunctionView&& move)
-			: _data(move._data), _func()
+			: _data(move._data), _func(move._func)
 		{
 		}
 		FunctionView(const FunctionView&& move)
