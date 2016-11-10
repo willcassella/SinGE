@@ -20,7 +20,28 @@ namespace sge
 	{
 	}
 
-	void StaticMesh::load(const std::string& path)
+	void StaticMesh::to_archive(ArchiveWriter& writer) const
+	{
+		// Write all vertex positions
+		writer.add_object_member("vertex_positions", [this](ArchiveWriter& vPositionWriter)
+		{
+			vPositionWriter.typed_array(this->_vertex_positions.data()->vec(), this->_vertex_positions.size() * 3);
+		});
+
+		// Write all vertex normals
+		writer.add_object_member("vertex_normals", [this](ArchiveWriter& vNormalWriter)
+		{
+			vNormalWriter.typed_array(this->_vertex_normals.data()->vec(), this->_vertex_normals.size() * 3);
+		});
+
+		// Write the first UV layer
+		writer.add_object_member("uv0", [this](ArchiveWriter& uv0Writer)
+		{
+			uv0Writer.typed_array(this->_uv_map_0.data()->vec(), this->_uv_map_0.size() * 2);
+		});
+	}
+
+	void StaticMesh::from_file(const std::string& path)
 	{
 		auto file = fopen(path.c_str(), "rb");
 
