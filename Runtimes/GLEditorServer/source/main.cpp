@@ -33,7 +33,6 @@ int main()
 
 	// Create a scene
 	sge::Scene scene;
-	sge::Frame initFrame{ scene, 0 };
 	sge::register_builtin_components(scene);
 
 	// Load the scene
@@ -51,7 +50,7 @@ int main()
 	while (!glfwWindowShouldClose(window))
 	{
 		// Draw the scene
-		renderSystem.render_frame(initFrame);
+		renderSystem.render_scene(scene);
 
 		// Swap front and back buffers
 		glfwSwapBuffers(window);
