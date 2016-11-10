@@ -9,8 +9,8 @@
 #include <Engine/Components/Display/CStaticMesh.h>
 #include <GLRender/GLRenderSystem.h>
 
-constexpr sge::uint32 window_width = 3000;
-constexpr sge::uint32 window_height = 2000;
+constexpr sge::uint32 window_width = 1920;
+constexpr sge::uint32 window_height = 1080;
 
 int main()
 {
@@ -35,12 +35,10 @@ int main()
 
 	// Create a scene
 	sge::Scene scene;
-	sge::Frame initFrame{ scene, 0 };
 	sge::register_builtin_components(scene);
 
-	// Load the scene
 	sge::JsonArchive archive;
-	archive.load("scene.json");
+	archive.from_file("scene.json");
 	archive.deserialize_root(scene);
 
 	// Create a render system
@@ -50,11 +48,11 @@ int main()
 	while (!glfwWindowShouldClose(window))
 	{
 		// Draw the scene
-		renderSystem.render_frame(initFrame);
+		renderSystem.render_scene(scene);
 
-		scene.run_system([](sge::Frame& frame, sge::EntityId, sge::TComponentInstance<sge::CTransform3D> transform, sge::TComponentInstance<sge::CPerspectiveCamera>)
+		scene.process_entities_mut([](sge::ProcessingFrame&, sge::EntityId, sge::CTransform3D& transform, sge::CPerspectiveCamera&)
 		{
-			sge::CTransform3D::set_local_position(transform, frame, sge::CTransform3D::get_local_position(transform) + sge::Vec3{ 0, 0, -0.01 });
+			transform.set_local_position(transform.get_local_position() + sge::Vec3{ 0, 0, 0.01 });
 		});
 
 		// Swap front and back buffers
