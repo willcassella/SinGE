@@ -7,6 +7,7 @@
 #include <Engine/Scene.h>
 #include <Engine/Components/CTransform3D.h>
 #include <Engine/Components/Display/CCamera.h>
+#include <Engine/Components/Display/CStaticMesh.h>
 #include <JavaScript/JavaScriptEngine.h>
 #include <GLRender/GLRenderSystem.h>
 
@@ -50,6 +51,9 @@ int main()
 	jsEngine.register_type(sge::Vec2::type_info);
 	jsEngine.register_type(sge::Vec3::type_info);
 	jsEngine.register_type(sge::Vec4::type_info);
+	jsEngine.register_type(sge::CTransform3D::type_info);
+	jsEngine.register_type(sge::CPerspectiveCamera::type_info);
+	jsEngine.register_type(sge::CStaticMesh::type_info);
 	jsEngine.load_script("main.js");
 
 	// Loop until the user closes the window
