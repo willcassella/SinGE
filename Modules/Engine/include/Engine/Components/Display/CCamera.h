@@ -23,9 +23,9 @@ namespace sge
 
 		static void register_type(Scene& scene);
 
-		Angle h_fov() const;
+		float h_fov() const;
 
-		void h_fov(Angle angle);
+		void h_fov(float angle);
 
 		float z_min() const;
 

@@ -60,14 +60,14 @@ namespace sge
 		scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CPerspectiveCamera, Data>>());
 	}
 
-	Angle CPerspectiveCamera::h_fov() const
+	float CPerspectiveCamera::h_fov() const
 	{
-		return _data->h_fov;
+		return _data->h_fov.degrees();
 	}
 
-	void CPerspectiveCamera::h_fov(Angle angle)
+	void CPerspectiveCamera::h_fov(float angle)
 	{
-		_data->h_fov = angle;
+		_data->h_fov = degrees(angle);
 	}
 
 	float CPerspectiveCamera::z_min() const
