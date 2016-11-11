@@ -4,6 +4,7 @@
 #include <memory>
 #include <vector>
 #include <ChakraCore.h>
+#include <Core/env.h>
 #include "JsForeignConstructor.h"
 
 namespace sge

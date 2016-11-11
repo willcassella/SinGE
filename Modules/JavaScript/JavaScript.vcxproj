@@ -211,6 +211,7 @@ xcopy "$(SolutionDir)packages\ChakraCore\bin\$(Platform)\$(Configuration)\Chakra
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\JavaScriptEngine.cpp" />
+    <ClCompile Include="source\JavaScriptEngineState.cpp" />
     <ClCompile Include="source\JsForeignConstructor.cpp" />
     <ClCompile Include="source\JsForeignObject.cpp" />
     <ClCompile Include="source\JsForeignProperty.cpp" />

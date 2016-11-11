@@ -10,48 +10,84 @@ namespace sge
 
 	struct JsForeignObject
 	{
-		/////////////////////
-		///   Functions   ///
+		/* Bit flag indicating what this ForeignObject contains, and how it was allocated. */
+		enum StoragePolicy : byte
+		{
+			/* This ForeignObject doesn't hold an actual object, but rather a pointer to an object.
+			 * The destructor for the pointed object will not be called in finalization. */
+			OBJECT_POINTER = 0,
+
+			/* This ForeignObject contigiously stores an actual object.
+			 * The destructor for the stored object will be called in finalization. */
+			OBJECT_STORED_CONTIGUOUS = (1 << 0),
+
+			/* This ForeignObject was allocated on the stack, so 'free' will not be called after the destructor. */
+			STACK_ALLOCATED = 0,
+
+			/* This ForeignObject was allocated on the heap, so 'free' will be called after the destructor. */
+			HEAP_ALLOCATED = (1 << 1)
+		};
+
+		////////////////////////
+		///   Constructors   ///
 	public:
 
-		/* Initializes a JsForeignObject with the given construct and arguments. */
-		static JsForeignObject* constructor_init(
-			JsValueRef* out,
+		static void stack_init_pointer(
+			void* addr,
+			JsValueRef jsObject,
 			const TypeInfo& type,
 			JsValueRef proto,
-			const ConstructorInfo& constructor,
-			JsValueRef* args);
+			void* pointer);
 
-		/* Default-initializes a JsForeignObject of the given type. */
-		static JsForeignObject* default_init(JsValueRef* out, const TypeInfo& type, JsValueRef proto);
+		/**
+		 * \brief Initializes a JsForeignObject on the heap, with contigous storage for an object.
+		 * \param jsObject The JsValueRef to set to this object. Must be a JsValueRef previously created by a call to 'create_js_foreign_object'.
+		 * \param type The type this JsForeignObject is being created for.
+		 * \param proto The javascript prototype for the type.
+		 * \return The newly created JsForeignObject. The stored value must be initialized by the user.
+		 */
+		static JsForeignObject* heap_init_object(
+			JsValueRef jsObject,
+			const TypeInfo& type,
+			JsValueRef proto);
 
-		/* Copy-initializes a JsForeignObject of the given type. */
-		static JsForeignObject* copy_init(JsValueRef* out, const TypeInfo& type, JsValueRef proto, const void* copy);
-
-		/* Move-initializes a JsForeignObject of the given type. */
-		static JsForeignObject* move_init(JsValueRef* out, const TypeInfo& type, JsValueRef proto, void* move);
-
-		/* Extracts a JsForeignObject from a JS object. */
-		static JsForeignObject* from_jsref(JsValueRef object);
+		/**
+		 * \brief Finalizes a JsForeignObject.
+		 * \param ptr The address of the JsForeignObject.
+		 */
+		static void CALLBACK drop_foreign_object(void* ptr);
 
 	private:
 
 		JsForeignObject() = default;
 
-		static JsForeignObject* create(JsValueRef* out, const TypeInfo& type, JsValueRef proto);
+		static void init(
+			void* addr,
+			JsValueRef jsObject,
+			const TypeInfo& type,
+			JsValueRef proto,
+			byte storagePolicy);
+
+		/////////////////////
+		///   Functions   ///
+	public:
+
+		static JsValueRef create_js_foreign_object();
+
+		static JsForeignObject* from_jsref(JsValueRef object);
+
+		static std::size_t object_pointer_alloc_size()
+		{
+			return sizeof(JsForeignObject) + sizeof(void*);
+		}
 
 		///////////////////
 		///   Methods   ///
 	public:
 
-		void* object()
+		byte storage_policy() const
 		{
-			return this + 1;
-		}
-
-		const void* object() const
-		{
-			return this + 1;
+			return _storagePolicy;
 		}
 
 		const TypeInfo& type() const
@@ -59,10 +95,35 @@ namespace sge
 			return *_type;
 		}
 
+		void* object()
+		{
+			if (_storagePolicy & StoragePolicy::OBJECT_STORED_CONTIGUOUS)
+			{
+				return this + 1;
+			}
+			else
+			{
+				return *reinterpret_cast<void**>(this + 1);
+			}
+		}
+
+		const void* object() const
+		{
+			if (_storagePolicy & StoragePolicy::OBJECT_STORED_CONTIGUOUS)
+			{
+				return this + 1;
+			}
+			else
+			{
+				return *reinterpret_cast<const void* const*>(this + 1);
+			}
+		}
+
 		//////////////////
 		///   Fields   ///
 	private:
 
+		byte _storagePolicy;
 		const TypeInfo* _type;
 	};
 }

@@ -23,7 +23,7 @@ namespace sge
 
 		// Run the getter
 		JsValueRef ret = JS_INVALID_REFERENCE;
-		prop->get(object->object(), nullptr, [&](Any<> out) {
+		prop->get(object->object(), nullptr, [&ret](Any<> out) {
 			ret = from_native_primitive<T>(out);
 		});
 

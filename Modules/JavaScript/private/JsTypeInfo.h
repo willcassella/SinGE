@@ -51,7 +51,7 @@ namespace sge
 			auto* object = static_cast<JsValueRef*>(addr);
 			JsSetCurrentContext(_data.context);
 
-			// Creat arguments for constructor
+			// Create arguments for constructor
 			JsCreateObject(object);
 			JsValueRef initObj;
 			JsCreateObject(&initObj);
