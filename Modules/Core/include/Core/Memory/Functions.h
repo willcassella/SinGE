@@ -13,4 +13,4 @@ namespace sge
 }
 
 /* Allocates an array on the stack */
-#define SGE_STACK_ALLOC(TYPE, N) static_cast<TYPE*>(alloca(sizeof(TYPE) * N))
+#define SGE_STACK_ALLOC(TYPE, N) static_cast<TYPE*>(alloca(sizeof(TYPE) * (N)))
