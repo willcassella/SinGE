@@ -149,16 +149,13 @@ namespace sge
 			using GetFnTraits = stde::function_traits<GetFn>;
 			using SetFnTraits = stde::function_traits<SetFn>;
 			using PropT = std::decay_t<typename GetFnTraits::return_type>;
-			using ContextT = std::remove_pointer_t<tmp::car_n<typename SetFnTraits::arg_types, 1>>;
 
-			static_assert(std::is_same<const PropT*, tmp::car_n<typename SetFnTraits::arg_types, 2>>::value,
+			static_assert(std::is_same<const PropT*, tmp::car_n<typename SetFnTraits::arg_types, 1>>::value,
 				"Property type differs between getter and setter");
-			static_assert(std::is_same<const ContextT*, tmp::car_n<typename GetFnTraits::arg_types, 1>>::value,
-				"Context type differs between getter and setter.");
 
 			auto adaptedGetter = adapt_function_getter(getter);
 			auto adaptedSetter = adapt_function_setter(setter);
-			create_property<PropT>(name, adaptedGetter, adaptedSetter, flags, &sge::get_type<ContextT>());
+			create_property<PropT>(name, adaptedGetter, adaptedSetter, flags);
 			return std::move(*this);
 		}
 
@@ -172,10 +169,9 @@ namespace sge
 		{
 			using GetFnTraits = stde::function_traits<GetFn>;
 			using PropT = std::decay_t<typename GetFnTraits::return_type>;
-			using ContextT = std::remove_const_t<std::remove_pointer_t<tmp::car_n<typename GetFnTraits::arg_types, 1>>>;
 
 			auto adaptedGetter = adapt_function_getter(getter);
-			create_readonly_property<PropT>(name, adaptedGetter, flags, &sge::get_type<ContextT>());
+			create_readonly_property<PropT>(name, adaptedGetter, flags);
 			return std::move(*this);
 		}
 
@@ -192,7 +188,7 @@ namespace sge
 
 			auto adaptedGetter = adapt_method_getter(getter);
 			auto adaptedSetter = adapt_method_setter(setter);
-			create_property<PropT>(name, adaptedGetter, adaptedSetter, flags, nullptr);
+			create_property<PropT>(name, adaptedGetter, adaptedSetter, flags);
 			return std::move(*this);
 		}
 
@@ -207,78 +203,7 @@ namespace sge
 			using PropT = std::decay_t<GetRetT>;
 
 			auto adaptedGetter = adapt_method_getter(getter);
-			create_readonly_property<PropT>(name, adaptedGetter, flags, nullptr);
-			return std::move(*this);
-		}
-
-		/* Creates a property with a method getter and setter, where the getter requires a context. */
-		template <typename GetRetT, typename GetContextT, typename SetRetT, typename SetArgT>
-		NativeTypeInfoBuilder&& property(
-			const char* name,
-			GetRetT(T::*getter)(GetContextT)const,
-			SetRetT(T::*setter)(SetArgT),
-			PropertyFlags flags = PF_NONE)
-		{
-			using PropT = std::decay_t<GetRetT>;
-			using ContextT = std::decay_t<GetContextT>;
-			static_assert(std::is_same<PropT, std::decay_t<SetArgT>>::value, "Getter and setter use different property types.");
-
-			auto adaptedGetter = adapt_method_getter(getter);
-			auto adaptedSetter = adapt_method_setter(setter);
-			create_property<PropT>(name, getter, setter, flags, &sge::get_type<ContextT>());
-			return std::move(*this);
-		}
-
-		/* Creates a property with a method getter and no setter, where the getter requires a context. */
-		template <typename GetRetT, typename GetContextT>
-		NativeTypeInfoBuilder&& property(
-			const char* name,
-			GetRetT(T::*getter)(GetContextT)const,
-			std::nullptr_t /*setter*/,
-			PropertyFlags flags = PF_NONE)
-		{
-			using PropT = std::decay_t<GetRetT>;
-			using ContextT = std::decay_t<GetContextT>;
-
-			auto adaptedGetter = adapt_method_getter(getter);
-			create_readonly_property<PropT>(name, getter, flags, &sge::get_type<ContextT>());
-			return std::move(*this);
-		}
-
-		/* Creates a property with a method getter and method setter, where the setter requires a context. */
-		template <typename GetRetT, typename SetRetT, typename SetContextT, typename SetArgT>
-		NativeTypeInfoBuilder&& property(
-			const char* name,
-			GetRetT(T::*getter)()const,
-			SetRetT(T::*setter)(SetContextT, SetArgT),
-			PropertyFlags flags = PF_NONE)
-		{
-			using PropT = std::decay_t<GetRetT>;
-			using ContextT = std::decay_t<SetContextT>;
-			static_assert(std::is_same<PropT, std::decay_t<SetArgT>>::value, "Getter and setter use different property types.");
-
-			auto adaptedGetter = adapt_method_getter(getter);
-			auto adaptedSetter = adapt_method_setter(setter);
-			create_property<PropT>(name, adaptedGetter, adaptedSetter, flags, &sge::get_type<ContextT>());
-			return std::move(*this);
-		}
-
-		/* Creates a property with a method getter and method setter, where both require a context. */
-		template <typename GetRetT, typename GetContextT, typename SetRetT, typename SetContextT, typename SetArgT>
-		NativeTypeInfoBuilder&& property(
-			const char* name,
-			GetRetT(T::*getter)(GetContextT)const,
-			SetRetT(T::*setter)(SetContextT, SetArgT),
-			PropertyFlags flags = PF_NONE)
-		{
-			using PropT = std::decay_t<GetRetT>;
-			using ContextT = std::decay_t<GetContextT>;
-			static_assert(std::is_same<PropT, std::decay_t<SetArgT>>::value, "Getter and setter use different property types.");
-			static_assert(std::is_same<ContextT, std::decay_t<SetContextT>>::value, "Getter and setter use different context types.");
-
-			auto adaptedGetter = adapt_method_getter(getter);
-			auto adaptedSetter = adapt_method_setter(setter);
-			create_property<PropT>(name, getter, setter, flags, &sge::get_type<ContextT>());
+			create_readonly_property<PropT>(name, adaptedGetter, flags);
 			return std::move(*this);
 		}
 
@@ -353,11 +278,10 @@ namespace sge
 		}
 
 		template <typename PropT, typename GetFn, typename SetFn>
-		void create_property(const char* name, GetFn getter, SetFn setter, PropertyFlags flags, const TypeInfo* contextType)
+		void create_property(const char* name, GetFn getter, SetFn setter, PropertyFlags flags)
 		{
 			PropertyInfo::Data basePropData;
 			basePropData.type = &sge::get_type<PropT>();
-			basePropData.context_type = contextType;
 			basePropData.flags = flags;
 
 			NativePropertyInfo::Data propData;
@@ -369,11 +293,10 @@ namespace sge
 		}
 
 		template <typename PropT, typename GetFn>
-		void create_readonly_property(const char* name, GetFn getter, PropertyFlags flags, const TypeInfo* contextType)
+		void create_readonly_property(const char* name, GetFn getter, PropertyFlags flags)
 		{
 			PropertyInfo::Data basePropData;
 			basePropData.type = &sge::get_type<PropT>();
-			basePropData.context_type = contextType;
 			basePropData.flags = flags;
 
 			NativePropertyInfo::Data propData;
@@ -398,28 +321,17 @@ namespace sge
 		{
 			using FnTraits = stde::function_traits<GetFn>;
 			using RetT = typename FnTraits::return_type;
-			using PContextT = tmp::car_n<typename FnTraits::arg_types, 1>;
 
-			return [getter](const T* self, const void* context) -> RetT {
-				return getter(self, static_cast<PContextT>(context));
+			return [getter](const T* self) -> RetT {
+				return getter(self);
 			};
 		}
 
 		template <typename RetT>
 		static auto adapt_method_getter(RetT(T::*getter)()const)
 		{
-			return [getter](const T* self, const void* /*context*/) -> RetT {
+			return [getter](const T* self) -> RetT {
 				return (self->*getter)();
-			};
-		}
-
-		template <typename RetT, typename ContextArgT>
-		static auto adapt_method_getter(RetT(T::*getter)(ContextArgT)const)
-		{
-			using ContextT = std::decay_t<ContextArgT>;
-
-			return [getter](const T* self, const void* context) -> RetT {
-				return (self->*getter)(*static_cast<const ContextT*>(context));
 			};
 		}
 
@@ -427,40 +339,25 @@ namespace sge
 		static auto adapt_function_setter(SetFn setter)
 		{
 			using FnTraits = stde::function_traits<SetFn>;
-			using PContextT = tmp::car_n<typename FnTraits::arg_types, 1>;
-			using PPropT = tmp::car_n<typename FnTraits::arg_types, 2>;
 
-			return [setter](T* self, void* context, PPropT value) -> void {
-				setter(self, static_cast<PContextT>(context), value);
+			return [setter](T* self, const auto& value) -> void {
+				setter(self, value);
 			};
 		}
 
 		template <typename RetT, typename PropArgT>
 		static auto adapt_method_setter(RetT(T::*setter)(PropArgT))
 		{
-			using PropT = std::decay_t<PropArgT>;
-
-			return [setter](T* self, void* /*context*/, const PropT* value) -> void {
-				(self->*setter)(*value);
-			};
-		}
-
-		template <typename RetT, typename ContextArgT, typename PropArgT>
-		static auto adapt_method_setter(RetT(T::*setter)(ContextArgT, PropArgT))
-		{
-			using ContextT = std::decay_t<ContextArgT>;
-			using PropT = std::decay_t<PropArgT>;
-
-			return [setter](T* self, void* context, const PropT* value) -> void {
-				(self->*setter)(*static_cast<ContextT*>(context), *value);
+			return [setter](T* self, const auto& value) -> void {
+				(self->*setter)(value);
 			};
 		}
 
 		template <typename PropT, typename GetFn>
 		static auto create_getter(GetFn getter)
 		{
-			return [getter](const void* self, const void* context, PropertyInfo::GetterOutFn out) -> void {
-				const PropT& value = getter(static_cast<const T*>(self), context);
+			return [getter](const void* self, PropertyInfo::GetterOutFn out) -> void {
+				const PropT& value = getter(static_cast<const T*>(self));
 				out(value);
 			};
 		}
@@ -468,25 +365,25 @@ namespace sge
 		template <typename PropT, typename SetFn>
 		static auto create_setter(SetFn setter)
 		{
-			return [setter](void* self, void* context, const void* value) -> void {
-				setter(static_cast<T*>(self), context, static_cast<const PropT*>(value));
+			return [setter](void* self, const void* value) -> void {
+				setter(static_cast<T*>(self), *static_cast<const PropT*>(value));
 			};
 		}
 
 		template <typename PropT, typename GetFn, typename SetFn>
 		static auto create_mutate(GetFn getter, SetFn setter)
 		{
-			return [getter, setter](void* self, void* context, PropertyInfo::MutatorFn mutator) -> void {
-				PropT prop = getter(static_cast<const T*>(self), context);
+			return [getter, setter](void* self, PropertyInfo::MutatorFn mutator) -> void {
+				PropT prop = getter(static_cast<const T*>(self));
 				mutator(prop);
-				setter(static_cast<T*>(self), context, &prop);
+				setter(static_cast<T*>(self), prop);
 			};
 		}
 
 		template <typename FieldT>
 		static auto create_field_getter(FieldT T::*field)
 		{
-			return [field](const void* self, const void* /*context*/, PropertyInfo::GetterOutFn out) -> void {
+			return [field](const void* self, PropertyInfo::GetterOutFn out) -> void {
 				out(static_cast<const T*>(self)->*field);
 			};
 		}
@@ -494,7 +391,7 @@ namespace sge
 		template <typename FieldT>
 		static auto create_field_setter(FieldT T::*field)
 		{
-			return [field](void* self, void* /*context*/, const void* value) -> void {
+			return [field](void* self, const void* value) -> void {
 				static_cast<T*>(self)->*field = *static_cast<const FieldT*>(value);
 			};
 		}
@@ -502,7 +399,7 @@ namespace sge
 		template <typename FieldT>
 		static auto create_field_mutate(FieldT T::*field)
 		{
-			return [field](void* self, void* /*context*/, PropertyInfo::MutatorFn mutate) -> void {
+			return [field](void* self, PropertyInfo::MutatorFn mutate) -> void {
 				mutate(static_cast<T*>(self)->*field);
 			};
 		}

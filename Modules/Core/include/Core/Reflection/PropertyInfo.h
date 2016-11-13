@@ -34,7 +34,7 @@ namespace sge
 		public:
 
 			Data()
-				: type(nullptr), context_type(nullptr), flags(PF_NONE)
+				: type(nullptr), flags(PF_NONE)
 			{
 			}
 
@@ -43,7 +43,6 @@ namespace sge
 		public:
 
 			const TypeInfo* type;
-			const TypeInfo* context_type;
 			PropertyFlags flags;
 		};
 
@@ -69,22 +68,6 @@ namespace sge
 		}
 
 		/**
-		 * \brief Whether this property requires a context.
-		 */
-		bool requires_context() const
-		{
-			return _data.context_type != nullptr;
-		}
-
-		/**
-		 * \brief The context type required for getting and setting this property.
-		 */
-		const TypeInfo* context_type() const
-		{
-			return _data.context_type;
-		}
-
-		/**
 		 * \brief Any special flags for this property.
 		 */
 		PropertyFlags flags() const
@@ -100,26 +83,23 @@ namespace sge
 		/**
 		 * \brief Acesses the value of this property.
 		 * \param self The object to access the property on.
-		 * \param context The context object for accessing the property.
 		 * \param out A function to call with the value and type of the property.
 		 */
-		virtual void get(const void* self, const void* context, GetterOutFn out) const = 0;
+		virtual void get(const void* self, GetterOutFn out) const = 0;
 
 		/**
 		 * \brief Sets the value of this property.
 		 * \param self The object to set the property on.
-		 * \param context The context object for accessing the property.
 		 * \param value The new value of the property.
 		 */
-		virtual void set(void* self, void* context, const void* value) const = 0;
+		virtual void set(void* self, const void* value) const = 0;
 
 		/**
 		 * \brief Mutates the value of this property.
 		 * \param self The object to mutate the property on.
-		 * \param context The context object for accessing the property.
 		 * \param mutator A function to call that will mutate the value of the property.
 		 */
-		virtual void mutate(void* self, void* context, MutatorFn mutator) const = 0;
+		virtual void mutate(void* self, MutatorFn mutator) const = 0;
 
 		//////////////////
 		///   Fields   ///

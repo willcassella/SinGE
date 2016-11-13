@@ -14,9 +14,9 @@ namespace sge
 			///   Fields   ///
 		public:
 
-			std::function<void(const void* self, const void* context, GetterOutFn out)> getter;
-			std::function<void(void* self, void* context, const void* value)> setter;
-			std::function<void(void* self, void* context, MutatorFn mutator)> mutate;
+			std::function<void(const void* self, GetterOutFn out)> getter;
+			std::function<void(void* self, const void* value)> setter;
+			std::function<void(void* self, MutatorFn mutator)> mutate;
 		};
 
 		////////////////////////
@@ -37,19 +37,19 @@ namespace sge
 			return _data.setter == nullptr;
 		}
 
-		void get(const void* self, const void* context, GetterOutFn out) const override
+		void get(const void* self, GetterOutFn out) const override
 		{
-			_data.getter(self, context, out);
+			_data.getter(self, out);
 		}
 
-		void set(void* self, void* context, const void* value) const override
+		void set(void* self, const void* value) const override
 		{
-			_data.setter(self, context, value);
+			_data.setter(self, value);
 		}
 
-		void mutate(void* self, void* context, MutatorFn mutator) const override
+		void mutate(void* self, MutatorFn mutator) const override
 		{
-			_data.mutate(self, context, mutator);
+			_data.mutate(self, mutator);
 		}
 
 		//////////////////
