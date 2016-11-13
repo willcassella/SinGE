@@ -23,7 +23,7 @@ namespace sge
 
 		// Run the getter
 		JsValueRef ret = JS_INVALID_REFERENCE;
-		prop->get(object->object(), nullptr, [&ret](Any<> out) {
+		prop->get(object->object(), [&ret](Any<> out) {
 			ret = from_native_primitive<T>(out);
 		});
 
@@ -54,7 +54,7 @@ namespace sge
 		auto* prop = static_cast<const PropertyInfo*>(callbackState);
 
 		// Run the setter
-		prop->set(object->object(), nullptr, &value);
+		prop->set(object->object(), &value);
 
 		return JS_INVALID_REFERENCE;
 	}
@@ -82,29 +82,29 @@ namespace sge
 		JsSetProperty(propertyDescriptor, setPropId, setter, true);
 	}
 
-	JsValueRef CALLBACK js_getter_wrapper(
-		JsValueRef callee,
+	static JsValueRef CALLBACK js_getter_wrapper(
+		JsValueRef /*callee*/,
 		bool /*isConstructCall*/,
 		JsValueRef* args,
 		unsigned short argc,
-		void* callbackState)
+		void* cbState)
 	{
 		// Get the 'this' argument as a foreign object
 		auto* self = JsForeignObject::from_jsref(args[0]);
 
 		// Get the property we're getting
-		auto* prop = static_cast<const PropertyInfo*>(callbackState);
+		auto* prop = static_cast<const PropertyInfo*>(cbState);
 
 		// Run the getter for the property
-		JsValueRef ret = nullptr;
-		prop->get(self->object(), nullptr, [&](Any<> value) {
+		JsValueRef ret = JsForeignObject::create_js_foreign_object();
+		prop->get(self->object(), [ret](Any<> value) {
 			//ret = from_native(value);
 		});
 
 		return ret;
 	}
 
-	JsValueRef CALLBACK js_setter_wrapper(
+	static JsValueRef CALLBACK js_setter_wrapper(
 		JsValueRef /*callee*/,
 		bool /*isConstructCall*/,
 		JsValueRef* args,
