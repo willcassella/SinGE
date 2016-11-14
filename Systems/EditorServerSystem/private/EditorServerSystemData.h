@@ -80,7 +80,7 @@ namespace sge
 		void async_receive_change_header()
 		{
 			asio::async_read(socket, asio::buffer(&_in_content_length, sizeof(EditorPacket::ContentLength_t)),
-				[self = shared_from_this()](const std::error_code& error, std::size_t len)
+				[self = shared_from_this()](const std::error_code& error, std::size_t /*len*/)
 			{
 				if (!error)
 				{
@@ -101,7 +101,7 @@ namespace sge
 		void async_receive_change()
 		{
 			asio::async_read(socket, asio::buffer(&_in_content[0], _in_content.size()),
-				[self = shared_from_this()](const std::error_code& error, std::size_t len)
+				[self = shared_from_this()](const std::error_code& error, std::size_t /*len*/)
 			{
 				if (!error)
 				{
@@ -203,7 +203,7 @@ namespace sge
 			// Create a session for the connection
 			auto session = std::make_shared<EditorServerSession>(io, *_scene);
 			_acceptor.async_accept(session->socket,
-				[this, session](const std::error_code& error)
+				[this, session](const std::error_code& /*error*/)
 			{
 				// Prepare for a new connection
 				this->async_connection();
