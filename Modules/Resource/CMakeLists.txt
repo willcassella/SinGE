@@ -9,7 +9,7 @@ add_definitions(-DSGE_RESOURCE_BUILD)
 
 # Dependencies
 include_directories(${Core_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} Core)
+target_link_libraries(${PROJECT_NAME} Core freeimage)
 
 # Public
 set(${PROJECT_NAME}_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include" PARENT_SCOPE)

@@ -27,5 +27,6 @@ add_subdirectory(Modules/Engine)
 add_subdirectory(Systems/GLRender)
 add_subdirectory(Systems/EditorServerSystem)
 
-# Add GLClient project
+# Add Runtimes
 add_subdirectory(Runtimes/GLClient)
+add_subdirectory(Runtimes/GLEditorServer)
