@@ -3,6 +3,8 @@
 
 #include <queue>
 #include <iostream>
+// Not sure why I have to define this, but otherwise I can't use asio::steady_timer
+#define ASIO_HAS_STD_CHRONO
 #include <asio.hpp>
 #include <Resource/Archives/JsonArchive.h>
 #include "../include/EditorServerSystem/EditorServerSystem.h"
@@ -98,7 +100,7 @@ namespace sge
 		/* Handles a change received from the client, reads the JSON body of the packet. */
 		void async_receive_change()
 		{
-			asio::async_read(socket, asio::buffer(_in_content),
+			asio::async_read(socket, asio::buffer(&_in_content[0], _in_content.size()),
 				[self = shared_from_this()](const std::error_code& error, std::size_t len)
 			{
 				if (!error)
@@ -186,7 +188,7 @@ namespace sge
 			_scene(&scene),
 			_acceptor(io, tcp::endpoint{ tcp::v4(), port })
 		{
-			asio::post(io, [this]()
+			io.post([this]()
 			{
 				this->async_connection();
 			});

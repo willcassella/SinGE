@@ -20,6 +20,15 @@ namespace sge
 
 	void EditorServerSystem::serve(int milliseconds)
 	{
-		_data->io.run_for(asio::chrono::milliseconds{ milliseconds });
+		// Create a timer so we don't run indefinetaly
+		asio::steady_timer timer(_data->io);
+		timer.expires_from_now(std::chrono::milliseconds{ milliseconds });
+		timer.async_wait([&io = _data->io](const std::error_code&)
+		{
+			io.stop();
+		});
+
+		// Run the service
+		_data->io.run();
 	}
 }
