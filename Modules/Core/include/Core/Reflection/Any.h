@@ -9,7 +9,7 @@ namespace sge
 	struct TypeInfo;
 
 	template <typename T>
-	const auto& get_type();
+	const auto& get_type(const T&);
 
 	template <typename I>
 	struct AnyImpl

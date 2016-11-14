@@ -1,7 +1,7 @@
 // JsonArchiveWriter.h
 #pragma once
 
-#include <rapidjson/Document.h>
+#include <rapidjson/document.h>
 #include <Core/IO/ArchiveWriter.h>
 
 namespace sge

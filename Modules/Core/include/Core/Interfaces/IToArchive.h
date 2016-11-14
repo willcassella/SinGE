@@ -158,12 +158,12 @@ namespace sge
 		{
 			assert(!self.null());
 
-			for (const auto& entry : *self->as<std::unordered_map<KeyT, HasherT, KeyEqT, AllocT>>())
+			for (const auto& entry : *self.as<std::unordered_map<KeyT, HasherT, KeyEqT, AllocT>>())
 			{
 				writer.add_array_element([&entry](ArchiveWriter& entryWriter)
 				{
-					writer.push_object_member("key", entry.first);
-					writer.push_object_member("value", entry.second);
+					entryWriter.push_object_member("key", entry.first);
+					entryWriter.push_object_member("value", entry.second);
 				});
 			}
 		}
@@ -176,7 +176,7 @@ namespace sge
 		{
 			assert(!self.null());
 
-			for (const auto& entry : *self->as<std::unordered_map<std::string, HasherT, KeyEqT, AllocT>>())
+			for (const auto& entry : *self.as<std::unordered_map<std::string, HasherT, KeyEqT, AllocT>>())
 			{
 				writer.push_object_member(entry.first.c_str(), entry.second);
 			}
@@ -190,12 +190,12 @@ namespace sge
 		{
 			assert(!self.null());
 
-			for (const auto& entry : *self->as<std::map<KeyT, T, CompT, AllocT>>())
+			for (const auto& entry : *self.as<std::map<KeyT, T, CompT, AllocT>>())
 			{
 				writer.add_array_element([&entry](ArchiveWriter& entryWriter)
 				{
-					writer.push_object_member("key", entry.first);
-					writer.push_object_member("value", entry.second);
+					entryWriter.push_object_member("key", entry.first);
+					entryWriter.push_object_member("value", entry.second);
 				});
 			}
 		}

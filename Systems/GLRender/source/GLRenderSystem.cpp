@@ -201,7 +201,7 @@ namespace sge
 
 		// Get the first camera in the frame
 		scene.process_entities(
-			[&](const ProcessingFrame&, EntityId entity, const CTransform3D& transform, const CPerspectiveCamera& camera)
+			[&](const ProcessingFrame&, EntityId /*entity*/, const CTransform3D& transform, const CPerspectiveCamera& camera)
 		{
 			if (hasCamera)
 			{
@@ -221,7 +221,7 @@ namespace sge
 
 		// Render each static mesh in the world
 		scene.process_entities(
-			[&](const ProcessingFrame&, EntityId entity, const CTransform3D& transform, const CStaticMesh& staticMesh)
+			[&](const ProcessingFrame&, EntityId /*entity*/, const CTransform3D& transform, const CStaticMesh& staticMesh)
 		{
 			// Get the model matrix
 			auto model = transform.get_world_matrix();

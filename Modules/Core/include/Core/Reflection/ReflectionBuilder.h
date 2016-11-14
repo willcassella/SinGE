@@ -338,8 +338,6 @@ namespace sge
 		template <typename SetFn>
 		static auto adapt_function_setter(SetFn setter)
 		{
-			using FnTraits = stde::function_traits<SetFn>;
-
 			return [setter](T* self, const auto& value) -> void {
 				setter(self, value);
 			};

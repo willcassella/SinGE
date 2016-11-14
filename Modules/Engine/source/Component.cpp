@@ -20,7 +20,7 @@ namespace sge
 			const auto* prop = type.find_property(propName);
 			if (prop)
 			{
-				prop->mutate(this, nullptr,
+				prop->mutate(this,
 					[&propReader](AnyMut<> value)
 				{
 					const auto* fromArchive = sge::get_vtable<IFromArchive>(value.type());

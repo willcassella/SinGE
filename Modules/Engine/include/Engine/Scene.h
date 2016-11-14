@@ -59,7 +59,7 @@ namespace sge
 		void process_single(EntityId entity, const TypeInfo* const types[], std::size_t numTypes, FunctionView<ProcessFn> processFn) const;
 
 		template <typename ProcessFnT>
-		void process_entities_mut(ProcessFnT& processFn)
+		void process_entities_mut(ProcessFnT&& processFn)
 		{
 			using FnTraits = stde::function_traits<ProcessFnT>;
 			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
@@ -70,7 +70,7 @@ namespace sge
 		}
 
 		template <typename ProcessFnT>
-		void process_entities(ProcessFnT& processFn) const
+		void process_entities(ProcessFnT&& processFn) const
 		{
 			using FnTraits = stde::function_traits<ProcessFnT>;
 			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
@@ -81,7 +81,7 @@ namespace sge
 		}
 
 		template <typename ProcessFnT>
-		void process_single_mut(EntityId entity, ProcessFnT& processFn)
+		void process_single_mut(EntityId entity, ProcessFnT&& processFn)
 		{
 			using FnTraits = stde::function_traits<ProcessFnT>;
 			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
@@ -92,7 +92,7 @@ namespace sge
 		}
 
 		template <typename ProcessFnT>
-		void process_single(EntityId entity, ProcessFnT& processFn)
+		void process_single(EntityId entity, ProcessFnT&& processFn)
 		{
 			using FnTraits = stde::function_traits<ProcessFnT>;
 			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;

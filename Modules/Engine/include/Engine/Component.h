@@ -242,9 +242,9 @@ namespace sge
 			for (const auto& instance : instances)
 			{
 				writer.add_object_member(sge::to_string(instance.first).c_str(),
-					[&value = instance.second](ArchiveWriter& instanceWriter)
+					[&instance](ArchiveWriter& instanceWriter)
 				{
-					sge::to_archive(value, instanceWriter);
+					sge::to_archive(instance.second, instanceWriter);
 				});
 			}
 		}
