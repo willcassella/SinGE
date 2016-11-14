@@ -18,8 +18,9 @@ add_subdirectory(Modules/Core)
 add_subdirectory(Modules/Resource)
 add_subdirectory(Modules/Engine)
 
-# Add Systems required for GLClient
+# Add Systems
 add_subdirectory(Systems/GLRender)
+add_subdirectory(Systems/EditorServerSystem)
 
 # Add GLClient project
 add_subdirectory(Runtimes/GLClient)
