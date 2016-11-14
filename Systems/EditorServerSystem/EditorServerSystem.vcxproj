@@ -98,7 +98,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
-      <PreprocessorDefinitions>SGE_EDITORSERVERSYSTEM_BUILD;ASIO_STANDALONE;ASIO_SEPARATE_COMPILATION;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SGE_EDITORSERVERSYSTEM_BUILD;ASIO_STANDALONE;ASIO_SEPARATE_COMPILATION;ASIO_HAS_STD_CHRONO;ASIO_HAS_STD_SYSTEM_ERROR;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
@@ -113,7 +113,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
-      <PreprocessorDefinitions>SGE_EDITORSERVERSYSTEM_BUILD;ASIO_STANDALONE;ASIO_SEPARATE_COMPILATION;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SGE_EDITORSERVERSYSTEM_BUILD;ASIO_STANDALONE;ASIO_SEPARATE_COMPILATION;ASIO_HAS_STD_CHRONO;ASIO_HAS_STD_SYSTEM_ERROR;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
@@ -130,7 +130,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
-      <PreprocessorDefinitions>SGE_EDITORSERVERSYSTEM_BUILD;ASIO_STANDALONE;ASIO_SEPARATE_COMPILATION;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SGE_EDITORSERVERSYSTEM_BUILD;ASIO_STANDALONE;ASIO_SEPARATE_COMPILATION;ASIO_HAS_STD_CHRONO;ASIO_HAS_STD_SYSTEM_ERROR;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -151,7 +151,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
-      <PreprocessorDefinitions>SGE_EDITORSERVERSYSTEM_BUILD;ASIO_STANDALONE;ASIO_SEPARATE_COMPILATION;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>SGE_EDITORSERVERSYSTEM_BUILD;ASIO_STANDALONE;ASIO_SEPARATE_COMPILATION;ASIO_HAS_STD_CHRONO;ASIO_HAS_STD_SYSTEM_ERROR;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
