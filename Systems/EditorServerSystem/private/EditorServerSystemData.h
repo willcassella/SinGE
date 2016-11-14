@@ -3,8 +3,6 @@
 
 #include <queue>
 #include <iostream>
-// Not sure why I have to define this, but otherwise I can't use asio::steady_timer
-#define ASIO_HAS_STD_CHRONO
 #include <asio.hpp>
 #include <Resource/Archives/JsonArchive.h>
 #include "../include/EditorServerSystem/EditorServerSystem.h"
