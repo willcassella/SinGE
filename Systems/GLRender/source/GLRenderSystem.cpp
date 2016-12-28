@@ -120,9 +120,9 @@ namespace sge
 		}
 
 		constexpr float QUAD_VERTEX_DATA[] = {
-			-1.f, 1.f, 1.f, 0.f,	// Top-left point
+			-1.f, 1.f, 0.f, 1.f,	// Top-left point
 			-1.f, -1.f, 0.f, 0.f,	// Bottom-left point
-			1.f, -1.f, 0.f, 1.f,	// Bottom-right point
+			1.f, -1.f, 1.f, 0.f,	// Bottom-right point
 			1.f, 1.f, 1.f, 1.f, 	// Top-right point
 		};
 
@@ -210,7 +210,7 @@ namespace sge
 
 			hasCamera = true;
 			view = transform.get_world_matrix().inverse();
-			proj = camera.get_projection_matrix((float)this->_state->height / this->_state->width);
+			proj = camera.get_projection_matrix((float)this->_state->width / this->_state->height);
 		});
 
 		// If no camera was found, return
