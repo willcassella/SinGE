@@ -34,6 +34,11 @@ namespace sge
 		 * \brief This type may not be constructed by scripts.
 		 */
 		TF_SCRIPT_NOCONSTRUCT = (1 << 2) | TF_NATIVE,
+
+		/**
+		 * \brief This type represents a container.
+		 */
+		TF_CONTAINER = (1 << 3),
 	};
 
 	struct TypeInfo
@@ -126,7 +131,7 @@ namespace sge
 		}
 
 		/**
-		 * \breif Returns a hash code for this type.
+		 * \brief Returns a hash code for this type.
 		 */
 		std::size_t hash_code() const
 		{
@@ -234,6 +239,17 @@ namespace sge
 		 * \param self The instance to drop.
 		 */
 		virtual void drop(void* self) const = 0;
+
+		/**
+		 * \brief Returns whether equality comparison is supported by this type.
+		 */
+		virtual bool has_equality_compare() const = 0;
+
+		/**
+		 * \brief Perofms an equality comparison between two instances of this type.
+		 * \return The result of the comparison.
+		 */
+		virtual bool equality_compare(const void* lhs, const void* rhs) const = 0;
 
 		/**
 		* \brief Returns the number of constructors for this type. This will match the number of calls to 'enumerator'

@@ -45,12 +45,13 @@ namespace sge
 			base_type_data.alignment = alignof(T&);
 			base_type_data.native_type_info = &typeid(T);
 
-			this->template set_init<T>();
-			this->template set_copy_init<T>();
-			this->template set_move_init<T>();
-			this->template set_copy_assign<T>();
-			this->template set_move_assign<T>();
-			this->template set_drop<T>();
+			this->set_init<T>(0);
+			this->set_copy_init<T>(0);
+			this->set_move_init<T>(0);
+			this->set_copy_assign<T>(0);
+			this->set_move_assign<T>(0);
+			this->set_drop<T>(0);
+			this->set_equality_compare<T>(0);
 		}
 
 		///////////////////
@@ -403,7 +404,7 @@ namespace sge
 		}
 
 		template <typename F>
-		auto set_init() -> std::enable_if_t<std::is_default_constructible<F>::value>
+		auto set_init(int) -> std::enable_if_t<std::is_default_constructible<F>::value>
 		{
 			type_data.init = [](void* addr) -> void {
 				new(addr) F();
@@ -411,12 +412,12 @@ namespace sge
 		}
 
 		template <typename F>
-		auto set_init() -> std::enable_if_t<!std::is_default_constructible<F>::value>
+		void set_init(char)
 		{
 		}
 
 		template <typename F>
-		auto set_copy_init() -> std::enable_if_t<std::is_copy_constructible<F>::value>
+		auto set_copy_init(int) -> std::enable_if_t<std::is_copy_constructible<F>::value>
 		{
 			type_data.copy_init = [](void* addr, const void* copy) -> void {
 				new(addr) F(*static_cast<const F*>(copy));
@@ -424,12 +425,12 @@ namespace sge
 		}
 
 		template <typename F>
-		auto set_copy_init() -> std::enable_if_t<!std::is_copy_constructible<F>::value>
+		void set_copy_init(char)
 		{
 		}
 
 		template <typename F>
-		auto set_move_init() -> std::enable_if_t<std::is_move_constructible<F>::value>
+		auto set_move_init(int) -> std::enable_if_t<std::is_move_constructible<F>::value>
 		{
 			type_data.move_init = [](void* addr, void* move) -> void {
 				new(addr) T(std::move(*static_cast<T*>(move)));
@@ -437,12 +438,12 @@ namespace sge
 		}
 
 		template <typename F>
-		auto set_move_init() -> std::enable_if_t<!std::is_move_constructible<F>::value>
+		void set_move_init(char)
 		{
 		}
 
 		template <typename F>
-		auto set_copy_assign() -> std::enable_if_t<std::is_copy_assignable<F>::value>
+		auto set_copy_assign(int) -> std::enable_if_t<std::is_copy_assignable<F>::value>
 		{
 			type_data.copy_assign = [](void* self, const void* copy) -> void {
 				*static_cast<T*>(self) = *static_cast<const T*>(copy);
@@ -450,12 +451,12 @@ namespace sge
 		}
 
 		template <typename F>
-		auto set_copy_assign() -> std::enable_if_t<!std::is_copy_assignable<F>::value>
+		void set_copy_assign(char)
 		{
 		}
 
 		template <typename F>
-		auto set_move_assign() -> std::enable_if_t<std::is_move_assignable<F>::value>
+		auto set_move_assign(int) -> std::enable_if_t<std::is_move_assignable<F>::value>
 		{
 			type_data.move_assign = [](void* self, void* move) -> void {
 				*static_cast<T*>(self) = std::move(*static_cast<T*>(move));
@@ -463,12 +464,12 @@ namespace sge
 		}
 
 		template <typename F>
-		auto set_move_assign() -> std::enable_if_t<!std::is_move_assignable<F>::value>
+		void set_move_assign(char)
 		{
 		}
 
 		template <typename F>
-		auto set_drop() -> std::enable_if_t<std::is_destructible<F>::value>
+		auto set_drop(int) -> std::enable_if_t<std::is_destructible<F>::value>
 		{
 			type_data.drop = [](void* self) -> void {
 				static_cast<T*>(self)->~T();
@@ -476,7 +477,20 @@ namespace sge
 		}
 
 		template <typename F>
-		auto set_drop() -> std::enable_if_t<!std::is_destructible<F>::value>
+		void set_drop(char)
+		{
+		}
+
+		template <typename F>
+		auto set_equality_compare(int) -> std::enable_if_t<std::is_same<decltype(std::declval<const F&>() == std::declval<const F&>()), bool>::value>
+		{
+			type_data.equality_compare = [](const void* lhs, const void* rhs) -> bool {
+				return *static_cast<const F*>(lhs) == *static_cast<const F*>(rhs);
+			};
+		}
+
+		template <typename F>
+		void set_equality_compare(char)
 		{
 		}
 
@@ -543,4 +557,3 @@ namespace sge
 	template <__VA_ARGS__>												\
 	const ::sge::NativeTypeInfo GetType<TYPE<__VA_ARGS__>>::type_info =	\
 		NativeTypeInfoBuilder<TYPE<__VA_ARGS__>>(#TYPE); }}
-

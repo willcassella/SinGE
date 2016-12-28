@@ -12,14 +12,24 @@ namespace sge
 	enum PropertyFlags
 	{
 		/**
-		 * \breif This property has no special flags.
+		 * \brief This property has no special flags.
 		 */
 		PF_NONE = 0,
 
 		/**
-		 * \breif This property is intended exclusively for use by the editor, and should not be exposed to scripting.
+		 * \brief This property is intended exclusively for use by the editor, and should not be exposed to scripting.
 		 */
-		PF_EDITOR_ONLY = (1<<0)
+		PF_EDITOR_ONLY = (1 << 0),
+
+		/**
+		 * \brief This property is not intended to be exposed to the editor.
+		 */
+		PF_EDITOR_HIDDEN = (1 << 1),
+
+		/**
+		 * \brief By default, the value of this property is not visible in the editor unless expanded.
+		 */
+		PF_EDITOR_DEFAULT_COLLAPSED = (1 << 2)
 	};
 
 	struct PropertyInfo
@@ -42,6 +52,8 @@ namespace sge
 			///   Fields   ///
 		public:
 
+			std::string category;
+			std::string description;
 			const TypeInfo* type;
 			PropertyFlags flags;
 		};
@@ -76,7 +88,23 @@ namespace sge
 		}
 
 		/**
-		 * \breif Whether this property may be read from, but not written to ('set' or 'mutate').
+		 * \brief Returns the categorry for this property.
+		 */
+		const std::string& category() const
+		{
+			return _data.category;
+		}
+
+		/**
+		 * \brief Returns the description for this property.
+		 */
+		const std::string& description() const
+		{
+			return _data.description;
+		}
+
+		/**
+		 * \brief Whether this property may be read from, but not written to ('set' or 'mutate').
 		 */
 		virtual bool is_read_only() const = 0;
 

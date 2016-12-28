@@ -22,6 +22,7 @@ namespace sge
 		using CopyAssignFn = void(void* self, const void* copy);
 		using MoveAssignFn = void(void* self, void* move);
 		using DropFn = void(void* self);
+		using EqualityCompareFn = bool(const void* lhs, const void* rhs);
 
 		struct Data
 		{
@@ -35,7 +36,8 @@ namespace sge
 				move_init(nullptr),
 				copy_assign(nullptr),
 				move_assign(nullptr),
-				drop(nullptr)
+				drop(nullptr),
+				equality_compare(nullptr)
 			{
 			}
 
@@ -49,6 +51,7 @@ namespace sge
 			CopyAssignFn* copy_assign;
 			MoveAssignFn* move_assign;
 			DropFn* drop;
+			EqualityCompareFn* equality_compare;
 			std::unordered_map<const InterfaceInfo*, const void*> interfaces;
 			std::unordered_map<std::size_t, NativeConstructorInfo> constructors;
 			std::unordered_map<std::string, NativeConstructorInfo> named_constructors;
@@ -133,6 +136,16 @@ namespace sge
 		void drop(void* self) const override
 		{
 			_data.drop(self);
+		}
+
+		bool has_equality_compare() const override
+		{
+			return _data.equality_compare != nullptr;
+		}
+
+		bool equality_compare(const void* lhs, const void* rhs) const override
+		{
+			return _data.equality_compare(lhs, rhs);
 		}
 
 		std::size_t num_constructors() const override
