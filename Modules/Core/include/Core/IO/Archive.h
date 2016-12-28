@@ -20,15 +20,13 @@ namespace sge
 
 		/**
 		 * \brief Writes to the root node of this archive.
-		 * \param func The function to call with a writer for the root node of this archive.
 		 */
-		virtual void set_root(FunctionView<void(ArchiveWriter& rootWriter)> func) = 0;
+		virtual ArchiveWriter* write_root() = 0;
 
 		/**
 		 * \brief Reads from the root node of this archive.
-		 * \param func The function to call with a reader for the root node of this archive.
 		 */
-		virtual void get_root(FunctionView<void(const ArchiveReader& rootReader)> func) const = 0;
+		virtual ArchiveReader* read_root() const = 0;
 
 		/**
 		 * \brief Trys to load this archive from a file.
@@ -51,9 +49,9 @@ namespace sge
 		template <typename T>
 		void serialize_root(const T& rootValue)
 		{
-			set_root([&](ArchiveWriter& rootWriter) {
-				to_archive(rootValue, rootWriter);
-			});
+			auto* writer = this->write_root();
+			sge::to_archive(rootValue, *writer);
+			writer->pop();
 		};
 
 		/**
@@ -63,9 +61,9 @@ namespace sge
 		template <typename T>
 		void deserialize_root(T& rootValue) const
 		{
-			get_root([&](const ArchiveReader& rootReader) {
-				from_archive(rootValue, rootReader);
-			});
+			auto* reader = this->read_root();
+			sge::from_archive(rootValue, *reader);
+			reader->pop();
 		}
 	};
 }

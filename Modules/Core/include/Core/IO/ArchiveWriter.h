@@ -19,79 +19,84 @@ namespace sge
 	public:
 
 		/**
+		 * \brief Pops the active node from this writer, and returns to the parent.
+		 */
+		virtual void pop() = 0;
+
+		/**
 		 * \brief Sets this archive node as null.
 		 */
 		virtual void null() = 0;
 
 		/**
-		 * \brief Sets this archive node as a value of type boolean.
+		 * \brief Sets this archive node as a boolean value.
 		 * \param value The value to set.
 		 */
 		virtual void boolean(bool value) = 0;
 
 		/**
-		 * \brief Sets this archive node as a value of type int8.
+		 * \brief Sets this archive node as a numeric value of type int8.
 		 * \param value The value to set.
 		 */
-		virtual void value(int8 value) = 0;
+		virtual void number(int8 value) = 0;
 
 		/**
-		 * \brief Sets this archive node as a value of type uint8.
+		 * \brief Sets this archive node as a numeric value of type uint8.
 		 * \param value The value to set.
 		 */
-		virtual void value(uint8 value) = 0;
+		virtual void number(uint8 value) = 0;
 
 		/**
-		 * \brief Sets this archive node as a value of type int16.
+		 * \brief Sets this archive node as a numeric value of type int16.
 		 * \param value The value to set.
 		 */
-		virtual void value(int16 value) = 0;
+		virtual void number(int16 value) = 0;
 
 		/**
-		 * \brief Sets this archive node as a value of type uint16.
+		 * \brief Sets this archive node as a numeric value of type uint16.
 		 * \param value The value to set.
 		 */
-		virtual void value(uint16 value) = 0;
+		virtual void number(uint16 value) = 0;
 
 		/**
-		 * \brief Sets this archive node as a value of type int32.
+		 * \brief Sets this archive node as a numeric value of type int32.
 		 * \param value The value to set.
 		 */
-		virtual void value(int32 value) = 0;
+		virtual void number(int32 value) = 0;
 
 		/**
-		 * \brief Sets this archive node as a value of type uint32.
+		 * \brief Sets this archive node as a numeric value of type uint32.
 		 * \param value The value to set.
 		 */
-		virtual void value(uint32 value) = 0;
+		virtual void number(uint32 value) = 0;
 
 		/**
-		 * \brief Sets this archive node as a value of type int64.
+		 * \brief Sets this archive node as a numeric value of type int64.
 		 * \param value The value to set.
 		 */
-		virtual void value(int64 value) = 0;
+		virtual void number(int64 value) = 0;
 
 		/**
-		 * \brief Sets this archive node as a value of type uint64.
+		 * \brief Sets this archive node as a numeric value of type uint64.
 		 * \param value The value to set.
 		 */
-		virtual void value(uint64 value) = 0;
+		virtual void number(uint64 value) = 0;
 
 		/**
-		 * \brief Sets this archive node as a value of type float.
+		 * \brief Sets this archive node as a numeric value of type float.
 		 * \param value The value to set.
 		 */
-		virtual void value(float value) = 0;
+		virtual void number(float value) = 0;
 
 		/**
-		 * \brief Sets this archive node as a value of type double.
+		 * \brief Sets this archive node as a numeric value of type double.
 		 * \param value The value to set.
 		 */
-		virtual void value(double value) = 0;
+		virtual void number(double value) = 0;
 
 		/**
-		 * \brief Sets this archive node as a value of type string.
-		 * \param str The string value.
+		 * \brief Sets this archive node as a string value.
+		 * \param str Address of the the first character of the string.
 		 * \param len The length of the string.
 		 */
 		virtual void string(const char* str, std::size_t len) = 0;
@@ -173,32 +178,22 @@ namespace sge
 		 */
 		virtual void typed_array(const double* array, std::size_t size) = 0;
 
-		/**
-		 * \brief Sets this archive node as an array of untyped elements, and calls the given function
-		 * on the writer for the node appended to the array.
-		 * \param func The function to call with the writer for the node at the end of the array.
-		 */
-		virtual void add_array_element(FunctionView<void(ArchiveWriter&)> func) = 0;
+		virtual void push_array_element() = 0;
 
-		/**
-		* \brief Sets this archive node as an array, and serializes the given value as the last element of this array.
-		* \param value The value to serialize as the last array element.
-		*/
 		template <typename T>
-		void push_array_element(const T& value)
+		void array_element(const T& value)
 		{
-			this->add_array_element([&](ArchiveWriter& elementWriter) {
-				to_archive(value, elementWriter);
-			});
+			this->push_array_element();
+			sge::to_archive(value, *this);
+			this->pop();
 		}
 
 		/**
 		 * \brief Sets this archive node as an object, and calls the given function
 		 * on the writer for the node set as a member of the object.
 		 * \param name The name of the member.
-		 * \param func The function to call with the writer for the node.
 		 */
-		virtual void add_object_member(const char* name, FunctionView<void(ArchiveWriter&)> func) = 0;
+		virtual void push_object_member(const char* name) = 0;
 
 		/**
 		 * \brief Sets this archive node as an object, and serializes the given value as a member of this object under the given name.
@@ -206,11 +201,11 @@ namespace sge
 		 * \param value The value to serialize as the member.
 		 */
 		template <typename T>
-		void push_object_member(const char* name, const T& value)
+		void object_member(const char* name, const T& value)
 		{
-			this->add_object_member(name, [&](ArchiveWriter& childWriter) {
-				to_archive(value, childWriter);
-			});
+			this->push_object_member(name);
+			sge::to_archive(value, *this);
+			this->pop();
 		}
 	};
 }
