@@ -18,11 +18,14 @@
     <Filter Include="private">
       <UniqueIdentifier>{aa12fe1e-ff77-4474-b47e-4127ec161a05}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Resources">
+      <UniqueIdentifier>{0554814a-8f03-4574-95e6-81a58ddf8491}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Resources">
+      <UniqueIdentifier>{f4378baf-b502-4522-a304-1a8a0dcce690}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Resource\Image.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\Resource\config.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -32,19 +35,31 @@
     <ClInclude Include="private\JsonArchiveWriter.h">
       <Filter>private</Filter>
     </ClInclude>
-    <ClInclude Include="include\Resource\Archives\BinaryArchive.h">
-      <Filter>include\Archives</Filter>
-    </ClInclude>
     <ClInclude Include="private\JsonArchiveReader.h">
       <Filter>private</Filter>
     </ClInclude>
+    <ClInclude Include="include\Resource\Resources\Image.h">
+      <Filter>include\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Resource\ResourceManager.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Resource\ResourceId.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Resource\ResourceCallbackQueue.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="source\Image.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="source\Archives\JsonArchive.cpp">
       <Filter>source\Archives</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Resources\Image.cpp">
+      <Filter>source\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="source\ResourceManager.cpp">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -192,16 +192,19 @@ xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Soluti
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Resource\Archives\BinaryArchive.h" />
     <ClInclude Include="include\Resource\Archives\JsonArchive.h" />
     <ClInclude Include="include\Resource\config.h" />
-    <ClInclude Include="include\Resource\Image.h" />
+    <ClInclude Include="include\Resource\ResourceCallbackQueue.h" />
+    <ClInclude Include="include\Resource\ResourceId.h" />
+    <ClInclude Include="include\Resource\ResourceManager.h" />
+    <ClInclude Include="include\Resource\Resources\Image.h" />
     <ClInclude Include="private\JsonArchiveReader.h" />
     <ClInclude Include="private\JsonArchiveWriter.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Archives\JsonArchive.cpp" />
-    <ClCompile Include="source\Image.cpp" />
+    <ClCompile Include="source\ResourceManager.cpp" />
+    <ClCompile Include="source\Resources\Image.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
