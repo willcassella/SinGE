@@ -26,12 +26,18 @@
     <ClInclude Include="private\EditorPacket.h">
       <Filter>private</Filter>
     </ClInclude>
+    <ClInclude Include="private\EditorOps.h">
+      <Filter>private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\EditorServerSystem.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\asio.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EditorOps.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

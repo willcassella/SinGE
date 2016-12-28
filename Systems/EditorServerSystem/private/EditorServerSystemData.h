@@ -7,6 +7,7 @@
 #include <Resource/Archives/JsonArchive.h>
 #include "../include/EditorServerSystem/EditorServerSystem.h"
 #include "EditorPacket.h"
+#include "EditorOps.h"
 
 namespace sge
 {
@@ -46,11 +47,11 @@ namespace sge
 			_out_change_queue.push(EditorPacket::encode_packet(content.c_str(), content.size()));
 
 			// Send it
-			async_send_change();
+			async_send_message();
 		}
 
-		/* Sends a change to the client. */
-		void async_send_change()
+		/* Sends a message to the client. */
+		void async_send_message()
 		{
 			asio::async_write(socket, asio::buffer(_out_change_queue.front(), _out_change_queue.front()->size()),
 				[self = shared_from_this()](const std::error_code& error, std::size_t /*bytes*/)
@@ -64,7 +65,7 @@ namespace sge
 					// If we have more to send, go again
 					if (!self->_out_change_queue.empty())
 					{
-						self->async_send_change();
+						self->async_send_message();
 					}
 				}
 				else
@@ -74,8 +75,8 @@ namespace sge
 			});
 		}
 
-		/* Handles a change received from the client, reads the number of bytes to receive. */
-		void async_receive_change_header()
+		/* Handles a message from the client, reads the number of bytes to receive. */
+		void async_receive_client_message_header()
 		{
 			asio::async_read(socket, asio::buffer(&_in_content_length, sizeof(EditorPacket::ContentLength_t)),
 				[self = shared_from_this()](const std::error_code& error, std::size_t /*len*/)
@@ -86,7 +87,7 @@ namespace sge
 					self->_in_content.assign(self->_in_content_length, 0);
 
 					// Read content
-					self->async_receive_change();
+					self->async_receive_message();
 				}
 				else
 				{
@@ -96,7 +97,7 @@ namespace sge
 		}
 
 		/* Handles a change received from the client, reads the JSON body of the packet. */
-		void async_receive_change()
+		void async_receive_message()
 		{
 			asio::async_read(socket, asio::buffer(&_in_content[0], _in_content.size()),
 				[self = shared_from_this()](const std::error_code& error, std::size_t /*len*/)
@@ -106,42 +107,56 @@ namespace sge
 					// Deserialze the string
 					JsonArchive archive;
 					archive.from_string(self->_in_content.c_str());
+					auto* in_reader = archive.read_root();
 
-					// Read the change
-					auto* scene = self->_scene; // MSVC BUG WORKAROUND?
-					archive.get_root([scene](const ArchiveReader& reader)
+					if (in_reader->pull_object_member("set_component"))
 					{
-						// Handle component modifications
-						reader.object_member("component_mod", [scene](const ArchiveReader& modReader)
-						{
-							// Enumerate types of components changed
-							modReader.enumerate_object_members([scene](const char* typeName, const ArchiveReader& typeReader)
-							{
-								auto* type = scene->get_component_type(typeName);
-								if (!type)
-								{
-									return;
-								}
+						editor_ops::set_component_query(*self->_scene, *in_reader);
+						in_reader->pop();
+					}
 
-								// Enumerate the EntityIds of components changed
-								typeReader.enumerate_object_members([=](const char* entityId, const ArchiveReader& instanceReader)
-								{
-									// Get the component Id
-									ComponentId id{ std::strtoull(entityId, nullptr, 10), *type };
+					// Create an output archive
+					JsonArchive out;
+					auto* out_writer = out.write_root();
 
-									// Process the component and deserialize it
-									scene->process_single_mut(id.entity(), &type, 1,
-										[&instanceReader](ProcessingFrame&, EntityId, auto comp)
-									{
-										comp[0]->from_archive(instanceReader);
-									});
-								});
-							});
-						});
-					});
+					// Handle a query for all component types
+					if (in_reader->pull_object_member("get_component_types"))
+					{
+						out_writer->push_object_member("get_component_types");
+						editor_ops::get_component_types_query(*self->_scene, *out_writer);
+						out_writer->pop();
+						in_reader->pop();
+					}
+
+					// Handle a property info query
+					if (in_reader->pull_object_member("get_type_info"))
+					{
+						out_writer->push_object_member("get_type_info");
+						editor_ops::get_type_info_query(*self->_scene, *in_reader, *out_writer);
+						out_writer->pop();
+						in_reader->pop();
+					}
+
+					// Handle an object property query
+					if (in_reader->pull_object_member("get_component"))
+					{
+						out_writer->push_object_member("get_component");
+						editor_ops::get_component_query(*self->_scene, *in_reader, *out_writer);
+						in_reader->pop();
+						out_writer->pop();
+					}
+
+					// Close reader and writer
+					in_reader->pop();
+					out_writer->pop();
+
+					// Write result
+					std::string result = out.to_string();
+					self->_out_change_queue.push(EditorPacket::encode_packet(result.c_str(), result.size()));
+					self->async_send_message();
 
 					// Prepare for new changes
-					self->async_receive_change_header();
+					self->async_receive_client_message_header();
 				}
 				else
 				{
@@ -200,8 +215,7 @@ namespace sge
 		{
 			// Create a session for the connection
 			auto session = std::make_shared<EditorServerSession>(io, *_scene);
-			_acceptor.async_accept(session->socket,
-				[this, session](const std::error_code& /*error*/)
+			_acceptor.async_accept(session->socket, [this, session](const std::error_code& /*error*/)
 			{
 				// Prepare for a new connection
 				this->async_connection();
@@ -209,8 +223,7 @@ namespace sge
 				std::cout << "Session opened with " << session->socket.remote_endpoint() << std::endl;
 
 				// Start the session
-				session->async_send_scene();
-				session->async_receive_change();
+				session->async_receive_client_message_header();
 			});
 		}
 

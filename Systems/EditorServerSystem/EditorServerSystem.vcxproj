@@ -167,11 +167,13 @@
   <ItemGroup>
     <ClInclude Include="include\EditorServerSystem\config.h" />
     <ClInclude Include="include\EditorServerSystem\EditorServerSystem.h" />
+    <ClInclude Include="private\EditorOps.h" />
     <ClInclude Include="private\EditorPacket.h" />
     <ClInclude Include="private\EditorServerSystemData.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\asio.cpp" />
+    <ClCompile Include="source\EditorOps.cpp" />
     <ClCompile Include="source\EditorServerSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
