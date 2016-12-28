@@ -15,18 +15,18 @@ namespace sge
 
 		void to_archive(ArchiveWriter& writer) const
 		{
-			writer.push_object_member("local_position", local_position);
-			writer.push_object_member("local_scale", local_scale);
-			writer.push_object_member("local_rotation", local_rotation);
-			writer.push_object_member("parent", parent);
+			writer.object_member("local_position", local_position);
+			writer.object_member("local_scale", local_scale);
+			writer.object_member("local_rotation", local_rotation);
+			writer.object_member("parent", parent);
 		}
 
-		void from_archive(const ArchiveReader& reader)
+		void from_archive(ArchiveReader& reader)
 		{
-			reader.pull_object_member("local_position", local_position);
-			reader.pull_object_member("local_scale", local_scale);
-			reader.pull_object_member("local_rotation", local_rotation);
-			reader.pull_object_member("parent", parent);
+			reader.object_member("local_position", local_position);
+			reader.object_member("local_scale", local_scale);
+			reader.object_member("local_rotation", local_rotation);
+			reader.object_member("parent", parent);
 		}
 
 		//////////////////

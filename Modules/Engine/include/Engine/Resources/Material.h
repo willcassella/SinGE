@@ -19,7 +19,7 @@ namespace sge
 
 			void to_archive(ArchiveWriter& writer) const;
 
-			void from_archive(const ArchiveReader& reader);
+			void from_archive(ArchiveReader& reader);
 
 			//////////////////
 			///   Fields   ///
@@ -38,7 +38,7 @@ namespace sge
 
 		void to_archive(ArchiveWriter& writer) const;
 
-		void from_archive(const ArchiveReader& reader);
+		void from_archive(ArchiveReader& reader);
 
 		const std::string& vertex_shader() const
 		{

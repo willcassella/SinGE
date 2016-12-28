@@ -162,9 +162,9 @@ namespace sge
 			return{ _entity, get_type() };
 		}
 
-		virtual const TypeInfo& get_type() const = 0;
+		void from_property_archive(ArchiveReader& reader);
 
-		virtual void from_archive(const ArchiveReader& reader);
+		virtual const TypeInfo& get_type() const = 0;
 
 	protected:
 
@@ -217,7 +217,7 @@ namespace sge
 
 		virtual void to_archive(ArchiveWriter& writer) const = 0;
 
-		virtual void from_archive(const ArchiveReader& reader) = 0;
+		virtual void from_archive(ArchiveReader& reader) = 0;
 
 		virtual void create_component(EntityId entity) = 0;
 
@@ -241,17 +241,13 @@ namespace sge
 		{
 			for (const auto& instance : instances)
 			{
-				writer.add_object_member(sge::to_string(instance.first).c_str(),
-					[&instance](ArchiveWriter& instanceWriter)
-				{
-					sge::to_archive(instance.second, instanceWriter);
-				});
+				writer.object_member(sge::to_string(instance.first).c_str(), instance.second);
 			}
 		}
 
-		void from_archive(const ArchiveReader& reader) override
+		void from_archive(ArchiveReader& reader) override
 		{
-			reader.enumerate_object_members([this](const char* entityIdStr, const auto& instanceReader)
+			reader.enumerate_object_members([this, &reader](const char* entityIdStr)
 			{
 				EntityId entity = std::strtoull(entityIdStr, nullptr, 10);
 
@@ -264,7 +260,7 @@ namespace sge
 					entities.insert(entity);
 				}
 
-				sge::from_archive(iter->second, instanceReader);
+				sge::from_archive(iter->second, reader);
 			});
 		}
 

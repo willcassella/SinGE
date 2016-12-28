@@ -24,14 +24,14 @@ namespace sge
 
 		void to_archive(ArchiveWriter& writer) const
 		{
-			writer.push_object_member("mesh", mesh);
-			writer.push_object_member("material", material);
+			writer.object_member("mesh", mesh);
+			writer.object_member("material", material);
 		}
 
-		void from_archive(const ArchiveReader& reader)
+		void from_archive(ArchiveReader& reader)
 		{
-			reader.pull_object_member("mesh", mesh);
-			reader.pull_object_member("material", material);
+			reader.object_member("mesh", mesh);
+			reader.object_member("material", material);
 		}
 
 		//////////////////

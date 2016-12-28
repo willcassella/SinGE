@@ -10,23 +10,21 @@ SGE_REFLECT_TYPE(sge::ComponentId);
 
 namespace sge
 {
-	void ComponentInterface::from_archive(const ArchiveReader& reader)
+	void ComponentInterface::from_property_archive(ArchiveReader& reader)
 	{
 		const auto& type = this->get_type();
 
-		reader.enumerate_object_members(
-			[this, &type](const char* propName, const ArchiveReader& propReader)
+		reader.enumerate_object_members([this, &type, &reader](const char* propName)
 		{
 			const auto* prop = type.find_property(propName);
 			if (prop)
 			{
-				prop->mutate(this,
-					[&propReader](AnyMut<> value)
+				prop->mutate(this, [&reader](AnyMut<> value)
 				{
 					const auto* fromArchive = sge::get_vtable<IFromArchive>(value.type());
 					if (fromArchive)
 					{
-						fromArchive->from_archive(value.object(), propReader);
+						fromArchive->from_archive(value.object(), reader);
 					}
 				});
 			}

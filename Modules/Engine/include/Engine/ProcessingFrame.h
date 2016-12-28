@@ -1,7 +1,6 @@
 // ProcessingFrame.h
 #pragma once
 
-#include <atomic>
 #include <Core/Reflection/Reflection.h>
 #include "Component.h"
 

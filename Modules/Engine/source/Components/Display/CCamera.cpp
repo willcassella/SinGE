@@ -30,14 +30,14 @@ namespace sge
 
 		void to_archive(ArchiveWriter& writer) const
 		{
-			writer.push_object_member("z_min", z_min);
-			writer.push_object_member("z_max", z_max);
+			writer.object_member("z_min", z_min);
+			writer.object_member("z_max", z_max);
 		}
 
-		void from_archive(const ArchiveReader& reader)
+		void from_archive(ArchiveReader& reader)
 		{
-			reader.pull_object_member("z_min", z_min);
-			reader.pull_object_member("z_max", z_max);
+			reader.object_member("z_min", z_min);
+			reader.object_member("z_max", z_max);
 		}
 
 		//////////////////

@@ -8,18 +8,21 @@
 
 namespace sge
 {
+	struct TypeDB;
+
 	struct SGE_ENGINE_API Scene
 	{
 		SGE_REFLECTED_TYPE;
 
 		using ProcessMutFn = void(ProcessingFrameMut& pframe, EntityId entity, ComponentInterface* const components[]);
 		using ProcessFn = void(ProcessingFrame& pframe, EntityId entity, const ComponentInterface* const components[]);
+		using ComponentTypeEnumeratorFn = void(const TypeInfo& type);
 
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		Scene();
+		Scene(TypeDB& typedb);
 		Scene(const Scene& copy) = delete;
 		Scene& operator=(const Scene& copy) = delete;
 		Scene(Scene&& move) = default;
@@ -32,11 +35,15 @@ namespace sge
 
 		void to_archive(ArchiveWriter& writer) const;
 
-		void from_archive(const ArchiveReader& reader);
+		void from_archive(ArchiveReader& reader);
 
 		void register_component_type(const TypeInfo& type, std::unique_ptr<ComponentContainer> container);
 
+		TypeDB& get_type_db() const;
+
 		const TypeInfo* get_component_type(const char* typeName) const;
+
+		void enumerate_component_types(FunctionView<ComponentTypeEnumeratorFn> enumerator) const;
 
 		EntityId new_entity();
 
@@ -228,8 +235,6 @@ namespace sge
 
 		/* Component Data */
 		std::unordered_map<const TypeInfo*, std::unique_ptr<ComponentContainer>> _components;
-
-		/* Map of component types registered with this scene. */
-		std::unordered_map<std::string, const TypeInfo*> _component_types;
+		TypeDB* _type_db;
 	};
 }
