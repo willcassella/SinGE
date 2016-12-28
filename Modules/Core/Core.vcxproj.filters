@@ -146,6 +146,9 @@
     <ClInclude Include="include\Core\IO\Archive.h">
       <Filter>include\IO</Filter>
     </ClInclude>
+    <ClInclude Include="include\Core\Reflection\TypeDB.h">
+      <Filter>include\Reflection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Math\Vec2.cpp">
@@ -180,6 +183,9 @@
     </ClCompile>
     <ClCompile Include="source\Interfaces\IFromArchive.cpp">
       <Filter>source\Interfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Reflection\TypeDB.cpp">
+      <Filter>source\Reflection</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -190,6 +190,7 @@
     <ClInclude Include="include\Core\Reflection\PropertyInfo.h" />
     <ClInclude Include="include\Core\Reflection\Reflection.h" />
     <ClInclude Include="include\Core\Reflection\ReflectionBuilder.h" />
+    <ClInclude Include="include\Core\Reflection\TypeDB.h" />
     <ClInclude Include="include\Core\Reflection\TypeInfo.h" />
     <ClInclude Include="include\Core\STDE\TMP.h" />
     <ClInclude Include="include\Core\STDE\TypeTraits.h" />
@@ -211,6 +212,7 @@
     <ClCompile Include="source\Math\Vec4.cpp" />
     <ClCompile Include="source\Memory\Functions.cpp" />
     <ClCompile Include="source\Reflection\Reflection.cpp" />
+    <ClCompile Include="source\Reflection\TypeDB.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
