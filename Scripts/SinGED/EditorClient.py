@@ -3,13 +3,14 @@ import bpy
 import json
 import socket
 import struct
+import time
 
 # Connect to the editor server
 sock = socket.socket()
 sock.connect(("localhost", 1995))
 
 # Load scene data
-def sge_editor_receive():
+def sge_editor_receive_message():
     # Get the length of the incoming string
     (in_len,) = struct.unpack("I", sock.recv(4))
 
@@ -20,9 +21,9 @@ def sge_editor_receive():
     return json.loads(in_str.decode("utf-8"))
 
 
-def sge_editor_send(eventDict):
+def sge_editor_send_message(messageDict):
     # Convert the json to a byte string
-    out_str = json.dumps(eventDict).encode()
+    out_str = json.dumps(messageDict).encode()
 
     # Construct a packet
     out_packet = struct.pack("I", len(out_str)) + out_str
@@ -32,12 +33,23 @@ def sge_editor_send(eventDict):
 
 def transform_to_dict(dict, entity):
     dict["local_position"] = [
-        entity.location[1],
+        -entity.location[0],
         entity.location[2],
-        entity.location[0]
+        entity.location[1]
+    ]
+    dict["local_rotation"] = [
+        -entity.rotation_quaternion[1],
+        entity.rotation_quaternion[3],
+        entity.rotation_quaternion[2],
+        entity.rotation_quaternion[0]
     ]
 
+lastUpdate = 0
 def send_transform_event(scene):
+    # Make sure we don't send too frequently
+    #if time.time() - lastUpdate < 0.034:
+        #return
+
     # Create a dictionary for all selected objects
     transformComponents = {}
     sceneDict = {
@@ -56,9 +68,10 @@ def send_transform_event(scene):
         transform_to_dict(transformDict, obj)
 
     sge_editor_send(sceneDict)
+    lastUpdate = time.time()
 
 # Get scene data
-engine_scene = sge_editor_receive()
+engine_scene = sge_editor_receive_message()
 
 # Instantiate all entities
 entities = {}
@@ -75,22 +88,22 @@ for id,transform in engine_scene["components"]["sge::CTransform3D"].items():
 
     # Assign the local position (swizzle comopnents)
     local_position = transform["local_position"]
-    entity.location[1] = local_position[0]
+    entity.location[0] = -local_position[0]
     entity.location[2] = local_position[1]
-    entity.location[0] = local_position[2]
+    entity.location[1] = local_position[2]
 
     # Assign local scale (swizzle components)
     local_scale = transform["local_scale"]
-    entity.scale[1] = local_scale[0]
+    entity.scale[0] = -local_scale[0]
     entity.scale[2] = local_scale[1]
-    entity.scale[0] = local_scale[2]
+    entity.scale[1] = local_scale[2]
 
     # Assign local rotation (swizzle components)
     local_rotation = transform["local_rotation"]
-    entity.rotation_quaternion[2] = local_rotation[0]
-    entity.rotation_quaternion[3] = local_rotation[1]
-    entity.rotation_quaternion[1] = local_rotation[2]
-    entity.rotation_quaternion[0] = -local_rotation[3]
+    entity.rotation_quaternion[1] = local_rotation[0]
+    entity.rotation_quaternion[2] = -local_rotation[1]
+    entity.rotation_quaternion[3] = local_rotation[2]
+    entity.rotation_quaternion[0] = local_rotation[3]
 
 # Instantiate all cameras
 for id,camera in engine_scene["components"]["sge::CPerspectiveCamera"].items():
@@ -117,4 +130,24 @@ for id,mesh in engine_scene["components"]["sge::CStaticMesh"].items():
     owner.parent = entity
 
 # Register the update handler
-bpy.app.handlers.scene_update_post.append(send_transform_event)
+#bpy.app.handlers.scene_update_post.append(send_transform_event)
+
+# Send an reflection query
+sge_editor_send_message({
+    "get_property_info": ["sge::CTransform3D"]
+})
+result = sge_editor_receive_message()
+
+# Get data about the third transform
+sge_editor_send_message({
+    "get_properties": {
+        "sge::CTransform3D": {
+            "3": {
+                "local_position": None,
+                "local_rotation": None
+            }
+        }
+    }
+})
+result = sge_editor_receive_message()
+print(result)
