@@ -2,10 +2,13 @@
 
 #include <iostream>
 #include <GLFW/glfw3.h>
+#include <Core/Reflection/TypeDB.h>
 #include <Resource/Archives/JsonArchive.h>
 #include <Engine/Scene.h>
 #include <GLRender/GLRenderSystem.h>
 #include <EditorServerSystem/EditorServerSystem.h>
+#include "Core/Math/Vec3.h"
+#include "Core/Math/Quat.h"
 
 constexpr sge::uint32 window_width = 1920;
 constexpr sge::uint32 window_height = 1080;
@@ -31,8 +34,14 @@ int main()
 	// Make the window's OpenGL context current
 	glfwMakeContextCurrent(window);
 
+	// Create a type database
+	sge::TypeDB type_db;
+	type_db.new_type<sge::Vec3>();
+	type_db.new_type<sge::Quat>();
+	type_db.new_type<float>();
+
 	// Create a scene
-	sge::Scene scene;
+	sge::Scene scene{ type_db };
 	sge::register_builtin_components(scene);
 
 	// Load the scene

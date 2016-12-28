@@ -70,26 +70,26 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
-    <OutDir>bin\</OutDir>
-    <IntDir>build\</IntDir>
+    <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
-    <OutDir>bin\</OutDir>
-    <IntDir>build\</IntDir>
+    <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
-    <OutDir>bin\</OutDir>
-    <IntDir>build\</IntDir>
+    <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
-    <OutDir>bin\</OutDir>
-    <IntDir>build\</IntDir>
+    <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

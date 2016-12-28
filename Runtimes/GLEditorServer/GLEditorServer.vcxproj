@@ -97,7 +97,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4251;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
@@ -114,7 +115,8 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4251;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
@@ -133,7 +135,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4251;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -154,7 +157,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4251;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
