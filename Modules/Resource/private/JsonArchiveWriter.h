@@ -1,6 +1,7 @@
 // JsonArchiveWriter.h
 #pragma once
 
+#include <stack>
 #include <rapidjson/document.h>
 #include <Core/IO/ArchiveWriter.h>
 
@@ -15,8 +16,8 @@ namespace sge
 	public:
 
 		JsonArchiveWriter(rapidjson::Value& node, rapidjson::MemoryPoolAllocator<>& allocator)
-			: _node(node),
-			_allocator(allocator)
+			: _head(&node),
+			_allocator(&allocator)
 		{
 		}
 
@@ -24,69 +25,82 @@ namespace sge
 		///   Methods   ///
 	public:
 
+		void pop() override
+		{
+			// If we've reached the end of this stack
+			if (_parents.empty())
+			{
+				delete this;
+				return;
+			}
+
+			_head = _parents.top();
+			_parents.pop();
+		}
+
 		void null() override
 		{
-			_node.SetNull();
+			_head->SetNull();
 		}
 
 		void boolean(bool value) override
 		{
-			_node.SetBool(value);
+			_head->SetBool(value);
 		}
 
-		void value(int8 value) override
+		void number(int8 value) override
 		{
-			_node.SetInt(value);
+			_head->SetInt(value);
 		}
 
-		void value(uint8 value) override
+		void number(uint8 value) override
 		{
-			_node.SetUint(value);
+			_head->SetUint(value);
 		}
 
-		void value(int16 value) override
+		void number(int16 value) override
 		{
-			_node.SetInt(value);
+			_head->SetInt(value);
 		}
 
-		void value(uint16 value) override
+		void number(uint16 value) override
 		{
-			_node.SetUint(value);
+			_head->SetUint(value);
 		}
 
-		void value(int32 value) override
+		void number(int32 value) override
 		{
-			_node.SetInt(value);
+			_head->SetInt(value);
 		}
 
-		void value(uint32 value) override
+		void number(uint32 value) override
 		{
-			_node.SetUint(value);
+			_head->SetUint(value);
 		}
 
-		void value(int64 value) override
+		void number(int64 value) override
 		{
-			_node.SetInt64(value);
+			_head->SetInt64(value);
 		}
 
-		void value(uint64 value) override
+		void number(uint64 value) override
 		{
-			_node.SetUint64(value);
+			_head->SetUint64(value);
 		}
 
-		void value(float value) override
+		void number(float value) override
 		{
-			_node.SetFloat(value);
+			_head->SetFloat(value);
 		}
 
-		void value(double value) override
+		void number(double value) override
 		{
-			_node.SetDouble(value);
+			_head->SetDouble(value);
 		}
 
 		void string(const char* str, std::size_t len) override
 		{
-			_node.SetString(str, static_cast<rapidjson::SizeType>(len), _allocator);
+			_head->SetString(str, static_cast<rapidjson::SizeType>(len), *_allocator);
 		}
 
 		void typed_array(const bool* array, std::size_t size) override
@@ -144,43 +158,43 @@ namespace sge
 			impl_typed_array(array, size);
 		}
 
-		void add_array_element(FunctionView<void(ArchiveWriter& elementWriter)> func) override
-		{
-			// Set this node as an array, if it isn't already
-			if (!_node.IsArray())
-			{
-				_node.SetArray();
-			}
-
-			// Create a new node for the array element
-			rapidjson::Value elementNode;
-
-			// Operate on the element
-			JsonArchiveWriter elementWriter{ elementNode, _allocator };
-			func(elementWriter);
-
-			// Add the element node as an element of this node
-			_node.GetArray().PushBack(elementNode, _allocator);
-		}
-
-		void add_object_member(const char* name, FunctionView<void(ArchiveWriter& memberWriter)> func) override
+		void push_object_member(const char* name) override
 		{
 			// Set this node as an object, if it isn't already
-			if (!_node.IsObject())
+			if (!_head->IsObject())
 			{
-				_node.SetObject();
+				_head->SetObject();
 			}
 
-			// Create a new node for the object member
-			rapidjson::Value memberNode;
-
-			// Operate on the member
-			JsonArchiveWriter memberWriter{ memberNode, _allocator };
-			func(memberWriter);
+			// Push the head as a parent
+			_parents.push(_head);
 
 			// Add the member node to this node
-			rapidjson::Value memberName{ name, _allocator };
-			_node.AddMember(memberName, memberNode, _allocator);
+			rapidjson::Value memberName{ name, *_allocator };
+			rapidjson::Value memberNode;
+			_head->AddMember(memberName, memberNode, *_allocator);
+
+			// Get the member node out of the object
+			_head = &_head->GetObject()[name];
+		}
+
+		void push_array_element() override
+		{
+			// Set this node as an array, if it isn't already
+			if (!_head->IsArray())
+			{
+				_head->SetArray();
+			}
+
+			// Push the head onto the stack
+			_parents.push(_head);
+
+			// Add the element node to this node
+			rapidjson::Value element;
+			_head->PushBack(element, *_allocator);
+
+			// Get the element node
+			_head = &_head->GetArray()[_head->Size() - 1];
 		}
 
 	private:
@@ -188,12 +202,12 @@ namespace sge
 		template <typename T>
 		void impl_typed_array(const T* array, std::size_t size)
 		{
-			_node.SetArray();
-			_node.GetArray().Reserve(static_cast<rapidjson::SizeType>(size), _allocator);
+			_head->SetArray();
+			_head->GetArray().Reserve(static_cast<rapidjson::SizeType>(size), *_allocator);
 
 			for (std::size_t i = 0; i < size; ++i)
 			{
-				_node.GetArray().PushBack(array[i], _allocator);
+				_head->GetArray().PushBack(array[i], *_allocator);
 			}
 		}
 
@@ -201,7 +215,8 @@ namespace sge
 		///   Fields   ///
 	private:
 
-		rapidjson::Value& _node;
-		rapidjson::MemoryPoolAllocator<>& _allocator;
+		rapidjson::Value* _head;
+		std::stack<rapidjson::Value*> _parents;
+		rapidjson::MemoryPoolAllocator<>* _allocator;
 	};
 }

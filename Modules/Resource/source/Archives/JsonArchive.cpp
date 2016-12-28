@@ -24,16 +24,14 @@ namespace sge
 	{
 	}
 
-	void JsonArchive::get_root(FunctionView<void(const ArchiveReader& rootReader)> func) const
+	ArchiveReader* JsonArchive::read_root() const
 	{
-		JsonArchiveReader rootReader{ _data->doc };
-		func(rootReader);
+		return new JsonArchiveReader{ _data->doc };
 	}
 
-	void JsonArchive::set_root(FunctionView<void(ArchiveWriter& rootWriter)> func)
+	ArchiveWriter* JsonArchive::write_root()
 	{
-		JsonArchiveWriter rootWriter{ _data->doc, _data->doc.GetAllocator() };
-		func(rootWriter);
+		return new JsonArchiveWriter{ _data->doc, _data->doc.GetAllocator() };
 	}
 
 	bool JsonArchive::to_file(const char* path) const

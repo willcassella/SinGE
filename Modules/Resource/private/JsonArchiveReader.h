@@ -1,10 +1,11 @@
 // JsonArchiveReader.h
 #pragma once
 
+#include <stack>
+#include <algorithm>
 #include <rapidjson/document.h>
 #include <Core/IO/ArchiveReader.h>
 #include "Core/Memory/Functions.h"
-#include <vector>
 
 namespace sge
 {
@@ -15,7 +16,7 @@ namespace sge
 	public:
 
 		JsonArchiveReader(const rapidjson::Value& node)
-			: _node(node)
+			: _head(&node)
 		{
 		}
 
@@ -23,14 +24,27 @@ namespace sge
 		///   Methods   ///
 	public:
 
+		void pop() override
+		{
+			// If we've reached the end of this stack
+			if (_parents.empty())
+			{
+				delete this;
+				return;
+			}
+
+			_head = _parents.top();
+			_parents.pop();
+		}
+
 		bool null() const override
 		{
-			return _node.IsNull();
+			return _head->IsNull();
 		}
 
 		bool is_boolean() const override
 		{
-			return _node.IsBool();
+			return _head->IsBool();
 		}
 
 		bool boolean(bool& out) const override
@@ -38,86 +52,103 @@ namespace sge
 			return impl_value<bool, &rapidjson::Value::IsBool, &rapidjson::Value::GetBool>(out);
 		}
 
-		bool is_value() const override
+		bool is_number() const override
 		{
-			return _node.IsNumber();
+			return _head->IsNumber();
 		}
 
-		bool value(int8& out) const override
-		{
-			return impl_value<int, &rapidjson::Value::IsInt, &rapidjson::Value::GetInt>(out);
-		}
-
-		bool value(uint8& out) const override
-		{
-			return impl_value<unsigned int, &rapidjson::Value::IsUint, &rapidjson::Value::GetUint>(out);
-		}
-
-		bool value(int16& out) const override
+		bool number(int8& out) const override
 		{
 			return impl_value<int, &rapidjson::Value::IsInt, &rapidjson::Value::GetInt>(out);
 		}
 
-		bool value(uint16& out) const override
+		bool number(uint8& out) const override
 		{
 			return impl_value<unsigned int, &rapidjson::Value::IsUint, &rapidjson::Value::GetUint>(out);
 		}
 
-		bool value(int32& out) const override
+		bool number(int16& out) const override
 		{
 			return impl_value<int, &rapidjson::Value::IsInt, &rapidjson::Value::GetInt>(out);
 		}
 
-		bool value(uint32& out) const override
+		bool number(uint16& out) const override
 		{
 			return impl_value<unsigned int, &rapidjson::Value::IsUint, &rapidjson::Value::GetUint>(out);
 		}
 
-		bool value(int64& out) const override
+		bool number(int32& out) const override
+		{
+			return impl_value<int, &rapidjson::Value::IsInt, &rapidjson::Value::GetInt>(out);
+		}
+
+		bool number(uint32& out) const override
+		{
+			return impl_value<unsigned int, &rapidjson::Value::IsUint, &rapidjson::Value::GetUint>(out);
+		}
+
+		bool number(int64& out) const override
 		{
 			return impl_value<int64_t, &rapidjson::Value::IsInt64, &rapidjson::Value::GetInt64>(out);
 		}
 
-		bool value(uint64& out) const override
+		bool number(uint64& out) const override
 		{
 			return impl_value<uint64_t, &rapidjson::Value::IsUint64, &rapidjson::Value::GetUint64>(out);
 		}
 
-		bool value(float& out) const override
+		bool number(float& out) const override
 		{
 			return impl_value<float, &rapidjson::Value::IsFloat, &rapidjson::Value::GetFloat>(out);
 		}
 
-		bool value(double& out) const override
+		bool number(double& out) const override
 		{
 			return impl_value<double, &rapidjson::Value::IsDouble, &rapidjson::Value::GetDouble>(out);
 		}
 
 		bool is_string() const override
 		{
-			return _node.IsString();
+			return _head->IsString();
 		}
 
-		bool string(const char*& outStr, std::size_t& outLen) const override
+		bool string_size(std::size_t& out) const override
 		{
-			if (!_node.IsString())
+			if (!_head->IsString())
 			{
 				return false;
 			}
 
-			outStr = _node.GetString();
-			outLen = _node.GetStringLength();
+			out = _head->GetStringLength();
 			return true;
+		}
+
+		std::size_t string(char* out, std::size_t len) const override
+		{
+			if (!_head->IsString())
+			{
+				return false;
+			}
+
+			// Copy the string
+			const std::size_t copy_length = std::min(len, (std::size_t)_head->GetStringLength());
+			std::memcpy(out, _head->GetString(), copy_length);
+			return copy_length;
+		}
+
+		bool is_array() const override
+		{
+			return _head->IsArray();
 		}
 
 		bool array_size(std::size_t& out) const override
 		{
-			if (!_node.IsArray())
+			if (!_head->IsArray())
 			{
 				return false;
 			}
 
-			out = _node.GetArray().Size();
+			out = _head->GetArray().Size();
 			return true;
 		}
 
@@ -176,87 +207,56 @@ namespace sge
 			return impl_typed_array<double, &rapidjson::Value::IsDouble, &rapidjson::Value::GetDouble>(out, size);
 		}
 
-		void enumerate_array_elements(FunctionView<void(std::size_t i, const ArchiveReader& elementReader)> enumerator) const override
+		bool is_object() const override
 		{
-			if (!_node.IsArray())
+			return _head->IsObject();
+		}
+
+		bool object_size(std::size_t& out) const override
+		{
+			if (!_head->IsObject())
+			{
+				return false;
+			}
+
+			out = _head->MemberCount();
+			return true;
+		}
+
+		void enumerate_object_members(FunctionView<void(const char* name)> enumerator) override
+		{
+			if (!_head->IsObject())
 			{
 				return;
 			}
 
-			const auto& array = _node.GetArray();
-			for (rapidjson::SizeType i = 0; i < array.Size(); ++i)
-			{
-				// Create a reader for the element
-				JsonArchiveReader elementReader{ array[i] };
+			// Push the head onto the stack
+			_parents.push(_head);
 
-				// Call the enumerator
-				enumerator(i, elementReader);
+			// For each member of the object
+			for (const auto& member : _head->GetObject())
+			{
+				_head = &member.value;
+
+				// Call the enumerator with the name of the member
+				enumerator(member.name.GetString());
 			}
+
+			// Pop the head off the stack
+			_head = _parents.top();
+			_parents.pop();
 		}
 
-		bool array_element(std::size_t i, FunctionView<void(const ArchiveReader& elementReader)> func) const override
-		{
-			// We can't get the element if this node doesn't hold an array
-			if (!_node.IsArray())
-			{
-				return false;
-			}
-
-			// Get the node as an array
-			const auto& array = _node.GetArray();
-			auto index = static_cast<rapidjson::SizeType>(i);
-
-			// We can't get the element if its out of bounds
-			if (array.Size() <= index)
-			{
-				return false;
-			}
-
-			// Create a reader for the element
-			JsonArchiveReader elementReader{ array[index] };
-			func(elementReader);
-
-			return true;
-		}
-
-		bool object_num_members(std::size_t& out) const override
-		{
-			if (!_node.IsObject())
-			{
-				return false;
-			}
-
-			out = _node.MemberCount();
-			return true;
-		}
-
-		void enumerate_object_members(FunctionView<void(const char* name, const ArchiveReader& memberReader)> enumerator) const override
-		{
-			if (!_node.IsObject())
-			{
-				return;
-			}
-
-			for (const auto& member : _node.GetObject())
-			{
-				// Create a reader for the member
-				JsonArchiveReader memberReader{ member.value };
-
-				// Call the enumerator
-				enumerator(member.name.GetString(), memberReader);
-			}
-		}
-
-		bool object_member(const char* name, FunctionView<void(const ArchiveReader& memberReader)> func) const override
+		bool pull_object_member(const char* name) override
 		{
 			// We can't get the member if this node doesn't hold an object
-			if (!_node.IsObject())
+			if (!_head->IsObject())
 			{
 				return false;
 			}
 
 			// Get the node as an object
-			const auto& object = _node.GetObject();
+			const auto& object = _head->GetObject();
 
 			// Try to get the member
 			auto iter = object.FindMember(name);
@@ -265,9 +265,58 @@ namespace sge
 				return false;
 			}
 
-			// Create a reader for the member
-			JsonArchiveReader memberReader{ iter->value };
-			func(memberReader);
+			// Push the member as the head
+			_parents.push(_head);
+			_head = &iter->value;
+
+			return true;
+		}
+
+		void enumerate_array_elements(FunctionView<void(std::size_t i)> enumerator) override
+		{
+			if (!_head->IsArray())
+			{
+				return;
+			}
+
+			// Push the head onto the stack
+			_parents.push(_head);
+
+			// For each element of the array
+			std::size_t i = 0;
+			for (const auto& element : _head->GetArray())
+			{
+				_head = &element;
+
+				// Call the enumerator with the index
+				enumerator(i);
+				i += 1;
+			}
+
+			// Pop the head off the stack
+			_head = _parents.top();
+			_parents.pop();
+		}
+
+		bool pull_array_element(std::size_t i) override
+		{
+			if (!_head->IsArray())
+			{
+				return false;
+			}
+
+			// Get the node as an array
+			const auto& array = _head->GetArray();
+
+			// Make sure the array contains the element
+			if (array.Size() <= i)
+			{
+				return false;
+			}
+
+			// Push the head onto the stack
+			_parents.push(_head);
+			_head = &array[static_cast<rapidjson::SizeType>(i)];
 
 			return true;
 		}
@@ -277,24 +326,24 @@ namespace sge
 		template <typename RetT, bool(rapidjson::Value::*CheckerFn)() const, RetT(rapidjson::Value::*GetterFn)() const, typename T>
 		bool impl_value(T& out) const
 		{
-			if (!(_node.*CheckerFn)())
+			if (!(_head->*CheckerFn)())
 			{
 				return false;
 			}
 
-			out = static_cast<T>((_node.*GetterFn)());
+			out = static_cast<T>((_head->*GetterFn)());
 			return true;
 		}
 
 		template <typename RetT, bool(rapidjson::Value::*CheckerFn)() const, RetT(rapidjson::Value::*GetterFn)() const, typename T>
 		std::size_t impl_typed_array(T* out, std::size_t size) const
 		{
-			if (!_node.IsArray())
+			if (!_head->IsArray())
 			{
 				return 0;
 			}
 
-			const auto& array = _node.GetArray();
+			auto array = _head->GetArray();
 			rapidjson::SizeType i = 0;
 			for (; i < size && i < array.Size(); ++i)
 			{
@@ -313,6 +362,7 @@ namespace sge
 		///   Fields   ///
 	private:
 
-		const rapidjson::Value& _node;
+		const rapidjson::Value* _head;
+		std::stack<const rapidjson::Value*> _parents;
 	};
 }

@@ -22,9 +22,9 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		void set_root(FunctionView<void(ArchiveWriter& rootWriter)> func) override;
+		ArchiveWriter* write_root() override;
 
-		void get_root(FunctionView<void(const ArchiveReader& rootReader)> func) const override;
+		ArchiveReader* read_root() const override;
 
 		bool to_file(const char* path) const override;
 
