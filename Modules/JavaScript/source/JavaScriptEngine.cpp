@@ -9,10 +9,7 @@
 #include "../private/JavaScriptEngineState.h"
 #include "../private/JsForeignObject.h"
 #include "../private/JsForeignType.h"
-#include "../private/JsForeignProperty.h"
-#include "../private/JsForeignConstructor.h"
 #include "../private/JsTypeInfo.h"
-#include "../private/Util.h"
 
 SGE_REFLECT_TYPE(sge::JavaScriptEngine)
 .flags(TF_SCRIPT_NOCONSTRUCT);
