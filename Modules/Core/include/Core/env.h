@@ -58,7 +58,7 @@
 namespace sge
 {
 	// bool is still bool
-	// char is still char (ONLY used for characters, prefer 'Char')
+	// char is still char
 	using int8 = std::int8_t;
 	using uint8 = std::uint8_t;
 	using int16 = std::int16_t;
@@ -92,3 +92,9 @@ namespace sge
 
 /** Macro useful for macros that expect to be given an API specification, but can't be given one. */
 #define SGE_NO_API
+
+/*
+ * Macro useful for maintaining alignment with buffer headers.
+ * NOTE: I use 'alignas(alignof(...))' instead of the 'alignas(type-id)' expression, because that doesn't appear to work on MSVC (as usual).
+ */
+#define SGE_ALIGNED_BUFFER_HEADER alignas(alignof(std::max_align_t))
