@@ -2,6 +2,7 @@
 #pragma once
 
 #include "../Reflection/Reflection.h"
+#include "../Reflection/ReflectionBuilder.h"
 
 namespace sge
 {
@@ -103,26 +104,6 @@ namespace sge
 	{
 		return{ value * TAngle<T>::Degrees_To_Radians };
 	}
-
-	namespace specialized
-	{
-		template <typename T>
-		struct GetType< TAngle<T> >
-		{
-			static const NativeTypeInfo type_info;
-
-			static const NativeTypeInfo& get_type()
-			{
-				return type_info;
-			}
-
-			static const NativeTypeInfo& get_type(const TAngle<T>& /*value*/)
-			{
-				return type_info;
-			}
-		};
-
-		template <typename T>
-		const NativeTypeInfo GetType<TAngle<T>>::type_info = NativeTypeInfoBuilder<TAngle<T>>("TAngle");
-	}
 }
+
+SGE_REFLECT_TYPE_TEMPLATE(sge::TAngle, typename T);

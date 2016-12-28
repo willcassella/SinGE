@@ -101,7 +101,7 @@ namespace sge
 		}
 
 		/* Deserializes the state of this Vec4 from an archive. */
-		void from_archive(const ArchiveReader& reader)
+		void from_archive(ArchiveReader& reader)
 		{
 			reader.typed_array(_values, 4);
 		}
