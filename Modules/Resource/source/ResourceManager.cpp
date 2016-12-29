@@ -100,6 +100,7 @@ namespace sge
 
 		// Add it to the resource map
 		_resources.insert(std::make_pair(std::move(uri), resource));
+		return NewResourceResult::SUCCESS; // TODO: Make this actually work
 	}
 
 	auto ResourceManager::async_new_resource(
