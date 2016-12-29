@@ -2,7 +2,9 @@ bin/
 build/
 packages/
 .vscode/
+engine_content/
 
 *.suo
 *.VC.db
 *.VC.opendb
+
