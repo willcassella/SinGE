@@ -24,7 +24,7 @@ if "bpy" in locals():
     importlib.reload(ui)
 else:
     import bpy
-    from bpy.props import PointerProperty
+    from bpy.props import PointerProperty, IntProperty
     from . import core, operators, ui
 
 # Register classes in the module
@@ -34,7 +34,9 @@ def register():
     bpy.utils.register_class(core.SinGEDProps)
     bpy.utils.register_class(operators.SinGEDConnect)
     bpy.utils.register_class(ui.SinGEDConnectPanel)
+    bpy.utils.register_class(core.SGEVec3)
     bpy.types.Scene.singed = PointerProperty(type=core.SinGEDProps)
+    bpy.types.Object.entity_id = IntProperty(default=0)
 
 # Unregister classes
 def unregister():
@@ -43,7 +45,9 @@ def unregister():
     # Close the active session
     core.close_active_session()
 
+    del bpy.types.Object.entity_id
     del bpy.types.Scene.singed
+    bpy.utils.unregister_class(core.SGEVec3)
     bpy.utils.unregister_class(ui.SinGEDConnectPanel)
     bpy.utils.unregister_class(operators.SinGEDConnect)
     bpy.utils.unregister_class(core.SinGEDProps)

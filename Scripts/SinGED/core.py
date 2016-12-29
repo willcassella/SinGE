@@ -3,7 +3,7 @@
 import bpy
 from bpy.types import PropertyGroup, Menu, Panel
 from bpy.props import BoolProperty, IntProperty, FloatProperty, StringProperty, PointerProperty
-from . import EditorSession, TypeDB
+from . import EditorSession, TypeDB, SceneManager
 
 class SGETypes(PropertyGroup):
     """Nothing here"""
@@ -15,7 +15,7 @@ class SinGEDProps(PropertyGroup):
 
 class SGETypeBase(PropertyGroup):
     @classmethod
-    def unregister(cls):
+    def sge_unregister(cls):
         bpy.utils.unregister_class(cls)
 
     @classmethod
@@ -35,7 +35,7 @@ class SGETypeBase(PropertyGroup):
 
 class SGEPrimitiveBase(object):
     @staticmethod
-    def unregister():
+    def sge_unregister():
         return
 
     @staticmethod
@@ -63,13 +63,35 @@ class SGEString(SGEPrimitiveBase):
     def create_property(name):
         return StringProperty(name=name)
 
+class SGEVec3(PropertyGroup):
+    x = FloatProperty(name='x')
+    y = FloatProperty(name='y')
+    z = FloatProperty(name='z')
+
+    @staticmethod
+    def sge_unregister():
+        # Do nothing
+        return
+
+    @staticmethod
+    def create_property(name):
+        return PointerProperty(name=name, type=SGEVec3)
+
+    @staticmethod
+    def draw(layout, parent_obj, parent_attr_name):
+        self = getattr(parent_obj, parent_attr_name)
+        layout = layout.column()
+        layout.prop(self, 'x')
+        layout.prop(self, 'y')
+        layout.prop(self, 'z')
+
 class SinGEDComponentPanelBase(Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = 'object'
 
     @classmethod
-    def unregister(cls):
+    def sge_unregister(cls):
         bpy.utils.unregister_class(cls)
 
     def draw(self, context):
@@ -128,9 +150,23 @@ def create_blender_component(typedb, type_name, type_object):
     # Add it to the typedb
     typedb.insert_type(panel_type_name, panel_type_object)
 
+def create_blender_entity(scene, entity_id, name, components):
+    obj = bpy.data.objects.new(name, None)
+    obj.entity_id = entity_id
+    bpy.context.scene.objects.link(obj)
+    scene.add_get_component_query(entity_id, 'sge::CTransform3D')
+    return obj
+
+def transform_blender_entity(scene, entity_id, value):
+    obj = scene.user_entity_data[entity_id]
+    obj.location[0] = -value['local_position']['x']
+    obj.location[2] = value['local_position']['y']
+    obj.location[1] = value['local_position']['z']
+
 # Global variables
 active_session = None
 typedb = None
+scene = None
 
 def close_active_session():
     global active_session, typedb
@@ -143,12 +179,12 @@ def close_active_session():
 
     # Unregister types in the TypeDB
     for type_name,sge_type in typedb.types.items():
-        sge_type.unregister()
+        sge_type.sge_unregister()
 
     typedb = None
 
 def open_active_session(host, port):
-    global active_session, typedb
+    global active_session, typedb, scene
     if active_session is not None:
         close_active_session()
 
@@ -171,10 +207,15 @@ def open_active_session(host, port):
     typedb.insert_type('float', SGEFloat)
     typedb.insert_type('double', SGEFloat)
     typedb.insert_type('std::string', SGEString)
+    typedb.insert_type('sge::Vec3', SGEVec3)
 
     # Add the typedb to the session object
-    active_session.add_handler('get_type_info', typedb)
-    active_session.add_handler('get_component_types', typedb)
+    typedb.register_handlers(active_session)
+
+    # Create a scene manager object
+    scene = SceneManager.SceneManager(create_blender_entity)
+    scene.add_get_component_callback('sge::CTransform3D', transform_blender_entity)
+    scene.register_handlers(active_session)
 
     # Cycle the session a few times
     for i in range(3):

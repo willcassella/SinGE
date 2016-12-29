@@ -8,7 +8,8 @@ class EditorSession(object):
         # Connect to the editor server
         self.sock = socket.socket()
         self.sock.connect((host, port))
-        self.handlers = {}
+        self.query_handlers = {}
+        self.response_handlers = {}
 
     def close(self):
         self.sock.close()
@@ -33,35 +34,37 @@ class EditorSession(object):
         # Send it
         self.sock.send(out_packet)
 
-    def send_handler_message(self):
+    def add_query_handler(self, query, handler):
+        self.query_handlers[query] = handler
+
+    def add_response_handler(self, query, handler):
+        self.response_handlers[query] = handler
+
+    def create_query(self):
         # Create a message for each handler
         message = {}
-        for query,handler in self.handlers.items():
-            handler_message = handler.create_message(query)
+        for query,handler in self.query_handlers.items():
+            handler_message = handler()
 
             # If the handler has a message to send
             if handler_message is not None:
                 message[query] = handler_message
 
-        # If there's nothing to be sent
-        if len(message) == 0:
-            return
+        return message
 
-        # Send out the message
-        self.send_message(message)
-
-    def run_handlers(self):
-        message = self.receive_message()
-
-        # For each query result in the received message
-        for query,response in message.items():
-            if query in self.handlers:
-                # Run the query handler
-                self.handlers[query].handle_response(query, response)
+    def handle_response(self, response):
+        # For each query response in the response
+        for query, query_response in response.items():
+            if query in self.response_handlers:
+                # Run the response handler
+                self.response_handlers[query](query_response)
 
     def cycle(self):
-        self.send_handler_message()
-        self.run_handlers()
+        # Create and send the query
+        query = self.create_query()
+        if len(query) != 0:
+            self.send_message(query)
 
-    def add_handler(self, query, handler):
-        self.handlers[query] = handler
+        # Handle the response
+        response = self.receive_message()
+        self.handle_response(response)

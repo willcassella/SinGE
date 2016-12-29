@@ -2,7 +2,6 @@
 from functools import partial
 
 class TypeDB(object):
-
     def __init__(self, type_constructor, component_type_constructor):
         self.type_constructor = type_constructor
         self.component_type_constructor = component_type_constructor
@@ -11,20 +10,52 @@ class TypeDB(object):
         self.pending = set()
         self.component_types = set()
 
-    def insert_type(self, type_name, type_object):
-        self.types[type_name] = type_object
+    def register_handlers(self, session):
+        session.add_query_handler('get_component_types', self.get_component_types_query)
+        session.add_response_handler('get_component_types', self.get_component_types_response)
+        session.add_query_handler('get_type_info', self.get_type_info_query)
+        session.add_response_handler('get_type_info', self.get_type_info_response)
 
-    def create_message(self, query):
-        if query == 'get_component_types' and len(self.component_types) == 0:
+    def get_component_types_query(self):
+        if len(self.component_types) == 0:
             return True # Actual value doesn't matter
 
-        elif query == 'get_type_info':
-            if len(self.pending) == 0:
-                return None
+    def get_component_types_response(self, response):
+        if response is None:
+            return
 
-            message = list(self.pending)
-            self.pending = set()
-            return message
+        for type_name in response:
+            self.component_types.add(type_name)
+            self.construct_type(type_name)
+
+    def get_type_info_query(self):
+        if len(self.pending) == 0:
+            return None
+
+        message = list(self.pending)
+        self.pending = set()
+        return message
+
+    def get_type_info_response(self, response):
+        if response is None:
+            return None
+
+        # Iterate through respones types
+        for type_name,type_info in response.items():
+            dependent_types = set()
+            self.waiting[type_name] = (type_info, dependent_types)
+
+            # If the type has any dependent properties
+            if type_info["properties"] is not None:
+                for propName,propInfo in type_info["properties"].items():
+                    dependent_types.add(propInfo["type"])
+
+        # Try to construct waiting types
+        for type_name in list(self.waiting.keys()):
+            self.construct_type(type_name)
+
+    def insert_type(self, type_name, type_object):
+        self.types[type_name] = type_object
 
     def construct_type(self, type_name):
         # If the type has already been constructed
@@ -58,27 +89,6 @@ class TypeDB(object):
             return True
         else:
             return False
-
-    def handle_response(self, query, response):
-        if query == 'get_component_types' and response is not None:
-            for type_name in response:
-                self.component_types.add(type_name)
-                self.construct_type(type_name)
-
-        elif query == 'get_type_info' and response is not None:
-            # Iterate through respones types
-            for type_name,type_info in response.items():
-                dependent_types = set()
-                self.waiting[type_name] = (type_info, dependent_types)
-
-                # If the type has any dependent properties
-                if type_info["properties"] is not None:
-                    for propName,propInfo in type_info["properties"].items():
-                        dependent_types.add(propInfo["type"])
-
-            # Try to construct waiting types
-            for type_name in list(self.waiting.keys()):
-                self.construct_type(type_name)
 
     def get_type(self, type_name):
         if type_name in self.types:
