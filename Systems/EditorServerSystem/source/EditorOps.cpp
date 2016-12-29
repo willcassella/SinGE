@@ -21,7 +21,7 @@ namespace sge
 			type.enumerate_properties([&writer](const char* propName, const PropertyInfo& propInfo)
 			{
 				// Don't send property info for hidden properties, or read-only, or containers
-				if (propInfo.is_read_only() || propInfo.flags() & PF_EDITOR_HIDDEN || propInfo.type().flags() & TF_CONTAINER)
+				if (propInfo.is_read_only() || propInfo.type().flags() & TF_CONTAINER)
 				{
 					return;
 				}
@@ -47,40 +47,44 @@ namespace sge
 			writer.pop();
 		}
 
-		static void read_properties(Any<> object, ArchiveReader& reader, ArchiveWriter& writer)
+		static void read_properties(Any<> object, ArchiveWriter& writer)
 		{
-			reader.enumerate_object_members([&reader, &writer, object](const char* propName)
+			object.type().enumerate_properties([object, &writer](const char* propName, const PropertyInfo& propInfo)
 			{
-				// Search for the property
-				const auto* propInfo = object.type().find_property(propName);
-				if (!propInfo)
+				if (propInfo.flags() & (PF_EDITOR_HIDDEN | PF_EDITOR_DEFAULT_COLLAPSED))
+				{
+					return;
+				}
+				if (propInfo.is_read_only())
+				{
+					return;
+				}
+				if (propInfo.type().flags() & TF_CONTAINER)
 				{
 					return;
 				}
 
-				// Access the value of the property
-				propInfo->get(object.object(), [&reader, &writer, propName](Any<> prop)
+				// Access the property
+				writer.push_object_member(propName);
+				propInfo.get(object.object(), [&writer](Any<> prop)
 				{
-					// If there are specific properties within this property we're querying for
-					if (!reader.null())
+					// If the property is a primitive or a string (TODO: This should be more intelligent)
+					if (prop.type().is_primitive() || prop.type() == sge::get_type<std::string>())
 					{
-						writer.push_object_member(propName);
-						read_properties(prop, reader, writer);
-						writer.pop();
+						// Get the IToArchive implementation
+						const auto* const impl = sge::get_vtable<IToArchive>(prop.type());
+						if (!impl)
+						{
+							return;
+						}
+
+						impl->to_archive(prop.object(), writer);
 						return;
 					}
 
-					// Get the IToArchive implementation
-					const auto* const impl = sge::get_vtable<IToArchive>(prop.type());
-					if (!impl)
-					{
-						return;
-					}
-
-					writer.push_object_member(propName);
-					impl->to_archive(prop.object(), writer);
-					writer.pop();
+					read_properties(prop, writer);
 				});
+				writer.pop();
 			});
 		}
 
@@ -147,6 +151,23 @@ namespace sge
 			});
 		}
 
+		void get_scene_query(const Scene& scene, ArchiveWriter& writer)
+		{
+			scene.enumerate_entities([&scene, &writer](EntityId entity)
+			{
+				writer.push_object_member(sge::to_string(entity).c_str());
+				writer.object_member("name", scene.get_entity_name(entity));
+				writer.object_member("parent", scene.get_entity_parent(entity));
+				writer.push_object_member("components");
+				scene.enumerate_components(entity, [&writer](const TypeInfo& type)
+				{
+					writer.array_element(type.name());
+				});
+				writer.pop(); // "components"
+				writer.pop(); // entity
+			});
+		}
+
 		void get_component_query(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
 		{
 			// Enumerate the types to get the properties from
@@ -162,18 +183,20 @@ namespace sge
 				}
 
 				// Enumerate the instances
-				reader.enumerate_object_members([type, &scene, &reader, &writer](const char* idStr)
+				reader.enumerate_array_elements([type, &scene, &reader, &writer](std::size_t /*i*/)
 				{
-					writer.push_object_member(idStr);
+					// Get the current entity id
+					EntityId entity_id;
+					sge::from_archive(entity_id, reader);
+					writer.push_object_member(sge::to_string(entity_id).c_str());
 
-					// Get the EntityID
-					EntityId entity = std::strtoull(idStr, nullptr, 10);
-					scene.process_single(entity, &type, 1, [type, &reader, &writer](
+					// Access the component
+					scene.process_single(entity_id, &type, 1, [type, &writer](
 						ProcessingFrame&,
 						EntityId,
 						const ComponentInterface* const components[])
 					{
-						editor_ops::read_properties(Any<>{ *type, components[0] }, reader, writer);
+						editor_ops::read_properties(Any<>{ *type, components[0] }, writer);
 					});
 
 					writer.pop();

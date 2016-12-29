@@ -137,6 +137,15 @@ namespace sge
 						in_reader->pop();
 					}
 
+					// Handle a query for acessing the scene structure
+					if (in_reader->pull_object_member("get_scene"))
+					{
+						out_writer->push_object_member("get_scene");
+						editor_ops::get_scene_query(*self->_scene, *out_writer);
+						out_writer->pop();
+						in_reader->pop();
+					}
+
 					// Handle an object property query
 					if (in_reader->pull_object_member("get_component"))
 					{
