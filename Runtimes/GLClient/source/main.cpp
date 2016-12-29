@@ -3,6 +3,7 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
 #include <Core/Math/Vec4.h>
+#include <Core/Reflection/TypeDB.h>
 #include <Resource/Archives/JsonArchive.h>
 #include <Engine/Scene.h>
 #include <Engine/Components/CTransform3D.h>
@@ -35,8 +36,14 @@ int main()
 	// Make the window's OpenGL context current
 	glfwMakeContextCurrent(window);
 
+	// Create a type database
+	sge::TypeDB type_db;
+	type_db.new_type<sge::Vec3>();
+	type_db.new_type<sge::Quat>();
+	type_db.new_type<float>();
+
 	// Create a scene
-	sge::Scene scene;
+	sge::Scene scene{ type_db };
 	sge::register_builtin_components(scene);
 
 	sge::JsonArchive archive;
