@@ -175,6 +175,25 @@ namespace sge
 		}
 	}
 
+	void Scene::enumerate_entities(FunctionView<EntityEnumeratorFn> enumerator) const
+	{
+		for (auto entity : _entity_parents)
+		{
+			enumerator(entity.first);
+		}
+	}
+
+	void Scene::enumerate_components(EntityId entity, FunctionView<ComponentTypeEnumeratorFn> enumerator) const
+	{
+		for (const auto& type : _components)
+		{
+			if (type.second->entities.find(entity) != type.second->entities.end())
+			{
+				enumerator(*type.first);
+			}
+		}
+	}
+
 	EntityId Scene::new_entity()
 	{
 		auto id = _next_entity_id++;

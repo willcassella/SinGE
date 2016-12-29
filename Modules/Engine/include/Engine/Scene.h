@@ -17,6 +17,7 @@ namespace sge
 		using ProcessMutFn = void(ProcessingFrameMut& pframe, EntityId entity, ComponentInterface* const components[]);
 		using ProcessFn = void(ProcessingFrame& pframe, EntityId entity, const ComponentInterface* const components[]);
 		using ComponentTypeEnumeratorFn = void(const TypeInfo& type);
+		using EntityEnumeratorFn = void(EntityId entity);
 
 		////////////////////////
 		///   Constructors   ///
@@ -44,6 +45,10 @@ namespace sge
 		const TypeInfo* get_component_type(const char* typeName) const;
 
 		void enumerate_component_types(FunctionView<ComponentTypeEnumeratorFn> enumerator) const;
+
+		void enumerate_entities(FunctionView<EntityEnumeratorFn> enumerator) const;
+
+		void enumerate_components(EntityId entity, FunctionView<ComponentTypeEnumeratorFn> enumerator) const;
 
 		EntityId new_entity();
 
