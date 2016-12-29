@@ -16,7 +16,7 @@ namespace sge
 	{
 		std::string str;
 		std::cin >> str;
-		value.call(&IFromString::from_string, str);
+		value.call(&IFromString::from_string, str.c_str(), str.size());
 	}
 
 	void do_stuff(AnyMut<IToString, IFromString> value)
