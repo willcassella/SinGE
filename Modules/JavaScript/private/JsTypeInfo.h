@@ -133,6 +133,16 @@ namespace sge
 			JsRelease(*static_cast<JsValueRef*>(self), nullptr);
 		}
 
+		bool has_equality_compare() const override
+		{
+			return false;
+		}
+
+		bool equality_compare(const void* lhs, const void* rhs) const override
+		{
+			return false;
+		}
+
 		std::size_t num_constructors() const override
 		{
 			return 0;
