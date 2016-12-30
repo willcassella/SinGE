@@ -47,7 +47,7 @@ int main()
 	sge::register_builtin_components(scene);
 
 	sge::JsonArchive archive;
-	archive.from_file("scene.json");
+	archive.from_file("Content/Scenes/test.json");
 	archive.deserialize_root(scene);
 
 	// Create a render system
@@ -61,7 +61,7 @@ int main()
 	jsEngine.register_type(sge::CTransform3D::type_info);
 	jsEngine.register_type(sge::CPerspectiveCamera::type_info);
 	jsEngine.register_type(sge::CStaticMesh::type_info);
-	jsEngine.load_script("main.js");
+	jsEngine.load_script("Content/JavaScript/main.js");
 
 	// Loop until the user closes the window
 	while (!glfwWindowShouldClose(window))

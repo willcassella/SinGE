@@ -1,0 +1,7 @@
+{
+    "vertex_shader": "Content/Shaders/basic.vert",
+    "pixel_shader": "Content/Shaders/basic.frag",
+    "params": {
+        "diffuse": "game_content/player_final.png"
+    }
+}

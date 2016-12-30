@@ -142,8 +142,8 @@ namespace sge
 		glVertexAttribPointer(GLMaterial::TEXCOORD_ATTRIB_LOCATION, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(sizeof(float) * 2));
 
 		// Create and upload a shader program for the screen quad
-		GLShader screenVShader{ GL_VERTEX_SHADER, "engine_content/shaders/viewport.vert" };
-		GLShader screenFShader{ GL_FRAGMENT_SHADER, "engine_content/shaders/viewport.frag" };
+		GLShader screenVShader{ GL_VERTEX_SHADER, "Content/Shaders/viewport.vert" };
+		GLShader screenFShader{ GL_FRAGMENT_SHADER, "Content/Shaders/viewport.frag" };
 		_state->screen_quad_program = glCreateProgram();
 		glAttachShader(_state->screen_quad_program, screenVShader.id());
 		glAttachShader(_state->screen_quad_program, screenFShader.id());
