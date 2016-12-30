@@ -7,6 +7,7 @@ class EditorSession(object):
     def __init__(self, host="localhost", port=1995):
         # Connect to the editor server
         self.sock = socket.socket()
+        self.sock.settimeout(0.008)
         self.sock.connect((host, port))
         self.query_handlers = {}
         self.response_handlers = {}
@@ -15,14 +16,19 @@ class EditorSession(object):
         self.sock.close()
 
     def receive_message(self):
-        # Get the length of the incoming string
-        (in_len,) = struct.unpack("I", self.sock.recv(4))
+        try:
 
-        # Get the incoming string
-        in_str = self.sock.recv(in_len)
+            # Get the length of the incoming string
+            (in_len,) = struct.unpack("I", self.sock.recv(4))
 
-        # Convert it to a dictionary
-        return json.loads(in_str.decode("utf-8"))
+            # Get the incoming string
+            in_str = self.sock.recv(in_len)
+
+            # Convert it to a dictionary
+            return json.loads(in_str.decode("utf-8"))
+
+        except socket.timeout as e:
+            return None
 
     def send_message(self, message):
         # Convert the json to a byte string
@@ -67,4 +73,5 @@ class EditorSession(object):
 
         # Handle the response
         response = self.receive_message()
-        self.handle_response(response)
+        if response is not None:
+            self.handle_response(response)

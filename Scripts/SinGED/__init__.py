@@ -9,7 +9,7 @@ bl_info = {
     "description": "SinGE editor client for Blender",
     "warning": "",
     "wiki_url": "",
-    "category": "Development"
+    "category": "Development",
 }
 
 # If we're reloading the module
@@ -19,39 +19,37 @@ if "bpy" in locals():
 
     # Reimport modules
     import importlib
-    importlib.reload(core)
-    importlib.reload(operators)
+    importlib.reload(types)
     importlib.reload(ui)
+    importlib.reload(integration)
 else:
     import bpy
     from bpy.props import PointerProperty, IntProperty
-    from . import core, operators, ui
+    from . import types, ui, integration
 
 # Register classes in the module
 def register():
     print ("Registering ", __name__)
-    bpy.utils.register_class(core.SGETypes)
-    bpy.utils.register_class(core.SinGEDProps)
-    bpy.utils.register_class(operators.SinGEDConnect)
-    bpy.utils.register_class(ui.SinGEDConnectPanel)
-    bpy.utils.register_class(core.SGEVec3)
-    bpy.types.Scene.singed = PointerProperty(type=core.SinGEDProps)
-    bpy.types.Object.entity_id = IntProperty(default=0)
+    bpy.utils.register_class(types.SGETypes)
+    bpy.utils.register_class(types.SinGEDProps)
+    bpy.utils.register_class(integration.SinGEDConnect)
+    bpy.utils.register_class(integration.SinGEDConnectPanel)
+    bpy.types.Scene.singed = PointerProperty(type=types.SinGEDProps)
+    bpy.types.Object.sge_entity_id = IntProperty(default=0)
 
 # Unregister classes
 def unregister():
     print ("Unregistering ", __name__)
 
     # Close the active session
-    core.close_active_session()
+    integration.close_active_session()
 
-    del bpy.types.Object.entity_id
+    del bpy.types.Object.sge_entity_id
     del bpy.types.Scene.singed
-    bpy.utils.unregister_class(core.SGEVec3)
-    bpy.utils.unregister_class(ui.SinGEDConnectPanel)
-    bpy.utils.unregister_class(operators.SinGEDConnect)
-    bpy.utils.unregister_class(core.SinGEDProps)
-    bpy.utils.unregister_class(core.SGETypes)
+    bpy.utils.unregister_class(integration.SinGEDConnectPanel)
+    bpy.utils.unregister_class(integration.SinGEDConnect)
+    bpy.utils.unregister_class(types.SinGEDProps)
+    bpy.utils.unregister_class(types.SGETypes)
 
 if __name__ == "__main__":
     register()

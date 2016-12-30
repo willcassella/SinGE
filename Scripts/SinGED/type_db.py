@@ -1,4 +1,5 @@
-# TypeDB.py
+# type_db.py
+
 from functools import partial
 
 class TypeDB(object):

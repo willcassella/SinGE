@@ -1,4 +1,4 @@
-# Components.py
+# scene_manager.py
 
 # Recursively updates a dictionary D with E.
 # This assumes that E has a structure that is a subset of D
@@ -38,7 +38,7 @@ class SceneManager(object):
             entity_dict = {
                 'name': value['name'],
                 'parent': value['parent'],
-                'components': component_dict
+                'components': component_dict,
             }
 
             # Create the component type dictionary
@@ -93,7 +93,7 @@ class SceneManager(object):
         else:
             self.get_component_queries[component_type] = set([entity_id])
 
-    def get_propery_value(self, entity_id, component_type, property_path, property_name):
+    def get_property_value(self, entity_id, component_type, property_path, property_name):
         value = self.entities[entity_id]['components'][component_type]
 
         # Follow the path to get the property value
