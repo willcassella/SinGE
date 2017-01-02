@@ -3,12 +3,13 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
 #include <Core/Reflection/TypeDB.h>
+#include <Core/Math/Quat.h>
+#include <Core/Math/Vec3.h>
 #include <Resource/Archives/JsonArchive.h>
+#include <Engine/Resources/StaticMesh.h>
 #include <Engine/Scene.h>
 #include <GLRender/GLRenderSystem.h>
 #include <EditorServerSystem/EditorServerSystem.h>
-#include "Core/Math/Vec3.h"
-#include "Core/Math/Quat.h"
 
 constexpr sge::uint32 window_width = 1920;
 constexpr sge::uint32 window_height = 1080;
@@ -39,6 +40,7 @@ int main()
 	type_db.new_type<sge::Vec3>();
 	type_db.new_type<sge::Quat>();
 	type_db.new_type<float>();
+	type_db.new_type<sge::StaticMesh>();
 
 	// Create a scene
 	sge::Scene scene{ type_db };
