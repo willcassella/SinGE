@@ -13,7 +13,7 @@ namespace sge
 	struct SGE_CORE_API IToArchive
 	{
 		SGE_REFLECTED_INTERFACE;
-		SGE_INTERFACE_1(IToArchive, to_archive);
+		SGE_INTERFACE_1(IToArchive, to_archive)
 
 		/////////////////////
 		///   Functions   ///
