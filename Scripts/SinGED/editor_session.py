@@ -13,7 +13,6 @@ class EditorSession(object):
         self.sock.connect((host, port))
         self.query_handlers = {}
         self.response_handlers = {}
-        self.log = open("C:/Users/Will/Downloads/test.txt", "w")
 
     def close(self):
         self.sock.close()
@@ -33,13 +32,10 @@ class EditorSession(object):
         # Set it to block while loading the packet
         self.sock.setblocking(True)
 
-        # Get the incoming string
-        in_str = self.sock.recv(in_len).decode("utf-8")
-
-        # Log the string to a file
-        for i in range(5):
-            self.log.write("\n")
-        self.log.write(in_str)
+        # Loop until we've loaded the whole string
+        in_str = ''
+        while len(in_str) < in_len:
+            in_str += self.sock.recv(in_len - len(in_str)).decode("utf-8")
 
         # Convert it to a dictionary
         return json.loads(in_str)
