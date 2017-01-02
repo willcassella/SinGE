@@ -119,9 +119,9 @@ namespace sge
 	Mat4 CTransform3D::get_local_matrix() const
 	{
 		Mat4 result;
-		result *= Mat4::scale(_data->local_scale);
-		result *= Mat4::rotate(_data->local_rotation);
 		result *= Mat4::translation(_data->local_position);
+		result *= Mat4::rotate(_data->local_rotation);
+		result *= Mat4::scale(_data->local_scale);
 
 		return result;
 	}
