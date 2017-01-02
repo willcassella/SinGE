@@ -32,5 +32,7 @@ namespace sge
 		void new_component_query(Scene& scene, ArchiveReader& reader);
 
 		void set_component_query(Scene& scene, ArchiveReader& reader);
+
+		void get_resource(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 	}
 }

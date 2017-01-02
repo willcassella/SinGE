@@ -1,5 +1,7 @@
 // EditorOps.cpp
 
+#include <iostream>
+#include <Core/Memory/Functions.h>
 #include <Core/IO/ArchiveWriter.h>
 #include <Core/IO/ArchiveReader.h>
 #include <Core/Reflection/Reflection.h>
@@ -7,8 +9,8 @@
 #include <Core/Reflection/TypeDB.h>
 #include <Core/Reflection/PropertyInfo.h>
 #include <Core/Interfaces/IToString.h>
+#include <Resource/Interfaces/IFromFile.h>
 #include <Engine/Scene.h>
-#include <iostream>
 
 namespace sge
 {
@@ -145,6 +147,7 @@ namespace sge
 
 		void get_component_types_query(const Scene& scene, ArchiveWriter& writer)
 		{
+			std::cout << "Sending component list" << std::endl;
 			scene.enumerate_component_types([&writer](const TypeInfo& type)
 			{
 				writer.array_element(type.name());
@@ -153,6 +156,7 @@ namespace sge
 
 		void get_scene_query(const Scene& scene, ArchiveWriter& writer)
 		{
+			std::cout << "Sending scene information" << std::endl;
 			scene.enumerate_entities([&scene, &writer](EntityId entity)
 			{
 				writer.push_object_member(sge::to_string(entity).c_str());
@@ -191,12 +195,10 @@ namespace sge
 					writer.push_object_member(sge::to_string(entity_id).c_str());
 
 					// Access the component
-					scene.process_single(entity_id, &type, 1, [type, &writer](
-						ProcessingFrame&,
-						EntityId,
-						const ComponentInterface* const components[])
+					scene.process_single(entity_id, &type, 1, [type, &writer](ProcessingFrame&, EntityId entity, auto comp)
 					{
-						editor_ops::read_properties(Any<>{ *type, components[0] }, writer);
+						std::cout << "Reading properties of '" << type->name() << "' component on entity '" << entity << "'" << std::endl;
+						editor_ops::read_properties(Any<>{ *type, comp[0] }, writer);
 					});
 
 					writer.pop();
@@ -224,11 +226,80 @@ namespace sge
 					ComponentId id{ std::strtoull(entityId, nullptr, 10), *type };
 
 					// Process the component and deserialize it
-					scene.process_single_mut(id.entity(), &type, 1, [&reader](ProcessingFrame&, EntityId, auto comp)
+					scene.process_single_mut(id.entity(), &type, 1, [type, &reader](ProcessingFrame&, EntityId entity, auto comp)
 					{
-						write_properties(AnyMut<>{ comp[0]->get_type(), comp[0] }, reader);
+						std::cout << "Writing properties of '" << type->name() << "' component on entity '" << entity << "'" << std::endl;
+						write_properties(AnyMut<>{ *type, comp[0] }, reader);
 					});
 				});
+			});
+		}
+
+		void get_resource(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
+		{
+			reader.enumerate_array_elements([&scene, &reader, &writer](std::size_t /*i*/)
+			{
+				// Get the type name
+				std::string type_str;
+				if (!reader.object_member("type", type_str))
+				{
+					return;
+				}
+
+				// Get the path
+				std::string path;
+				if (!reader.object_member("path", path))
+				{
+					return;
+				}
+
+				// Get the type from the name
+				const auto* type = scene.get_type_db().find_type(type_str.c_str());
+				if (!type)
+				{
+					return;
+				}
+
+				// Make sure the type is default-constructible
+				if (!type->has_init())
+				{
+					return;
+				}
+
+				// Get the 'from file' implementation
+				const auto* from_file = sge::get_vtable<IFromFile>(*type);
+				if (!from_file)
+				{
+					return;
+				}
+
+				// Get the 'to archive' implementation
+				const auto* to_archive = sge::get_vtable<IToArchive>(*type);
+				if (!to_archive)
+				{
+					return;
+				}
+
+				std::cout << "Reading resource '" << path << "'" << std::endl;
+
+				// Construct the type
+				auto* object = SGE_STACK_ALLOC(uint8, type->size());
+				type->init(object);
+
+				// Load it from the file
+				from_file->from_file(object, path.c_str());
+
+				// Save it to the writer
+				writer.push_array_element();
+				writer.object_member("type", type->name());
+				writer.object_member("path", path);
+				writer.push_object_member("value");
+				to_archive->to_archive(object, writer);
+				writer.pop(); // "value"
+				writer.pop(); // array element
+
+				// Destroy the resource
+				type->drop(object);
 			});
 		}
 	}

@@ -44,31 +44,22 @@ namespace sge
 
 			// Create a packet and add it to the queue
 			auto content = archive.to_string();
-			_out_change_queue.push(EditorPacket::encode_packet(content.c_str(), content.size()));
+			auto* message = EditorPacket::encode_packet(content.c_str(), content.size());
 
 			// Send it
-			async_send_message();
+			async_send_message(message);
 		}
 
 		/* Sends a message to the client. */
-		void async_send_message()
+		void async_send_message(EditorPacket* packet)
 		{
-			asio::async_write(socket, asio::buffer(_out_change_queue.front(), _out_change_queue.front()->size()),
-				[self = shared_from_this()](const std::error_code& error, std::size_t /*bytes*/)
+			asio::async_write(socket, asio::buffer(packet, packet->size()),
+				[self = shared_from_this(), packet](const std::error_code& error, std::size_t /*bytes*/)
 			{
-				if (!error)
-				{
-					// Get rid of the packet
-					EditorPacket::free(self->_out_change_queue.front());
-					self->_out_change_queue.pop();
+				// Get rid of the packet
+				EditorPacket::free(packet);
 
-					// If we have more to send, go again
-					if (!self->_out_change_queue.empty())
-					{
-						self->async_send_message();
-					}
-				}
-				else
+				if (error)
 				{
 					self->close_session();
 				}
@@ -155,14 +146,23 @@ namespace sge
 						out_writer->pop();
 					}
 
+					// Handle a resource query
+					if (in_reader->pull_object_member("get_resource"))
+					{
+						out_writer->push_object_member("get_resource");
+						editor_ops::get_resource(*self->_scene, *in_reader, *out_writer);
+						in_reader->pop();
+						out_writer->pop();
+					}
+
 					// Close reader and writer
 					in_reader->pop();
 					out_writer->pop();
 
 					// Write result
 					std::string result = out.to_string();
-					self->_out_change_queue.push(EditorPacket::encode_packet(result.c_str(), result.size()));
-					self->async_send_message();
+					auto* packet = EditorPacket::encode_packet(result.c_str(), result.size());
+					self->async_send_message(packet);
 
 					// Prepare for new changes
 					self->async_receive_client_message_header();
@@ -194,9 +194,6 @@ namespace sge
 		// Incoming content data
 		std::string _in_content;
 		EditorPacket::ContentLength_t _in_content_length;
-
-		// Outgoing content
-		std::queue<EditorPacket*> _out_change_queue;
 	};
 
 	struct EditorServerSystem::Data
