@@ -2,10 +2,13 @@
 
 #include <fstream>
 #include <Core/Reflection/ReflectionBuilder.h>
+#include <Resource/Interfaces/IFromFile.h>
 #include "../../include/Engine/Resources/StaticMesh.h"
 
 SGE_REFLECT_TYPE(sge::StaticMesh)
-.flags(TF_SCRIPT_NOCONSTRUCT);
+.flags(TF_SCRIPT_NOCONSTRUCT)
+.implements<IFromFile>()
+.implements<IToArchive>();
 
 namespace sge
 {
@@ -31,9 +34,9 @@ namespace sge
 		writer.pop();
 	}
 
-	void StaticMesh::from_file(const std::string& path)
+	void StaticMesh::from_file(const char* path)
 	{
-		auto file = fopen(path.c_str(), "rb");
+		auto file = fopen(path, "rb");
 
 		// Get the number of vertex positions
 		uint32 num = 0;

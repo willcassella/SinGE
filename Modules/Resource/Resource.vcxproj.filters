@@ -24,6 +24,12 @@
     <Filter Include="source\Resources">
       <UniqueIdentifier>{f4378baf-b502-4522-a304-1a8a0dcce690}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Interfaces">
+      <UniqueIdentifier>{690e0c8c-3dac-4cd5-b2fb-56e12e66d39e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Interfaces">
+      <UniqueIdentifier>{ef253ddf-b108-453e-8aa8-f5643297d93a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Resource\config.h">
@@ -50,6 +56,9 @@
     <ClInclude Include="include\Resource\ResourceCallbackQueue.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Resource\Interfaces\IFromFile.h">
+      <Filter>include\Interfaces</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Archives\JsonArchive.cpp">
@@ -60,6 +69,9 @@
     </ClCompile>
     <ClCompile Include="source\ResourceManager.cpp">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Interfaces\IFromFile.cpp">
+      <Filter>source\Interfaces</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

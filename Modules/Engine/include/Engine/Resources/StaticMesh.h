@@ -22,7 +22,7 @@ namespace sge
 
 		void to_archive(ArchiveWriter& writer) const;
 
-		void from_file(const std::string& path);
+		void from_file(const char* path);
 
 		std::size_t num_vertices() const
 		{

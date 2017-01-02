@@ -194,6 +194,7 @@ xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Soluti
   <ItemGroup>
     <ClInclude Include="include\Resource\Archives\JsonArchive.h" />
     <ClInclude Include="include\Resource\config.h" />
+    <ClInclude Include="include\Resource\Interfaces\IFromFile.h" />
     <ClInclude Include="include\Resource\ResourceCallbackQueue.h" />
     <ClInclude Include="include\Resource\ResourceId.h" />
     <ClInclude Include="include\Resource\ResourceManager.h" />
@@ -203,6 +204,7 @@ xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Soluti
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Archives\JsonArchive.cpp" />
+    <ClCompile Include="source\Interfaces\IFromFile.cpp" />
     <ClCompile Include="source\ResourceManager.cpp" />
     <ClCompile Include="source\Resources\Image.cpp" />
   </ItemGroup>
