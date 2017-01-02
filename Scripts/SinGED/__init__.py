@@ -15,7 +15,7 @@ bl_info = {
 # If we're reloading the module
 if "bpy" in locals():
     # Close the active session
-    core.close_active_session()
+    integration.close_active_session()
 
     # Reimport modules
     import importlib

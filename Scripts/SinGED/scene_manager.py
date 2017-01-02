@@ -17,6 +17,7 @@ class SceneManager(object):
         self.set_component_queries = {}
         self.get_component_callbacks = {}
         self.user_entity_data = {}
+        self.sent_scene_query = False
 
     def register_handlers(self, session):
         session.add_query_handler('get_scene', self.get_scene_query)
@@ -26,7 +27,8 @@ class SceneManager(object):
         session.add_query_handler('set_component', self.set_component_query)
 
     def get_scene_query(self):
-        if len(self.entities) == 0:
+        if not self.sent_scene_query:
+            self.sent_scene_query = True
             return True # Actual value doesn't matter
 
     def get_scene_response(self, response):

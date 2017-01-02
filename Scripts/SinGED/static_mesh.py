@@ -1,4 +1,4 @@
-# StaticMesh.py
+# static_mesh.py
 
 import bpy
 import bmesh
@@ -50,5 +50,18 @@ def export_mesh(data, path):
         file.write(struct.pack('I', len(uv0) // 2))
         uv0.tofile(file)
 
-mesh = bpy.context.object.data
-export_mesh(mesh, "C:/Users/Will/Downloads/monkey.wmesh")
+def from_json(path, value):
+    mesh = bmesh.new()
+    verts = value['vertex_positions']
+    face = [None, None, None]
+
+    for i in range(0, len(verts), 9):
+        # For each position in the vertex
+        for v in range(0, 3):
+            face[v] = mesh.verts.new((-verts[v * 3 + i], verts[v * 3 + i + 2], verts[v * 3 + i + 1]))
+        mesh.faces.new(face)
+
+    # Convert the bmesh to a blender mesh data object
+    result = bpy.data.meshes.new(path)
+    mesh.to_mesh(result)
+    return result

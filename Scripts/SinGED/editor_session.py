@@ -4,31 +4,45 @@ import struct
 import json
 
 class EditorSession(object):
+    CONNECTION_TIMEOUT = 0.033
+
     def __init__(self, host="localhost", port=1995):
         # Connect to the editor server
         self.sock = socket.socket()
-        self.sock.settimeout(0.008)
+        self.sock.settimeout(self.CONNECTION_TIMEOUT)
         self.sock.connect((host, port))
         self.query_handlers = {}
         self.response_handlers = {}
+        self.log = open("C:/Users/Will/Downloads/test.txt", "w")
 
     def close(self):
         self.sock.close()
 
     def receive_message(self):
+
         try:
+            # Set it to non-blocking while we check for a packet
+            self.sock.setblocking(False)
 
             # Get the length of the incoming string
             (in_len,) = struct.unpack("I", self.sock.recv(4))
 
-            # Get the incoming string
-            in_str = self.sock.recv(in_len)
-
-            # Convert it to a dictionary
-            return json.loads(in_str.decode("utf-8"))
-
-        except socket.timeout as e:
+        except socket.error as e:
             return None
+
+        # Set it to block while loading the packet
+        self.sock.setblocking(True)
+
+        # Get the incoming string
+        in_str = self.sock.recv(in_len).decode("utf-8")
+
+        # Log the string to a file
+        for i in range(5):
+            self.log.write("\n")
+        self.log.write(in_str)
+
+        # Convert it to a dictionary
+        return json.loads(in_str)
 
     def send_message(self, message):
         # Convert the json to a byte string

@@ -10,6 +10,7 @@ class TypeDB(object):
         self.waiting = {}
         self.pending = set()
         self.component_types = set()
+        self.queried_component_types = False
 
     def register_handlers(self, session):
         session.add_query_handler('get_component_types', self.get_component_types_query)
@@ -18,7 +19,8 @@ class TypeDB(object):
         session.add_response_handler('get_type_info', self.get_type_info_response)
 
     def get_component_types_query(self):
-        if len(self.component_types) == 0:
+        if not self.queried_component_types:
+            self.queried_component_types = True
             return True # Actual value doesn't matter
 
     def get_component_types_response(self, response):

@@ -11,11 +11,12 @@ class SinGEDProps(PropertyGroup):
     sge_host = StringProperty(name='Host', default='localhost')
     sge_port = IntProperty(name='Port', default=1995)
     sge_types = PointerProperty(type=SGETypes)
+    sge_realtime_update_delay = FloatProperty(default=0.033)
     sge_last_realtime_update = 0
-    sge_realtime_update_delay = 0.033
     sge_session = None
     sge_typedb = None
     sge_scene = None
+    sge_resource_manager = None
 
 class SGETypeBase(PropertyGroup):
     sge_property_path = StringProperty()
@@ -88,28 +89,6 @@ class SGEString(SGEPrimitiveBase):
     @staticmethod
     def sge_create_property(name):
         return StringProperty(name=name)
-
-class SGEVec3(PropertyGroup):
-    x = FloatProperty(name='x')
-    y = FloatProperty(name='y')
-    z = FloatProperty(name='z')
-
-    @staticmethod
-    def sge_unregister():
-        # Do nothing
-        return
-
-    @staticmethod
-    def sge_create_property(name):
-        return PointerProperty(name=name, type=SGEVec3)
-
-    @staticmethod
-    def sge_draw(layout, parent_obj, parent_attr_name):
-        self = getattr(parent_obj, parent_attr_name)
-        layout = layout.column()
-        layout.prop(self, 'x')
-        layout.prop(self, 'y')
-        layout.prop(self, 'z')
 
 def create_blender_type(typedb, type_name, type_info):
     # Create dictionaries for the class and the properties
