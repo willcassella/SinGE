@@ -65,7 +65,7 @@ namespace sge
 		{
 			// Load the mesh from the file
 			StaticMesh staticMesh;
-			staticMesh.from_file(path);
+			staticMesh.from_file(path.c_str());
 
 			// Create a GLStaticMesh from that mesh
 			GLStaticMesh mesh{ staticMesh };
