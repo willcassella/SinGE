@@ -34,6 +34,11 @@ namespace sge
 		///   Methods   ///
 	public:
 
+		EntityId next_entity_id() const
+		{
+			return _next_entity_id;
+		}
+
 		void to_archive(ArchiveWriter& writer) const;
 
 		void from_archive(ArchiveReader& reader);
@@ -77,8 +82,8 @@ namespace sge
 			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
 
 			// Run the process functions
-			auto adapted = adapt_process_fn(ComponentList{}, processFn);
-			process_entities_mut(adapted.first.data(), ComponentList::size(), adapted.second);
+			auto adapted = Scene::adapt_process_fn(ComponentList{}, processFn);
+			Scene::process_entities_mut(adapted.first.data(), ComponentList::size(), adapted.second);
 		}
 
 		template <typename ProcessFnT>
@@ -88,8 +93,8 @@ namespace sge
 			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
 
 			// Run the process function
-			auto adapted = adapt_process_fn(ComponentList{}, processFn);
-			process_entities(adapted.first.data(), ComponentList::size(), adapted.second);
+			auto adapted = Scene::adapt_process_fn(ComponentList{}, processFn);
+			Scene::process_entities(adapted.first.data(), ComponentList::size(), adapted.second);
 		}
 
 		template <typename ProcessFnT>
@@ -99,8 +104,8 @@ namespace sge
 			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
 
 			// Run the processing function
-			auto adapted = adapt_process_fn(ComponentList{}, processFn);
-			process_single_mut(entity, adapted.first.data(), ComponentList::size(), adapted.second);
+			auto adapted = Scene::adapt_process_fn(ComponentList{}, processFn);
+			Scene::process_single_mut(entity, adapted.first.data(), ComponentList::size(), adapted.second);
 		}
 
 		template <typename ProcessFnT>
@@ -110,8 +115,8 @@ namespace sge
 			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
 
 			// Run the processing function
-			auto adapted = adapt_process_fn(ComponentList{}, processFn);
-			process_single(entity, adapted.first.data(), ComponentList::size(), adapted.second);
+			auto adapted = Scene::adapt_process_fn(ComponentList{}, processFn);
+			Scene::process_single(entity, adapted.first.data(), ComponentList::size(), adapted.second);
 		}
 
 		template <class T, typename Ret, class ... ComponentTs>
@@ -125,8 +130,8 @@ namespace sge
 			};
 
 			// Run the processing function
-			auto adapted = adapt_process_fn(ComponentList{}, wrapper);
-			process_entities_mut(adapted.first.data(), ComponentList::size(), adapted.second);
+			auto adapted = Scene::adapt_process_fn(ComponentList{}, wrapper);
+			Scene::process_entities_mut(adapted.first.data(), ComponentList::size(), adapted.second);
 		}
 
 		template <class T, typename Ret, typename ... ComponentTs>
@@ -140,8 +145,8 @@ namespace sge
 			};
 
 			// Run the processing function
-			auto adapted = adapt_process_fn(ComponentList{}, wrapper);
-			process_entities(adapted.first.data(), ComponentList::size(), adapted.second);
+			auto adapted = Scene::adapt_process_fn(ComponentList{}, wrapper);
+			Scene::process_entities(adapted.first.data(), ComponentList::size(), adapted.second);
 		}
 
 		template <class T, typename Ret, class ... ComponentTs>
@@ -155,8 +160,8 @@ namespace sge
 			};
 
 			// Run the processing function
-			auto adapted = adapt_process_fn(ComponentList{}, wrapper);
-			process_single_mut(entity, adapted.first.data(), ComponentList::size(), adapted.second);
+			auto adapted = Scene::adapt_process_fn(ComponentList{}, wrapper);
+			Scene::process_single_mut(entity, adapted.first.data(), ComponentList::size(), adapted.second);
 		}
 
 		template <class T, typename Ret, class ... ComponentTs>
@@ -170,8 +175,8 @@ namespace sge
 			};
 
 			// Run the processing function
-			auto adapted = adapt_process_fn(ComponentList{}, wrapper);
-			process_single(entity, adapted.first.data(), ComponentList::size(), adapted.second);
+			auto adapted = Scene::adapt_process_fn(ComponentList{}, wrapper);
+			Scene::process_single(entity, adapted.first.data(), ComponentList::size(), adapted.second);
 		}
 
 	private:
@@ -184,7 +189,7 @@ namespace sge
 
 			// Create wrapper function
 			auto invoker = [&processFn](auto& pframe, EntityId entity, auto components) {
-				invoke_process_fn(tmp::list<ComponentTs...>{}, processFn, pframe, entity, components);
+				Scene::invoke_process_fn(tmp::list<ComponentTs...>{}, processFn, pframe, entity, components);
 			};
 
 			return std::make_pair(types, invoker);
@@ -199,7 +204,7 @@ namespace sge
 			const ComponentIT* components,
 			ConvertedCTs&... converted)
 		{
-			invoke_process_fn(
+			Scene::invoke_process_fn(
 				tmp::list<RestCTs...>{},
 				processFn,
 				pframe,
