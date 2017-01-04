@@ -28,6 +28,7 @@ namespace sge
 		}
 		~EditorServerSession()
 		{
+			socket.close();
 			std::cout << "Session successfully closed." << std::endl;
 		}
 
@@ -47,22 +48,45 @@ namespace sge
 			auto* message = EditorPacket::encode_packet(content.c_str(), content.size());
 
 			// Send it
-			async_send_message(message);
+			enequeue_message(message);
+		}
+
+		void enequeue_message(EditorPacket* packet)
+		{
+			// Add the message to the queue
+			_outgoing_packets.push(packet);
+
+			// If the packet we just added is the only packet in the queue, we need to send it
+			if (_outgoing_packets.size() == 1)
+			{
+				async_send_message();
+			}
 		}
 
 		/* Sends a message to the client. */
-		void async_send_message(EditorPacket* packet)
+		void async_send_message()
 		{
-			asio::async_write(socket, asio::buffer(packet, packet->size()),
-				[self = shared_from_this(), packet](const std::error_code& error, std::size_t /*bytes*/)
+			// If there are no messages, return
+			if (_outgoing_packets.empty())
 			{
-				// Get rid of the packet
-				EditorPacket::free(packet);
+				return;
+			}
 
+			// Send it
+			asio::async_write(socket, asio::buffer(_outgoing_packets.front(), _outgoing_packets.front()->size()),
+				[self = shared_from_this()](const std::error_code& error, std::size_t /*bytes*/)
+			{
 				if (error)
 				{
-					self->close_session();
+					report_error(error);
 				}
+
+				// Get rid of the packet
+				EditorPacket::free(self->_outgoing_packets.front());
+				self->_outgoing_packets.pop();
+
+				// Go again
+				self->async_send_message();
 			});
 		}
 
@@ -82,7 +106,7 @@ namespace sge
 				}
 				else
 				{
-					self->close_session();
+					report_error(error);
 				}
 			});
 		}
@@ -100,6 +124,35 @@ namespace sge
 					archive.from_string(self->_in_content.c_str());
 					auto* in_reader = archive.read_root();
 
+					// Handle a query to create an entity
+					if (in_reader->pull_object_member("new_entity"))
+					{
+						editor_ops::new_entity_query(*self->_scene, *in_reader);
+						in_reader->pop();
+					}
+
+					// Handle a query to set an entity's name
+					if (in_reader->pull_object_member("set_entity_name"))
+					{
+						editor_ops::set_entity_name_query(*self->_scene, *in_reader);
+						in_reader->pop();
+					}
+
+					// Handle a query to set an entity's parent
+					if (in_reader->pull_object_member("set_entity_parent"))
+					{
+						editor_ops::set_entity_parent_query(*self->_scene, *in_reader);
+						in_reader->pop();
+					}
+
+					// Handle a query to create a component
+					if (in_reader->pull_object_member("new_component"))
+					{
+						editor_ops::new_component_query(*self->_scene, *in_reader);
+						in_reader->pop();
+					}
+
+					// Handle a query to set the properties on a component
 					if (in_reader->pull_object_member("set_component"))
 					{
 						editor_ops::set_component_query(*self->_scene, *in_reader);
@@ -109,6 +162,7 @@ namespace sge
 					// Create an output archive
 					JsonArchive out;
 					auto* out_writer = out.write_root();
+					bool wrote_output = false;
 
 					// Handle a query for all component types
 					if (in_reader->pull_object_member("get_component_types"))
@@ -117,6 +171,7 @@ namespace sge
 						editor_ops::get_component_types_query(*self->_scene, *out_writer);
 						out_writer->pop();
 						in_reader->pop();
+						wrote_output = true;
 					}
 
 					// Handle a property info query
@@ -126,6 +181,7 @@ namespace sge
 						editor_ops::get_type_info_query(*self->_scene, *in_reader, *out_writer);
 						out_writer->pop();
 						in_reader->pop();
+						wrote_output = true;
 					}
 
 					// Handle a query for acessing the scene structure
@@ -135,6 +191,7 @@ namespace sge
 						editor_ops::get_scene_query(*self->_scene, *out_writer);
 						out_writer->pop();
 						in_reader->pop();
+						wrote_output = true;
 					}
 
 					// Handle an object property query
@@ -144,6 +201,7 @@ namespace sge
 						editor_ops::get_component_query(*self->_scene, *in_reader, *out_writer);
 						in_reader->pop();
 						out_writer->pop();
+						wrote_output = true;
 					}
 
 					// Handle a resource query
@@ -153,32 +211,35 @@ namespace sge
 						editor_ops::get_resource(*self->_scene, *in_reader, *out_writer);
 						in_reader->pop();
 						out_writer->pop();
+						wrote_output = true;
 					}
 
 					// Close reader and writer
 					in_reader->pop();
 					out_writer->pop();
 
-					// Write result
-					std::string result = out.to_string();
-					auto* packet = EditorPacket::encode_packet(result.c_str(), result.size());
-					self->async_send_message(packet);
+					// If we wrote something, send it
+					if (wrote_output)
+					{
+						// Write result
+						std::string result = out.to_string();
+						auto* packet = EditorPacket::encode_packet(result.c_str(), result.size());
+						self->enequeue_message(packet);
+					}
 
-					// Prepare for new changes
+					// Wait for a new message
 					self->async_receive_client_message_header();
 				}
 				else
 				{
-					self->close_session();
+					report_error(error);
 				}
 			});
 		}
 
-		/* Closes a session with the client. */
-		void close_session()
+		static void report_error(std::error_code error)
 		{
-			std::cout << "Closing session with " << socket.remote_endpoint() << std::endl;
-			socket.close();
+			std::cout << "Error occurred: '" << error << "', this may be expected." << std::endl;
 		}
 
 		//////////////////
@@ -190,6 +251,9 @@ namespace sge
 	private:
 
 		Scene* _scene;
+
+		// Outgoing data
+		std::queue<EditorPacket*> _outgoing_packets;
 
 		// Incoming content data
 		std::string _in_content;
