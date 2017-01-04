@@ -23,15 +23,22 @@ namespace sge
 		 * \param scene The scene to gather information from.
 		 * \param writer The output device.
 		 */
-		void get_scene_query(const Scene& scene, ArchiveWriter& writer);
 
 		void get_component_types_query(const Scene& scene, ArchiveWriter& writer);
 
-		void get_component_query(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
+		void new_entity_query(Scene& scene, ArchiveReader& reader);
+
+		void set_entity_name_query(Scene& scene, ArchiveReader& reader);
+
+		void set_entity_parent_query(Scene& scene, ArchiveReader& reader);
 
 		void new_component_query(Scene& scene, ArchiveReader& reader);
 
+		void get_component_query(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
+
 		void set_component_query(Scene& scene, ArchiveReader& reader);
+
+		void get_scene_query(const Scene& scene, ArchiveWriter& writer);
 
 		void get_resource(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 	}

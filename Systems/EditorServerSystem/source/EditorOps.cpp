@@ -9,6 +9,7 @@
 #include <Core/Reflection/TypeDB.h>
 #include <Core/Reflection/PropertyInfo.h>
 #include <Core/Interfaces/IToString.h>
+#include <Core/Interfaces/IFromString.h>
 #include <Resource/Interfaces/IFromFile.h>
 #include <Engine/Scene.h>
 
@@ -154,9 +155,94 @@ namespace sge
 			});
 		}
 
+		void new_entity_query(Scene& scene, ArchiveReader& reader)
+		{
+			// Get the number of entities to create
+			uint32 num_entities;
+			if (!reader.number(num_entities))
+			{
+				return;
+			}
+
+			// Create the entities
+			for (uint32 i = 0; i < num_entities; ++i)
+			{
+				auto entity = scene.new_entity();
+				std::cout << "Created entity " << entity << std::endl;
+			}
+		}
+
+		void set_entity_name_query(Scene& scene, ArchiveReader& reader)
+		{
+			// Enumerate entities to set the names of
+			reader.enumerate_object_members([&scene, &reader](const char* entity_id_str)
+			{
+				// Get the entity to set the name of
+				EntityId entity_id = NULL_ENTITY;
+				sge::from_string(entity_id, entity_id_str, std::strlen(entity_id_str));
+
+				// Get the name to set
+				std::string name;
+				sge::from_archive(name, reader);
+
+				// Set the name
+				std::cout << "Setting name on entity " << entity_id << " to '" << name << "'" << std::endl;
+				scene.set_entity_name(entity_id, std::move(name));
+			});
+		}
+
+		void set_entity_parent_query(Scene& scene, ArchiveReader& reader)
+		{
+			// Enumerate entities to set the names of
+			reader.enumerate_object_members([&scene, &reader](const char* entity_id_str)
+			{
+				// Get the id of the entity to set the parent of
+				EntityId entity_id = NULL_ENTITY;
+				sge::from_string(entity_id, entity_id_str, std::strlen(entity_id_str));
+
+				// Get the id of the entity to set as the parent
+				EntityId parent_id = NULL_ENTITY;
+				sge::from_archive(parent_id, reader);
+
+				// Set the parent
+				scene.set_entity_parent(entity_id, parent_id);
+				std::cout << "Setting parent on entity " << entity_id << " to " << parent_id << std::endl;
+			});
+		}
+
+		void new_component_query(Scene& scene, ArchiveReader& reader)
+		{
+			// Enumerate entities to add components to
+			reader.enumerate_object_members([&scene, &reader](const char* entity_id_str)
+			{
+				EntityId entity_id;
+				sge::from_string(entity_id, entity_id_str, std::strlen(entity_id_str));
+
+				// Enumerate component types to add
+				reader.enumerate_array_elements([entity_id, &scene, &reader](std::size_t /*i*/)
+				{
+					std::string component_type;
+					sge::from_archive(component_type, reader);
+
+					// Get the component type
+					const auto* type = scene.get_component_type(component_type.c_str());
+					if (!type)
+					{
+						return;
+					}
+
+					// Create the component
+					scene.new_component(entity_id, *type);
+					std::cout << "Created '" << type->name() << "' component on entity " << entity_id << std::endl;
+				});
+			});
+		}
+
 		void get_scene_query(const Scene& scene, ArchiveWriter& writer)
 		{
 			std::cout << "Sending scene information" << std::endl;
+			writer.object_member("next_entity_id", scene.next_entity_id());
+			writer.push_object_member("entities");
 			scene.enumerate_entities([&scene, &writer](EntityId entity)
 			{
 				writer.push_object_member(sge::to_string(entity).c_str());
@@ -170,6 +256,7 @@ namespace sge
 				writer.pop(); // "components"
 				writer.pop(); // entity
 			});
+			writer.pop(); // "entities"
 		}
 
 		void get_component_query(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
