@@ -12,26 +12,32 @@ def create_blender_resource(res_manager, path, type, value):
     if type == 'sge::StaticMesh':
         return static_mesh.from_json(path, value)
 
-def create_blender_entity(scene, entity_id, name, components):
+def create_blender_entity(scene, entity):
+    # Disable scene updates
+    disable_sge_update()
+
     # Create the object
-    if 'sge::CStaticMesh' in components:
+    if 'sge::CStaticMesh' in entity.components:
         bpy.ops.mesh.primitive_cube_add()
         obj = bpy.context.active_object
-        obj.name = name
+        obj.name = entity.name
     else:
-        obj = bpy.data.objects.new(name, None)
+        obj = bpy.data.objects.new(entity.name, None)
         bpy.context.scene.objects.link(obj)
 
     # Set the entity id on it
-    obj.sge_entity_id = entity_id
+    obj.sge_entity_id = entity.id
+    entity.user_data = obj
 
     # Add a query to get all component data
-    for component in components:
-        scene.add_get_component_query(entity_id, component)
-    return obj
+    for component in entity.components:
+        scene.add_get_component_query(entity.id, component)
 
-def blender_static_mesh(scene, entity_id, value):
-    obj = scene.user_entity_data[entity_id]
+    # Reenable scene updates
+    enable_sge_update()
+
+def blender_static_mesh(scene, entity, value):
+    obj = entity.user_data
     res = types.SinGEDProps.sge_resource_manager
 
     def set_mesh(path, mesh):
@@ -40,8 +46,8 @@ def blender_static_mesh(scene, entity_id, value):
 
     res.get_resource(value['mesh'], 'sge::StaticMesh', set_mesh)
 
-def transform_blender_entity(scene, entity_id, value):
-    obj = scene.user_entity_data[entity_id]
+def transform_blender_entity(scene, entity, value):
+    obj = entity.user_data
 
     # Assign local position (swizzle components)
     obj.location[0] = -value['local_position']['x']
@@ -60,31 +66,99 @@ def transform_blender_entity(scene, entity_id, value):
     obj.rotation_quaternion[3] = value['local_rotation']['y']
     obj.rotation_quaternion[2] = value['local_rotation']['z']
 
-def update_blender_entity_transform(scene):
+def validate_entity(sge_scene, obj):
+    entity_id = obj.sge_entity_id
+
+    # If the object is brand new
+    if entity_id == 0:
+        # Validate the parent
+        if obj.parent is not None:
+            validate_entity(sge_scene, obj.parent)
+
+        # Create a new entity for it
+        entity_id = sge_scene.new_entity(obj)
+        obj.sge_entity_id = entity_id
+        sge_scene.set_entity_name(entity_id, obj.name)
+        # TODO: Set parent
+
+        # Give it a transform component, and set the value
+        sge_scene.new_component(entity_id, 'sge::CTransform3D')
+        # sge_scene.set_component_value(entity_id, 'sge::CTransform3D', {
+        #     'local_position': {
+        #         'x': -obj.location[0],
+        #         'y': obj.location[2],
+        #         'z': obj.location[1],
+        #     },
+        #     'local_scale': {
+        #         'x': obj.scale[0],
+        #         'y': obj.scale[2],
+        #         'z': obj.scale[1],
+        #     },
+        #     'local_rotation': {
+        #         'w': obj.rotation_quaternion[0],
+        #         'x': -obj.rotation_quaternion[1],
+        #         'y': obj.rotation_quaternion[3],
+        #         'z': obj.rotation_quaternion[2],
+        #     },
+        # })
+        return
+
+    # The object is a duplicate, so create a new entity and copy everything from the old one
+    # if sge_scene.get_entity_userdata(entity_id) != obj:
+    #     # Validate the parent
+    #     if obj.parent is not None:
+    #         validate_entity(scene, obj.parent)
+
+    #     old_entity_id = entity_id
+    #     entity_id = sge_scene.new_entity(obj)
+
+    #     # Create all of the components on it
+
+
+def update_blender_entities(scene):
     self = types.SinGEDProps
+
+    # Check previously selected objects
+    for obj in self.sge_selection:
+        # If the object was deleted
+        if scene not in obj.users_scene:
+            # Delete the object, and all of its children TODO
+            continue
+
+    # Save the current selection
+    self.sge_selection = list(bpy.context.selected_objects)
+
+    # Validate all objects in current selection
+    for obj in self.sge_selection:
+       validate_entity(self.sge_scene, obj)
+       # TODO: Check parent
+
+    # Check name on active object
+    active_entity = bpy.context.active_object
+    if active_entity is not None and active_entity.name != self.sge_scene.get_entity_name(active_entity.sge_entity_id):
+        self.sge_scene.set_entity_name(active_entity.sge_entity_id, active_entity.name)
 
     # Make sure we don't perform realtime updates too frequently and overload the server
     if time.time() - self.sge_last_realtime_update < bpy.context.scene.singed.sge_realtime_update_delay:
         return
 
-    for obj in bpy.context.selected_objects:
-        if obj.sge_entity_id == 0:
-            # New object, need to add to the scene TODO
-            continue
+    for obj in self.sge_selection:
+        entity_id = obj.sge_entity_id
 
         # Helper function binding to get a transform property
-        transform_getter = partial(self.sge_scene.get_property_value, obj.sge_entity_id, 'sge::CTransform3D', [])
+        transform_getter = partial(self.sge_scene.get_property_value, entity_id, 'sge::CTransform3D', [])
 
         # Access the transform properties
         local_position = transform_getter('local_position')
         if local_position is None:
             # Component hasn't been loaded yet
             continue
+
         local_scale = transform_getter('local_scale')
         local_rotation = transform_getter('local_rotation')
 
         # Helper function binding to set a transform property
-        transform_setter = partial(self.sge_scene.set_property_value, obj.sge_entity_id, 'sge::CTransform3D')
+        transform_setter = partial(self.sge_scene.set_property_value, entity_id, 'sge::CTransform3D')
 
         # Update translation properties as necessary (swizzle components)
         if obj.location[0] != -local_position['x']:
@@ -146,17 +220,19 @@ def open_active_session(host, port):
 
     # Create the scene manager object
     self.sge_scene = scene_manager.SceneManager(create_blender_entity)
-    self.sge_scene.add_get_component_callback('sge::CTransform3D', transform_blender_entity)
-    self.sge_scene.add_get_component_callback('sge::CStaticMesh', blender_static_mesh)
+    self.sge_scene.add_component_type_callback('sge::CTransform3D', transform_blender_entity)
+    self.sge_scene.add_component_type_callback('sge::CStaticMesh', blender_static_mesh)
     self.sge_scene.register_handlers(self.sge_session)
 
     # Create the resource manager object
     self.sge_resource_manager = resource_manager.ResourceManager(create_blender_resource)
     self.sge_resource_manager.register_handlers(self.sge_session)
 
-    # Tell blender to update the session
-    bpy.app.handlers.scene_update_pre.append(cycle_session)
-    bpy.app.handlers.scene_update_post.append(update_blender_entity_transform)
+    # Create an empty selection list
+    self.sge_selection = []
+
+    # Enable updates
+    enable_sge_update()
 
 def close_active_session():
     self = types.SinGEDProps
@@ -164,9 +240,8 @@ def close_active_session():
     if self.sge_session is None:
         return
 
-    # Remove blender app handlers
-    bpy.app.handlers.scene_update_pre.remove(cycle_session)
-    bpy.app.handlers.scene_update_post.remove(update_blender_entity_transform)
+    # Disable updates
+    disable_sge_update()
 
     # Close the session
     self.sge_session.close()
@@ -180,11 +255,27 @@ def close_active_session():
     # Destroy the scene manager
     self.sge_scene = None
 
+    # Destroy the resource manager
+    self.sge_resource_manager = None
+
+    # Destroy the selection list
+    self.sge_selection = None
+
 def cycle_session(scene):
     self = types.SinGEDProps
 
     if self.sge_session is not None:
         self.sge_session.cycle()
+
+def enable_sge_update():
+    # Add the app handlers
+    bpy.app.handlers.scene_update_pre.append(cycle_session)
+    bpy.app.handlers.scene_update_post.append(update_blender_entities)
+
+def disable_sge_update():
+    # Remove the app handlers
+    bpy.app.handlers.scene_update_pre.remove(cycle_session)
+    bpy.app.handlers.scene_update_post.remove(update_blender_entities)
 
 class SinGEDConnect(Operator):
     bl_idname = 'singed.connect'

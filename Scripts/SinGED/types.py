@@ -2,10 +2,17 @@
 
 import bpy
 from bpy.types import PropertyGroup
-from bpy.props import BoolProperty, IntProperty, FloatProperty, StringProperty, PointerProperty
+from bpy.props import BoolProperty, IntProperty, FloatProperty, StringProperty, PointerProperty, EnumProperty
+
+def get_component_types(scene=None, context=None):
+    result = []
+    for component_type in SinGEDProps.sge_typedb.component_types:
+        result.append((component_type, component_type, ''))
+
+    return result
 
 class SGETypes(PropertyGroup):
-    """Nothing here"""
+    sge_component_types = EnumProperty(items=get_component_types)
 
 class SinGEDProps(PropertyGroup):
     sge_host = StringProperty(name='Host', default='localhost')
@@ -17,6 +24,7 @@ class SinGEDProps(PropertyGroup):
     sge_typedb = None
     sge_scene = None
     sge_resource_manager = None
+    sge_selection = None
 
 class SGETypeBase(PropertyGroup):
     sge_property_path = StringProperty()

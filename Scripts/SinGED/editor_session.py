@@ -5,6 +5,7 @@ import json
 
 class EditorSession(object):
     CONNECTION_TIMEOUT = 0.033
+    BUFFER_SIZE = 4096
 
     def __init__(self, host="localhost", port=1995):
         # Connect to the editor server
@@ -13,9 +14,25 @@ class EditorSession(object):
         self.sock.connect((host, port))
         self.query_handlers = {}
         self.response_handlers = {}
+        self.socket_data = b''
 
     def close(self):
         self.sock.close()
+
+    def get_socket_data(self):
+        self.socket_data += self.sock.recv(self.BUFFER_SIZE)
+
+    def split_socket_data(self, offset):
+        while len(self.socket_data) < offset:
+            self.get_socket_data()
+
+        # Split the socket data along the offset
+        result = self.socket_data[: offset]
+        self.socket_data = self.socket_data[offset: ]
+        return result
+
+    def len_socket_data(self):
+        return len(self.socket_data)
 
     def receive_message(self):
 
@@ -23,19 +40,23 @@ class EditorSession(object):
             # Set it to non-blocking while we check for a packet
             self.sock.setblocking(False)
 
-            # Get the length of the incoming string
-            (in_len,) = struct.unpack("I", self.sock.recv(4))
+            # Probe the socket for data
+            self.get_socket_data()
+            if self.len_socket_data() == 0:
+                return None
 
+        # If an error occured, quit
         except socket.error as e:
             return None
 
         # Set it to block while loading the packet
         self.sock.setblocking(True)
 
-        # Loop until we've loaded the whole string
-        in_str = ''
-        while len(in_str) < in_len:
-            in_str += self.sock.recv(in_len - len(in_str)).decode("utf-8")
+        # Get the length of the incoming string
+        (in_len,) = struct.unpack('I', self.split_socket_data(4))
+
+        # Create a result string
+        in_str = self.split_socket_data(in_len).decode('utf-8')
 
         # Convert it to a dictionary
         return json.loads(in_str)
@@ -45,7 +66,7 @@ class EditorSession(object):
         out_str = json.dumps(message).encode()
 
         # Construct a packet
-        out_packet = struct.pack("I", len(out_str)) + out_str
+        out_packet = struct.pack('I', len(out_str)) + out_str
 
         # Send it
         self.sock.send(out_packet)

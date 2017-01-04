@@ -56,7 +56,6 @@ def from_json(path, value):
     face = [None, None, None]
 
     for i in range(0, len(verts), 9):
-        # For each position in the vertex
         for v in range(0, 3):
             face[v] = mesh.verts.new((-verts[v * 3 + i], verts[v * 3 + i + 2], verts[v * 3 + i + 1]))
         mesh.faces.new(face)
