@@ -77,7 +77,7 @@ class SceneManager(object):
 
             # Create the component type dictionary
             for component_type in value['components']:
-                entity.components.setdefault(component_type, dict())
+                entity.components[component_type] = dict()
 
             # Run the user callback on the entity
             if self._new_entity_callback is not None:

@@ -26,10 +26,16 @@ class SinGEDEntityPanel(Panel):
 
     def draw(self, context):
         layout = self.layout
-        layout.prop(context.scene.singed.sge_types, 'sge_component_types')
-        op = layout.operator(operators.SinGEDNewComponent.bl_idname)
-        op.entity_id = context.active_object.sge_entity_id
-        op.component_type = context.scene.singed.sge_types.sge_component_types
+        entity_id = context.active_object.sge_entity_id
+
+        if len(types.get_component_types()) != 0:
+            layout.prop(context.scene.singed.sge_types, 'sge_component_types', text='Type')
+            op = layout.operator(operators.SinGEDNewComponent.bl_idname, text='Add new component')
+            op.entity_id = context.active_object.sge_entity_id
+            op.component_type = context.scene.singed.sge_types.sge_component_types
+        else:
+            layout.label("All component types in use by this object.")
+
         return
 
 class SinGEDComponentPanelBase(Panel):

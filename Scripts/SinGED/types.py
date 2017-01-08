@@ -6,8 +6,11 @@ from bpy.props import BoolProperty, IntProperty, FloatProperty, StringProperty, 
 
 def get_component_types(scene=None, context=None):
     result = []
+    filter = SinGEDProps.sge_scene.get_components(bpy.context.active_object.sge_entity_id)
+
     for component_type in SinGEDProps.sge_typedb.component_types:
-        result.append((component_type, component_type, ''))
+        if component_type not in filter:
+            result.append((component_type, component_type, ''))
 
     return result
 

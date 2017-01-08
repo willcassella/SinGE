@@ -83,24 +83,24 @@ def validate_entity(sge_scene, obj):
 
         # Give it a transform component, and set the value
         sge_scene.new_component(entity_id, 'sge::CTransform3D')
-        # sge_scene.set_component_value(entity_id, 'sge::CTransform3D', {
-        #     'local_position': {
-        #         'x': -obj.location[0],
-        #         'y': obj.location[2],
-        #         'z': obj.location[1],
-        #     },
-        #     'local_scale': {
-        #         'x': obj.scale[0],
-        #         'y': obj.scale[2],
-        #         'z': obj.scale[1],
-        #     },
-        #     'local_rotation': {
-        #         'w': obj.rotation_quaternion[0],
-        #         'x': -obj.rotation_quaternion[1],
-        #         'y': obj.rotation_quaternion[3],
-        #         'z': obj.rotation_quaternion[2],
-        #     },
-        # })
+        sge_scene.set_component_value(entity_id, 'sge::CTransform3D', {
+            'local_position': {
+                'x': -obj.location[0],
+                'y': obj.location[2],
+                'z': obj.location[1],
+            },
+            'local_scale': {
+                'x': obj.scale[0],
+                'y': obj.scale[2],
+                'z': obj.scale[1],
+            },
+            'local_rotation': {
+                'w': obj.rotation_quaternion[0],
+                'x': -obj.rotation_quaternion[1],
+                'y': obj.rotation_quaternion[3],
+                'z': obj.rotation_quaternion[2],
+            },
+        })
         return
 
     # The object is a duplicate, so create a new entity and copy everything from the old one
@@ -131,7 +131,6 @@ def update_blender_entities(scene):
     # Validate all objects in current selection
     for obj in self.sge_selection:
        validate_entity(self.sge_scene, obj)
-       # TODO: Check parent
 
     # Check name on active object
     active_entity = bpy.context.active_object
