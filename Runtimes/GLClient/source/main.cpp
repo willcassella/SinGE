@@ -6,6 +6,7 @@
 #include <Core/Reflection/TypeDB.h>
 #include <Resource/Archives/JsonArchive.h>
 #include <Engine/Scene.h>
+#include <Engine/SystemFrame.h>
 #include <Engine/Components/CTransform3D.h>
 #include <Engine/Components/Display/CCamera.h>
 #include <Engine/Components/Display/CStaticMesh.h>
@@ -14,6 +15,14 @@
 
 constexpr sge::uint32 window_width = 1920;
 constexpr sge::uint32 window_height = 1080;
+
+void mut_process_test(sge::SystemFrameMut& frame, float current_time, float dt)
+{
+	frame.process_entities_mut([](sge::ProcessingFrame&, sge::EntityId, sge::CTransform3D& transform, sge::CPerspectiveCamera&)
+	{
+		transform.set_local_position(transform.get_local_position() + sge::Vec3{ 0, 0, 0.01 });
+	});
+}
 
 int main()
 {
@@ -52,6 +61,7 @@ int main()
 
 	// Create a render system
 	sge::GLRenderSystem renderSystem{ window_width, window_height };
+	renderSystem.register_with_scene(scene);
 
 	// Create a JavaScript system
 	sge::JavaScriptEngine jsEngine{ scene };
@@ -61,18 +71,15 @@ int main()
 	jsEngine.register_type(sge::CTransform3D::type_info);
 	jsEngine.register_type(sge::CPerspectiveCamera::type_info);
 	jsEngine.register_type(sge::CStaticMesh::type_info);
-	jsEngine.load_script("Content/JavaScript/main.js");
+	//jsEngine.load_script("Content/JavaScript/main.js");
+
+	// Create the test mutation system
+	auto system_test_token = scene.register_system_mut_fn(&mut_process_test);
 
 	// Loop until the user closes the window
 	while (!glfwWindowShouldClose(window))
 	{
-		// Draw the scene
-		renderSystem.render_scene(scene);
-
-		scene.process_entities_mut([](sge::ProcessingFrame&, sge::EntityId, sge::CTransform3D& transform, sge::CPerspectiveCamera&)
-		{
-			transform.set_local_position(transform.get_local_position() + sge::Vec3{ 0, 0, 0.01 });
-		});
+		scene.update(0.016);
 
 		// Swap front and back buffers
 		glfwSwapBuffers(window);
@@ -80,6 +87,10 @@ int main()
 		// Poll for and process events
 		glfwPollEvents();
 	}
+
+	// Unregister systems
+	scene.unregister_system_fn(system_test_token);
+	renderSystem.unregister_with_scene(scene);
 
 	glfwTerminate();
 }

@@ -53,25 +53,29 @@ int main()
 
 	// Create a render system
 	sge::GLRenderSystem renderSystem{ window_width, window_height };
+	renderSystem.register_with_scene(scene);
 
 	// Create an editor server
-	sge::EditorServerSystem editorServer{ scene, 1995 };
+	sge::EditorServerSystem editorServer{ 1995 };
+	editorServer.set_serve_time(4);
+	editorServer.register_with_scene(scene);
 
 	// Loop until the user closes the window
 	while (!glfwWindowShouldClose(window))
 	{
-		// Draw the scene
-		renderSystem.render_scene(scene);
+		// Update
+		scene.update(0.016);
 
 		// Swap front and back buffers
 		glfwSwapBuffers(window);
 
 		// Poll for and process events
 		glfwPollEvents();
-
-		// Run the server
-		editorServer.serve(4);
 	}
+
+	// Unregister systems
+	editorServer.unregister_with_scene(scene);
+	renderSystem.unregister_with_scene(scene);
 
 	glfwTerminate();
 }
