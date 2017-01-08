@@ -123,6 +123,32 @@ namespace sge
 		}
 
 		/**
+		 * \brief Pads the size of this type to a multiple of the given alignment.
+		 * \param alignment The alignment to pad to.
+		 * \return The aligned size of this type.
+		 */
+		std::size_t aligned_size(const std::size_t alignment = alignof(std::max_align_t)) const
+		{
+			const auto size = _data.size;
+
+			if (alignment == 0)
+			{
+				return size;
+			}
+
+			const auto remainder = size % alignment;
+
+			if (remainder == 0)
+			{
+				return size;
+			}
+			else
+			{
+				return size + alignment - remainder;
+			}
+		}
+
+		/**
 		 * \brief Returns the alignment requirements of this type.
 		 */
 		std::size_t alignment() const
