@@ -1,11 +1,16 @@
 // ProcessingFrame.cpp
 
+#include <algorithm>
+#include <Core/Memory/Functions.h>
 #include <Core/Reflection/ReflectionBuilder.h>
 #include "../include/Engine/ProcessingFrame.h"
+#include "../include/Engine/Scene.h"
+
+SGE_REFLECT_TYPE(sge::ProcessingFrame);
 
 namespace sge
 {
-	struct TagHeader
+	struct SGE_ALIGNED_BUFFER_HEADER TagHeader
 	{
 		//////////////////
 		///   Fields   ///
@@ -15,8 +20,10 @@ namespace sge
 		const TypeInfo* tag_type;
 	};
 
-	ProcessingFrame::ProcessingFrame(const Scene& /*unused*/)
-		: _free_offset(0)
+	ProcessingFrame::ProcessingFrame()
+		: _tag_buffer(nullptr),
+		_buffer_size(0),
+		_free_offset(0)
 	{
 	}
 
@@ -27,40 +34,85 @@ namespace sge
 		for (std::size_t offset = 0; offset < freeOffset;)
 		{
 			// Access the header and tag
-			auto* header = reinterpret_cast<TagHeader*>(&_tag_buffer[offset]);
-			void* tag = &_tag_buffer[offset + sizeof(TagHeader)];
+			auto* header = reinterpret_cast<TagHeader*>(_tag_buffer + offset);
+			void* tag = _tag_buffer + offset + sizeof(TagHeader);
 
 			// Destroy the tag object
 			header->tag_type->drop(tag);
 
+			// Destroy the tag header (no-op, but for good measure)
+			header->~TagHeader();
+
 			// Move the offset forward
-			offset += sizeof(TagHeader) + header->tag_type->size();
+			offset += sizeof(TagHeader) + header->tag_type->aligned_size();
+		}
+
+		// Free the tag buffer
+		sge::free(_tag_buffer);
+	}
+
+	void ProcessingFrame::create_tag(ComponentId component, const TypeInfo& tagType, void* tag)
+	{
+		const auto aligned_size = tagType.aligned_size(alignof(std::max_align_t));
+
+		// Reserve space for the tag
+		tag_buffer_reserve(1, aligned_size);
+
+		// Acquire an offset into the buffer
+		auto bufferOffset = _free_offset;
+		_free_offset += sizeof(TagHeader) + aligned_size;
+
+		// Insert the tag header
+		new (_tag_buffer + bufferOffset) TagHeader{ component, &tagType };
+
+		// Insert the tag object
+		tagType.move_init(_tag_buffer + bufferOffset + sizeof(TagHeader), tag);
+	}
+
+	void ProcessingFrame::tag_buffer_reserve(std::size_t num_tags, std::size_t tag_size)
+	{
+		const auto requested = (tag_size + sizeof(TagHeader)) * num_tags;
+
+		if (_buffer_size == 0)
+		{
+			_tag_buffer = (byte*)sge::malloc(requested);
+			_buffer_size = requested;
+		}
+		else if (_buffer_size - _free_offset < requested)
+		{
+			tag_buffer_expand(requested - (_buffer_size - _free_offset));
 		}
 	}
 
-	void* ProcessingFrame::create_tag(ComponentId component, const TypeInfo& tagType)
+	void ProcessingFrame::tag_buffer_expand(std::size_t additional_size)
 	{
-		// Acquire an offset into the buffer
-		auto bufferOffset = _free_offset;
-		_free_offset += sizeof(TagHeader) + tagType.size();
+		// Allocate a new buffer
+		byte* buff = (byte*)sge::malloc(_buffer_size + additional_size);
 
-		// Make sure that we haven't run out of room in the tag buffer
-		assert(_free_offset < TAG_BUFFER_SIZE /*Tag buffer overflow*/);
+		// Move everything into the new buffer
+		for (std::size_t offset = 0; offset < _free_offset;)
+		{
+			// Get the current header
+			auto* header = reinterpret_cast<TagHeader*>(_tag_buffer + offset);
 
-		// Insert the tag header
-		new (&_tag_buffer[bufferOffset]) TagHeader{ component, &tagType };
+			// Copy it to the target
+			auto* new_header = new (buff + offset) TagHeader{ *header };
 
-		// Insert the tag object
-		void* tag = &_tag_buffer[bufferOffset + tagType.size()];
-		tagType.init(tag);
-		return tag;
-	}
+			// Move the value
+			header->tag_type->move_init(new_header + 1, header + 1);
 
-	ProcessingFrameMut::ProcessingFrameMut(Scene& scene)
-		: ProcessingFrame(scene),
-		_scene(&scene)
-	{
-		_component_interface_free_offset = 0;
-		_new_component_next = 0;
+			// Destroy the original
+			header->tag_type->drop(header + 1);
+
+			// Increment the offset
+			offset += sizeof(TagHeader) + header->tag_type->aligned_size();
+		}
+
+		// Free the old buffer
+		sge::free(_tag_buffer);
+
+		// Replace it
+		_tag_buffer = buff;
+		_buffer_size += additional_size;
 	}
 }

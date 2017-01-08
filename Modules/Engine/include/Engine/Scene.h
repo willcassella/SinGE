@@ -1,23 +1,48 @@
 // Scene.h
 #pragma once
 
-#include <array>
-#include <memory>
-#include <unordered_map>
-#include "ProcessingFrame.h"
+#include <map>
+#include "SceneData.h"
 
 namespace sge
 {
 	struct TypeDB;
+	class SystemFrame;
+	class SystemFrameMut;
 
+	/**
+	 * \brief Top-level scene interface.
+	 */
 	struct SGE_ENGINE_API Scene
 	{
 		SGE_REFLECTED_TYPE;
 
-		using ProcessMutFn = void(ProcessingFrameMut& pframe, EntityId entity, ComponentInterface* const components[]);
-		using ProcessFn = void(ProcessingFrame& pframe, EntityId entity, const ComponentInterface* const components[]);
-		using ComponentTypeEnumeratorFn = void(const TypeInfo& type);
-		using EntityEnumeratorFn = void(EntityId entity);
+		/**
+		 * \brief Token used to identify registered system functions, and later unregister them.
+		 * This design may change in the future.
+		 */
+		using SystemFnToken = uint16;
+
+		/**
+		 * \brief Default system token value.
+		 */
+		static constexpr SystemFnToken NULL_SYSTEM_TOKEN = 0;
+
+		/**
+		 * \brief Function signature used for system funtions during the read phase. This design may change in the future.
+		 * \param frame The frame to be used by the system function.
+		 * \param current_time The current game time.
+		 * \param dt The time delta since the last frame.
+		 */
+		using SystemFn = void(SystemFrame& frame, float current_time, float dt);
+
+		/**
+		 * \brief Function signature used for system functions during the read/write phase. This design may change in the future.
+		 * \param frame The frame to be used by the system function.
+		 * \param current_time The current game time.
+		 * \param dt The time delta since the last frame.
+		 */
+		using SystemMutFn = void(SystemFrameMut& frame, float current_time, float dt);
 
 		////////////////////////
 		///   Constructors   ///
@@ -34,217 +59,129 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		EntityId next_entity_id() const
-		{
-			return _next_entity_id;
-		}
+		/**
+		 * \brief Resets entity/component data. Essentially creates a new scene without unregistering component types.
+		 */
+		void reset_scene();
 
+		/**
+		 * \brief Returns raw scene data. You should not use this unless you know what you're doing.
+		 */
+		const SceneData& get_raw_scene_data() const;
+
+		/**
+		 * \brief Serializes the state of this Scene to an Archive.
+		 * \param writer The writer for the archive to serialize to.
+		 */
 		void to_archive(ArchiveWriter& writer) const;
 
+		/**
+		 * \brief Deserializes the state of this Scene from an Archive.
+		 * \param reader The reader for the Archive to deserialize from.
+		 */
 		void from_archive(ArchiveReader& reader);
 
-		void register_component_type(const TypeInfo& type, std::unique_ptr<ComponentContainer> container);
+		/**
+		 * \brief Returns the type database for this Scene.
+		 */
+		TypeDB& get_type_db();
 
-		TypeDB& get_type_db() const;
+		/**
+		 * \brief Returns the type database for this Scene.
+		 */
+		const TypeDB& get_type_db() const;
 
+		/**
+		 * \brief Searches for a component type with the given name in the type database.
+		 * \param typeName The name of the component type to search for.
+		 * \return A pointer to the type information for the type, if found.
+		 */
 		const TypeInfo* get_component_type(const char* typeName) const;
 
-		void enumerate_component_types(FunctionView<ComponentTypeEnumeratorFn> enumerator) const;
+		/**
+		 * \brief Registers a new component type with the scene.
+		 * \param type
+		 * \param container
+		 */
+		void register_component_type(const TypeInfo& type, std::unique_ptr<ComponentContainer> container);
 
-		void enumerate_entities(FunctionView<EntityEnumeratorFn> enumerator) const;
+		/**
+		 * \brief Registers a system function to be called during the read phase.
+		 * This design may change in the future.
+		 * \param system_fn The system function to call during the read phase.
+		 * \return The token for the system function, which may be used to unregister it.
+		 */
+		SystemFnToken register_system_fn(std::function<SystemFn> system_fn);
 
-		void enumerate_components(EntityId entity, FunctionView<ComponentTypeEnumeratorFn> enumerator) const;
-
-		EntityId new_entity();
-
-		EntityId get_entity_parent(EntityId entity) const;
-
-		void set_entity_parent(EntityId entity, EntityId parent);
-
-		std::string get_entity_name(EntityId entity) const;
-
-		void set_entity_name(EntityId entity, std::string name);
-
-		ComponentId new_component(EntityId entity, const TypeInfo& type);
-
-		void process_entities_mut(const TypeInfo* const types[], std::size_t numTypes, FunctionView<ProcessMutFn> processFn);
-
-		void process_entities(const TypeInfo* const types[], std::size_t numTypes, FunctionView<ProcessFn> processFn) const;
-
-		void process_single_mut(EntityId entity, const TypeInfo* const types[], std::size_t numTypes, FunctionView<ProcessMutFn> processFn);
-
-		void process_single(EntityId entity, const TypeInfo* const types[], std::size_t numTypes, FunctionView<ProcessFn> processFn) const;
-
-		template <typename ProcessFnT>
-		void process_entities_mut(ProcessFnT&& processFn)
+		/**
+		 * \brief Registers a system member function to be called during the read phase.
+		 * This design may change in the future.
+		 * \param outer The system object that the member function is to be called on.
+		 * \param system_fn The system member function to call during the read phase.
+		 * \return The token for the system function, which may be used to unregister it.
+		 */
+		template <typename T>
+		SystemFnToken register_system_fn(T* outer, void(T::*system_fn)(SystemFrame& frame, float current_time, float dt))
 		{
-			using FnTraits = stde::function_traits<ProcessFnT>;
-			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
-
-			// Run the process functions
-			auto adapted = Scene::adapt_process_fn(ComponentList{}, processFn);
-			Scene::process_entities_mut(adapted.first.data(), ComponentList::size(), adapted.second);
+			return this->register_system_fn(std::bind(
+				system_fn,
+				outer,
+				std::placeholders::_1,
+				std::placeholders::_2,
+				std::placeholders::_3));
 		}
 
-		template <typename ProcessFnT>
-		void process_entities(ProcessFnT&& processFn) const
-		{
-			using FnTraits = stde::function_traits<ProcessFnT>;
-			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
+		/**
+		 * \brief Registers a system function to be called during the read/write phase.
+		 * This design may change in the future.
+		 * \param system_fn The system function to call during the read/write phase.
+		 * \return The token for the system function, which may be used to unregister it.
+		 */
+		SystemFnToken register_system_mut_fn(std::function<SystemMutFn> system_fn);
 
-			// Run the process function
-			auto adapted = Scene::adapt_process_fn(ComponentList{}, processFn);
-			Scene::process_entities(adapted.first.data(), ComponentList::size(), adapted.second);
+		/**
+		 * \brief Registers a system member function to be called during the read/write phase.
+		 * This design may change in the future.
+		 * \param outer The system object that the member function is to be called on.
+		 * \param system_fn The system member function to call during the read/write phase.
+		 * \return The token for the system function, which may be used to unregister it.
+		 */
+		template <typename T>
+		SystemFnToken register_system_mut_fn(T* outer, void(T::*system_fn)(SystemFrameMut& frame, float current_time, float dt))
+		{
+			return this->register_system_mut_fn(std::bind(
+				system_fn,
+				outer,
+				std::placeholders::_1,
+				std::placeholders::_2,
+				std::placeholders::_3));
 		}
 
-		template <typename ProcessFnT>
-		void process_single_mut(EntityId entity, ProcessFnT&& processFn)
-		{
-			using FnTraits = stde::function_traits<ProcessFnT>;
-			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
+		/**
+		 * \brief Unregisters the system function identified by the given token.
+		 * \param token The token associated with the system function to unregister.
+		 */
+		void unregister_system_fn(SystemFnToken token);
 
-			// Run the processing function
-			auto adapted = Scene::adapt_process_fn(ComponentList{}, processFn);
-			Scene::process_single_mut(entity, adapted.first.data(), ComponentList::size(), adapted.second);
-		}
-
-		template <typename ProcessFnT>
-		void process_single(EntityId entity, ProcessFnT&& processFn)
-		{
-			using FnTraits = stde::function_traits<ProcessFnT>;
-			using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
-
-			// Run the processing function
-			auto adapted = Scene::adapt_process_fn(ComponentList{}, processFn);
-			Scene::process_single(entity, adapted.first.data(), ComponentList::size(), adapted.second);
-		}
-
-		template <class T, typename Ret, class ... ComponentTs>
-		void process_entities_mut(T& outer, Ret(T::*processFn)(ProcessingFrameMut&, EntityId, ComponentTs...))
-		{
-			using ComponentList = tmp::list<ComponentTs...>;
-
-			// Create a wrapper function
-			auto wrapper = [&outer, processFn](ProcessingFrameMut& pframe, EntityId entity, ComponentTs ... components) {
-				(outer.*processFn)(pframe, entity, components...);
-			};
-
-			// Run the processing function
-			auto adapted = Scene::adapt_process_fn(ComponentList{}, wrapper);
-			Scene::process_entities_mut(adapted.first.data(), ComponentList::size(), adapted.second);
-		}
-
-		template <class T, typename Ret, typename ... ComponentTs>
-		void process_entities(T& outer, Ret(T::*processFn)(ProcessingFrame&, EntityId, ComponentTs...)) const
-		{
-			using ComponentList = tmp::list<ComponentTs...>;
-
-			// Create a wrapper function
-			auto wrapper = [&outer, processFn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) {
-				(outer.*processFn)(pframe, entity, components...);
-			};
-
-			// Run the processing function
-			auto adapted = Scene::adapt_process_fn(ComponentList{}, wrapper);
-			Scene::process_entities(adapted.first.data(), ComponentList::size(), adapted.second);
-		}
-
-		template <class T, typename Ret, class ... ComponentTs>
-		void process_single_mut(EntityId entity, T& outer, Ret(T::*processFn)(ProcessingFrameMut&, EntityId, ComponentTs...))
-		{
-			using ComponentList = tmp::list<ComponentTs...>;
-
-			// Create a wrapper function
-			auto wrapper = [&outer, processFn](ProcessingFrameMut& pframe, EntityId entity, ComponentTs ... components) -> void {
-				(outer.*processFn)(pframe, entity, components...);
-			};
-
-			// Run the processing function
-			auto adapted = Scene::adapt_process_fn(ComponentList{}, wrapper);
-			Scene::process_single_mut(entity, adapted.first.data(), ComponentList::size(), adapted.second);
-		}
-
-		template <class T, typename Ret, class ... ComponentTs>
-		void process_single(EntityId entity, T& outer, Ret(T::*processFn)(ProcessingFrame&, EntityId, ComponentTs...)) const
-		{
-			using ComponentList = tmp::list<ComponentTs...>;
-
-			// Create a wrapper function
-			auto wrapper = [&outer, processFn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) -> void {
-				(outer.*processFn)(pframe, entity, components...);
-			};
-
-			// Run the processing function
-			auto adapted = Scene::adapt_process_fn(ComponentList{}, wrapper);
-			Scene::process_single(entity, adapted.first.data(), ComponentList::size(), adapted.second);
-		}
-
-	private:
-
-		template <typename ... ComponentTs, typename ProcessFnT>
-		static auto adapt_process_fn(tmp::list<ComponentTs...>, ProcessFnT& processFn)
-		{
-			// Create the array of component types
-			std::array<const TypeInfo*, sizeof...(ComponentTs)> types = { &sge::get_type<ComponentTs>()... };
-
-			// Create wrapper function
-			auto invoker = [&processFn](auto& pframe, EntityId entity, auto components) {
-				Scene::invoke_process_fn(tmp::list<ComponentTs...>{}, processFn, pframe, entity, components);
-			};
-
-			return std::make_pair(types, invoker);
-		}
-
-		template <typename ProcessFnT, typename PFrameT, typename ComponentIT, class FrontCT, class ... RestCTs, class ... ConvertedCTs>
-		static void invoke_process_fn(
-			tmp::list<FrontCT, RestCTs...>,
-			ProcessFnT& processFn,
-			PFrameT& pframe,
-			EntityId entity,
-			const ComponentIT* components,
-			ConvertedCTs&... converted)
-		{
-			Scene::invoke_process_fn(
-				tmp::list<RestCTs...>{},
-				processFn,
-				pframe,
-				entity,
-				components + 1,
-				converted...,
-				*static_cast<std::remove_reference_t<FrontCT>*>(*components));
-		}
-
-		template <typename ProcessFnT, typename PFrameT, typename ComponentIT, class ... ConvertedCTs>
-		static void invoke_process_fn(
-			tmp::list<>,
-			ProcessFnT& processFn,
-			PFrameT& pframe,
-			EntityId entity,
-			const ComponentIT* /*components*/,
-			ConvertedCTs&... converted)
-		{
-			processFn(pframe, entity, converted...);
-		}
-
-		template <typename PFrameT, typename SelfT, typename ProcessFnT>
-		static void impl_process_entities(SelfT& self, const TypeInfo* const types[], std::size_t numTypes, ProcessFnT& processFn);
-
-		template <typename PFrameT, typename SelfT, typename ProcessFnT>
-		static void impl_process_single(SelfT& self, EntityId entity, const TypeInfo* const types[], std::size_t numTypes, ProcessFnT& processFn);
+		/**
+		 * \brief Runs a full read-read/write update of the scene, with the given time delta.
+		 * \param dt The game time that is supposed to have passed since the last call to 'update'.
+		 */
+		void update(float dt);
 
 		//////////////////
 		///   Fields   ///
 	private:
 
-		EntityId _next_entity_id;
 		float _current_time;
-
-		/* Entity Data */
-		std::unordered_map<EntityId, EntityId> _entity_parents;
-		std::unordered_map<EntityId, std::string> _entity_names;
-
-		/* Component Data */
-		std::unordered_map<const TypeInfo*, std::unique_ptr<ComponentContainer>> _components;
 		TypeDB* _type_db;
+
+		/* Scene data */
+		SceneData _scene_data;
+
+		/* System data */
+		SystemFnToken _next_system_fn_token;
+		std::map<SystemFnToken, std::function<SystemFn>> _system_fns;
+		std::map<SystemFnToken, std::function<SystemMutFn>> _system_mut_fns;
 	};
 }

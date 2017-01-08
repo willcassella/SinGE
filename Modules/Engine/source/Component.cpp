@@ -7,6 +7,8 @@
 #include "../include/Engine/Components/Display/CStaticMesh.h"
 
 SGE_REFLECT_TYPE(sge::ComponentId);
+SGE_REFLECT_TYPE(sge::FNewComponent);
+SGE_REFLECT_TYPE(sge::FDestroyedComponent);
 
 namespace sge
 {

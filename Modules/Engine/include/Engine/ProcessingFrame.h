@@ -6,71 +6,71 @@
 
 namespace sge
 {
-	struct Scene;
+	class SystemFrame;
 
-	struct ProcessingFrame
+	struct SGE_ENGINE_API ProcessingFrame
 	{
-		static constexpr std::size_t TAG_BUFFER_SIZE = 1024;
+		SGE_REFLECTED_TYPE;
+
+		/* Only 'SystemFrame' objects make construct ProcessingFrames. */
+		friend SystemFrame;
 
 		////////////////////////
 		///   Constructors   ///
-	public:
+	private:
 
-		ProcessingFrame(const Scene& scene);
+		ProcessingFrame();
 		~ProcessingFrame();
+		ProcessingFrame(const ProcessingFrame& copy) = delete;
+		ProcessingFrame& operator=(const ProcessingFrame& copy) = delete;
+		ProcessingFrame(ProcessingFrame&& move) = delete;
+		ProcessingFrame& operator=(ProcessingFrame&& move) = delete;
 
 		///////////////////
 		///   Methods   ///
 	public:
 
-		void* create_tag(ComponentId component, const TypeInfo& tagType);
+		/**
+		 * \brief Creates a new tag for the given component.
+		 * \param component The component to create the tag for.
+		 * \param tagType The type of tag being created.
+		 * \param tag The value of the tag object, to move from.
+		 */
+		void create_tag(ComponentId component, const TypeInfo& tagType, void* tag);
 
+		/**
+		 * \brief Creates a new tag for the given component.
+		 * \tparam T The type of tag to create.
+		 * \param component The component to create the tag for.
+		 * \param tag The value of the tag object, to move from.
+		 */
 		template <typename T>
-		T* create_tag(ComponentId component)
+		void create_tag(ComponentId component, T&& tag)
 		{
-			return static_cast<T*>(create_tag(component, sge::get_type<T>()));
+			this->create_tag(component, sge::get_type<T>(), &tag);
 		}
+
+		/**
+		 * \brief Reserves additional space in the tag buffer for the given number of tags of the given size.
+		 * \param num_tags The number of tag objects to reserve space for.
+		 * \param tag_size The size of each tag object.
+		 */
+		void tag_buffer_reserve(std::size_t num_tags, std::size_t tag_size);
+
+	private:
+
+		/**
+		 * \brief Expands the tag buffer by the given amount.
+		 * \param additional_size The size to increase the tag buffer by.
+		 */
+		void tag_buffer_expand(std::size_t additional_size);
 
 		//////////////////
 		///   Fields   ///
 	private:
 
+		byte* _tag_buffer;
+		std::size_t _buffer_size;
 		std::size_t _free_offset;
-		byte _tag_buffer[TAG_BUFFER_SIZE];
-	};
-
-	struct ProcessingFrameMut : ProcessingFrame
-	{
-		static constexpr std::size_t COMPONENT_BUFFER_SIZE = 256;
-
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		ProcessingFrameMut(Scene& scene);
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		ComponentInterface* new_component(EntityId entity, const TypeInfo& type);
-
-		template <class C>
-		C* new_component(EntityId entity)
-		{
-			return static_cast<C*>(new_component(entity, sge::get_type<C>()));
-		}
-
-		//////////////////
-		///   Fields   ///
-	public:
-
-		Scene* _scene;
-
-		std::size_t _component_interface_free_offset;
-		byte _new_component_interfaces[COMPONENT_BUFFER_SIZE];
-
-		std::size_t _new_component_next;
-		ComponentId _new_components[COMPONENT_BUFFER_SIZE];
 	};
 }

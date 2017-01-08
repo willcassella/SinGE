@@ -25,7 +25,9 @@ namespace sge
 	/* EntityId reserved for the World entity. */
 	constexpr EntityId WORLD_ENTITY = 1;
 
-	/* Uniquely identifies a component within a scene. */
+	/**
+	 * \brief Uniquely identifies a Component of any type within a Scene.
+	 */
 	struct SGE_ENGINE_API ComponentId
 	{
 		SGE_REFLECTED_TYPE;
@@ -94,6 +96,10 @@ namespace sge
 		const TypeInfo* _type;
 	};
 
+	/**
+	 * \brief Uniquely identifies a Component of a specific type within a Scene.
+	 * \tparam C The type of Component this object identifies.
+	 */
 	template <class C>
 	struct TComponentId
 	{
@@ -215,19 +221,17 @@ namespace sge
 		///   Methods   ///
 	public:
 
+		virtual void reset() = 0;
+
 		virtual void to_archive(ArchiveWriter& writer) const = 0;
 
-		virtual void from_archive(ArchiveReader& reader) = 0;
+		virtual void from_archive(ArchiveReader& reader, std::set<EntityId>& est_instances) = 0;
 
 		virtual void create_component(EntityId entity) = 0;
 
+		virtual void remove_component(EntityId entity) = 0;
+
 		virtual bool create_interface(ProcessingFrame& pframe, EntityId entity, void* addr) = 0;
-
-		//////////////////
-		///   Fields   ///
-	public:
-
-		std::set<EntityId> entities;
 	};
 
 	template <class ComponentT, typename ComponentDataT>
@@ -237,6 +241,11 @@ namespace sge
 		///   Methods   ///
 	public:
 
+		void reset() override
+		{
+			instances = {};
+		}
+
 		void to_archive(ArchiveWriter& writer) const override
 		{
 			for (const auto& instance : instances)
@@ -245,9 +254,9 @@ namespace sge
 			}
 		}
 
-		void from_archive(ArchiveReader& reader) override
+		void from_archive(ArchiveReader& reader, std::set<EntityId>& est_instances) override
 		{
-			reader.enumerate_object_members([this, &reader](const char* entityIdStr)
+			reader.enumerate_object_members([this, &reader, &est_instances](const char* entityIdStr)
 			{
 				EntityId entity = std::strtoull(entityIdStr, nullptr, 10);
 
@@ -257,7 +266,7 @@ namespace sge
 				{
 					// If not, create one
 					iter = instances.insert(std::make_pair(entity, ComponentDataT{})).first;
-					entities.insert(entity);
+					est_instances.insert(entity);
 				}
 
 				sge::from_archive(iter->second, reader);
@@ -267,7 +276,15 @@ namespace sge
 		void create_component(EntityId entity) override
 		{
 			instances.insert(std::make_pair(entity, ComponentDataT{}));
-			entities.insert(entity);
+		}
+
+		void remove_component(EntityId entity) override
+		{
+			auto iter = instances.find(entity);
+			if (iter != instances.end())
+			{
+				instances.erase(iter);
+			}
 		}
 
 		bool create_interface(ProcessingFrame& pframe, EntityId entity, void* addr) override
@@ -287,6 +304,22 @@ namespace sge
 	public:
 
 		std::unordered_map<EntityId, ComponentDataT> instances;
+	};
+
+	/**
+	 * \brief Tag applied to new component objects.
+	 */
+	struct SGE_ENGINE_API FNewComponent
+	{
+		SGE_REFLECTED_TYPE;
+	};
+
+	/**
+	 * \brief Tag applied to destroyed component objects.
+	 */
+	struct SGE_ENGINE_API FDestroyedComponent
+	{
+		SGE_REFLECTED_TYPE;
 	};
 
 	/**

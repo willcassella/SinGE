@@ -1,8 +1,9 @@
 // CTransform3D.cpp
 
-#include <unordered_map>
+#include <memory>
 #include <Core/Reflection/ReflectionBuilder.h>
 #include "../../include/Engine/Components/CTransform3D.h"
+#include "../../include/Engine/ProcessingFrame.h"
 #include "../../include/Engine/Scene.h"
 
 namespace sge
@@ -34,7 +35,7 @@ namespace sge
 	public:
 
 		Vec3 local_position = Vec3::zero();
-		Vec3 local_scale = Vec3{1.f, 1.f, 1.f};
+		Vec3 local_scale = Vec3{ 1.f, 1.f, 1.f };
 		Quat local_rotation = Quat{};
 		EntityId parent = WORLD_ENTITY;
 	};
@@ -78,7 +79,7 @@ namespace sge
 		_data->parent = parent.entity();
 		if (!_applied_parent_changed_tag)
 		{
-			processing_frame().create_tag<FParentChanged>(this->id());
+			processing_frame().create_tag(this->id(), FParentChanged{});
 			_applied_parent_changed_tag = true;
 		}
 	}
@@ -184,7 +185,7 @@ namespace sge
 	{
 		if (!_applied_transform_changed_tag)
 		{
-			processing_frame().create_tag<FTransformChanged>(this->id());
+			processing_frame().create_tag(this->id(), FTransformChanged{});
 			_applied_transform_changed_tag = true;
 		}
 	}

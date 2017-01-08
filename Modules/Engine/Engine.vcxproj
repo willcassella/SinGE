@@ -180,6 +180,8 @@
     <ClInclude Include="include\Engine\Resources\StaticMesh.h" />
     <ClInclude Include="include\Engine\Resources\Texture.h" />
     <ClInclude Include="include\Engine\Scene.h" />
+    <ClInclude Include="include\Engine\SceneData.h" />
+    <ClInclude Include="include\Engine\SystemFrame.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Component.cpp" />
@@ -196,6 +198,7 @@
     <ClCompile Include="source\Resources\StaticMesh.cpp" />
     <ClCompile Include="source\Resources\Texture.cpp" />
     <ClCompile Include="source\Scene.cpp" />
+    <ClCompile Include="source\SystemFrame.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
