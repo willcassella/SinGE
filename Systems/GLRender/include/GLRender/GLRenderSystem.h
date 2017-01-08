@@ -3,11 +3,12 @@
 
 #include <memory>
 #include <Core/Reflection/Reflection.h>
+#include <Engine/Scene.h>
 #include "config.h"
 
 namespace sge
 {
-	struct Scene;
+	class SystemFrame;
 
 	struct SGE_GLRENDER_API GLRenderSystem
 	{
@@ -25,12 +26,19 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		void render_scene(const Scene& scene);
+		void register_with_scene(Scene& scene);
+
+		void unregister_with_scene(Scene& scene);
+
+	private:
+
+		void render_scene(SystemFrame& frame, float current_time, float dt);
 
 		////////////////
 		///   Data   ///
 	private:
 
 		std::unique_ptr<State> _state;
+		Scene::SystemFnToken _render_fn_token;
 	};
 }

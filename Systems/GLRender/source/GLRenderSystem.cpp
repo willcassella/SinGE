@@ -6,6 +6,7 @@
 #include <Engine/Components/Display/CStaticMesh.h>
 #include <Engine/Components/Display/CCamera.h>
 #include <Engine/Scene.h>
+#include <Engine/SystemFrame.h>
 #include "../private/GLRenderSystemState.h"
 
 SGE_REFLECT_TYPE(sge::GLRenderSystem);
@@ -36,12 +37,16 @@ namespace sge
 	static constexpr GLenum GBUFFER_DIFFUSE_ATTACHMENT = GL_COLOR_ATTACHMENT2;
 	static constexpr GLenum GBUFFER_SPECULAR_ATTACHMENT = GL_COLOR_ATTACHMENT3;
 
+	////////////////////////
+	///   Constructors   ///
+
 	GLRenderSystem::GLRenderSystem(uint32 width, uint32 height)
 	{
+		// Create the internal state object
 		_state = std::make_unique<GLRenderSystem::State>();
-
 		_state->width = static_cast<GLsizei>(width);
 		_state->height = static_cast<GLsizei>(height);
+		_render_fn_token = Scene::NULL_SYSTEM_TOKEN;
 
 		// Initialize GLEW
 		glewExperimental = GL_TRUE;
@@ -176,7 +181,21 @@ namespace sge
 		// Todo
 	}
 
-	void GLRenderSystem::render_scene(const Scene& scene)
+	///////////////////
+	///   Methods   ///
+
+	void GLRenderSystem::register_with_scene(Scene& scene)
+	{
+		_render_fn_token = scene.register_system_fn(this, &GLRenderSystem::render_scene);
+	}
+
+	void GLRenderSystem::unregister_with_scene(Scene& scene)
+	{
+		scene.unregister_system_fn(_render_fn_token);
+		_render_fn_token = Scene::NULL_SYSTEM_TOKEN;
+	}
+
+	void GLRenderSystem::render_scene(SystemFrame& frame, float current_time, float dt)
 	{
 		constexpr GLenum DRAW_BUFFERS[] = {
 			GBUFFER_POSITION_ATTACHMENT,
@@ -199,18 +218,17 @@ namespace sge
 		Mat4 view;
 		Mat4 proj;
 
-		// Get the first camera in the frame
-		scene.process_entities(
-			[&](const ProcessingFrame&, EntityId /*entity*/, const CTransform3D& transform, const CPerspectiveCamera& camera)
+		// Get the first camera in the scene
+		frame.process_entities([&](
+			ProcessingFrame& /*pframe*/,
+			EntityId /*entity*/,
+			const CTransform3D& transform,
+			const CPerspectiveCamera& camera)
 		{
-			if (hasCamera)
-			{
-				return;
-			}
-
-			hasCamera = true;
 			view = transform.get_world_matrix().inverse();
 			proj = camera.get_projection_matrix((float)this->_state->width / this->_state->height);
+			hasCamera = true;
+			return ProcessControl::BREAK;
 		});
 
 		// If no camera was found, return
@@ -220,8 +238,11 @@ namespace sge
 		}
 
 		// Render each static mesh in the world
-		scene.process_entities(
-			[&](const ProcessingFrame&, EntityId /*entity*/, const CTransform3D& transform, const CStaticMesh& staticMesh)
+		frame.process_entities([&](
+			ProcessingFrame& /*pframe*/,
+			EntityId /*entity*/,
+			const CTransform3D& transform,
+			const CStaticMesh& staticMesh)
 		{
 			// Get the model matrix
 			auto model = transform.get_world_matrix();
