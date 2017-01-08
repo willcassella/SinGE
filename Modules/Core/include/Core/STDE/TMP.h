@@ -1,10 +1,26 @@
 // TMP.h
 #pragma once
 
+#include <type_traits>
+
 namespace sge
 {
 	namespace tmp
 	{
+		/**
+		 * \brief Useful for forcing static_assert failure if a particular function is compiled.
+		 */
+		template <typename T>
+		struct failure : std::false_type
+		{};
+
+		/**
+		 * \brief Represents a type argument with a value, Useful for doing switch-like type handling via function overloading.
+		 * \tparam T The type to represent.
+		 */
+		template <typename T>
+		struct type {};
+
 		/* Represents a parameter pack. Useful for function overloading type stuff.
 		 * I used to have scheme-style pairs here too, but this was a lot more useful and is probably more efficient (compile-time). */
 		template <typename ... T>
