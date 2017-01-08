@@ -5,6 +5,7 @@
 #include <Core/Memory/Functions.h>
 #include <Core/Reflection/ReflectionBuilder.h>
 #include <Engine/Scene.h>
+#include <Engine/SystemFrame.h>
 #include "../include/JavaScript/JavaScriptEngine.h"
 #include "../private/JavaScriptEngineState.h"
 #include "../private/JsForeignObject.h"
@@ -169,9 +170,9 @@ namespace sge
 
 		// Wrapper function to call
 		auto processFn = [jsProcessFn = args[argc - 1], jsArgs, numTypes, foreignObjectBuffer, types, jsProtos](
-			ProcessingFrameMut&,
+			ProcessingFrame&,
 			EntityId entity,
-			ComponentInterface* const components[])
+			ComponentInterface* const components[]) -> ProcessControl
 		{
 			// Get the entity ID as an int TODO: FIX THIS
 			JsIntToNumber(static_cast<int>(entity), &jsArgs[2]);
@@ -189,10 +190,11 @@ namespace sge
 
 			// Run the processing function
 			auto error = JsCallFunction(jsProcessFn, jsArgs, numTypes + 3, nullptr);
+			return ProcessControl::CONTINUE;
 		};
 
 		// Run the process function
-		jsEngine->scene->process_entities_mut(types, numTypes, processFn);
+		jsEngine->mut_frame->process_entities_mut(types, numTypes, processFn);
 
 		// Null out all the js arguments
 		for (int i = 0; i < numTypes; ++i)
@@ -247,6 +249,7 @@ namespace sge
 	{
 		_state = std::make_unique<State>();
 		_state->scene = &scene;
+		_state->mut_frame = nullptr;
 
 		// Create a runtime
 		JsCreateRuntime(JsRuntimeAttributeNone, nullptr, &_state->js_runtime.runtime);
