@@ -16,14 +16,14 @@ foreach ($package in $args[2..$args.Length])
     # Check if The package is currently in progress
     if (Test-Path $inProgressPath)
     {
-        Write-Output ("Waiting on package {0} to finish." -f $package)
-        $inProgress.Add($inProgressPath)
+        Write-Output ("Waiting on in-progress package '{0}'." -f $package)
+        $inProgress.Add($inProgressPath) | Out-Null
         continue
     }
     # Check if we've already installed the package
     elseif (Test-Path $packagePath)
     {
-        Write-Output ("Package {0} is up to date." -f $package)
+        Write-Output ("Package '{0}' is up to date." -f $package)
         continue
     }
 
@@ -34,13 +34,13 @@ foreach ($package in $args[2..$args.Length])
     $temp = [System.IO.Path]::GetTempFileName() + ".zip"
 
     # Download the package
-    Write-Output ("Downloading package {0}..." -f $package)
+    Write-Output ("Downloading package '{0}'..." -f $package)
     $url = "https://github.com/willcassella/SinGE/releases/download/{0}/{1}.zip" -f $release, $package
     $web = New-Object net.webclient
     $web.DownloadFile($url, $temp)
 
     # Extract the package
-    Write-Output ("Extracting package {0}..." -f $package)
+    Write-Output ("Extracting package '{0}'..." -f $package)
     Expand-Archive $temp -dest $packagePath
 
     # Delete the temporary file and the in-progress file
