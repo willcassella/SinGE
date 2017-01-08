@@ -23,10 +23,13 @@
     <ClInclude Include="private\EditorServerSystemData.h">
       <Filter>private</Filter>
     </ClInclude>
-    <ClInclude Include="private\EditorPacket.h">
+    <ClInclude Include="private\EditorOps.h">
       <Filter>private</Filter>
     </ClInclude>
-    <ClInclude Include="private\EditorOps.h">
+    <ClInclude Include="private\Session.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\Packet.h">
       <Filter>private</Filter>
     </ClInclude>
   </ItemGroup>
@@ -38,6 +41,12 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\EditorOps.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Session.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\EditorServerSystemData.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
