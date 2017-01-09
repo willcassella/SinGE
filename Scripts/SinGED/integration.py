@@ -8,6 +8,10 @@ from functools import partial
 import time
 import socket
 
+# Global variable to prevent scene updates during critical sections
+# I have this rather than removing the app handler because I don't trust how Blender handles it
+sge_should_update = False
+
 def create_blender_resource(res_manager, path, type, value):
     if type == 'sge::StaticMesh':
         return static_mesh.from_json(path, value)
@@ -59,6 +63,8 @@ def validate_object_type(entity):
     # Create a new object
     obj = bpy.data.objects.new(entity.name, data)
     bpy.context.scene.objects.link(obj)
+    bpy.context.scene.objects.active = obj
+    obj.select = True
 
     # Restore entity data
     obj.sge_entity_id = entity.id
@@ -69,13 +75,6 @@ def validate_object_type(entity):
     obj.location = location
     obj.scale = scale
     obj.rotation_quaternion = rotation
-
-def destroy_entity_callback(sge_scene, entity):
-    # Disable scene updates
-    disable_sge_update()
-
-    # Re-enable updates
-    enable_sge_update()
 
 def update_transform_component_callback(sge_scene, entity, value):
     obj = entity.user_data
@@ -195,20 +194,24 @@ def validate_entity(sge_scene, obj):
             sge_scene.set_component_value(entity_id, component_type, component_value)
 
 def update_blender_entities(scene):
+    global sge_should_update
     self = types.SinGEDProps
 
+    if not sge_should_update:
+        return
+
     # Check previously selected objects
-    for (entity_id, obj) in self.sge_selection:
+    for entity_id in self.sge_selection:
         # If the object was deleted
-        if scene not in obj.users_scene:
+        if scene not in self.sge_scene.get_entity_userdata(entity_id).users_scene:
             self.sge_scene.request_destroy_entity(entity_id)
             continue
 
     # Save the current selection
-    self.sge_selection = [(obj.sge_entity_id, obj) for obj in bpy.context.selected_objects]
+    self.sge_selection = [obj.sge_entity_id for obj in bpy.context.selected_objects]
 
     # Validate all objects in current selection
-    for (entity_id, obj) in self.sge_selection:
+    for obj in bpy.context.selected_objects:
        validate_entity(self.sge_scene, obj)
 
     # Check name on active object
@@ -220,7 +223,8 @@ def update_blender_entities(scene):
     if time.time() - self.sge_last_realtime_update < bpy.context.scene.singed.sge_realtime_update_delay:
         return
 
-    for (entity_id, obj) in self.sge_selection:
+    for obj in bpy.context.selected_objects:
+        entity_id = obj.sge_entity_id
 
         # Helper function binding to get a transform property
         transform_getter = partial(self.sge_scene.get_property_value, entity_id, 'sge::CTransform3D', [])
@@ -304,6 +308,7 @@ def open_active_session(host, port):
     self.sge_scene.new_entity_callback(new_entity_callback)
     self.sge_scene.update_component_callback('sge::CTransform3D', update_transform_component_callback)
     self.sge_scene.update_component_callback('sge::CStaticMesh', update_static_mesh_component_callback)
+    self.sge_scene.destroy_component_callback('sge::CStaticMesh', destroy_static_mesh_component_callback)
     self.sge_scene.register_handlers(self.sge_session)
 
     # Create the resource manager object
@@ -313,6 +318,10 @@ def open_active_session(host, port):
 
     # Create an empty selection list
     self.sge_selection = []
+
+    # Add the app handlers
+    bpy.app.handlers.scene_update_pre.append(cycle_session)
+    bpy.app.handlers.scene_update_post.append(update_blender_entities)
 
     # Enable updates
     enable_sge_update()
@@ -325,6 +334,10 @@ def close_active_session():
 
     # Disable updates
     disable_sge_update()
+
+    # Remove the app handlers
+    bpy.app.handlers.scene_update_pre.remove(cycle_session)
+    bpy.app.handlers.scene_update_post.remove(update_blender_entities)
 
     # Close the session
     self.sge_session.close()
@@ -345,20 +358,19 @@ def close_active_session():
     self.sge_selection = None
 
 def cycle_session(scene):
+    global sge_should_update
     self = types.SinGEDProps
 
-    if self.sge_session is not None:
+    if sge_should_update and self.sge_session is not None:
         self.sge_session.cycle()
 
 def enable_sge_update():
-    # Add the app handlers
-    bpy.app.handlers.scene_update_pre.append(cycle_session)
-    bpy.app.handlers.scene_update_post.append(update_blender_entities)
+    global sge_should_update
+    sge_should_update = True
 
 def disable_sge_update():
-    # Remove the app handlers
-    bpy.app.handlers.scene_update_pre.remove(cycle_session)
-    bpy.app.handlers.scene_update_post.remove(update_blender_entities)
+    global sge_should_update
+    sge_should_update = False
 
 class SinGEDConnect(Operator):
     bl_idname = 'singed.connect'

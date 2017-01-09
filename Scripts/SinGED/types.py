@@ -3,6 +3,7 @@
 import bpy
 from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, IntProperty, FloatProperty, StringProperty, PointerProperty, EnumProperty
+from functools import partial
 
 def get_unused_component_types(scene=None, context=None):
     result = []
@@ -13,6 +14,38 @@ def get_unused_component_types(scene=None, context=None):
             result.append((component_type, component_type, ''))
 
     return result
+
+def property_getter(self, name, default):
+    # Get the component type and property path
+    property_path = self.sge_property_path.split('.')
+    component_type = property_path[0]
+    property_path = property_path[1: ]
+
+    # Get the active object entity id
+    entity_id = bpy.context.active_object.sge_entity_id
+
+    # Get the property value
+    value = SinGEDProps.sge_scene.get_property_value(entity_id, component_type, property_path, name)
+
+    # Returnt the default if there is no value
+    if value is None:
+        return default
+    return value
+
+def property_setter(self, name, value):
+    # Get the component type and property path
+    property_path = self.sge_property_path.split('.')
+    component_type = property_path[0]
+    property_path = property_path[1: ]
+
+    # Get the active object entity id
+    entity_id = bpy.context.active_object.sge_entity_id
+
+    # Set the property value
+    SinGEDProps.sge_scene.set_property_value(entity_id, component_type, property_path, name, value)
+
+    # Add a query to retrieve the component value
+    SinGEDProps.sge_scene.add_get_component_query(entity_id, component_type)
 
 class SGETypes(PropertyGroup):
     sge_component_types = EnumProperty(items=get_unused_component_types)
@@ -31,8 +64,6 @@ class SinGEDProps(PropertyGroup):
     sge_selection = None
 
 class SGETypeBase(PropertyGroup):
-    sge_property_path = StringProperty()
-
     @classmethod
     def sge_unregister(cls):
         bpy.utils.unregister_class(cls)
@@ -62,45 +93,37 @@ class SGEPrimitiveBase(object):
         # Draw the property
         layout.prop(parent_obj, parent_attr_name)
 
-    @classmethod
-    def sge_get(cls, name, self):
-        obj = bpy.context.active_object
-
 class SGEBool(SGEPrimitiveBase):
     @staticmethod
-    def sge_get_default():
-        return False
-
-    @staticmethod
     def sge_create_property(name):
-        return BoolProperty(name=name)
+        return FloatProperty(
+            name=name,
+            get=lambda self: property_getter(self, name, False),
+            set=lambda self, value: property_setter(self, name, value))
 
 class SGEInt(SGEPrimitiveBase):
     @staticmethod
-    def sge_get_default():
-        return 0
-
-    @staticmethod
     def sge_create_property(name):
-        return IntProperty(name=name)
+        return FloatProperty(
+            name=name,
+            get=lambda self: property_getter(self, name, 0),
+            set=lambda self, value: property_setter(self, name, value))
 
 class SGEFloat(SGEPrimitiveBase):
     @staticmethod
-    def sge_get_default():
-        return 0.0
-
-    @staticmethod
     def sge_create_property(name):
-        return FloatProperty(name=name)
+        return FloatProperty(
+            name=name,
+            get=lambda self: property_getter(self, name, 0.0),
+            set=lambda self, value: property_setter(self, name, value))
 
 class SGEString(SGEPrimitiveBase):
     @staticmethod
-    def sge_get_default():
-        return ""
-
-    @staticmethod
     def sge_create_property(name):
-        return StringProperty(name=name)
+        return StringProperty(
+            name=name,
+            get=lambda self: property_getter(self, name, ""),
+            set=lambda self, value: property_setter(self, name, value))
 
 def create_blender_type(typedb, type_name, type_info):
     # Create dictionaries for the class and the properties
@@ -108,6 +131,7 @@ def create_blender_type(typedb, type_name, type_info):
     class_dict = {
         'sge_type_name': type_name,
         'sge_property_dict': property_dict,
+        'sge_property_path': StringProperty(),
     }
 
     # Define each property

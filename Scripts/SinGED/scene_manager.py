@@ -307,7 +307,7 @@ class SceneManager(object):
 
         # Run the destroy component callback
         if component.destroy_instance_callback is not None:
-            component.destroy_instance_callback(self, self._entities[entity_id], component.instances[entity_id])
+            component.destroy_instance_callback(self, self._entities[entity_id], component_value)
 
     def get_entity_userdata(self, entity_id):
         return self._entities[entity_id].user_data

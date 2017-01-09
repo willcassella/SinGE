@@ -78,9 +78,31 @@ class SinGEDComponentPanelBase(Panel):
         # Draw the component properties
         self.sge_blender_type.sge_draw(layout, bpy.context.scene.singed.sge_types, self.sge_blender_type.__name__)
 
+def initialize_blender_component_properties_path(obj, path):
+    # Initialize the path to this object
+    obj.sge_property_path = path
+
+    # For each property on the object
+    for prop_name, (attr_name, prop_type) in obj.sge_property_dict.items():
+        # If the property is an object type
+        if issubclass(prop_type, types.SGETypeBase):
+            # Initialize it
+            prop = getattr(obj, attr_name)
+            initialize_blender_component_properties_path(prop, "{}.{}".format(path, prop_name))
+
 def create_blender_component(typedb, type_name, blender_type):
-     # Add the type to the types class
+    # We don't want to create a UI for the Transform component
+    if type_name == 'sge::CTransform3D':
+        return
+
+    # Add the type to the types class
     setattr(types.SGETypes, blender_type.__name__, PointerProperty(type=blender_type))
+
+    # Get the component object
+    component = getattr(bpy.context.scene.singed.sge_types, blender_type.__name__)
+
+    # Initialize the property path
+    initialize_blender_component_properties_path(component, type_name)
 
     # Create a dictionary for the panel type
     panel_class_dict = {
