@@ -107,7 +107,7 @@
       <AdditionalDependencies>glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 glfw-3.2.1</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.2 glfw-3.2.1</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -125,7 +125,7 @@
       <AdditionalDependencies>glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 glfw-3.2.1</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.2 glfw-3.2.1</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -148,7 +148,7 @@
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 glfw-3.2.1</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.2 glfw-3.2.1</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -171,7 +171,7 @@
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 glfw-3.2.1</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.2 glfw-3.2.1</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

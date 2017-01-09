@@ -70,29 +70,29 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>bin\</OutDir>
-    <IntDir>build\</IntDir>
+    <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)packages\ChakraCore\include\Jsrt;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)packages\ChakraCore\bin\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>bin\</OutDir>
-    <IntDir>build\</IntDir>
+    <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)packages\ChakraCore\include\Jsrt;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)packages\ChakraCore\bin\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>bin\</OutDir>
-    <IntDir>build\</IntDir>
+    <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)packages\ChakraCore\include\Jsrt;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)packages\ChakraCore\bin\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>bin\</OutDir>
-    <IntDir>build\</IntDir>
+    <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
     <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)packages\ChakraCore\include\Jsrt;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)packages\ChakraCore\bin\$(Platform)\$(Configuration);$(LibraryPath)</LibraryPath>
@@ -114,7 +114,7 @@ xcopy "$(SolutionDir)packages\ChakraCore\bin\$(Platform)\$(Configuration)\Chakra
       <AdditionalDependencies>ChakraCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 ChakraCore</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.2 ChakraCore</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -134,7 +134,7 @@ xcopy "$(SolutionDir)packages\ChakraCore\bin\$(Platform)\$(Configuration)\Chakra
       <AdditionalDependencies>ChakraCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 ChakraCore</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.2 ChakraCore</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -159,7 +159,7 @@ xcopy "$(SolutionDir)packages\ChakraCore\bin\$(Platform)\$(Configuration)\Chakra
 xcopy "$(SolutionDir)packages\ChakraCore\bin\$(Platform)\$(Configuration)\ChakraCore.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 ChakraCore</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.2 ChakraCore</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -184,7 +184,7 @@ xcopy "$(SolutionDir)packages\ChakraCore\bin\$(Platform)\$(Configuration)\Chakra
 xcopy "$(SolutionDir)packages\ChakraCore\bin\$(Platform)\$(Configuration)\ChakraCore.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 ChakraCore</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.2 ChakraCore</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -112,7 +112,7 @@
       <AdditionalDependencies>glew32.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 glew-2.0.0</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.2 glew-2.0.0</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -131,7 +131,7 @@
       <AdditionalDependencies>glew32.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 glew-2.0.0</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.2 glew-2.0.0</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -155,7 +155,7 @@
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 glew-2.0.0</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.2 glew-2.0.0</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -179,7 +179,7 @@
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file $(SolutionDir)Scripts\packages.ps1 $(SolutionDir)packages\ dependencies-v0.2 glew-2.0.0</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.2 glew-2.0.0</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
