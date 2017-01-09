@@ -9,7 +9,7 @@ import time
 import socket
 
 # Global variable to prevent scene updates during critical sections
-# I have this rather than removing the app handler because I don't trust how Blender handles it
+# I have this rather than adding/removing the app handler because I don't trust how Blender handles it
 sge_should_update = False
 
 def create_blender_resource(res_manager, path, type, value):
@@ -197,6 +197,7 @@ def update_blender_entities(scene):
     global sge_should_update
     self = types.SinGEDProps
 
+    # Make sure we're not in a critical section
     if not sge_should_update:
         return
 
@@ -359,10 +360,10 @@ def close_active_session():
 
 def cycle_session(scene):
     global sge_should_update
-    self = types.SinGEDProps
 
-    if sge_should_update and self.sge_session is not None:
-        self.sge_session.cycle()
+    # Make sure we're not in a critical section
+    if sge_should_update:
+        types.SinGEDProps.sge_session.cycle()
 
 def enable_sge_update():
     global sge_should_update

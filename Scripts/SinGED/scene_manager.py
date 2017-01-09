@@ -29,7 +29,7 @@ class ComponentType(object):
         self.destroy_instance_callback = None
 
 class SceneManager(object):
-    def __init__(self, **callbacks):
+    def __init__(self):
         self._new_entity_callback = None
         self._update_entity_callback = None
         self._destroy_entity_callback = None
@@ -39,10 +39,10 @@ class SceneManager(object):
         self._set_entity_name_queries = dict()
         self._set_entity_parent_queries = dict()
         self._components = dict()
+        self._new_component_queries = dict()
         self._destroyed_components = dict()
         self._get_component_queries = dict()
         self._set_component_queries = dict()
-        self._new_component_queries = dict()
         self._num_new_entities = 0
         self._sent_scene_query = False
         self._save_scene_path = ''
@@ -84,7 +84,7 @@ class SceneManager(object):
             entity = Entity()
             self._entities[entity_id] = entity
 
-            # Create the entity
+            # Initialize the entity
             entity.id = entity_id
             entity.name = value['name']
             entity.parent = value['parent']
