@@ -137,7 +137,7 @@ namespace sge
 			auto storageIter = _scene_data.components.find(type);
 
 			// Deserialize the storage object
-			storageIter->second.container->from_archive(reader, storageIter->second.established_instances);
+			storageIter->second.container->from_archive(reader, storageIter->second.instances);
 		});
 		reader.pop();
 

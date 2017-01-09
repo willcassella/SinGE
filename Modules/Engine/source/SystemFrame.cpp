@@ -98,7 +98,7 @@ namespace sge
 		}
 
 		// Iterate through all entities that the primary component type appears on
-		for (EntityId entity : primary_type->second.established_instances)
+		for (EntityId entity : primary_type->second.instances)
 		{
 			bool satisfied = true;
 			for (std::size_t i = 1; i < num_types; ++i)
@@ -215,8 +215,8 @@ namespace sge
 		for (auto& component_type : _scene_data_mut->components)
 		{
 			// If this component type has an instance on this entity
-			auto iter = component_type.second.established_instances.find(entity);
-			if (iter != component_type.second.established_instances.end())
+			auto iter = component_type.second.instances.find(entity);
+			if (iter != component_type.second.instances.end())
 			{
 				_destroyed_components.insert(ComponentId{ entity, *component_type.first });
 			}
@@ -338,15 +338,15 @@ namespace sge
 			}
 
 			// Find the entity
-			auto entity_iter = type_iter->second.established_instances.find(component.entity());
-			if (entity_iter == type_iter->second.established_instances.end())
+			auto entity_iter = type_iter->second.instances.find(component.entity());
+			if (entity_iter == type_iter->second.instances.end())
 			{
 				continue;
 			}
 
 			// Destroy the component
 			type_iter->second.container->remove_component(*entity_iter);
-			type_iter->second.established_instances.erase(entity_iter);
+			type_iter->second.instances.erase(entity_iter);
 		}
 		_destroyed_components.clear();
 
@@ -387,6 +387,7 @@ namespace sge
 
 			// Create the component
 			type_iter->second.container->create_component(component.first.entity());
+			type_iter->second.instances.insert(component.first.entity());
 
 			// If the user supplied an init function
 			if (component.second)

@@ -14,8 +14,8 @@ namespace sge
 		///   Fields   ///
 	public:
 
-		/* All instances of this component which are recognized by processing functions. */
-		std::set<EntityId> established_instances;
+		/* All entities which have an instance of this component. */
+		std::set<EntityId> instances;
 
 		/* The container for this component. */
 		std::unique_ptr<ComponentContainer> container;
