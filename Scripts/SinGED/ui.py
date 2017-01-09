@@ -28,7 +28,11 @@ class SinGEDEntityPanel(Panel):
         layout = self.layout
         entity_id = context.active_object.sge_entity_id
 
-        if len(types.get_component_types()) != 0:
+        # Draw the entity id
+        layout.label(text="Entity Id: {}".format(context.active_object.sge_entity_id))
+
+        # Draw the add component box
+        if len(types.get_unused_component_types()) != 0:
             layout.prop(context.scene.singed.sge_types, 'sge_component_types', text='Type')
             op = layout.operator(operators.SinGEDNewComponent.bl_idname, text='Add new component')
             op.entity_id = context.active_object.sge_entity_id
@@ -64,7 +68,15 @@ class SinGEDComponentPanelBase(Panel):
         return True
 
     def draw(self, context):
-        self.sge_blender_type.sge_draw(self.layout, bpy.context.scene.singed.sge_types, self.sge_blender_type.__name__)
+        layout = self.layout
+
+        # Draw the 'remove component' button
+        destroy = layout.operator(operators.SinGEDDestroyComponent.bl_idname, text='Destroy Component')
+        destroy.entity_id = context.active_object.sge_entity_id
+        destroy.component_type = self.sge_blender_type.sge_type_name
+
+        # Draw the component properties
+        self.sge_blender_type.sge_draw(layout, bpy.context.scene.singed.sge_types, self.sge_blender_type.__name__)
 
 def create_blender_component(typedb, type_name, blender_type):
      # Add the type to the types class

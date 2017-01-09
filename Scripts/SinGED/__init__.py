@@ -35,6 +35,8 @@ def register():
     bpy.utils.register_class(integration.SinGEDConnect)
     bpy.utils.register_class(integration.SinGEDConnectPanel)
     bpy.utils.register_class(operators.SinGEDNewComponent)
+    bpy.utils.register_class(operators.SinGEDDestroyComponent)
+    bpy.utils.register_class(operators.SinGEDSaveScene)
     bpy.utils.register_class(ui.SinGEDEntityPanel)
     bpy.types.Scene.singed = PointerProperty(type=types.SinGEDProps)
     bpy.types.Object.sge_entity_id = IntProperty(default=0)
@@ -49,6 +51,8 @@ def unregister():
     del bpy.types.Object.sge_entity_id
     del bpy.types.Scene.singed
     bpy.utils.unregister_class(ui.SinGEDEntityPanel)
+    bpy.utils.unregister_class(operators.SinGEDSaveScene)
+    bpy.utils.unregister_class(operators.SinGEDDestroyComponent)
     bpy.utils.unregister_class(operators.SinGEDNewComponent)
     bpy.utils.unregister_class(integration.SinGEDConnectPanel)
     bpy.utils.unregister_class(integration.SinGEDConnect)

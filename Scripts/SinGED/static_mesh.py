@@ -21,14 +21,14 @@ def export_mesh(data, path):
     for face in mesh.faces:
         for loop in face.loops:
             # Serialize position (swizzled)
+            positions.append(-loop.vert.co[0])
             positions.append(loop.vert.co[1])
             positions.append(loop.vert.co[2])
-            positions.append(loop.vert.co[0])
 
             # Serialize normal (swizzled)
-            normals.append(loop.vert.normal[1])
+            normals.append(-loop.vert.normal[0])
             normals.append(loop.vert.normal[2])
-            normals.append(loop.vert.normal[0])
+            normals.append(loop.vert.normal[1])
 
             # Serialize UV
             if uvLayer is not None:

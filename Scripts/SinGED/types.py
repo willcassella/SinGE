@@ -4,7 +4,7 @@ import bpy
 from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, IntProperty, FloatProperty, StringProperty, PointerProperty, EnumProperty
 
-def get_component_types(scene=None, context=None):
+def get_unused_component_types(scene=None, context=None):
     result = []
     filter = SinGEDProps.sge_scene.get_components(bpy.context.active_object.sge_entity_id)
 
@@ -15,13 +15,14 @@ def get_component_types(scene=None, context=None):
     return result
 
 class SGETypes(PropertyGroup):
-    sge_component_types = EnumProperty(items=get_component_types)
+    sge_component_types = EnumProperty(items=get_unused_component_types)
 
 class SinGEDProps(PropertyGroup):
     sge_host = StringProperty(name='Host', default='localhost')
     sge_port = IntProperty(name='Port', default=1995)
     sge_types = PointerProperty(type=SGETypes)
     sge_realtime_update_delay = FloatProperty(default=0.033)
+    sge_scene_path = StringProperty(name='Path', default='')
     sge_last_realtime_update = 0
     sge_session = None
     sge_typedb = None

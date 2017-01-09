@@ -2,19 +2,19 @@
 
 class ResourceManager(object):
     def __init__(self, resource_constructor):
-        self.resource_constructor =  resource_constructor
-        self.resources = {}
-        self.waiting_resources = {}
+        self._resource_constructor =  resource_constructor
+        self._resources = {}
+        self._pending_resources = {}
 
     def register_handlers(self, session):
-        session.add_query_handler('get_resource', self.get_resource_query)
-        session.add_response_handler('get_resource', self.get_resource_response)
+        session.add_query_handler('get_resource', self._get_resource_query)
+        session.add_response_handler('get_resource', self._get_resource_response)
 
-    def get_resource_query(self):
+    def _get_resource_query(self):
         message = []
 
         # For each resource to be loaded
-        for path, info in self.waiting_resources.items():
+        for path, info in self._pending_resources.items():
             # If a query has already been sent for this resource, continue
             if info[1]:
                 continue
@@ -35,7 +35,7 @@ class ResourceManager(object):
         # Send the message
         return message
 
-    def get_resource_response(self, response):
+    def _get_resource_response(self, response):
         if response is None:
             return
 
@@ -45,26 +45,32 @@ class ResourceManager(object):
             value = resource['value']
 
             # Construct the resource
-            res = self.resource_constructor(self, path, type, value)
+            res = self._resource_constructor(self, path, type, value)
 
             # Insert the resource into the table
-            self.resources[path] = res
+            self._resources[path] = res
 
-            # Get it from the waiting table
-            if path not in self.waiting_resources:
+            # Get it from the pending table
+            if path not in self._pending_resources:
                 continue
 
             # Get the callbacks for this resource
-            callbacks = self.waiting_resources[path][2]
-            del self.waiting_resources[path]
+            callbacks = self._pending_resources[path][2]
+            del self._pending_resources[path]
 
             # Run all the callbacks
             for callback in callbacks:
-                callback(path, res)
+                callback(self, path, res)
 
     def insert_resource(self, path, obj):
-        self.resources[path] = obj
+        self._resources[path] = obj
 
-    def get_resource(self, path, type, callback):
-        self.waiting_resources.setdefault(path, [type, False, []])
-        self.waiting_resources[path][2].append(callback)
+    def get_resource_async(self, path, type, callback):
+        if path in self._resources:
+            callback(self, path, self._resources[path])
+        else:
+            self._pending_resources.setdefault(path, [type, False, []])[2].append(callback)
+
+    def get_resource_immediate(self, path):
+        assert(path in self._resources)
+        return self._resources[path]

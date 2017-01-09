@@ -5,11 +5,6 @@ from bpy.types import Operator
 from bpy.props import IntProperty, StringProperty
 from . import types
 
-def sge_new_component(entity_id, component_type):
-    types.SinGEDProps.sge_scene.new_component(entity_id, component_type)
-    types.SinGEDProps.sge_scene.add_get_component_query(entity_id, component_type)
-    return
-
 class SinGEDNewComponent(Operator):
     bl_idname = 'singed.new_component'
     bl_label = 'SinGED New Component'
@@ -18,5 +13,26 @@ class SinGEDNewComponent(Operator):
     component_type = StringProperty(name='Type')
 
     def execute(self, context):
-        sge_new_component(self.entity_id, self.component_type)
+        types.SinGEDProps.sge_scene.request_new_component(self.entity_id, self.component_type)
+        return {'FINISHED'}
+
+class SinGEDDestroyComponent(Operator):
+    bl_idname = 'singed.destroy_component'
+    bl_label = 'SinGED Destroy Component'
+
+    entity_id = IntProperty(name='Entity Id')
+    component_type = StringProperty(name='Type')
+
+    def execute(self, context):
+        types.SinGEDProps.sge_scene.request_destroy_component(self.entity_id, self.component_type)
+        return {'FINISHED'}
+
+class SinGEDSaveScene(Operator):
+    bl_idname = 'singed.save_scene'
+    bl_label = 'SinGED Save Scene'
+
+    path = StringProperty(name='Path')
+
+    def execute(self, context):
+        types.SinGEDProps.sge_scene.save_scene(self.path)
         return {'FINISHED'}
