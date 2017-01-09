@@ -247,6 +247,12 @@ namespace sge
 			// Get the model matrix
 			auto model = transform.get_world_matrix();
 
+			// If the mesh or material is empty, skip it
+			if (staticMesh.mesh().empty() || staticMesh.material().empty())
+			{
+				return;
+			}
+
 			// Get the mesh and material
 			const auto& mesh = this->_state->find_static_mesh(staticMesh.mesh());
 			const auto& material = this->_state->find_material(staticMesh.material());
