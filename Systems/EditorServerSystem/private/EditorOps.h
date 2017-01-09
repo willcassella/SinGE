@@ -23,17 +23,23 @@ namespace sge
 
 			void new_entity_query(SystemFrameMut& frame, ArchiveReader& reader);
 
+			void destroy_entity_query(SystemFrameMut& frame, ArchiveReader& reader);
+
 			void set_entity_name_query(SystemFrameMut& frame, ArchiveReader& reader);
 
 			void set_entity_parent_query(SystemFrameMut& frame, ArchiveReader& reader);
 
 			void new_component_query(SystemFrameMut& frame, ArchiveReader& reader);
 
+			void destroy_component_query(SystemFrameMut& frame, ArchiveReader& reader);
+
 			void get_component_query(SystemFrame& frame, ArchiveReader& reader, ArchiveWriter& writer);
 
 			void set_component_query(SystemFrameMut& frame, ArchiveReader& reader);
 
-			void get_resource(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
+			void get_resource_query(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
+
+			void save_scene_query(const Scene& scene, ArchiveReader& reader);
 		}
 	}
 }

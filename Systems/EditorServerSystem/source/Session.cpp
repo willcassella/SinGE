@@ -81,6 +81,10 @@ namespace sge
 			{
 				if (!error)
 				{
+					// Log query time
+					const auto message_time = std::chrono::system_clock::now();
+					std::cout << "Received query at " << std::chrono::system_clock::to_time_t(message_time) << std::endl;
+
 					// Deserialze the string
 					JsonArchive archive;
 					archive.from_string(self->_in_content.c_str());
@@ -104,6 +108,20 @@ namespace sge
 					if (in_reader->pull_object_member("set_entity_parent"))
 					{
 						ops::set_entity_parent_query(self->get_frame(), *in_reader);
+						in_reader->pop();
+					}
+
+					// Handle a query to destroy a component
+					if (in_reader->pull_object_member("destroy_component"))
+					{
+						ops::destroy_component_query(self->get_frame(), *in_reader);
+						in_reader->pop();
+					}
+
+					// Handle a query to destroy an entity
+					if (in_reader->pull_object_member("destroy_entity"))
+					{
+						ops::destroy_entity_query(self->get_frame(), *in_reader);
 						in_reader->pop();
 					}
 
@@ -173,15 +191,27 @@ namespace sge
 					if (in_reader->pull_object_member("get_resource"))
 					{
 						out_writer->push_object_member("get_resource");
-						ops::get_resource(self->get_frame().get_scene(), *in_reader, *out_writer);
+						ops::get_resource_query(self->get_frame().get_scene(), *in_reader, *out_writer);
 						in_reader->pop();
 						out_writer->pop();
 						wrote_output = true;
 					}
 
+					// Handle a save query
+					if (in_reader->pull_object_member("save_scene"))
+					{
+						ops::save_scene_query(self->get_frame().get_scene(), *in_reader);
+						in_reader->pop();
+					}
+
 					// Close reader and writer
 					in_reader->pop();
 					out_writer->pop();
+
+					// Log completion time
+					auto completed_time = std::chrono::system_clock::now();
+					std::cout << "Completed query at " << std::chrono::system_clock::to_time_t(completed_time) << std::endl;
+					std::cout << std::endl;
 
 					// If we wrote something, send it
 					if (wrote_output)

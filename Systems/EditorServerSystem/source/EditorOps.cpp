@@ -11,6 +11,7 @@
 #include <Core/Interfaces/IToString.h>
 #include <Core/Interfaces/IFromString.h>
 #include <Resource/Interfaces/IFromFile.h>
+#include <Resource/Archives/JsonArchive.h>
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
 
@@ -176,6 +177,21 @@ namespace sge
 				}
 			}
 
+			void destroy_entity_query(SystemFrameMut& frame, ArchiveReader& reader)
+			{
+				// Enumerate entities to destroy
+				reader.enumerate_array_elements([&frame, &reader](std::size_t /*i*/)
+				{
+					// Get the entity id
+					EntityId entity = NULL_ENTITY;
+					sge::from_archive(entity, reader);
+
+					// Destroy it
+					std::cout << "Destroying entity " << entity << std::endl;
+					frame.destroy_entity(entity);
+				});
+			}
+
 			void set_entity_name_query(SystemFrameMut& frame, ArchiveReader& reader)
 			{
 				// Enumerate entities to set the names of
@@ -242,36 +258,68 @@ namespace sge
 				});
 			}
 
+			void destroy_component_query(SystemFrameMut& frame, ArchiveReader& reader)
+			{
+				// Enumerate componen types to destroy
+				reader.enumerate_object_members([&frame, &reader](const char* component_type_name)
+				{
+					// Get the component type
+					const auto* type = frame.get_scene().get_component_type(component_type_name);
+					if (!type)
+					{
+						return;
+					}
+
+					// Enumerate instances to destroy
+					reader.enumerate_array_elements([type, &frame, &reader](std::size_t /*i*/)
+					{
+						// Get the entity
+						EntityId entity = NULL_ENTITY;
+						sge::from_archive(entity, reader);
+
+						// Destroy it
+						std::cout << "Destroyed '" << type->name() << "' component on entity " << entity << std::endl;
+						frame.destroy_component(entity, *type);
+					});
+				});
+			}
+
 			void get_scene_query(const SystemFrame& frame, ArchiveWriter& writer)
 			{
 				const auto& scene_data = frame.get_scene().get_raw_scene_data();
 				std::cout << "Sending scene information" << std::endl;
 				writer.object_member("next_entity_id", scene_data.next_entity_id);
-				writer.push_object_member("entities");
 
 				// Iterate over entities
+				writer.push_object_member("entities");
 				for (auto entity : scene_data.entity_parents)
 				{
 					writer.push_object_member(sge::to_string(entity.first).c_str());
 					writer.object_member("name", frame.get_entity_name(entity.first));
 					writer.object_member("parent", frame.get_entity_parent(entity.first));
-					writer.push_object_member("components");
-
-					// For each component type
-					for (const auto& component_type : scene_data.components)
-					{
-						// If the entity has an instance of this component type
-						if (component_type.second.established_instances.find(entity.first) != component_type.second.established_instances.end())
-						{
-							writer.array_element(component_type.first->name());
-						}
-					}
-
-					writer.pop(); // "components"
 					writer.pop(); // entity
 				}
-
 				writer.pop(); // "entities"
+
+				// Iterate over components
+				writer.push_object_member("components");
+				for (const auto& component_type : scene_data.components)
+				{
+					// Skip this component if there are not entities
+					if (component_type.second.instances.empty())
+					{
+						continue;
+					}
+
+					// Enumerate instances
+					writer.push_object_member(component_type.first->name().c_str());
+					for (auto instance : component_type.second.instances)
+					{
+						writer.array_element(instance);
+					}
+					writer.pop(); // type name
+				}
+				writer.pop(); // "components"
 			}
 
 			void get_component_query(SystemFrame& frame, ArchiveReader& reader, ArchiveWriter& writer)
@@ -339,7 +387,7 @@ namespace sge
 				});
 			}
 
-			void get_resource(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
+			void get_resource_query(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
 			{
 				reader.enumerate_array_elements([&scene, &reader, &writer](std::size_t /*i*/)
 				{
@@ -352,7 +400,7 @@ namespace sge
 
 					// Get the path
 					std::string path;
-					if (!reader.object_member("path", path))
+					if (!reader.object_member("path", path) || path.empty())
 					{
 						return;
 					}
@@ -405,6 +453,27 @@ namespace sge
 					// Destroy the resource
 					type->drop(object);
 				});
+			}
+
+			void save_scene_query(const Scene& scene, ArchiveReader& reader)
+			{
+				std::string path;
+				if (!reader.object_member("path", path))
+				{
+					return;
+				}
+
+				// Create an output archive
+				JsonArchive output;
+				auto* writer = output.write_root();
+
+				// Save the scene
+				scene.to_archive(*writer);
+				writer->pop();
+
+				// Save the archive to a file
+				output.to_file(path.c_str());
+				std::cout << "Saved scene to '" << path << "'" << std::endl;
 			}
 		}
 	}
