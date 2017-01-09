@@ -22,10 +22,11 @@ if "bpy" in locals():
     importlib.reload(types)
     importlib.reload(ui)
     importlib.reload(integration)
+    importlib.reload(static_mesh)
 else:
     import bpy
     from bpy.props import PointerProperty, IntProperty
-    from . import types, ui, integration
+    from . import types, ui, integration, static_mesh
 
 # Register classes in the module
 def register():
@@ -38,6 +39,8 @@ def register():
     bpy.utils.register_class(operators.SinGEDDestroyComponent)
     bpy.utils.register_class(operators.SinGEDSaveScene)
     bpy.utils.register_class(ui.SinGEDEntityPanel)
+    bpy.utils.register_class(static_mesh.SGEStaticMeshExporter)
+    bpy.types.INFO_MT_file_export.append(static_mesh.export_menu_func)
     bpy.types.Scene.singed = PointerProperty(type=types.SinGEDProps)
     bpy.types.Object.sge_entity_id = IntProperty(default=0)
 
@@ -50,6 +53,8 @@ def unregister():
 
     del bpy.types.Object.sge_entity_id
     del bpy.types.Scene.singed
+    bpy.types.INFO_MT_file_export.remove(static_mesh.export_menu_func)
+    bpy.utils.unregister_class(static_mesh.SGEStaticMeshExporter)
     bpy.utils.unregister_class(ui.SinGEDEntityPanel)
     bpy.utils.unregister_class(operators.SinGEDSaveScene)
     bpy.utils.unregister_class(operators.SinGEDDestroyComponent)
