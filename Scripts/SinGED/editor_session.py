@@ -4,8 +4,10 @@ import struct
 import json
 
 class EditorSession(object):
-    CONNECTION_TIMEOUT = 0.033
+    CONNECTION_TIMEOUT = 2
     BUFFER_SIZE = 4096
+    FLAG_NONE = ' '
+    FLAG_GLOBAL = 'G'
 
     def __init__(self, host="localhost", port=1995):
         # Connect to the editor server
@@ -52,6 +54,9 @@ class EditorSession(object):
         # Set it to block while loading the packet
         self.sock.setblocking(True)
 
+        # Get the packet flag
+        flag = self.split_socket_data(1).decode('utf-8')
+
         # Get the length of the incoming string
         (in_len,) = struct.unpack('I', self.split_socket_data(4))
 
@@ -59,7 +64,7 @@ class EditorSession(object):
         in_str = self.split_socket_data(in_len).decode('utf-8')
 
         # Convert it to a dictionary
-        return json.loads(in_str)
+        return (flag, json.loads(in_str))
 
     def send_message(self, message):
         # Convert the json to a byte string
@@ -89,7 +94,7 @@ class EditorSession(object):
 
         return message
 
-    def handle_response(self, response):
+    def handle_response(self, flag, response):
         # For each query response in the response
         for query, query_response in response.items():
             if query in self.response_handlers:
@@ -105,4 +110,4 @@ class EditorSession(object):
         # Handle the response
         response = self.receive_message()
         if response is not None:
-            self.handle_response(response)
+            self.handle_response(*response)

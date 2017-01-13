@@ -218,7 +218,7 @@ namespace sge
 					{
 						// Write result
 						std::string result = out.to_string();
-						auto* packet = Packet::encode_packet(result.c_str(), result.size());
+						auto* packet = Packet::encode_packet(Packet::FLAG_NONE, result.c_str(), result.size());
 						self->enequeue_message(packet);
 					}
 

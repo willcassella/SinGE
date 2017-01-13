@@ -3,6 +3,7 @@
 
 #include <queue>
 #include <memory>
+#include <asio.hpp>
 #include "EditorServerSystemData.h"
 #include "Packet.h"
 

@@ -28,7 +28,7 @@ namespace sge
 				type.enumerate_properties([&writer](const char* propName, const PropertyInfo& propInfo)
 				{
 					// Don't send property info for hidden properties, or read-only, or containers
-					if (propInfo.is_read_only() || propInfo.type().flags() & TF_CONTAINER)
+					if (propInfo.is_read_only() || propInfo.flags() & PF_EDITOR_HIDDEN || propInfo.type().flags() & TF_CONTAINER)
 					{
 						return;
 					}
@@ -54,9 +54,9 @@ namespace sge
 				writer.pop();
 			}
 
-			static void read_properties(Any<> object, ArchiveWriter& writer)
+			static void read_properties(Any<> object, ArchiveWriter* const* writers, std::size_t num_writers)
 			{
-				object.type().enumerate_properties([object, &writer](const char* propName, const PropertyInfo& propInfo)
+				object.type().enumerate_properties([object, writers, num_writers](const char* propName, const PropertyInfo& propInfo)
 				{
 					if (propInfo.flags() & (PF_EDITOR_HIDDEN | PF_EDITOR_DEFAULT_COLLAPSED))
 					{
@@ -71,12 +71,16 @@ namespace sge
 						return;
 					}
 
-					// Access the property
-					writer.push_object_member(propName);
-					propInfo.get(object.object(), [&writer](Any<> prop)
+					for (std::size_t i = 0; i < num_writers; ++i)
 					{
-						// If the property is a primitive or a string (TODO: This should be more intelligent)
-						if (prop.type().is_primitive() || prop.type() == sge::get_type<std::string>())
+						writers[i]->push_object_member(propName);
+					}
+
+					// Access the property
+					propInfo.get(object.object(), [writers, num_writers](Any<> prop)
+					{
+						// If the property's type is a terminal type
+						if (prop.type().flags() & TF_RECURSE_TERMINAL)
 						{
 							// Get the IToArchive implementation
 							const auto* const impl = sge::get_vtable<IToArchive>(prop.type());
@@ -85,13 +89,21 @@ namespace sge
 								return;
 							}
 
-							impl->to_archive(prop.object(), writer);
+							for (std::size_t i = 0; i < num_writers; ++i)
+							{
+								impl->to_archive(prop.object(), *writers[i]);
+							}
+
 							return;
 						}
 
-						read_properties(prop, writer);
+						read_properties(prop, writers, num_writers);
 					});
-					writer.pop();
+
+					for (std::size_t i = 0; i < num_writers; ++i)
+					{
+						writers[i]->pop();
+					}
 				});
 			}
 
@@ -348,7 +360,8 @@ namespace sge
 						frame.process_single(entity_id, &type, 1, [type, &writer](ProcessingFrame&, EntityId entity, auto comp) -> ProcessControl
 						{
 							std::cout << "Reading properties of '" << type->name() << "' component on entity '" << entity << "'" << std::endl;
-							read_properties(Any<>{ *type, comp[0] }, writer);
+							ArchiveWriter* writers[] = { &writer };
+							read_properties(Any<>{ *type, comp[0] }, writers, 1);
 							return ProcessControl::BREAK;
 						});
 
