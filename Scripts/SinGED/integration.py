@@ -11,6 +11,7 @@ import socket
 # Global variable to prevent scene updates during critical sections
 # I have this rather than adding/removing the app handler because I don't trust how Blender handles it
 sge_should_update = False
+sge_blender_old_undo = 32
 
 def create_blender_resource(res_manager, path, type, value):
     if type == 'sge::StaticMesh':
@@ -161,6 +162,29 @@ def validate_entity(sge_scene, obj):
                 'z': obj.rotation_quaternion[2],
             },
         })
+
+        # If it's a mesh
+        if obj.type == 'MESH':
+            sge_scene.request_new_component(entity_id, 'sge::CStaticMesh')
+
+            # If it's a cube
+            if obj.name.startswith('Cube'):
+                sge_scene.set_component_value(entity_id, 'sge::CStaticMesh', {
+                    'mesh': 'game_content/blender_cube.smesh',
+                    'material': 'Content/Materials/basic.json',
+                })
+            # If it's a plane
+            elif obj.name.startswith('Plane'):
+                sge_scene.set_component_value(entity_id, 'sge::CStaticMesh', {
+                    'mesh': 'game_content/blender_plane.smesh',
+                    'material': 'Content/Materials/basic.json',
+                })
+            # If it's a monkey
+            elif obj.name.startswith('Suzanne'):
+                sge_scene.set_component_value(entity_id, 'sge::CStaticMesh', {
+                    'mesh': 'game_content/blender_monkey.smesh',
+                    'material': 'Content/Materials/basic.json',
+                })
         return
 
     # The object is a duplicate, so create a new entity and copy everything from the old one
@@ -202,18 +226,18 @@ def update_blender_entities(scene):
         return
 
     # Check previously selected objects
-    for entity_id in self.sge_selection:
-        # If the object was deleted
-        if scene not in self.sge_scene.get_entity_userdata(entity_id).users_scene:
+    for (entity_id, obj) in self.sge_selection:
+        # If the current object no longer exists in the scene
+        if scene not in obj.users_scene:
             self.sge_scene.request_destroy_entity(entity_id)
             continue
-
-    # Save the current selection
-    self.sge_selection = [obj.sge_entity_id for obj in bpy.context.selected_objects]
 
     # Validate all objects in current selection
     for obj in bpy.context.selected_objects:
        validate_entity(self.sge_scene, obj)
+
+    # Save the current selection
+    self.sge_selection = [(obj.sge_entity_id, obj) for obj in bpy.context.selected_objects]
 
     # Check name on active object
     active_entity = bpy.context.active_object
@@ -272,6 +296,7 @@ def update_blender_entities(scene):
     self.sge_last_realtime_update = time.time()
 
 def open_active_session(host, port):
+    global sge_blender_old_undo
     self = types.SinGEDProps
 
     if self.sge_session is not None:
@@ -280,6 +305,10 @@ def open_active_session(host, port):
     # Delete everything in the scene
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete()
+
+    # Set the undo stack size to 0, since supporting undo in blender is too finnicky (not my fault, I swear!)
+    sge_blender_old_undo = bpy.context.user_preferences.edit.undo_steps
+    bpy.context.user_preferences.edit.undo_steps = 0
 
     # Open the session
     self.sge_session = editor_session.EditorSession(host, port)
@@ -290,16 +319,17 @@ def open_active_session(host, port):
     # Insert all of the default types
     self.sge_typedb.insert_type('bool', types.SGEBool)
     self.sge_typedb.insert_type('int8', types.SGEInt)
-    self.sge_typedb.insert_type('uint8', types.SGEInt)
+    self.sge_typedb.insert_type('uint8', types.SGEUInt)
     self.sge_typedb.insert_type('int16', types.SGEInt)
-    self.sge_typedb.insert_type('uint16', types.SGEInt)
+    self.sge_typedb.insert_type('uint16', types.SGEUInt)
     self.sge_typedb.insert_type('int32', types.SGEInt)
-    self.sge_typedb.insert_type('uint32', types.SGEInt)
+    self.sge_typedb.insert_type('uint32', types.SGEUInt)
     self.sge_typedb.insert_type('int64', types.SGEInt)
-    self.sge_typedb.insert_type('uint64', types.SGEInt)
+    self.sge_typedb.insert_type('uint64', types.SGEUInt)
     self.sge_typedb.insert_type('float', types.SGEFloat)
     self.sge_typedb.insert_type('double', types.SGEFloat)
     self.sge_typedb.insert_type('sge::String', types.SGEString)
+    self.sge_typedb.insert_type('sge::color::RGBA8', types.SGEColorRGBA8)
 
     # Add the typedb to the session object
     self.sge_typedb.register_handlers(self.sge_session)
@@ -328,6 +358,7 @@ def open_active_session(host, port):
     enable_sge_update()
 
 def close_active_session():
+    global sge_blender_old_undo
     self = types.SinGEDProps
 
     if self.sge_session is None:
@@ -357,6 +388,9 @@ def close_active_session():
 
     # Destroy the selection list
     self.sge_selection = None
+
+    # Restore undo stack size
+    bpy.context.user_preferences.edit.undo_steps = sge_blender_old_undo
 
 def cycle_session(scene):
     global sge_should_update
@@ -416,7 +450,7 @@ class SinGEDConnectPanel(Panel):
 
         # Draw realtime update property
         layout.split()
-        layout.prop(context.scene.singed, 'sge_realtime_update_delay', text='Realtime Update Delay')
+        layout.prop(context.scene.singed, 'sge_realtime_update_delay', text='Realtime Update Interval')
 
         # Draw save/load scene button
         if types.SinGEDProps.sge_session is not None:
