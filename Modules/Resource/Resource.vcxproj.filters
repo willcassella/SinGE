@@ -30,6 +30,12 @@
     <Filter Include="source\Interfaces">
       <UniqueIdentifier>{ef253ddf-b108-453e-8aa8-f5643297d93a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Misc">
+      <UniqueIdentifier>{317799fe-9eaf-41b4-9f94-8c92bfcd8247}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Misc">
+      <UniqueIdentifier>{053708ef-8d4c-4337-a43b-0ddafdbdc4a6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Resource\config.h">
@@ -59,6 +65,9 @@
     <ClInclude Include="include\Resource\Interfaces\IFromFile.h">
       <Filter>include\Interfaces</Filter>
     </ClInclude>
+    <ClInclude Include="include\Resource\Misc\Color.h">
+      <Filter>include\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Archives\JsonArchive.cpp">
@@ -72,6 +81,9 @@
     </ClCompile>
     <ClCompile Include="source\Interfaces\IFromFile.cpp">
       <Filter>source\Interfaces</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Misc\Color.cpp">
+      <Filter>source\Misc</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
