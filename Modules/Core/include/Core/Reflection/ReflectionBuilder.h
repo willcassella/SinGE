@@ -26,6 +26,8 @@ namespace sge
 	template <typename T>
 	struct NativeTypeInfoBuilder
 	{
+		using Self = NativeTypeInfoBuilder;
+
 		////////////////////////
 		///   Constructors   ///
 	public:
@@ -33,6 +35,8 @@ namespace sge
 		NativeTypeInfoBuilder(std::string name)
 			: base_type_data(std::move(name))
 		{
+			base_type_data.flags = TF_NATIVE;
+
 			if (std::is_empty<T>::value)
 			{
 				base_type_data.size = 0;
@@ -45,22 +49,22 @@ namespace sge
 			base_type_data.alignment = alignof(T&);
 			base_type_data.native_type_info = &typeid(T);
 
-			this->set_init<T>(0);
-			this->set_copy_init<T>(0);
-			this->set_move_init<T>(0);
-			this->set_copy_assign<T>(0);
-			this->set_move_assign<T>(0);
-			this->set_drop<T>(0);
-			this->set_equality_compare<T>(0);
+			Self::set_init<T>(0);
+			Self::set_copy_init<T>(0);
+			Self::set_move_init<T>(0);
+			Self::set_copy_assign<T>(0);
+			Self::set_move_assign<T>(0);
+			Self::set_drop<T>(0);
+			Self::set_equality_compare<T>(0);
 		}
 
 		///////////////////
 		///   Methods   ///
 	public:
 
-		NativeTypeInfoBuilder&& flags(TypeFlags flags)
+		NativeTypeInfoBuilder&& flags(TypeFlags_t flags)
 		{
-			base_type_data.flags = flags;
+			base_type_data.flags = flags | TF_NATIVE;
 			return std::move(*this);
 		}
 
@@ -145,7 +149,7 @@ namespace sge
 			const char* name,
 			GetFn getter,
 			SetFn setter,
-			PropertyFlags flags = PF_NONE)
+			PropertyFlags_t flags = PF_NONE)
 		{
 			using GetFnTraits = stde::function_traits<GetFn>;
 			using SetFnTraits = stde::function_traits<SetFn>;
@@ -154,9 +158,9 @@ namespace sge
 			static_assert(std::is_same<const PropT*, tmp::car_n<typename SetFnTraits::arg_types, 1>>::value,
 				"Property type differs between getter and setter");
 
-			auto adaptedGetter = adapt_function_getter(getter);
-			auto adaptedSetter = adapt_function_setter(setter);
-			create_property<PropT>(name, adaptedGetter, adaptedSetter, flags);
+			auto adaptedGetter = Self::adapt_function_getter(getter);
+			auto adaptedSetter = Self::adapt_function_setter(setter);
+			Self::create_property<PropT>(name, adaptedGetter, adaptedSetter, flags);
 			return std::move(*this);
 		}
 
@@ -166,13 +170,13 @@ namespace sge
 			const char* name,
 			GetFn getter,
 			std::nullptr_t /*setter*/,
-			PropertyFlags flags = PF_NONE)
+			PropertyFlags_t flags = PF_NONE)
 		{
 			using GetFnTraits = stde::function_traits<GetFn>;
 			using PropT = std::decay_t<typename GetFnTraits::return_type>;
 
-			auto adaptedGetter = adapt_function_getter(getter);
-			create_readonly_property<PropT>(name, adaptedGetter, flags);
+			auto adaptedGetter = Self::adapt_function_getter(getter);
+			Self::create_readonly_property<PropT>(name, adaptedGetter, flags);
 			return std::move(*this);
 		}
 
@@ -182,14 +186,14 @@ namespace sge
 			const char* name,
 			GetRetT(T::*getter)()const,
 			SetRetT(T::*setter)(SetArgT),
-			PropertyFlags flags = PF_NONE)
+			PropertyFlags_t flags = PF_NONE)
 		{
 			using PropT = std::decay_t<GetRetT>;
 			static_assert(std::is_same<PropT, std::decay_t<SetArgT>>::value, "Getter and setter use different property types.");
 
-			auto adaptedGetter = adapt_method_getter(getter);
-			auto adaptedSetter = adapt_method_setter(setter);
-			create_property<PropT>(name, adaptedGetter, adaptedSetter, flags);
+			auto adaptedGetter = Self::adapt_method_getter(getter);
+			auto adaptedSetter = Self::adapt_method_setter(setter);
+			Self::create_property<PropT>(name, adaptedGetter, adaptedSetter, flags);
 			return std::move(*this);
 		}
 
@@ -199,12 +203,12 @@ namespace sge
 			const char* name,
 			GetRetT(T::*getter)()const,
 			std::nullptr_t /*setter*/,
-			PropertyFlags flags = PF_NONE)
+			PropertyFlags_t flags = PF_NONE)
 		{
 			using PropT = std::decay_t<GetRetT>;
 
-			auto adaptedGetter = adapt_method_getter(getter);
-			create_readonly_property<PropT>(name, adaptedGetter, flags);
+			auto adaptedGetter = Self::adapt_method_getter(getter);
+			Self::create_readonly_property<PropT>(name, adaptedGetter, flags);
 			return std::move(*this);
 		}
 
@@ -213,9 +217,9 @@ namespace sge
 		NativeTypeInfoBuilder&& field(
 			const char* name,
 			FieldT T::*field,
-			FieldFlags flags = FF_NONE)
+			FieldFlags_t flags = FF_NONE)
 		{
-			create_field(name, field, flags);
+			Self::create_field(name, field, flags);
 			return std::move(*this);
 		}
 
@@ -224,19 +228,19 @@ namespace sge
 		NativeTypeInfoBuilder&& field_property(
 			const char* name,
 			FieldT T::*field,
-			FieldFlags fieldFlags = FF_NONE,
-			PropertyFlags propertyFlags = PF_NONE)
+			FieldFlags_t fieldFlags = FF_NONE,
+			PropertyFlags_t propertyFlags = PF_NONE)
 		{
-			create_field(name, field, fieldFlags);
+			Self::create_field(name, field, fieldFlags);
 
 			PropertyInfo::Data basePropData;
 			basePropData.type = &sge::get_type<FieldT>();
 			basePropData.flags = propertyFlags;
 
 			NativePropertyInfo::Data propData;
-			propData.getter = create_field_getter(field);
-			propData.setter = create_field_setter(field);
-			propData.mutate = create_field_mutate(field);
+			propData.getter = Self::create_field_getter(field);
+			propData.setter = Self::create_field_setter(field);
+			propData.mutate = Self::create_field_mutate(field);
 
 			type_data.properties.insert(std::make_pair(name, NativePropertyInfo{ std::move(basePropData), std::move(propData) }));
 
@@ -248,17 +252,17 @@ namespace sge
 		NativeTypeInfoBuilder&& field_readonly_property(
 			const char* name,
 			FieldT T::*field,
-			FieldFlags fieldFlags = FF_NONE,
-			PropertyFlags propertyFlags = PF_NONE)
+			FieldFlags_t fieldFlags = FF_NONE,
+			PropertyFlags_t propertyFlags = PF_NONE)
 		{
-			create_field(name, field, fieldFlags);
+			Self::create_field(name, field, fieldFlags);
 
 			PropertyInfo::Data basePropData;
 			basePropData.type = &sge::get_type<FieldT>();
 			basePropData.flags = propertyFlags;
 
 			NativePropertyInfo::Data propData;
-			create_field_getter(propData, field);
+			Self::create_field_getter(propData, field);
 
 			type_data.properties.insert(std::make_pair(name, NativePropertyInfo{ std::move(basePropData), std::move(propData) }));
 
@@ -279,40 +283,40 @@ namespace sge
 		}
 
 		template <typename PropT, typename GetFn, typename SetFn>
-		void create_property(const char* name, GetFn getter, SetFn setter, PropertyFlags flags)
+		void create_property(const char* name, GetFn getter, SetFn setter, PropertyFlags_t flags)
 		{
 			PropertyInfo::Data basePropData;
 			basePropData.type = &sge::get_type<PropT>();
 			basePropData.flags = flags;
 
 			NativePropertyInfo::Data propData;
-			propData.getter = create_getter<PropT>(getter);
-			propData.setter = create_setter<PropT>(setter);
-			propData.mutate = create_mutate<PropT>(getter, setter);
+			propData.getter = Self::create_getter<PropT>(getter);
+			propData.setter = Self::create_setter<PropT>(setter);
+			propData.mutate = Self::create_mutate<PropT>(getter, setter);
 
 			type_data.properties.insert(std::make_pair(name, NativePropertyInfo{ std::move(basePropData), std::move(propData) }));
 		}
 
 		template <typename PropT, typename GetFn>
-		void create_readonly_property(const char* name, GetFn getter, PropertyFlags flags)
+		void create_readonly_property(const char* name, GetFn getter, PropertyFlags_t flags)
 		{
 			PropertyInfo::Data basePropData;
 			basePropData.type = &sge::get_type<PropT>();
 			basePropData.flags = flags;
 
 			NativePropertyInfo::Data propData;
-			propData.getter = create_getter<PropT>(getter);
+			propData.getter = Self::create_getter<PropT>(getter);
 
 			type_data.properties.insert(std::make_pair(name, NativePropertyInfo{ std::move(basePropData), std::move(propData) }));
 		}
 
 		template <typename FieldT>
-		void create_field(const char* name, FieldT T::*field, FieldFlags flags)
+		void create_field(const char* name, FieldT T::*field, FieldFlags_t flags)
 		{
 			FieldInfo::Data fieldData;
 			fieldData.flags = flags;
 			fieldData.type = &sge::get_type<FieldT>();
-			fieldData.offset = get_field_offset(field);
+			fieldData.offset = Self::get_field_offset(field);
 
 			type_data.fields.insert(std::make_pair(name, std::move(fieldData)));
 		}

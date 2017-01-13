@@ -50,6 +50,7 @@ namespace sge
 		const NativeTypeInfo GetType<float>::type_info = build_primitive_type_info<float>("float");
 		const NativeTypeInfo GetType<double>::type_info = build_primitive_type_info<double>("double");
 
-		const NativeTypeInfo GetType<std::string>::type_info = NativeTypeInfoBuilder<std::string>("sge::String");
+		const NativeTypeInfo GetType<std::string>::type_info = NativeTypeInfoBuilder<std::string>("sge::String")
+		.flags(TF_RECURSE_TERMINAL);
 	}
 }

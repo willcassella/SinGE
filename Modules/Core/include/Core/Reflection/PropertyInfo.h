@@ -9,7 +9,8 @@ namespace sge
 {
 	struct TypeInfo;
 
-	enum PropertyFlags
+	using PropertyFlags_t = uint32;
+	enum PropertyFlags : PropertyFlags_t
 	{
 		/**
 		 * \brief This property has no special flags.
@@ -44,7 +45,8 @@ namespace sge
 		public:
 
 			Data()
-				: type(nullptr), flags(PF_NONE)
+				: flags(PF_NONE),
+				type(nullptr)
 			{
 			}
 
@@ -52,10 +54,10 @@ namespace sge
 			///   Fields   ///
 		public:
 
+			PropertyFlags_t flags;
 			std::string category;
 			std::string description;
 			const TypeInfo* type;
-			PropertyFlags flags;
 		};
 
 		////////////////////////
@@ -82,7 +84,7 @@ namespace sge
 		/**
 		 * \brief Any special flags for this property.
 		 */
-		PropertyFlags flags() const
+		PropertyFlags_t flags() const
 		{
 			return _data.flags;
 		}

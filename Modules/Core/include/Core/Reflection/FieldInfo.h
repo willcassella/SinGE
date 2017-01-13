@@ -8,7 +8,8 @@ namespace sge
 {
 	struct TypeInfo;
 
-	enum FieldFlags
+	using FieldFlags_t = uint32;
+	enum FieldFlags : FieldFlags_t
 	{
 		/**
 		 * \brief This field has no special flags.
@@ -36,7 +37,9 @@ namespace sge
 		public:
 
 			Data()
-				: flags(FF_NONE), type(nullptr), offset(0)
+				: flags(FF_NONE),
+				type(nullptr),
+				offset(0)
 			{
 			}
 
@@ -44,7 +47,7 @@ namespace sge
 			///   Fields   ///
 		public:
 
-			FieldFlags flags;
+			FieldFlags_t flags;
 			const TypeInfo* type;
 			std::size_t offset;
 		};
@@ -65,7 +68,7 @@ namespace sge
 		/**
 		 * \brief Returns the flags assigned to this field.
 		 */
-		FieldFlags flags() const
+		FieldFlags_t flags() const
 		{
 			return _data.flags;
 		}

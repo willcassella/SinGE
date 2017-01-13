@@ -13,7 +13,8 @@ namespace sge
 	struct PropertyInfo;
 	struct FieldInfo;
 
-	enum TypeFlags
+	using TypeFlags_t = uint32;
+	enum TypeFlags : TypeFlags_t
 	{
 		/**
 		 * \brief This type has no special flags.
@@ -21,24 +22,31 @@ namespace sge
 		TF_NONE = 0,
 
 		/**
+		 * \brief When recursing through type-property definitions, this type should terminate recursion.
+		 * TODO: Should there be a more context-sensitive solution to this?
+		 */
+		TF_RECURSE_TERMINAL = (1 << 0),
+
+		/**
 		 * \brief This type is a native (C++) type.
 		 */
-		TF_NATIVE = (1 << 0),
+		TF_NATIVE = (1 << 1),
 
 		/**
 		 * \brief This type is a native (C++) primitive type.
 		 */
-		TF_PRIMITIVE = (1 << 1) | TF_NATIVE,
+		TF_PRIMITIVE = (1 << 2) | TF_NATIVE | TF_RECURSE_TERMINAL,
 
 		/**
 		 * \brief This type may not be constructed by scripts.
 		 */
-		TF_SCRIPT_NOCONSTRUCT = (1 << 2) | TF_NATIVE,
+		TF_SCRIPT_NOCONSTRUCT = (1 << 3) | TF_NATIVE,
 
 		/**
 		 * \brief This type represents a container.
 		 */
-		TF_CONTAINER = (1 << 3),
+		TF_CONTAINER = (1 << 4),
+
 	};
 
 	struct TypeInfo
@@ -68,7 +76,7 @@ namespace sge
 			///   Fields   ///
 		public:
 
-			TypeFlags flags;
+			TypeFlags_t flags;
 			std::string name;
 			std::size_t size;
 			std::size_t alignment;
@@ -101,7 +109,7 @@ namespace sge
 		/**
 		 * \brief Returns the flags associated with this type.
 		 */
-		TypeFlags flags() const
+		TypeFlags_t flags() const
 		{
 			return _data.flags;
 		}
