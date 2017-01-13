@@ -167,6 +167,8 @@
   <ItemGroup>
     <ClInclude Include="include\Engine\Component.h" />
     <ClInclude Include="include\Engine\Components\Display\CCamera.h" />
+    <ClInclude Include="include\Engine\Components\Display\CLightColor.h" />
+    <ClInclude Include="include\Engine\Components\Display\CSpotlight.h" />
     <ClInclude Include="include\Engine\Components\Display\CStaticMesh.h" />
     <ClInclude Include="include\Engine\Components\Logic\CInput.h" />
     <ClInclude Include="include\Engine\Components\Physics\CCubeCollider.h" />
@@ -186,6 +188,8 @@
   <ItemGroup>
     <ClCompile Include="source\Component.cpp" />
     <ClCompile Include="source\Components\Display\CCamera.cpp" />
+    <ClCompile Include="source\Components\Display\CLightColor.cpp" />
+    <ClCompile Include="source\Components\Display\CSpotLight.cpp" />
     <ClCompile Include="source\Components\Display\CStaticMesh.cpp" />
     <ClCompile Include="source\Components\Logic\CInput.cpp" />
     <ClCompile Include="source\Components\Physics\CCubeCollider.cpp" />

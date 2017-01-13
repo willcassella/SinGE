@@ -53,27 +53,11 @@ namespace sge
 		Data* _data;
 	};
 
-	/* Component applied to entities with a 'CStaticMesh' component, to override the default material for that mesh. */
-	struct SGE_ENGINE_API CStaticMeshOverrideMaterial : TComponentInterface<CStaticMeshOverrideMaterial>
-	{
-		SGE_REFLECTED_TYPE;
-
-		//////////////////
-		///   Fields   ///
-	public:
-
-		std::string material;
-	};
-
 	/* Component applied to entities with a 'CStaticMesh' component, to override the default material parameters for that mesh. */
 	struct SGE_ENGINE_API CStaticMeshMaterialOverrideParameters : TComponentInterface<CStaticMeshMaterialOverrideParameters>
 	{
+		struct Data;
 		SGE_REFLECTED_TYPE;
-
-		struct SGE_ENGINE_API TParamChanged
-		{
-			SGE_REFLECTED_TYPE;
-		};
 
 		///////////////////
 		///   Methods   ///
@@ -98,6 +82,6 @@ namespace sge
 		///   Fields   ///
 	private:
 
-		Material::ParamTable _param_table;
+		Data* _data;
 	};
 }

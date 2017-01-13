@@ -148,11 +148,7 @@ namespace sge
 		///   Constructors   ///
 	public:
 
-		ComponentInterface(ProcessingFrame& pframe, EntityId entity)
-			: _pframe(&pframe),
-			_entity(entity)
-		{
-		}
+		ComponentInterface(ProcessingFrame& pframe, EntityId entity);
 
 		///////////////////
 		///   Methods   ///
@@ -179,12 +175,15 @@ namespace sge
 			return *_pframe;
 		}
 
+		void apply_component_modified_tag();
+
 		//////////////////
 		///   Fields   ///
 	private:
 
 		ProcessingFrame* _pframe;
 		EntityId _entity;
+		bool _applied_modified_tag;
 	};
 
 	template <class ComponentT>
@@ -318,6 +317,14 @@ namespace sge
 	 * \brief Tag applied to destroyed component objects.
 	 */
 	struct SGE_ENGINE_API FDestroyedComponent
+	{
+		SGE_REFLECTED_TYPE;
+	};
+
+	/**
+	 * \brief Tag applied to component objects that are modiified.
+	 */
+	struct SGE_ENGINE_API FModifiedComponent
 	{
 		SGE_REFLECTED_TYPE;
 	};

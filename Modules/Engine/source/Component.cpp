@@ -2,16 +2,27 @@
 
 #include <Core/Reflection/ReflectionBuilder.h>
 #include "../include/Engine/Scene.h"
+#include "../include/Engine/ProcessingFrame.h"
 #include "../include/Engine/Components/CTransform3D.h"
 #include "../include/Engine/Components/Display/CCamera.h"
 #include "../include/Engine/Components/Display/CStaticMesh.h"
+#include "../include/Engine/Components/Display/CSpotlight.h"
+#include "../include/Engine/Components/Display/CLightColor.h"
 
 SGE_REFLECT_TYPE(sge::ComponentId);
 SGE_REFLECT_TYPE(sge::FNewComponent);
 SGE_REFLECT_TYPE(sge::FDestroyedComponent);
+SGE_REFLECT_TYPE(sge::FModifiedComponent);
 
 namespace sge
 {
+	ComponentInterface::ComponentInterface(ProcessingFrame& pframe, EntityId entity)
+		: _pframe(&pframe),
+	    _entity(entity),
+	    _applied_modified_tag(false)
+	{
+	}
+
 	void ComponentInterface::from_property_archive(ArchiveReader& reader)
 	{
 		const auto& type = this->get_type();
@@ -33,10 +44,21 @@ namespace sge
 		});
 	}
 
+	void ComponentInterface::apply_component_modified_tag()
+	{
+		if (!_applied_modified_tag)
+		{
+			_pframe->create_tag(id(), FModifiedComponent{});
+			_applied_modified_tag = true;
+		}
+	}
+
 	void register_builtin_components(Scene& scene)
 	{
 		CTransform3D::register_type(scene);
 		CStaticMesh::register_type(scene);
 		CPerspectiveCamera::register_type(scene);
+		CSpotlight::register_type(scene);
+		CLightColor::register_type(scene);
 	}
 }

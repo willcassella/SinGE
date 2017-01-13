@@ -98,6 +98,12 @@
     <ClInclude Include="include\Engine\SystemFrame.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\Components\Display\CSpotlight.h">
+      <Filter>include\Components\Display</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Display\CLightColor.h">
+      <Filter>include\Components\Display</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Scene.cpp">
@@ -144,6 +150,12 @@
     </ClCompile>
     <ClCompile Include="source\SystemFrame.cpp">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Display\CSpotLight.cpp">
+      <Filter>source\Components\Display</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Display\CLightColor.cpp">
+      <Filter>source\Components\Display</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

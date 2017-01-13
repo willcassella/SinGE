@@ -10,9 +10,7 @@ SGE_REFLECT_TYPE(sge::CStaticMesh)
 
 SGE_REFLECT_TYPE(sge::CStaticMesh::FMeshChanged);
 SGE_REFLECT_TYPE(sge::CStaticMesh::FMaterialChanged);
-SGE_REFLECT_TYPE(sge::CStaticMeshOverrideMaterial);
 SGE_REFLECT_TYPE(sge::CStaticMeshMaterialOverrideParameters);
-SGE_REFLECT_TYPE(sge::CStaticMeshMaterialOverrideParameters::TParamChanged);
 
 namespace sge
 {
