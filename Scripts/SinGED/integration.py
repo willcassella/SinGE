@@ -32,6 +32,18 @@ def new_entity_callback(sge_scene, entity):
     # Re-enable scene updates
     enable_sge_update()
 
+def destroy_entity_callback(sge_scene, entity):
+    # Disable scene updates
+    disable_sge_update()
+
+    # Delete the object
+    bpy.ops.object.select_all(action='DESELECT')
+    entity.user_data.select = True
+    bpy.ops.object.delete()
+
+    # Re-enable scene updates
+    enable_sge_update()
+
 def validate_object_type(entity):
     obj = entity.user_data
     res = types.SinGEDProps.sge_resource_manager
@@ -337,6 +349,7 @@ def open_active_session(host, port):
     # Create the scene manager object
     self.sge_scene = scene_manager.SceneManager()
     self.sge_scene.new_entity_callback(new_entity_callback)
+    self.sge_scene.destroy_entity_callback(destroy_entity_callback)
     self.sge_scene.update_component_callback('sge::CTransform3D', update_transform_component_callback)
     self.sge_scene.update_component_callback('sge::CStaticMesh', update_static_mesh_component_callback)
     self.sge_scene.destroy_component_callback('sge::CStaticMesh', destroy_static_mesh_component_callback)
