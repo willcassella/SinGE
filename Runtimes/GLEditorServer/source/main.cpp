@@ -57,7 +57,7 @@ int main()
 
 	// Create an editor server
 	sge::EditorServerSystem editorServer{ 1995 };
-	editorServer.set_serve_time(4);
+	editorServer.set_serve_time(12);
 	editorServer.register_with_scene(scene);
 
 	// Loop until the user closes the window
