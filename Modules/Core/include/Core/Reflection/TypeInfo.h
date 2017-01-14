@@ -5,6 +5,7 @@
 #include <string>
 #include <typeinfo>
 #include "../Functional/FunctionView.h"
+#include "../env.h"
 
 namespace sge
 {
