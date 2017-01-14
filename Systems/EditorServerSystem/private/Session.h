@@ -19,8 +19,7 @@ namespace sge
 
 			Session(asio::io_service& io, EditorServerSystem::Data& system_data)
 				: socket(io),
-				_system_data(&system_data),
-				_in_content_length(0)
+				_system_data(&system_data)
 			{
 			}
 			~Session()
@@ -68,8 +67,8 @@ namespace sge
 			std::queue<Packet*> _outgoing_packets;
 
 			/* Incoming message */
+			Packet::Header_t _in_header;
 			std::string _in_content;
-			Packet::ContentLength_t _in_content_length;
 		};
 	}
 }

@@ -37,7 +37,7 @@ namespace sge
 			}
 
 			// Send it
-			asio::async_write(socket, asio::buffer(_outgoing_packets.front(), _outgoing_packets.front()->size()),
+			asio::async_write(socket, asio::buffer(_outgoing_packets.front(), _outgoing_packets.front()->packet_size()),
 				[self = shared_from_this()](const std::error_code& error, std::size_t /*bytes*/)
 			{
 				if (error)
@@ -56,13 +56,13 @@ namespace sge
 
 		void Session::async_receive_client_message_header()
 		{
-			asio::async_read(socket, asio::buffer(&_in_content_length, sizeof(Packet::ContentLength_t)),
+			asio::async_read(socket, asio::buffer(_in_header),
 				[self = shared_from_this()](const std::error_code& error, std::size_t /*len*/)
 			{
 				if (!error)
 				{
 					// Allocate space for content
-					self->_in_content.assign(self->_in_content_length, 0);
+					self->_in_content.assign(Packet::content_length(self->_in_header), 0);
 
 					// Read content
 					self->async_receive_message();
@@ -76,8 +76,9 @@ namespace sge
 
 		void Session::async_receive_message()
 		{
+			const auto in_sequence_number = Packet::sequence_number(_in_header);
 			asio::async_read(socket, asio::buffer(&_in_content[0], _in_content.size()),
-				[self = shared_from_this()](const std::error_code& error, std::size_t /*len*/)
+				[self = shared_from_this(), in_sequence_number](const std::error_code& error, std::size_t /*len*/)
 			{
 				if (!error)
 				{
@@ -218,7 +219,11 @@ namespace sge
 					{
 						// Write result
 						std::string result = out.to_string();
-						auto* packet = Packet::encode_packet(Packet::FLAG_NONE, result.c_str(), result.size());
+						auto* packet = Packet::encode_packet(
+							in_sequence_number,
+							result.c_str(),
+							static_cast<Packet::ContentLength_t>(result.size()));
+
 						self->enequeue_message(packet);
 					}
 
