@@ -10,7 +10,7 @@ class ResourceManager(object):
         session.add_query_handler('get_resource', self._get_resource_query)
         session.add_response_handler('get_resource', self._get_resource_response)
 
-    def _get_resource_query(self):
+    def _get_resource_query(self, seq_number, priority):
         message = []
 
         # For each resource to be loaded
@@ -35,7 +35,7 @@ class ResourceManager(object):
         # Send the message
         return message
 
-    def _get_resource_response(self, response):
+    def _get_resource_response(self, seq_number, response):
         if response is None:
             return
 

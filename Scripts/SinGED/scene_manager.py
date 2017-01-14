@@ -60,12 +60,12 @@ class SceneManager(object):
         session.add_query_handler('set_component', self._set_component_query)
         session.add_query_handler('save_scene', self._save_scene_query)
 
-    def _get_scene_query(self):
+    def _get_scene_query(self, seq_number, priority):
         if not self._sent_scene_query:
             self._sent_scene_query = True
             return True # Actual value doesn't matter
 
-    def _get_scene_response(self, response):
+    def _get_scene_response(self, seq_number, response):
         if response is None:
             return
 
@@ -117,7 +117,7 @@ class SceneManager(object):
                 # Add a query to retrieve the value
                 self.add_get_component_query(entity_id, component_type)
 
-    def _new_entity_query(self):
+    def _new_entity_query(self, seq_number, priority):
         if self._num_new_entities == 0:
             return None
 
@@ -125,7 +125,7 @@ class SceneManager(object):
         self._num_new_entities = 0
         return message
 
-    def _destroy_entity_query(self):
+    def _destroy_entity_query(self, seq_number, priority):
         if len(self._destroyed_entities) == 0:
             return None
 
@@ -133,7 +133,7 @@ class SceneManager(object):
         self._destroyed_entities.clear()
         return message
 
-    def _set_entity_name_query(self):
+    def _set_entity_name_query(self, seq_number, priority):
         if len(self._set_entity_name_queries) == 0:
             return None
 
@@ -141,7 +141,7 @@ class SceneManager(object):
         self._set_entity_name_queries = dict()
         return message
 
-    def _new_component_query(self):
+    def _new_component_query(self, seq_number, priority):
         # Make sure thare are actually outstanding 'new_component' queries
         if len(self._new_component_queries) == 0:
             return None
@@ -155,7 +155,7 @@ class SceneManager(object):
         self._new_component_queries.clear()
         return message
 
-    def _destroy_component_query(self):
+    def _destroy_component_query(self, seq_number, prioirty):
         if len(self._destroyed_components) == 0:
             return None
 
@@ -167,7 +167,7 @@ class SceneManager(object):
         self._destroyed_components.clear()
         return message
 
-    def _get_component_query(self):
+    def _get_component_query(self, seq_number, prioirty):
         # If there are no get component queries, just skip this
         if len(self._get_component_queries) == 0:
             return None
@@ -183,7 +183,7 @@ class SceneManager(object):
         self._get_component_queries.clear()
         return message
 
-    def _get_component_response(self, response):
+    def _get_component_response(self, seq_number, response):
         if response is None:
             return
 
@@ -210,7 +210,7 @@ class SceneManager(object):
                     entity = self._entities[entity_id]
                     component.update_instance_callback(self, entity, component_value)
 
-    def _set_component_query(self):
+    def _set_component_query(self, seq_number, priority):
         # Make sure there are actually outstanding 'set_component' queries
         if len(self._set_component_queries) == 0:
             return None
@@ -220,7 +220,7 @@ class SceneManager(object):
         self._set_component_queries = dict()
         return message
 
-    def _save_scene_query(self):
+    def _save_scene_query(self, seq_number, priority):
         if len(self._save_scene_path) == 0:
             return None
 

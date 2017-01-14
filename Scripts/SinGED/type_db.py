@@ -18,12 +18,12 @@ class TypeDB(object):
         session.add_query_handler('get_type_info', self.get_type_info_query)
         session.add_response_handler('get_type_info', self.get_type_info_response)
 
-    def get_component_types_query(self):
+    def get_component_types_query(self, seq_number, priority):
         if not self.queried_component_types:
             self.queried_component_types = True
             return True # Actual value doesn't matter
 
-    def get_component_types_response(self, response):
+    def get_component_types_response(self, seq_number, response):
         if response is None:
             return
 
@@ -31,7 +31,7 @@ class TypeDB(object):
             self.component_types.add(type_name)
             self.construct_type(type_name)
 
-    def get_type_info_query(self):
+    def get_type_info_query(self, seq_number, priority):
         if len(self.pending) == 0:
             return None
 
@@ -39,7 +39,7 @@ class TypeDB(object):
         self.pending = set()
         return message
 
-    def get_type_info_response(self, response):
+    def get_type_info_response(self, seq_number, response):
         if response is None:
             return None
 

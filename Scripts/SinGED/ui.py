@@ -71,9 +71,9 @@ class SinGEDComponentPanelBase(Panel):
         layout = self.layout
 
         # Draw the 'remove component' button
-        destroy = layout.operator(operators.SinGEDDestroyComponent.bl_idname, text='Destroy Component')
-        destroy.entity_id = context.active_object.sge_entity_id
-        destroy.component_type = self.sge_blender_type.sge_type_name
+        remove = layout.operator(operators.SinGEDDestroyComponent.bl_idname, text='Remove Component')
+        remove.entity_id = context.active_object.sge_entity_id
+        remove.component_type = self.sge_blender_type.sge_type_name
 
         # Draw the component properties
         self.sge_blender_type.sge_draw(layout, bpy.context.scene.singed.sge_types, self.sge_blender_type.__name__)

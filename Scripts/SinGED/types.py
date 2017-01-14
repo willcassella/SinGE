@@ -56,12 +56,10 @@ class SinGEDProps(PropertyGroup):
     sge_types = PointerProperty(type=SGETypes)
     sge_realtime_update_delay = FloatProperty(default=0.033, precision=3, unit='TIME')
     sge_scene_path = StringProperty(name='Path', default='')
-    sge_last_realtime_update = 0
     sge_session = None
     sge_typedb = None
     sge_scene = None
     sge_resource_manager = None
-    sge_selection = None
 
 class SGETypeBase(PropertyGroup):
     @classmethod

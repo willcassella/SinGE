@@ -6,12 +6,31 @@ from bpy.types import Operator, Panel
 from . import editor_session, type_db, scene_manager, resource_manager, types, ui, static_mesh, operators
 from functools import partial
 import time
-import socket
 
-# Global variable to prevent scene updates during critical sections
-# I have this rather than adding/removing the app handler because I don't trust how Blender handles it
-sge_should_update = False
-sge_blender_old_undo = 32
+class Globals(object):
+    # Global variable to prevent scene updates during critical sections
+    # I have this rather than adding/removing the app handler because I don't trust how Blender handles it
+    should_update = False
+    selected_objects = []
+    active_object = 0
+    last_low_priority_update = 0
+    blender_old_undo_steps = 32
+
+    @staticmethod
+    def reset():
+        Globals.should_update = False
+        Globals.selected_objects = []
+        Globals.active_object = 0
+        Globals.last_low_priority_update = 0
+        Globals.blender_old_undo_steps = 32
+
+    @staticmethod
+    def enable_update():
+        Globals.should_update = True
+
+    @staticmethod
+    def disable_update():
+        Globals.should_update = False
 
 def create_blender_resource(res_manager, path, type, value):
     if type == 'sge::StaticMesh':
@@ -19,7 +38,7 @@ def create_blender_resource(res_manager, path, type, value):
 
 def new_entity_callback(sge_scene, entity):
     # Disable scene updates
-    disable_sge_update()
+    Globals.disable_update()
 
     # Create the object
     obj = bpy.data.objects.new(entity.name, None)
@@ -30,11 +49,11 @@ def new_entity_callback(sge_scene, entity):
     entity.user_data = obj
 
     # Re-enable scene updates
-    enable_sge_update()
+    Globals.enable_update()
 
 def destroy_entity_callback(sge_scene, entity):
     # Disable scene updates
-    disable_sge_update()
+    Globals.disable_update()
 
     # Delete the object
     bpy.ops.object.select_all(action='DESELECT')
@@ -42,7 +61,7 @@ def destroy_entity_callback(sge_scene, entity):
     bpy.ops.object.delete()
 
     # Re-enable scene updates
-    enable_sge_update()
+    Globals.enable_update()
 
 def validate_object_type(entity):
     obj = entity.user_data
@@ -111,7 +130,7 @@ def update_transform_component_callback(sge_scene, entity, value):
 
 def update_static_mesh_component_callback(sge_scene, entity, value):
     # Disable scene updates
-    disable_sge_update()
+    Globals.disable_update()
 
     # Make sure the object is a mesh
     validate_object_type(entity)
@@ -125,19 +144,19 @@ def update_static_mesh_component_callback(sge_scene, entity, value):
 
     res = types.SinGEDProps.sge_resource_manager
     res.get_resource_async(value['mesh'], 'sge::StaticMesh', set_mesh)
-    enable_sge_update()
+    Globals.enable_update()
 
 def destroy_static_mesh_component_callback(sge_scene, entity, value):
     obj = entity.user_data
 
     # Disable scene updates
-    disable_sge_update()
+    Globals.disable_update()
 
     # Update object type
     validate_object_type(entity)
 
     # Re-enable updates
-    enable_sge_update()
+    Globals.enable()
 
 def validate_entity(sge_scene, obj):
     entity_id = obj.sge_entity_id
@@ -229,16 +248,16 @@ def validate_entity(sge_scene, obj):
             # Set the component value to the same as the old entity
             sge_scene.set_component_value(entity_id, component_type, component_value)
 
-def update_blender_entities(scene):
-    global sge_should_update
+def blender_update(scene):
     self = types.SinGEDProps
 
     # Make sure we're not in a critical section
-    if not sge_should_update:
+    if not Globals.should_update:
         return
 
     # Check previously selected objects
-    for (entity_id, obj) in self.sge_selection:
+    for entity_id in Globals.selected_objects:
+        obj = self.sge_scene.get_entity_userdata(entity_id)
         # If the current object no longer exists in the scene
         if scene not in obj.users_scene:
             self.sge_scene.request_destroy_entity(entity_id)
@@ -249,7 +268,7 @@ def update_blender_entities(scene):
        validate_entity(self.sge_scene, obj)
 
     # Save the current selection
-    self.sge_selection = [(obj.sge_entity_id, obj) for obj in bpy.context.selected_objects]
+    Globals.selected_objects = [obj.sge_entity_id for obj in bpy.context.selected_objects]
 
     # Check name on active object
     active_entity = bpy.context.active_object
@@ -257,7 +276,7 @@ def update_blender_entities(scene):
         self.sge_scene.set_entity_name(active_entity.sge_entity_id, active_entity.name)
 
     # Make sure we don't perform realtime updates too frequently and overload the server
-    if time.time() - self.sge_last_realtime_update < bpy.context.scene.singed.sge_realtime_update_delay:
+    if time.time() - Globals.last_low_priority_update < bpy.context.scene.singed.sge_realtime_update_delay:
         return
 
     for obj in bpy.context.selected_objects:
@@ -305,25 +324,30 @@ def update_blender_entities(scene):
         if obj.rotation_quaternion[2] != local_rotation['z']:
             transform_setter(['local_rotation'], 'z', obj.rotation_quaternion[2])
 
-    self.sge_last_realtime_update = time.time()
+    Globals.last_low_priority_update = time.time()
 
 def open_active_session(host, port):
-    global sge_blender_old_undo
     self = types.SinGEDProps
 
     if self.sge_session is not None:
         close_active_session()
+
+    # Reset global variables
+    Globals.reset()
+
+    # Open the session
+    self.sge_session = editor_session.EditorSession()
+    if not self.sge_session.connect(host, port):
+        self.sge_session = None
+        return 'FAILURE'
 
     # Delete everything in the scene
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete()
 
     # Set the undo stack size to 0, since supporting undo in blender is too finnicky (not my fault, I swear!)
-    sge_blender_old_undo = bpy.context.user_preferences.edit.undo_steps
+    Globals.blender_old_undo_steps = bpy.context.user_preferences.edit.undo_steps
     bpy.context.user_preferences.edit.undo_steps = 0
-
-    # Open the session
-    self.sge_session = editor_session.EditorSession(host, port)
 
     # Create the type database object
     self.sge_typedb = type_db.TypeDB(types.create_blender_type, ui.create_blender_component)
@@ -365,20 +389,19 @@ def open_active_session(host, port):
 
     # Add the app handlers
     bpy.app.handlers.scene_update_pre.append(cycle_session)
-    bpy.app.handlers.scene_update_post.append(update_blender_entities)
+    bpy.app.handlers.scene_update_post.append(blender_update)
 
     # Enable updates
-    enable_sge_update()
+    Globals.enable_update()
 
 def close_active_session():
-    global sge_blender_old_undo
     self = types.SinGEDProps
 
     if self.sge_session is None:
         return
 
     # Disable updates
-    disable_sge_update()
+    Globals.disable_update()
 
     # Remove the app handlers
     bpy.app.handlers.scene_update_pre.remove(cycle_session)
@@ -403,22 +426,12 @@ def close_active_session():
     self.sge_selection = None
 
     # Restore undo stack size
-    bpy.context.user_preferences.edit.undo_steps = sge_blender_old_undo
+    bpy.context.user_preferences.edit.undo_steps = Globals.blender_old_undo_steps
 
 def cycle_session(scene):
-    global sge_should_update
-
     # Make sure we're not in a critical section
-    if sge_should_update:
-        types.SinGEDProps.sge_session.cycle()
-
-def enable_sge_update():
-    global sge_should_update
-    sge_should_update = True
-
-def disable_sge_update():
-    global sge_should_update
-    sge_should_update = False
+    if Globals.should_update:
+        types.SinGEDProps.sge_session.cycle('PRIORITY_ANY')
 
 class SinGEDConnect(Operator):
     bl_idname = 'singed.connect'
@@ -430,10 +443,7 @@ class SinGEDConnect(Operator):
         if not self.establish_connection:
             close_active_session()
             return {'FINISHED'}
-
-        try:
-            open_active_session(context.scene.singed.sge_host, context.scene.singed.sge_port)
-        except socket.timeout as e:
+        elif open_active_session(context.scene.singed.sge_host, context.scene.singed.sge_port) == 'FAILURE':
             self.report(type={'ERROR'}, message="Could not connect to the server")
             return {'CANCELLED'}
 
