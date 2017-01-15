@@ -1,3 +1,5 @@
+# static_mesh.py
+
 import bpy
 import bmesh
 import struct
@@ -84,14 +86,28 @@ def export_menu_func(self, context):
 def from_json(path, value):
     mesh = bmesh.new()
     verts = value['vertex_positions']
-    face = [None, None, None]
+    uv0 = value['uv0']
+    face_verts = [None, None, None]
 
-    for i in range(0, len(verts), 9):
+    # Create the uv layer
+    uv_layer0 = mesh.loops.layers.uv.new('uv0')
+
+    # For each face in the mesh
+    for i in range(0, len(verts) // 9):
+        # For each vertex in the face
         for v in range(0, 3):
-            face[v] = mesh.verts.new((-verts[v * 3 + i], verts[v * 3 + i + 2], verts[v * 3 + i + 1]))
-        mesh.faces.new(face)
+            face_verts[v] = mesh.verts.new((-verts[i*9 + v*3 + 0], verts[i*9 + v*3 + 2], verts[i*9 + v*3 + 1]))
+        
+        # Create the face
+        face = mesh.faces.new(face_verts)
+        
+        # Set the uv coordinates
+        for v in range(0, 3):
+            face.loops[v][uv_layer0].uv[0] = uv0[i*6 + v*2 + 0]
+            face.loops[v][uv_layer0].uv[1] = uv0[i*6 + v*2 + 1] 
 
     # Convert the bmesh to a blender mesh data object
     result = bpy.data.meshes.new(path)
     mesh.to_mesh(result)
+    mesh.free()
     return result

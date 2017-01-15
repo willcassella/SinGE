@@ -3,7 +3,7 @@
 import bpy
 from bpy.props import BoolProperty
 from bpy.types import Operator, Panel
-from . import editor_session, type_db, scene_manager, resource_manager, types, ui, static_mesh, operators
+from . import editor_session, type_db, scene_manager, resource_manager, types, ui, static_mesh, material, operators
 from functools import partial
 import time
 
@@ -35,6 +35,10 @@ class Globals(object):
 def create_blender_resource(res_manager, path, type, value):
     if type == 'sge::StaticMesh':
         return static_mesh.from_json(path, value)
+    elif type == 'sge::Material':
+        return material.material_from_json(res_manager, path, value)
+    elif type == 'sge::Texture':
+        return material.texture_from_json(path, value)
 
 def new_entity_callback(sge_scene, entity):
     # Disable scene updates
@@ -137,13 +141,27 @@ def update_static_mesh_component_callback(sge_scene, entity, value):
     obj = entity.user_data
     assert(obj.type == 'MESH')
 
+    # Callback to set the material on the object
+    def set_material(data, res, path, mat):
+        if data.materials:
+            data.materials[0] = mat
+        else:
+            data.materials.append(mat)
+    
+    # Get the material path
+    mat_path = value['material']
+
     # Callback to set the mesh on the object
     def set_mesh(res, path, mesh):
-        nonlocal obj
+        nonlocal obj, mat_path
         obj.data = mesh
+        res.get_resource_async(mat_path, 'sge::Material', partial(set_material, obj.data))
 
+    # Request the resources
     res = types.SinGEDProps.sge_resource_manager
     res.get_resource_async(value['mesh'], 'sge::StaticMesh', set_mesh)
+    
+    # Re-enable updates
     Globals.enable_update()
 
 def destroy_static_mesh_component_callback(sge_scene, entity, value):
