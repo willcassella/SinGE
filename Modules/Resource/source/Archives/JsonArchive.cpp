@@ -4,9 +4,14 @@
 #include <rapidjson/filewritestream.h>
 #include <rapidjson/filereadstream.h>
 #include <rapidjson/writer.h>
+#include <Core/Reflection/ReflectionBuilder.h>
+#include "../../include/Resource/Interfaces/IFromFile.h"
 #include "../../include/Resource/Archives/JsonArchive.h"
 #include "../../private/JsonArchiveWriter.h"
 #include "../../private/JsonArchiveReader.h"
+
+SGE_REFLECT_TYPE(sge::JsonArchive)
+.implements<IFromFile>();
 
 namespace sge
 {

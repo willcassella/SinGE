@@ -34,9 +34,13 @@ namespace sge
 		writer.pop();
 	}
 
-	void StaticMesh::from_file(const char* path)
+	bool StaticMesh::from_file(const char* path)
 	{
 		auto file = fopen(path, "rb");
+		if (!file)
+		{
+			return false;
+		}
 
 		// Get the number of vertex positions
 		uint32 num = 0;
@@ -61,5 +65,6 @@ namespace sge
 		fread(_uv_map_0.data(), sizeof(Vec2), num, file);
 
 		fclose(file);
+		return true;
 	}
 }

@@ -16,15 +16,15 @@ namespace sge
 		///   Functions   ///
 	public:
 
-		void(*from_file)(SelfMut self, const char* path);
+		bool(*from_file)(SelfMut self, const char* path);
 	};
 
 	template <typename T>
 	struct Impl< IFromFile, T >
 	{
-		static void from_file(SelfMut self, const char* path)
+		static bool from_file(SelfMut self, const char* path)
 		{
-			self.as<T>()->from_file(path);
+			return self.as<T>()->from_file(path);
 		}
 	};
 }

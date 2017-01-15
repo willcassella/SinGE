@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <Core/IO/Archive.h>
+#include <Core/Reflection/Reflection.h>
 #include "../config.h"
 
 namespace sge
@@ -10,6 +11,7 @@ namespace sge
 	class SGE_RESOURCE_API JsonArchive final : public Archive
 	{
 		struct Data;
+		SGE_REFLECTED_TYPE;
 
 		////////////////////////
 		///   Constructors   ///
