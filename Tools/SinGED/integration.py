@@ -81,11 +81,21 @@ def validate_object_type(entity):
         # Get the default mesh datablock
         data = res.get_resource_immediate('BLENDER_DEFAULT_MESH')
 
+    # If the object is supposed to be a camera
+    elif 'sge::CPerspectiveCamera' in entity.components:
+        # If it is a camera
+        if obj.type == 'CAMERA':
+            return
+
+        # Create a camera datablock
+        data = bpy.data.cameras.new(obj.name)
+
     # If none of the above are true, it's supposed to be an empty
     elif obj.type == 'EMPTY':
         return
 
     # Get the object's current transform
+    rot_mode = obj.rotation_mode
     obj.rotation_mode = 'QUATERNION'
     location = tuple(obj.location)
     scale = tuple(obj.scale)
@@ -111,6 +121,7 @@ def validate_object_type(entity):
     obj.location = location
     obj.scale = scale
     obj.rotation_quaternion = rotation
+    obj.rotation_mode = rot_mode
 
 def update_transform_component_callback(sge_scene, entity, value):
     obj = entity.user_data
@@ -126,11 +137,13 @@ def update_transform_component_callback(sge_scene, entity, value):
     obj.scale[1] = value['local_scale']['z']
 
     # Assign local rotation (swizzle components)
+    rot_mode = obj.rotation_mode
     obj.rotation_mode = 'QUATERNION'
     obj.rotation_quaternion[0] = value['local_rotation']['w']
     obj.rotation_quaternion[1] = -value['local_rotation']['x']
     obj.rotation_quaternion[3] = value['local_rotation']['y']
     obj.rotation_quaternion[2] = value['local_rotation']['z']
+    obj.rotation_mode = rot_mode
 
 def update_static_mesh_component_callback(sge_scene, entity, value):
     # Disable scene updates
@@ -171,6 +184,30 @@ def destroy_static_mesh_component_callback(sge_scene, entity, value):
     Globals.disable_update()
 
     # Update object type
+    validate_object_type(entity)
+
+    # Re-enable updates
+    Globals.enable_update()
+
+def update_perspective_camera_component_callback(sge_scene, entity, value):
+    obj = entity.user_data
+
+    # Disable scene updates
+    Globals.disable_update()
+
+    # Update object type
+    validate_object_type(entity)
+
+    # Re-enable updates
+    Globals.enable_update()
+
+def destroy_perspective_camera_component_callback(sge_scene, entity, value):
+    obj = entity.user_data
+
+    # Disable scene updates
+    Globals.disable_update()
+
+    # Update objec type
     validate_object_type(entity)
 
     # Re-enable updates
@@ -254,6 +291,7 @@ def validate_entity(sge_scene, obj):
 
     # The object is a duplicate, so create a new entity and copy everything from the old one
     if sge_scene.get_entity_userdata(entity_id) != obj:
+        old_entity_id = entity_id
 
         # Validate the parent
         if obj.parent is not None:
@@ -261,9 +299,6 @@ def validate_entity(sge_scene, obj):
             parent_id = obj.parent.sge_entity_id
         else:
             parent_id = None
-
-        print("Creating duplicate entity...")
-        old_entity_id = entity_id
 
         # Create the new entity object
         entity_id = sge_scene.request_new_entity(obj)
@@ -348,6 +383,7 @@ def blender_update(scene):
             transform_setter(['local_scale'], 'z', obj.scale[1])
 
         # Update rotation properties as necessary (swizzle components)
+        rot_mode = obj.rotation_mode
         obj.rotation_mode = 'QUATERNION'
         if obj.rotation_quaternion[0] != local_rotation['w']:
             transform_setter(['local_rotation'], 'w', obj.rotation_quaternion[0])
@@ -357,6 +393,7 @@ def blender_update(scene):
             transform_setter(['local_rotation'], 'y', obj.rotation_quaternion[3])
         if obj.rotation_quaternion[2] != local_rotation['z']:
             transform_setter(['local_rotation'], 'z', obj.rotation_quaternion[2])
+        obj.rotation_mode = rot_mode
 
     Globals.last_low_priority_update = time.time()
 
@@ -411,15 +448,14 @@ def open_active_session(host, port):
     self.sge_scene.update_component_callback('sge::CTransform3D', update_transform_component_callback)
     self.sge_scene.update_component_callback('sge::CStaticMesh', update_static_mesh_component_callback)
     self.sge_scene.destroy_component_callback('sge::CStaticMesh', destroy_static_mesh_component_callback)
+    self.sge_scene.update_component_callback('sge::CPerspectiveCamera', update_perspective_camera_component_callback)
+    self.sge_scene.destroy_component_callback('sge::CPerspectiveCamera', destroy_perspective_camera_component_callback)
     self.sge_scene.register_handlers(self.sge_session)
 
     # Create the resource manager object
     self.sge_resource_manager = resource_manager.ResourceManager(create_blender_resource)
     self.sge_resource_manager.insert_resource('BLENDER_DEFAULT_MESH', bpy.data.meshes.new('DEFAULT_MESH'))
     self.sge_resource_manager.register_handlers(self.sge_session)
-
-    # Create an empty selection list
-    self.sge_selection = []
 
     # Add the app handlers
     bpy.app.handlers.scene_update_pre.append(cycle_session)
@@ -455,9 +491,6 @@ def close_active_session():
 
     # Destroy the resource manager
     self.sge_resource_manager = None
-
-    # Destroy the selection list
-    self.sge_selection = None
 
     # Restore undo stack size
     bpy.context.user_preferences.edit.undo_steps = Globals.blender_old_undo_steps
