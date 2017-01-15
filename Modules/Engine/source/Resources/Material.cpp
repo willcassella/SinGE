@@ -1,12 +1,15 @@
 // Material.cpp
 
-#include "../../include/Engine/Resources/Material.h"
 #include <Core/Reflection/ReflectionBuilder.h>
+#include <Resource/Archives/JsonArchive.h>
+#include <Resource/Interfaces/IFromFile.h>
+#include "../../include/Engine/Resources/Material.h"
 
 SGE_REFLECT_TYPE(sge::Material)
+.flags(TF_SCRIPT_NOCONSTRUCT)
 .implements<IToArchive>()
 .implements<IFromArchive>()
-.flags(TF_SCRIPT_NOCONSTRUCT);
+.implements<IFromFile>();
 
 namespace sge
 {
@@ -95,6 +98,18 @@ namespace sge
 				}
 			}
 		});
+	}
+
+	bool Material::from_file(const char* path)
+	{
+		JsonArchive archive;
+		if (!archive.from_file(path))
+		{
+			return false;
+		}
+
+		archive.deserialize_root(*this);
+		return true;
 	}
 
 	void Material::to_archive(ArchiveWriter& writer) const

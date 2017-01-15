@@ -14,7 +14,16 @@ namespace sge
 		///   Constructors   ///
 	public:
 
+		Texture();
 		Texture(const std::string& path);
+
+		///////////////////
+		///   Methods   ///
+	public:
+
+		bool from_file(const char* path);
+
+		void to_archive(ArchiveWriter& writer) const;
 
 		//////////////////
 		///   Fields   ///

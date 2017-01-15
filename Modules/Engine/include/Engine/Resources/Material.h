@@ -36,6 +36,8 @@ namespace sge
 		///   Methods   ///
 	public:
 
+		bool from_file(const char* path);
+
 		void to_archive(ArchiveWriter& writer) const;
 
 		void from_archive(ArchiveReader& reader);

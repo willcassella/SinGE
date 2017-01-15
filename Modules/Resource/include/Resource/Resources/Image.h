@@ -8,6 +8,8 @@ struct FIBITMAP;
 
 namespace sge
 {
+	class ArchiveWriter;
+
 	struct SGE_RESOURCE_API Image
 	{
 		SGE_REFLECTED_TYPE;
@@ -25,6 +27,10 @@ namespace sge
 		///////////////////
 		///   Methods   ///
 	public:
+
+		bool from_file(const char* path);
+
+		void to_archive(ArchiveWriter& archive) const;
 
 		uint32 get_width() const;
 
