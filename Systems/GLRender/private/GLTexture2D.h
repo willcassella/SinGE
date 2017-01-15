@@ -6,32 +6,35 @@
 
 namespace sge
 {
-	struct GLTexture2D
+	namespace gl_render
 	{
-		using Id = GLuint;
-
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		GLTexture2D(const Texture& texture);
-
-		GLTexture2D(GLTexture2D&& move);
-		~GLTexture2D();
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		Id id() const
+		struct GLTexture2D
 		{
-			return this->_id;
-		}
+			using Id = GLuint;
 
-		//////////////////
-		///   Fields   ///
-	private:
+			////////////////////////
+			///   Constructors   ///
+		public:
 
-		Id _id;
-	};
+			GLTexture2D(const Texture& texture);
+
+			GLTexture2D(GLTexture2D&& move);
+			~GLTexture2D();
+
+			///////////////////
+			///   Methods   ///
+		public:
+
+			Id id() const
+			{
+				return this->_id;
+			}
+
+			//////////////////
+			///   Fields   ///
+		private:
+
+			Id _id;
+		};
+	}
 }

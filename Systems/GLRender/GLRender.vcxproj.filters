@@ -14,12 +14,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\GLRender\config.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\GLRender\GLRenderSystem.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="private\glew.h">
       <Filter>private</Filter>
     </ClInclude>
@@ -41,6 +35,15 @@
     <ClInclude Include="private\GLTexture2D.h">
       <Filter>private</Filter>
     </ClInclude>
+    <ClInclude Include="include\GLRender\build.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GLRender\Config.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\GLRender\GLRenderSystem.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\GLMaterial.cpp">
@@ -59,6 +62,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\GLRenderSystemState.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Config.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

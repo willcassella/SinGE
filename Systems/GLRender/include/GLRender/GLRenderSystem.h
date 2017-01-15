@@ -4,41 +4,46 @@
 #include <memory>
 #include <Core/Reflection/Reflection.h>
 #include <Engine/Scene.h>
-#include "config.h"
+#include "build.h"
 
 namespace sge
 {
 	class SystemFrame;
 
-	struct SGE_GLRENDER_API GLRenderSystem
+	namespace gl_render
 	{
-		SGE_REFLECTED_TYPE;
-		struct State;
+		struct Config;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
+		struct SGE_GLRENDER_API GLRenderSystem
+		{
+			SGE_REFLECTED_TYPE;
+			struct State;
 
-		GLRenderSystem(uint32 width, uint32 height);
-		~GLRenderSystem();
+			////////////////////////
+			///   Constructors   ///
+		public:
 
-		///////////////////
-		///   Methods   ///
-	public:
+			GLRenderSystem(const Config& config);
+			~GLRenderSystem();
 
-		void register_with_scene(Scene& scene);
+			///////////////////
+			///   Methods   ///
+		public:
 
-		void unregister_with_scene(Scene& scene);
+			void register_with_scene(Scene& scene);
 
-	private:
+			void unregister_with_scene(Scene& scene);
 
-		void render_scene(SystemFrame& frame, float current_time, float dt);
+		private:
 
-		////////////////
-		///   Data   ///
-	private:
+			void render_scene(SystemFrame& frame, float current_time, float dt);
 
-		std::unique_ptr<State> _state;
-		Scene::SystemFnToken _render_fn_token;
-	};
+			////////////////
+			///   Data   ///
+		private:
+
+			std::unique_ptr<State> _state;
+			Scene::SystemFnToken _render_fn_token;
+		};
+	}
 }

@@ -6,36 +6,39 @@
 
 namespace sge
 {
-	struct GLShader
+	namespace gl_render
 	{
-		using Id = GLuint;
-
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		GLShader(GLenum type, const std::string& path);
-
-		GLShader(const VertexShader& shader);
-
-		GLShader(const PixelShader& shader);
-
-		GLShader(GLShader&& move);
-		~GLShader();
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		Id id() const
+		struct GLShader
 		{
-			return _id;
-		}
+			using Id = GLuint;
 
-		//////////////////
-		///   Fields   ///
-	private:
+			////////////////////////
+			///   Constructors   ///
+		public:
 
-		Id _id;
-	};
+			GLShader(GLenum type, const std::string& path);
+
+			GLShader(const VertexShader& shader);
+
+			GLShader(const PixelShader& shader);
+
+			GLShader(GLShader&& move);
+			~GLShader();
+
+			///////////////////
+			///   Methods   ///
+		public:
+
+			Id id() const
+			{
+				return _id;
+			}
+
+			//////////////////
+			///   Fields   ///
+		private:
+
+			Id _id;
+		};
+	}
 }

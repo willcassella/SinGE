@@ -1,10 +1,49 @@
-// config.h
+// GLRenderSystemConfig.h
 #pragma once
 
-#include <Core/env.h>
+#include <string>
+#include <Core/Reflection/Reflection.h>
+#include "build.h"
 
-#ifdef SGE_GLRENDER_BUILD
-#	define SGE_GLRENDER_API SGE_EXPORT
-#else
-#	define SGE_GLRENDER_API SGE_IMPORT
-#endif
+namespace sge
+{
+	class ArchiveReader;
+
+	namespace gl_render
+	{
+		struct SGE_GLRENDER_API Config
+		{
+			SGE_REFLECTED_TYPE;
+
+			////////////////////////
+			///   Constructors   ///
+		public:
+
+			Config();
+
+			///////////////////
+			///   Methods   ///
+		public:
+
+			void from_archive(ArchiveReader& reader);
+			
+			bool validate() const;
+
+			//////////////////
+			///   Fields   ///
+		public:
+
+			int viewport_width;
+
+			int viewport_height;
+
+			std::string viewport_vert_shader;
+
+			std::string viewport_frag_shader;
+
+			std::string missing_material;
+
+			std::string missing_mesh;
+		};
+	}
+}

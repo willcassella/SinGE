@@ -8,63 +8,66 @@
 
 namespace sge
 {
-	struct GLMaterial
+	namespace gl_render
 	{
-		static constexpr GLint POSITION_ATTRIB_LOCATION = 0;
-		static constexpr GLint NORMAL_ATTRIB_LOCATION = 1;
-		static constexpr GLint TEXCOORD_ATTRIB_LOCATION = 2;
-		static constexpr const char* POSITION_ATTRIB_NAME = "v_position";
-		static constexpr const char* NORMAL_ATTRIB_NAME = "v_normal";
-		static constexpr const char* TEXCOORD_ATTRIB_NAME = "v_texcoord";
-		static constexpr GLint MODEL_UNIFORM_LOCATION = 0;
-		static constexpr GLint VIEW_UNIFORM_LOCATION = 1;
-		static constexpr GLint PROJ_UNIFORM_LOCATION = 2;
-		static constexpr const char* MODEL_UNIFORM_NAME = "model";
-		static constexpr const char* VIEW_UNIFORM_NAME = "view";
-		static constexpr const char* PROJ_UNIFORM_NAME = "proj";
-		using Id = GLuint;
-
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		/** Constructs an OpenGL material from the given Material asset. */
-		GLMaterial(GLRenderSystem::State& renderState, const Material& mat);
-
-		GLMaterial(GLMaterial&& move);
-		~GLMaterial();
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		Id id() const
+		struct GLMaterial
 		{
-			return _id;
-		}
+			static constexpr GLint POSITION_ATTRIB_LOCATION = 0;
+			static constexpr GLint NORMAL_ATTRIB_LOCATION = 1;
+			static constexpr GLint TEXCOORD_ATTRIB_LOCATION = 2;
+			static constexpr const char* POSITION_ATTRIB_NAME = "v_position";
+			static constexpr const char* NORMAL_ATTRIB_NAME = "v_normal";
+			static constexpr const char* TEXCOORD_ATTRIB_NAME = "v_texcoord";
+			static constexpr GLint MODEL_UNIFORM_LOCATION = 0;
+			static constexpr GLint VIEW_UNIFORM_LOCATION = 1;
+			static constexpr GLint PROJ_UNIFORM_LOCATION = 2;
+			static constexpr const char* MODEL_UNIFORM_NAME = "model";
+			static constexpr const char* VIEW_UNIFORM_NAME = "view";
+			static constexpr const char* PROJ_UNIFORM_NAME = "proj";
+			using Id = GLuint;
 
-		void bind(GLuint& texIndex) const;
+			////////////////////////
+			///   Constructors   ///
+		public:
 
-		void set_model_matrix(const Mat4& model) const;
+			/** Constructs an OpenGL material from the given Material asset. */
+			GLMaterial(GLRenderSystem::State& renderState, const Material& mat);
 
-		void set_view_matrix(const Mat4& view) const;
+			GLMaterial(GLMaterial&& move);
+			~GLMaterial();
 
-		void set_projection_matrix(const Mat4& projection) const;
+			///////////////////
+			///   Methods   ///
+		public:
 
-		void override_params(GLRenderSystem::State& renderState, const Material::ParamTable& params, GLuint& texIndex) const;
+			Id id() const
+			{
+				return _id;
+			}
 
-		//////////////////
-		///   Fields   ///
-	private:
+			void bind(GLuint& texIndex) const;
 
-		Id _id;
-		GLuint _model;
-		GLuint _view;
-		GLuint _projection;
-		std::unordered_map<GLint, float> _float_params;
-		std::unordered_map<GLint, Vec2> _vec2_params;
-		std::unordered_map<GLint, Vec3> _vec3_params;
-		std::unordered_map<GLint, Vec4> _vec4_params;
-		std::unordered_map<GLint, GLTexture2D::Id> _texture_params;
-	};
+			void set_model_matrix(const Mat4& model) const;
+
+			void set_view_matrix(const Mat4& view) const;
+
+			void set_projection_matrix(const Mat4& projection) const;
+
+			void override_params(GLRenderSystem::State& renderState, const Material::ParamTable& params, GLuint& texIndex) const;
+
+			//////////////////
+			///   Fields   ///
+		private:
+
+			Id _id;
+			GLuint _model;
+			GLuint _view;
+			GLuint _projection;
+			std::unordered_map<GLint, float> _float_params;
+			std::unordered_map<GLint, Vec2> _vec2_params;
+			std::unordered_map<GLint, Vec3> _vec3_params;
+			std::unordered_map<GLint, Vec4> _vec4_params;
+			std::unordered_map<GLint, GLTexture2D::Id> _texture_params;
+		};
+	}
 }

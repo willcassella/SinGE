@@ -2,6 +2,7 @@
 #pragma once
 
 #include "../include/GLRender/GLRenderSystem.h"
+#include "../include/GLRender/Config.h"
 #include "GLShader.h"
 #include "GLMaterial.h"
 #include "GLStaticMesh.h"
@@ -9,58 +10,64 @@
 
 namespace sge
 {
-	namespace GBufferLayer
+	namespace gl_render
 	{
-		enum: GLsizei
+		namespace GBufferLayer
 		{
-			DEPTH,
-			NORMAL,
-			POSITION,
-			DIFFUSE,
-			SPECULAR,
-			NUM_LAYERS
+			enum : GLsizei
+			{
+				DEPTH,
+				NORMAL,
+				POSITION,
+				DIFFUSE,
+				SPECULAR,
+				NUM_LAYERS
+			};
+		}
+
+		struct GLRenderSystem::State
+		{
+			///////////////////
+			///   Methods   ///
+		public:
+
+			const GLShader& find_shader(const std::string& path);
+
+			const GLMaterial& find_material(const std::string& path);
+
+			const GLStaticMesh& find_static_mesh(const std::string& path);
+
+			const GLTexture2D& find_texture_2d(const std::string& path);
+
+			//////////////////
+			///   Fields   ///
+		public:
+			
+			// Config
+			GLint width;
+			GLint height;
+			StaticMesh missing_mesh;
+			Material missing_material;
+
+			// Resources
+			std::unordered_map<std::string, GLShader> shaders;
+			std::unordered_map<std::string, GLMaterial> materials;
+			std::unordered_map<std::string, GLStaticMesh> static_meshes;
+			std::unordered_map<std::string, GLTexture2D> textures;
+
+			// The default framebuffer
+			GLint default_framebuffer;
+
+			// GBuffer stuff
+			GLuint gbuffer_framebuffer;
+			std::array<GLuint, GBufferLayer::NUM_LAYERS> gbuffer_layers;
+
+			// Sprite quad
+			GLuint sprite_vao;
+			GLuint sprite_vbo;
+
+			// Screen quad
+			GLuint screen_quad_program;
 		};
 	}
-
-	struct GLRenderSystem::State
-	{
-		///////////////////
-		///   Methods   ///
-	public:
-
-		const GLShader& find_shader(const std::string& path);
-
-		const GLMaterial& find_material(const std::string& path);
-
-		const GLStaticMesh& find_static_mesh(const std::string& path);
-
-		const GLTexture2D& find_texture_2d(const std::string& path);
-
-		//////////////////
-		///   Fields   ///
-	public:
-
-		std::unordered_map<std::string, GLShader> shaders;
-		std::unordered_map<std::string, GLMaterial> materials;
-		std::unordered_map<std::string, GLStaticMesh> static_meshes;
-		std::unordered_map<std::string, GLTexture2D> textures;
-
-		// The default framebuffer
-		GLint default_framebuffer;
-
-		// GBuffer stuff
-		GLuint gbuffer_framebuffer;
-		std::array<GLuint, GBufferLayer::NUM_LAYERS> gbuffer_layers;
-
-		// Screen data
-		GLsizei width;
-		GLsizei height;
-
-		// Sprite quad
-		GLuint sprite_vao;
-		GLuint sprite_vbo;
-
-		// Screen quad
-		GLuint screen_quad_program;
-	};
 }

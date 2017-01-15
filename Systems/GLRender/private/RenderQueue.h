@@ -9,24 +9,27 @@
 
 namespace sge
 {
-	struct GLMaterial;
-
-	struct RenderQueue
+	namespace gl_render
 	{
-		//////////////////
-		///   Fields   ///
-	public:
+		struct GLMaterial;
 
-		GLStaticMesh::VAO vao;
-		std::vector<Mat4> matrices;
-	};
+		struct RenderQueue
+		{
+			//////////////////
+			///   Fields   ///
+		public:
 
-	struct RenderList
-	{
-		//////////////////
-		///   Fields   ///
-	public:
+			GLStaticMesh::VAO vao;
+			std::vector<Mat4> matrices;
+		};
 
-		std::unordered_map<GLMaterial::Id, RenderQueue> unmodified_renderables;
-	};
+		struct RenderList
+		{
+			//////////////////
+			///   Fields   ///
+		public:
+
+			std::unordered_map<GLMaterial::Id, RenderQueue> unmodified_renderables;
+		};
+	}
 }

@@ -183,8 +183,9 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\GLRender\config.h" />
+    <ClInclude Include="include\GLRender\build.h" />
     <ClInclude Include="include\GLRender\GLRenderSystem.h" />
+    <ClInclude Include="include\GLRender\Config.h" />
     <ClInclude Include="private\glew.h" />
     <ClInclude Include="private\GLMaterial.h" />
     <ClInclude Include="private\GLRenderSystemState.h" />
@@ -205,6 +206,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\Config.cpp" />
     <ClCompile Include="source\GLMaterial.cpp" />
     <ClCompile Include="source\GLRenderSystem.cpp" />
     <ClCompile Include="source\GLRenderSystemState.cpp" />
