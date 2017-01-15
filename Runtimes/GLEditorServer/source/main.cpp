@@ -8,6 +8,8 @@
 #include <Core/Interfaces/IFromArchive.h>
 #include <Resource/Archives/JsonArchive.h>
 #include <Engine/Resources/StaticMesh.h>
+#include <Engine/Resources/Material.h>
+#include <Engine/Resources/Texture.h>
 #include <Engine/Scene.h>
 #include <GLRender/GLRenderSystem.h>
 #include <GLRender/Config.h>
@@ -52,6 +54,8 @@ int main(int argc, char* argv[])
 	type_db.new_type<sge::Quat>();
 	type_db.new_type<float>();
 	type_db.new_type<sge::StaticMesh>();
+	type_db.new_type<sge::Material>();
+	type_db.new_type<sge::Texture>();
 
 	// Create a scene
 	sge::Scene scene{ type_db };
