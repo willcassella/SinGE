@@ -156,7 +156,7 @@ def destroy_static_mesh_component_callback(sge_scene, entity, value):
     validate_object_type(entity)
 
     # Re-enable updates
-    Globals.enable()
+    Globals.enable_update()
 
 def validate_entity(sge_scene, obj):
     entity_id = obj.sge_entity_id
@@ -197,25 +197,41 @@ def validate_entity(sge_scene, obj):
         # If it's a mesh
         if obj.type == 'MESH':
             sge_scene.request_new_component(entity_id, 'sge::CStaticMesh')
+            mesh_path = ''
 
-            # If it's a cube
-            if obj.name.startswith('Cube'):
-                sge_scene.set_component_value(entity_id, 'sge::CStaticMesh', {
-                    'mesh': 'game_content/blender_cube.smesh',
-                    'material': 'Content/Materials/basic.json',
-                })
-            # If it's a plane
-            elif obj.name.startswith('Plane'):
-                sge_scene.set_component_value(entity_id, 'sge::CStaticMesh', {
-                    'mesh': 'game_content/blender_plane.smesh',
-                    'material': 'Content/Materials/basic.json',
-                })
-            # If it's a monkey
-            elif obj.name.startswith('Suzanne'):
-                sge_scene.set_component_value(entity_id, 'sge::CStaticMesh', {
-                    'mesh': 'game_content/blender_monkey.smesh',
-                    'material': 'Content/Materials/basic.json',
-                })
+            # If it's a cube, monkey, or torus
+            if obj.name.startswith('Cube') or obj.name.startswith('Suzanne') or obj.name.startswith('Torus'):
+                mesh_path = "Content/Meshes/Primitives/cube.smesh"
+
+            # If it's a plane or a grid
+            elif obj.name.startswith('Plane') or obj.name.startswith('Grid'):
+                mesh_path = "Content/Meshes/Primitives/plane.smesh"
+
+            # If it's a circle
+            elif obj.name.startswith('Circle'):
+                mesh_path = "Content/Meshes/Primitives/circle.smesh"
+            
+            # If it's a sphere
+            elif obj.name.startswith('Sphere'):
+                mesh_path = "Content/Meshes/Primitives/sphere.smesh"
+
+            # If it's an Icosphere
+            elif obj.name.startswith('Icosphere'):
+                mesh_path = "Content/Meshes/Primitives/icosphere.smesh"
+
+            # If it's a cylindar
+            elif obj.name.startswith('Cylinder'):
+                mesh_path = "Content/Meshes/Primitives/cylinder.smesh"
+
+            # If it's a cone
+            elif obj.name.startswith('Cone'):
+                mesh_path = "Content/Meshes/Primitives/cone.smesh"
+
+            # Set the mesh and material
+            sge_scene.set_component_value(entity_id, 'sge::CStaticMesh', {
+                'mesh': mesh_path,
+                'material': "Content/Materials/Misc/checkerboard.json",
+            })
         return
 
     # The object is a duplicate, so create a new entity and copy everything from the old one
@@ -405,7 +421,7 @@ def close_active_session():
 
     # Remove the app handlers
     bpy.app.handlers.scene_update_pre.remove(cycle_session)
-    bpy.app.handlers.scene_update_post.remove(update_blender_entities)
+    bpy.app.handlers.scene_update_post.remove(blender_update)
 
     # Close the session
     self.sge_session.close()
