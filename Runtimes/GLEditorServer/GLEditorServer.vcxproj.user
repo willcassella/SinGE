@@ -4,20 +4,24 @@
     <LocalDebuggerCommand>$(SolutionDir)bin\$(Platform)\$(Configuration)\$(TargetName).exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(SolutionDir)</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerCommandArguments>Content/Config/gl_editor_server.json</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerCommand>$(SolutionDir)bin\$(Platform)\$(Configuration)\$(TargetName).exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(SolutionDir)</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerCommandArguments>Content/Config/gl_editor_server.json</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LocalDebuggerCommand>$(SolutionDir)bin\$(Platform)\$(Configuration)\$(TargetName).exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(SolutionDir)</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerCommandArguments>Content/Config/gl_editor_server.json</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalDebuggerCommand>$(SolutionDir)bin\$(Platform)\$(Configuration)\$(TargetName).exe</LocalDebuggerCommand>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerWorkingDirectory>$(SolutionDir)</LocalDebuggerWorkingDirectory>
+    <LocalDebuggerCommandArguments>Content/Config/gl_editor_server.json</LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>
