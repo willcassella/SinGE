@@ -2,7 +2,6 @@ bin/
 build/
 packages/
 .vscode/
-game_content/
 
 *.suo
 *.VC.db
