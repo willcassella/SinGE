@@ -1,4 +1,4 @@
-// config.h
+// build.h
 #pragma once
 
 #include <Core/env.h>

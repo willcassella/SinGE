@@ -3,7 +3,7 @@
 
 #include <Core/Util/InterfaceUtils.h>
 #include <Core/Reflection/Reflection.h>
-#include "../config.h"
+#include "../build.h"
 
 namespace sge
 {

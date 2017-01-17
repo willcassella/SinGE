@@ -38,9 +38,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Resource\config.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\Resource\Archives\JsonArchive.h">
       <Filter>include\Archives</Filter>
     </ClInclude>
@@ -68,6 +65,21 @@
     <ClInclude Include="include\Resource\Misc\Color.h">
       <Filter>include\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="private\BinaryArchiveWriter.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Resource\Archives\BinaryArchive.h">
+      <Filter>include\Archives</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Resource\build.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="private\BinaryArchiveReader.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\BinaryArchiveNode.h">
+      <Filter>private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Archives\JsonArchive.cpp">
@@ -84,6 +96,9 @@
     </ClCompile>
     <ClCompile Include="source\Misc\Color.cpp">
       <Filter>source\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Archives\BinaryArchive.cpp">
+      <Filter>source\Archives</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

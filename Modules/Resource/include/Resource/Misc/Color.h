@@ -2,7 +2,7 @@
 #pragma once
 
 #include <Core/Reflection/Reflection.h>
-#include "../config.h"
+#include "../build.h"
 
 namespace sge
 {
@@ -21,7 +21,7 @@ namespace sge
 			using Green_t = uint8;
 			using Blue_t = uint8;
 			using Alpha_t = uint8;
-			SGE_REFLECTED_TYPE;
+            SGE_REFLECTED_TYPE;
 
 			////////////////////////
 			///   Constructors   ///

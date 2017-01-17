@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <functional>
 #include <Core/Reflection/Any.h>
-#include "config.h"
+#include "build.h"
 #include "ResourceId.h"
 
 namespace sge

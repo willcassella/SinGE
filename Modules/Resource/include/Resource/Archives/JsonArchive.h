@@ -4,7 +4,7 @@
 #include <memory>
 #include <Core/IO/Archive.h>
 #include <Core/Reflection/Reflection.h>
-#include "../config.h"
+#include "../build.h"
 
 namespace sge
 {

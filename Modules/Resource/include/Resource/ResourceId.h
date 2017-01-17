@@ -2,7 +2,7 @@
 #pragma once
 
 #include <Core/Reflection/ReflectionBuilder.h>
-#include "config.h"
+#include "build.h"
 
 namespace sge
 {
