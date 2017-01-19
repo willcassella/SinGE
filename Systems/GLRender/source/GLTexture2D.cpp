@@ -23,18 +23,33 @@ namespace sge
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 8.f);
 
+            // Figure out colorspace
+            GLenum color_space;
+            switch (texture.color_space())
+            {
+            case Texture::ColorSpace::RGB:
+                color_space = GL_RGBA8;
+                break;
+
+            case Texture::ColorSpace::S_RGB:
+            default:
+                color_space = GL_SRGB8_ALPHA8;
+                break;
+            };
+
 			// Load the image
 			glTexImage2D(
 				GL_TEXTURE_2D,
 				0,
-				GL_RGBA8,
+                color_space,
 				texture.image.get_width(),
 				texture.image.get_height(),
 				0,
-				GL_BGRA,
+				GL_RGBA,
 				GL_UNSIGNED_BYTE,
 				texture.image.get_bitmap());
 
+            // Generate mipmaps
 			glGenerateMipmap(GL_TEXTURE_2D);
 		}
 
