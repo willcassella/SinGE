@@ -16,7 +16,7 @@ namespace sge
             BinaryArchiveNode node_type;
             std::size_t offset;
         };
-        
+
         ////////////////////////
         ///   Constructors   ///
     public:
@@ -209,7 +209,7 @@ namespace sge
             assert(
                 current_node.node_type == BAN_NULL || current_node.node_type == BAN_ARRAY_GENERIC
                 /*You may not change a node's type. Generic arrays are considered a different type than typed arrays.*/);
-            
+
             // Set the node as a generic array if it isn't already
             if (current_node.node_type == BAN_NULL)
             {
@@ -218,13 +218,13 @@ namespace sge
                 buffer_append(BinaryArchiveSize_t{ 0 });
                 buffer_append(BinaryArchiveSize_t{ 0 });
             }
-         
+
             // Increment the element count
             *reinterpret_cast<BinaryArchiveSize_t*>(buffer->data() + current_node.offset + 1) += 1;
 
             // Push the current node onto the node stack as a parent
             node_stack.push(current_node);
-            
+
             // Set up the new node
             current_node.node_type = BAN_NULL;
             current_node.offset = buffer->size();
@@ -264,7 +264,7 @@ namespace sge
         void impl_typed_array(BinaryArchiveNode array_type, const T* arr, std::size_t size)
         {
             assert(
-                current_node.node_type == BAN_NULL 
+                current_node.node_type == BAN_NULL
                 /*You may not change a node's type, or set it twice. Generic arrays are considered a different type than typed arrays.*/);
 
             // Reserve space for size, and data (on top of current size)
@@ -293,6 +293,7 @@ namespace sge
             assert(
                 current_node.node_type == BAN_NULL
                 /*Archive nodes may not may not have their value set twice.*/);
+
             current_node.node_type = type;
             (*buffer)[current_node.offset] = type;
         }

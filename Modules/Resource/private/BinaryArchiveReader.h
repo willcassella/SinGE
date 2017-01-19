@@ -160,7 +160,7 @@ namespace sge
             memcpy(out, cursor.node_value + sizeof(BinaryArchiveSize_t), copy_len);
             return copy_len;
         }
-        
+
         bool is_array() const override
         {
             return cursor.node_type >= BAN_ARRAY_INT8 && cursor.node_type <= BAN_ARRAY_FLOAT || cursor.node_type == BAN_ARRAY_GENERIC;
@@ -288,7 +288,7 @@ namespace sge
 
             // Amount to advance the cursor by each enumeration
             std::size_t advance = 0;
-            
+
             // Figure out which node to mark as the node type
             switch (cursor.node_type)
             {
@@ -296,7 +296,7 @@ namespace sge
                 cursor.node_type = BAN_BOOLEAN;
                 advance = sizeof(BinaryArchiveBool_t);
                 break;
-            
+
             case BAN_ARRAY_INT8:
                 cursor.node_type = BAN_INT8;
                 advance = sizeof(int8);
@@ -331,7 +331,7 @@ namespace sge
                 cursor.node_type = BAN_INT64;
                 advance = sizeof(int64);
                 break;
-            
+
             case BAN_ARRAY_UINT64:
                 cursor.node_type = BAN_UINT64;
                 advance = sizeof(uint64);
@@ -400,7 +400,7 @@ namespace sge
 
                 return true;
             }
-            
+
             // Move the cursor past the size object
             cursor.node_value += sizeof(BinaryArchiveSize_t);
 
@@ -653,7 +653,7 @@ namespace sge
                     return 0;
                 }
             }
-            
+
             // Handle value types
             switch (cursor.node_type)
             {
@@ -671,7 +671,7 @@ namespace sge
 
             case BAN_INT16:
                 return sizeof(int16);
-                    
+
             case BAN_UINT16:
                 return sizeof(uint16);
 
