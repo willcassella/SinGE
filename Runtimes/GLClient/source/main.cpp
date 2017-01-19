@@ -44,6 +44,7 @@ int main(int argc, char* argv[])
 	config_reader->object_member("window_height", window_height);
 
 	// Create a windowed mode window and its OpenGL context
+    glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
 	auto* window = glfwCreateWindow(window_width, window_height, "SinGE GLEditorServer", nullptr, nullptr);
 	if (!window)
 	{

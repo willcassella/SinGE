@@ -55,7 +55,7 @@ namespace sge
 
 			// Create the default resources for the internal state object
 			_state->missing_mesh.from_file(config.missing_mesh.c_str());
-			
+
 			// Create the default material resource
 			{
 				JsonArchive missing_material_archive;
@@ -74,6 +74,7 @@ namespace sge
 			glEnable(GL_DEPTH_TEST);
 			glEnable(GL_CULL_FACE);
 			glDisable(GL_STENCIL_TEST);
+            glEnable(GL_FRAMEBUFFER_SRGB);
 
 			// Get the default framebuffer
 			glGetIntegerv(GL_FRAMEBUFFER_BINDING, &_state->default_framebuffer);

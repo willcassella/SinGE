@@ -13,11 +13,13 @@ SGE_REFLECT_TYPE(sge::Texture)
 namespace sge
 {
 	Texture::Texture()
+        : _color_space(ColorSpace::S_RGB)
 	{
 	}
 
-	Texture::Texture(const std::string& path)
-		: image(path)
+    Texture::Texture(const std::string& path)
+        : _color_space(ColorSpace::S_RGB),
+        image(path)
 	{
 	}
 
