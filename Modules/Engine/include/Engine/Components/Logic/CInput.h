@@ -5,8 +5,10 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CInput
+	class SGE_ENGINE_API CInput : public TComponentInterface<CInput>
 	{
+	public:
+
 		SGE_REFLECTED_TYPE;
 
 		////////////////
@@ -37,5 +39,17 @@ namespace sge
 			std::string name;
 			float value;
 		};
+
+        ////////////////////////
+        ///   Constructors   ///
+	public:
+
+        CInput(ProcessingFrame& pframe, EntityId entity);
+
+        ///////////////////
+        ///   Methods   ///
+	public:
+
+        static void register_type(Scene& scene);
 	};
 }
