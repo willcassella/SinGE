@@ -5,7 +5,7 @@ import json
 
 class EditorSession(object):
     CONNECTION_TIMEOUT = 2
-    BUFFER_SIZE = 4096
+    BUFFER_SIZE = 2 ** 14
 
     SEQUENCE_NUMBER_SIZE = 4
     CONTENT_LENGTH_SIZE = 4
@@ -76,9 +76,10 @@ class EditorSession(object):
 
         # Create a result string
         in_str = self._split_socket_data(in_len).decode('utf-8')
+        in_content = json.loads(in_str)
 
         # Return the packet info
-        return (seq_number, json.loads(in_str))
+        return (seq_number, in_content)
 
     def send_message(self, seq_number, message):
         # Convert the json to a byte string
