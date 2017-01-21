@@ -6,27 +6,32 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CCubeCollider : TComponentInterface<CCubeCollider>
+	class SGE_ENGINE_API CCubeCollider final : public TComponentInterface<CCubeCollider>
 	{
+	public:
+
 		SGE_REFLECTED_TYPE;
 		struct Data;
 
-		////////////////
-		///   Tags   ///
+        ////////////////////////
+        ///   Constructors   ///
 	public:
 
-		struct SGE_ENGINE_API FShapeChanged
-		{
-			SGE_REFLECTED_TYPE;
-		};
+        CCubeCollider(ProcessingFrame& pframe, EntityId entity, Data& data);
 
 		////////////////////
 		////   Methods   ///
 	public:
 
-		Vec2 shape() const;
+        static void register_type(Scene& scene);
 
-		void shape(Vec2 shape);
+		float width() const;
+
+        void width(float value);
+
+        float height() const;
+
+        void height(float value);
 
 		//////////////////
 		///   Fields   ///

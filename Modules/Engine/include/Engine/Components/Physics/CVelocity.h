@@ -6,15 +6,65 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CVelocity
+	class SGE_ENGINE_API CVelocity final : public TComponentInterface<CVelocity>
 	{
+	public:
+
 		SGE_REFLECTED_TYPE;
+
+	    struct Data
+	    {
+            ///////////////////
+            ///   Methods   ///
+	    public:
+
+            void to_archive(ArchiveWriter& writer) const;
+
+            void from_archive(ArchiveReader& reader);
+
+            //////////////////
+            ///   Fields   ///
+	    public:
+
+            Vec3 linear_velocity;
+            Quat angular_velocity;
+
+            /////////////////////
+            ///   Operators   ///
+	    public:
+
+            bool operator==(const Data& rhs) const;
+            bool operator!=(const Data& rhs) const;
+        };
+
+        ////////////////////////
+        ///   Constructors   ///
+	public:
+
+        CVelocity(ProcessingFrame& pframe, EntityId entity, Data& data);
+
+        ///////////////////
+        ///   Methods   ///
+	public:
+
+        static void register_type(Scene& scene);
+
+        Vec3 linear_velocity() const;
+
+        void linear_velocity(const Vec3& value);
+
+        Quat angular_velocity() const;
+
+        void angular_velocity(const Quat& value);
+
+        Data data() const;
+
+        void data(const Data& value);
 
 		//////////////////
 		///   Fields   ///
 	private:
 
-		Vec3 _linear_velocity;
-		Quat _angular_velocity;
+        Data* _data;
 	};
 }
