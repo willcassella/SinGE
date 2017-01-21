@@ -8,8 +8,10 @@ def texture_from_json(path, value):
 
     # Fill the image
     bitmap = value['image']['bitmap']
-    img.pixels[:] = [float(pix) / 255 for pix in bitmap]
-    
+    print("Filling image")
+    img.pixels = [float(pix) / 255 for pix in bitmap]
+    print("Done")
+
     # Create a new blender texture
     tex = bpy.data.textures.new(path, type='IMAGE')
     tex.image = img
