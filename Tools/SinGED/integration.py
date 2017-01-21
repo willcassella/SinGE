@@ -160,7 +160,7 @@ def update_static_mesh_component_callback(sge_scene, entity, value):
             data.materials[0] = mat
         else:
             data.materials.append(mat)
-    
+
     # Get the material path
     mat_path = value['material']
 
@@ -173,7 +173,7 @@ def update_static_mesh_component_callback(sge_scene, entity, value):
     # Request the resources
     res = types.SinGEDProps.sge_resource_manager
     res.get_resource_async(value['mesh'], 'sge::StaticMesh', set_mesh)
-    
+
     # Re-enable updates
     Globals.enable_update()
 
@@ -265,7 +265,7 @@ def validate_entity(sge_scene, obj):
             # If it's a circle
             elif obj.name.startswith('Circle'):
                 mesh_path = "Content/Meshes/Primitives/circle.smesh"
-            
+
             # If it's a sphere
             elif obj.name.startswith('Sphere'):
                 mesh_path = "Content/Meshes/Primitives/sphere.smesh"
@@ -437,6 +437,7 @@ def open_active_session(host, port):
     self.sge_typedb.insert_type('double', types.SGEFloat)
     self.sge_typedb.insert_type('sge::String', types.SGEString)
     self.sge_typedb.insert_type('sge::color::RGBA8', types.SGEColorRGBA8)
+    self.sge_typedb.insert_type('sge::Vec3', types.SGEVec3)
 
     # Add the typedb to the session object
     self.sge_typedb.register_handlers(self.sge_session)

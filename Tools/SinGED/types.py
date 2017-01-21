@@ -94,7 +94,7 @@ class SGEPrimitiveBase(object):
 class SGEBool(SGEPrimitiveBase):
     @staticmethod
     def sge_create_property(name):
-        return FloatProperty(
+        return BoolProperty(
             name=name,
             get=lambda self: property_getter(self, name, False),
             set=lambda self, value: property_setter(self, name, value))
@@ -159,6 +159,28 @@ class SGEColorRGBA8(SGEPrimitiveBase):
             max=1.0,
             get=lambda self: SGEColorRGBA8.sge_get(self, name),
             set=lambda self, value: SGEColorRGBA8.sge_set(self, name, value))
+
+class SGEVec3(SGEPrimitiveBase):
+    @staticmethod
+    def sge_get(self, name):
+        value = property_getter(self, name, None)
+        if value is None:
+            return [0.0, 0.0, 0.0]
+        else:
+            return [value['x'], value['y'], value['z']]
+
+    @staticmethod
+    def sge_set(self, name, value):
+        property_setter(self, name, {'x': value[0], 'y': value[1], 'z': value[2]})
+
+    @staticmethod
+    def sge_create_property(name):
+        return FloatVectorProperty(
+            name=name,
+            subtype='XYZ',
+            size=3,
+            get=lambda self: SGEVec3.sge_get(self, name),
+            set=lambda self, value: SGEVec3.sge_set(self, name, value))
 
 def create_blender_type(typedb, type_name, type_info):
     # Create dictionaries for the class and the properties
