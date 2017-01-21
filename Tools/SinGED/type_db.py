@@ -48,10 +48,15 @@ class TypeDB(object):
             dependent_types = set()
             self.waiting[type_name] = (type_info, dependent_types)
 
+
             # If the type has any dependent properties
             if type_info["properties"] is not None:
                 for propName,propInfo in type_info["properties"].items():
                     dependent_types.add(propInfo["type"])
+            else:
+                # Set the properties to an empty table if there are no properties
+                # TODO: This should be removed once the serialization api supports writer coercion
+                type_info["properties"] = dict()
 
         # Try to construct waiting types
         for type_name in list(self.waiting.keys()):
