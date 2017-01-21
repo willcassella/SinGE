@@ -6,8 +6,10 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CPerspectiveCamera : TComponentInterface<CPerspectiveCamera>
+	class SGE_ENGINE_API CPerspectiveCamera final : TComponentInterface<CPerspectiveCamera>
 	{
+	public:
+
 		SGE_REFLECTED_TYPE;
 		struct Data;
 

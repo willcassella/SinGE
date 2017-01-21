@@ -7,8 +7,10 @@
 namespace sge
 {
 	/* Component applied to entities that should render a static mesh. */
-	struct SGE_ENGINE_API CStaticMesh : TComponentInterface<CStaticMesh>
+	class SGE_ENGINE_API CStaticMesh final : public TComponentInterface<CStaticMesh>
 	{
+    public:
+
 		SGE_REFLECTED_TYPE;
 		struct Data;
 

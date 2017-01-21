@@ -6,9 +6,11 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CLightColor : TComponentInterface<CLightColor>
+	class SGE_ENGINE_API CLightColor final : public TComponentInterface<CLightColor>
 	{
-		struct Data;
+    public:
+
+	    struct Data;
 		using Color_t = color::RGBA8;
 		SGE_REFLECTED_TYPE;
 

@@ -5,8 +5,10 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CSpotlight final : TComponentInterface<CSpotlight>
+	class SGE_ENGINE_API CSpotlight final : public TComponentInterface<CSpotlight>
 	{
+	public:
+
 		enum class Shape
 		{
 			/**
