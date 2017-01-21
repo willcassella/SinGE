@@ -3,6 +3,7 @@
 #include <Core/Reflection/ReflectionBuilder.h>
 #include "../../../include/Engine/Components/Display/CLightColor.h"
 #include "../../../include/Engine/Scene.h"
+#include "../../../include/Engine/Util/BasicComponentContainer.h"
 
 SGE_REFLECT_TYPE(sge::CLightColor)
 .property("color", &CLightColor::color, &CLightColor::color)

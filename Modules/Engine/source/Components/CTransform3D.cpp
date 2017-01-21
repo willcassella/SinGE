@@ -5,6 +5,7 @@
 #include "../../include/Engine/Components/CTransform3D.h"
 #include "../../include/Engine/ProcessingFrame.h"
 #include "../../include/Engine/Scene.h"
+#include "../../include/Engine/Util/BasicComponentContainer.h"
 
 namespace sge
 {

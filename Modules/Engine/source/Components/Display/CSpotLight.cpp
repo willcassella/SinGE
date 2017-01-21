@@ -3,6 +3,7 @@
 #include <Core/Reflection/ReflectionBuilder.h>
 #include "../../../include/Engine/Components/Display/CSpotlight.h"
 #include "../../../include/Engine/Scene.h"
+#include "../../../include/Engine/Util/BasicComponentContainer.h"
 
 SGE_REFLECT_TYPE(sge::CSpotlight)
 .property("cone_radius", &CSpotlight::cone_radius, &CSpotlight::cone_radius)

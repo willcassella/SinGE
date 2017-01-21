@@ -3,6 +3,7 @@
 #include <Core/Reflection/ReflectionBuilder.h>
 #include "../../../include/Engine/Components/Display/CCamera.h"
 #include "../../../include/Engine/Scene.h"
+#include "../../../include/Engine/Util/BasicComponentContainer.h"
 
 SGE_REFLECT_TYPE(sge::CPerspectiveCamera)
 .property("h_fov", &CPerspectiveCamera::h_fov, &CPerspectiveCamera::h_fov)
@@ -30,12 +31,14 @@ namespace sge
 
 		void to_archive(ArchiveWriter& writer) const
 		{
+            writer.object_member("h_fov", h_fov);
 			writer.object_member("z_min", z_min);
 			writer.object_member("z_max", z_max);
 		}
 
 		void from_archive(ArchiveReader& reader)
 		{
+            reader.object_member("h_fov", h_fov);
 			reader.object_member("z_min", z_min);
 			reader.object_member("z_max", z_max);
 		}
@@ -67,7 +70,7 @@ namespace sge
 
 	void CPerspectiveCamera::h_fov(float angle)
 	{
-		_data->h_fov = degrees(angle);
+        checked_setter(degrees(angle), _data->h_fov);
 	}
 
 	float CPerspectiveCamera::z_min() const
@@ -77,7 +80,7 @@ namespace sge
 
 	void CPerspectiveCamera::z_min(float zMin)
 	{
-		_data->z_min = zMin;
+        checked_setter(zMin, _data->z_min);
 	}
 
 	float CPerspectiveCamera::z_max() const
@@ -87,7 +90,7 @@ namespace sge
 
 	void CPerspectiveCamera::z_max(float zMax)
 	{
-		_data->z_max = zMax;
+        checked_setter(zMax, _data->z_max);
 	}
 
 	Mat4 CPerspectiveCamera::get_projection_matrix(float screenRatio) const

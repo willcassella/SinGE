@@ -177,6 +177,16 @@ namespace sge
 
 		void apply_component_modified_tag();
 
+        template <typename T>
+        void checked_setter(const T& new_value, T& old_value)
+        {
+            if (new_value != old_value)
+            {
+                old_value = new_value;
+                apply_component_modified_tag();
+            }
+        }
+
 		//////////////////
 		///   Fields   ///
 	private:
@@ -222,7 +232,7 @@ namespace sge
 
 		virtual void reset() = 0;
 
-		virtual void to_archive(ArchiveWriter& writer) const = 0;
+		virtual void to_archive(ArchiveWriter& writer, const std::set<EntityId>& est_instances) const = 0;
 
 		virtual void from_archive(ArchiveReader& reader, std::set<EntityId>& est_instances) = 0;
 
@@ -231,78 +241,6 @@ namespace sge
 		virtual void remove_component(EntityId entity) = 0;
 
 		virtual bool create_interface(ProcessingFrame& pframe, EntityId entity, void* addr) = 0;
-	};
-
-	template <class ComponentT, typename ComponentDataT>
-	class BasicComponentContainer final : public ComponentContainer
-	{
-		///////////////////
-		///   Methods   ///
-	public:
-
-		void reset() override
-		{
-			instances = {};
-		}
-
-		void to_archive(ArchiveWriter& writer) const override
-		{
-			for (const auto& instance : instances)
-			{
-				writer.object_member(sge::to_string(instance.first).c_str(), instance.second);
-			}
-		}
-
-		void from_archive(ArchiveReader& reader, std::set<EntityId>& est_instances) override
-		{
-			reader.enumerate_object_members([this, &reader, &est_instances](const char* entityIdStr)
-			{
-				EntityId entity = std::strtoull(entityIdStr, nullptr, 10);
-
-				// See if this instance already exists
-				auto iter = this->instances.find(entity);
-				if (iter == this->instances.end())
-				{
-					// If not, create one
-					iter = instances.insert(std::make_pair(entity, ComponentDataT{})).first;
-					est_instances.insert(entity);
-				}
-
-				sge::from_archive(iter->second, reader);
-			});
-		}
-
-		void create_component(EntityId entity) override
-		{
-			instances.insert(std::make_pair(entity, ComponentDataT{}));
-		}
-
-		void remove_component(EntityId entity) override
-		{
-			auto iter = instances.find(entity);
-			if (iter != instances.end())
-			{
-				instances.erase(iter);
-			}
-		}
-
-		bool create_interface(ProcessingFrame& pframe, EntityId entity, void* addr) override
-		{
-			auto data = instances.find(entity);
-			if (data == instances.end())
-			{
-				return false;
-			}
-
-			new (addr) ComponentT{ pframe, entity, data->second };
-			return true;
-		}
-
-		//////////////////
-		///   Fields   ///
-	public:
-
-		std::unordered_map<EntityId, ComponentDataT> instances;
 	};
 
 	/**

@@ -3,6 +3,7 @@
 #include <Core/Reflection/ReflectionBuilder.h>
 #include "../../../include/Engine/Components/Display/CStaticMesh.h"
 #include "../../../include/Engine/Scene.h"
+#include "../../../include/Engine/Util/BasicComponentContainer.h"
 
 SGE_REFLECT_TYPE(sge::CStaticMesh)
 .property("mesh", &CStaticMesh::mesh, &CStaticMesh::mesh)
