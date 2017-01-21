@@ -3,6 +3,8 @@
 
 #include "../Reflection/Reflection.h"
 #include "../Reflection/ReflectionBuilder.h"
+#include "../Interfaces/IToArchive.h"
+#include "../Interfaces/IFromArchive.h"
 
 namespace sge
 {
@@ -36,6 +38,16 @@ namespace sge
 		///////////////////
 		///   Methods   ///
 	public:
+
+        void to_archive(ArchiveWriter& writer) const
+        {
+            writer.number(_radians);
+        }
+
+        void from_archive(ArchiveReader& reader)
+        {
+            reader.number(_radians);
+        }
 
 		/** Returns the current value in radians. */
 		constexpr T radians() const
