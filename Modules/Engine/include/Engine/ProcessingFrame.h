@@ -6,7 +6,8 @@
 
 namespace sge
 {
-	class SystemFrame;
+	struct SystemFrame;
+    struct UpdatePipeline;
 
 	struct SGE_ENGINE_API ProcessingFrame
 	{
@@ -17,18 +18,23 @@ namespace sge
 
 		////////////////////////
 		///   Constructors   ///
+	public:
+
+	    ProcessingFrame(ProcessingFrame&& move);
+		~ProcessingFrame();
+
 	private:
 
 		ProcessingFrame();
-		~ProcessingFrame();
 		ProcessingFrame(const ProcessingFrame& copy) = delete;
 		ProcessingFrame& operator=(const ProcessingFrame& copy) = delete;
-		ProcessingFrame(ProcessingFrame&& move) = delete;
-		ProcessingFrame& operator=(ProcessingFrame&& move) = delete;
+        ProcessingFrame& operator=(ProcessingFrame&& move) = delete;
 
 		///////////////////
 		///   Methods   ///
 	public:
+
+        bool has_tags() const;
 
 		/**
 		 * \brief Creates a new tag for the given component.
@@ -64,6 +70,8 @@ namespace sge
 		 * \param additional_size The size to increase the tag buffer by.
 		 */
 		void tag_buffer_expand(std::size_t additional_size);
+
+        void dispatch_tags(UpdatePipeline& pipeline, SystemFrame& callback_frame);
 
 		//////////////////
 		///   Fields   ///

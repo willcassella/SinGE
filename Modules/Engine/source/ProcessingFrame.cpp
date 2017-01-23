@@ -5,6 +5,7 @@
 #include <Core/Reflection/ReflectionBuilder.h>
 #include "../include/Engine/ProcessingFrame.h"
 #include "../include/Engine/Scene.h"
+#include "../include/Engine/UpdatePipeline.h"
 
 SGE_REFLECT_TYPE(sge::ProcessingFrame);
 
@@ -26,6 +27,16 @@ namespace sge
 		_free_offset(0)
 	{
 	}
+
+    ProcessingFrame::ProcessingFrame(ProcessingFrame&& move)
+        : _tag_buffer(move._tag_buffer),
+        _buffer_size(move._buffer_size),
+        _free_offset(move._free_offset)
+    {
+        move._tag_buffer = nullptr;
+        move._buffer_size = 0;
+        move._free_offset = 0;
+    }
 
 	ProcessingFrame::~ProcessingFrame()
 	{
@@ -50,6 +61,11 @@ namespace sge
 		// Free the tag buffer
 		sge::free(_tag_buffer);
 	}
+
+    bool ProcessingFrame::has_tags() const
+    {
+        return _free_offset != 0;
+    }
 
 	void ProcessingFrame::create_tag(ComponentId component, const TypeInfo& tagType, void* tag)
 	{
@@ -115,4 +131,22 @@ namespace sge
 		_tag_buffer = buff;
 		_buffer_size += additional_size;
 	}
+
+    void ProcessingFrame::dispatch_tags(UpdatePipeline& pipeline, SystemFrame& callback_frame)
+    {
+        // Destroy all tag objects
+        const std::size_t freeOffset = _free_offset;
+        for (std::size_t offset = 0; offset < freeOffset;)
+        {
+            // Access the header and tag
+            auto* header = reinterpret_cast<TagHeader*>(_tag_buffer + offset);
+            void* tag = _tag_buffer + offset + sizeof(TagHeader);
+
+            // Run the tag callback
+            pipeline.run_tag(Any<>{ *header->tag_type, tag }, header->component, callback_frame);
+
+            // Move the offset forward
+            offset += sizeof(TagHeader) + header->tag_type->aligned_size();
+        }
+    }
 }

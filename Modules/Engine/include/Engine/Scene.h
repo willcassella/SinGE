@@ -1,14 +1,13 @@
 // Scene.h
 #pragma once
 
-#include <map>
 #include "SceneData.h"
+#include "TagCallback.h"
 
 namespace sge
 {
 	struct TypeDB;
-	class SystemFrame;
-	class SystemFrameMut;
+    struct UpdatePipeline;
 
 	/**
 	 * \brief Top-level scene interface.
@@ -16,33 +15,6 @@ namespace sge
 	struct SGE_ENGINE_API Scene
 	{
 		SGE_REFLECTED_TYPE;
-
-		/**
-		 * \brief Token used to identify registered system functions, and later unregister them.
-		 * This design may change in the future.
-		 */
-		using SystemFnToken = uint16;
-
-		/**
-		 * \brief Default system token value.
-		 */
-		static constexpr SystemFnToken NULL_SYSTEM_TOKEN = 0;
-
-		/**
-		 * \brief Function signature used for system funtions during the read phase. This design may change in the future.
-		 * \param frame The frame to be used by the system function.
-		 * \param current_time The current game time.
-		 * \param dt The time delta since the last frame.
-		 */
-		using SystemFn = void(SystemFrame& frame, float current_time, float dt);
-
-		/**
-		 * \brief Function signature used for system functions during the read/write phase. This design may change in the future.
-		 * \param frame The frame to be used by the system function.
-		 * \param current_time The current game time.
-		 * \param dt The time delta since the last frame.
-		 */
-		using SystemMutFn = void(SystemFrameMut& frame, float current_time, float dt);
 
 		////////////////////////
 		///   Constructors   ///
@@ -106,82 +78,18 @@ namespace sge
 		void register_component_type(const TypeInfo& type, std::unique_ptr<ComponentContainer> container);
 
 		/**
-		 * \brief Registers a system function to be called during the read phase.
-		 * This design may change in the future.
-		 * \param system_fn The system function to call during the read phase.
-		 * \return The token for the system function, which may be used to unregister it.
-		 */
-		SystemFnToken register_system_fn(std::function<SystemFn> system_fn);
-
-		/**
-		 * \brief Registers a system member function to be called during the read phase.
-		 * This design may change in the future.
-		 * \param outer The system object that the member function is to be called on.
-		 * \param system_fn The system member function to call during the read phase.
-		 * \return The token for the system function, which may be used to unregister it.
-		 */
-		template <typename T>
-		SystemFnToken register_system_fn(T* outer, void(T::*system_fn)(SystemFrame& frame, float current_time, float dt))
-		{
-			return this->register_system_fn(std::bind(
-				system_fn,
-				outer,
-				std::placeholders::_1,
-				std::placeholders::_2,
-				std::placeholders::_3));
-		}
-
-		/**
-		 * \brief Registers a system function to be called during the read/write phase.
-		 * This design may change in the future.
-		 * \param system_fn The system function to call during the read/write phase.
-		 * \return The token for the system function, which may be used to unregister it.
-		 */
-		SystemFnToken register_system_mut_fn(std::function<SystemMutFn> system_fn);
-
-		/**
-		 * \brief Registers a system member function to be called during the read/write phase.
-		 * This design may change in the future.
-		 * \param outer The system object that the member function is to be called on.
-		 * \param system_fn The system member function to call during the read/write phase.
-		 * \return The token for the system function, which may be used to unregister it.
-		 */
-		template <typename T>
-		SystemFnToken register_system_mut_fn(T* outer, void(T::*system_fn)(SystemFrameMut& frame, float current_time, float dt))
-		{
-			return this->register_system_mut_fn(std::bind(
-				system_fn,
-				outer,
-				std::placeholders::_1,
-				std::placeholders::_2,
-				std::placeholders::_3));
-		}
-
-		/**
-		 * \brief Unregisters the system function identified by the given token.
-		 * \param token The token associated with the system function to unregister.
-		 */
-		void unregister_system_fn(SystemFnToken token);
-
-		/**
-		 * \brief Runs a full read-read/write update of the scene, with the given time delta.
+		 * \brief Runs a full update of the scene, using the given update pipeline and time delta.
+		 * \param pipeline The update pipeline to use to update the scene.
 		 * \param dt The game time that is supposed to have passed since the last call to 'update'.
 		 */
-		void update(float dt);
+		void update(UpdatePipeline& pipeline, float dt);
 
 		//////////////////
 		///   Fields   ///
 	private:
 
-		float _current_time;
 		TypeDB* _type_db;
-
-		/* Scene data */
-		SceneData _scene_data;
-
-		/* System data */
-		SystemFnToken _next_system_fn_token;
-		std::map<SystemFnToken, std::function<SystemFn>> _system_fns;
-		std::map<SystemFnToken, std::function<SystemMutFn>> _system_mut_fns;
+		float _current_time;
+        SceneData _scene_data;
 	};
 }

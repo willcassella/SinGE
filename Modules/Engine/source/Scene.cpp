@@ -5,6 +5,8 @@
 #include <Core/Util/StringUtils.h>
 #include "../include/Engine/Scene.h"
 #include "../include/Engine/SystemFrame.h"
+#include "../include/Engine/ProcessingFrame.h"
+#include "../include/Engine/UpdatePipeline.h"
 
 SGE_REFLECT_TYPE(sge::Scene)
 .implements<IToArchive>()
@@ -16,8 +18,7 @@ namespace sge
 	///   Constructors   ///
 
 	Scene::Scene(TypeDB& typedb)
-		: _type_db(&typedb),
-		_next_system_fn_token(1)
+		: _type_db(&typedb)
 	{
 		_current_time = 0;
 		_scene_data.next_entity_id = 2; // '1' is reserved for WORLD_ENTITY
@@ -78,7 +79,9 @@ namespace sge
 		for (const auto& componentType : _scene_data.components)
 		{
 			// Add the component type name as a field
-			writer.object_member(componentType.first->name().c_str(), *componentType.second.container);
+			writer.push_object_member(componentType.first->name().c_str());
+            componentType.second.container->to_archive(writer, componentType.second.instances);
+            writer.pop();
 		}
 		writer.pop();
 	}
@@ -175,62 +178,24 @@ namespace sge
 		_type_db->new_type(type);
 	}
 
-	Scene::SystemFnToken Scene::register_system_fn(std::function<SystemFn> system)
-	{
-		auto token = _next_system_fn_token++;
-		_system_fns[token] = std::move(system);
-		return token;
-	}
-
-	Scene::SystemFnToken Scene::register_system_mut_fn(std::function<SystemMutFn> system)
-	{
-		auto token = _next_system_fn_token++;
-		_system_mut_fns[token] = std::move(system);
-		return token;
-	}
-
-	void Scene::unregister_system_fn(SystemFnToken token)
-	{
-		auto iter = _system_fns.find(token);
-		if (iter != _system_fns.end())
-		{
-			_system_fns.erase(iter);
-			return;
-		}
-
-		auto iter_mut = _system_mut_fns.find(token);
-		if (iter_mut != _system_mut_fns.end())
-		{
-			_system_mut_fns.erase(iter_mut);
-		}
-	}
-
-	void Scene::update(float dt)
+	void Scene::update(UpdatePipeline& pipeline, float dt)
 	{
 		// Update the time
 		_current_time += dt;
 
-		// Run all immutable system functions
-		for (auto& system : _system_fns)
+		// For each step in the pipeline
+		for (const auto& pipeline_step : pipeline.get_pipeline())
 		{
-			// Create a system frame
-			SystemFrame frame{ *this, _scene_data };
+            for (const auto& system : pipeline_step)
+            {
+                // Create a system frame for the system
+                SystemFrame frame{ *this, _scene_data, pipeline };
+                system(frame, _current_time, dt);
 
-			// Call the function
-			system.second(frame, _current_time, dt);
-		}
-
-		// Run all mutable system functions
-		for (auto& system : _system_mut_fns)
-		{
-			// Create a mut system frame
-			SystemFrameMut frame{ *this, _scene_data };
-
-			// Call the function
-			system.second(frame, _current_time, dt);
-
-			// Flush changes in system frame
-			frame.flush_changes();
+                // Create a system frame for the tags
+                SystemFrame tag_frame{ *this, _scene_data, pipeline };
+                frame.flush_changes(tag_frame);
+            }
 		}
 	}
 }
