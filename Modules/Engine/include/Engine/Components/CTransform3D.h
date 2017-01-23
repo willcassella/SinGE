@@ -6,8 +6,10 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CTransform3D : TComponentInterface<CTransform3D>
+	class SGE_ENGINE_API CTransform3D final : public TComponentInterface<CTransform3D>
 	{
+	public:
+
 		SGE_REFLECTED_TYPE;
 		struct Data;
 
