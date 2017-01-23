@@ -29,6 +29,16 @@ namespace stde
 	{
 	};
 
+    template <typename FuncT>
+    struct function_traits< FuncT& > : function_traits<FuncT>
+    {
+    };
+
+    template <typename FuncT>
+    struct function_traits< FuncT* > : function_traits<FuncT>
+    {
+    };
+
 	template <typename Ret, typename ... Args>
 	struct function_traits< Ret(Args...) >
 	{
