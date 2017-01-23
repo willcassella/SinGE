@@ -9,7 +9,7 @@
 #include "../include/Engine/Components/Display/CSpotlight.h"
 #include "../include/Engine/Components/Display/CLightColor.h"
 #include "../include/Engine/Components/Logic/CInput.h"
-#include "../include/Engine/Components/Physics/CCubeCollider.h"
+#include "../include/Engine/Components/Physics/CBoxCollider.h"
 #include "../include/Engine/Components/Physics/CVelocity.h"
 #include "../include/Engine/Components/Physics/CRigidBody.h"
 #include "../include/Engine/Components/Physics/CSensor.h"
@@ -66,7 +66,7 @@ namespace sge
 		CSpotlight::register_type(scene);
 		CLightColor::register_type(scene);
         CInput::register_type(scene);
-        CCubeCollider::register_type(scene);
+        CBoxCollider::register_type(scene);
         CVelocity::register_type(scene);
         CRigidBody::register_type(scene);
         CSensor::register_type(scene);

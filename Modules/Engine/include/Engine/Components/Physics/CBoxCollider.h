@@ -1,12 +1,12 @@
-// CCubeCollider.h
+// CBoxCollider.h
 #pragma once
 
-#include <Core/Math/Vec2.h>
+#include <Core/Math/Vec3.h>
 #include "../../Component.h"
 
 namespace sge
 {
-	class SGE_ENGINE_API CCubeCollider final : public TComponentInterface<CCubeCollider>
+	class SGE_ENGINE_API CBoxCollider final : public TComponentInterface<CBoxCollider>
 	{
 	public:
 
@@ -17,7 +17,7 @@ namespace sge
         ///   Constructors   ///
 	public:
 
-        CCubeCollider(ProcessingFrame& pframe, EntityId entity, Data& data);
+        CBoxCollider(ProcessingFrame& pframe, EntityId entity, Data& data);
 
 		////////////////////
 		////   Methods   ///
@@ -32,6 +32,14 @@ namespace sge
         float height() const;
 
         void height(float value);
+
+        float depth() const;
+
+        void depth(float value);
+
+        Vec3 shape() const;
+
+        void shape(const Vec3& shape);
 
 		//////////////////
 		///   Fields   ///
