@@ -197,16 +197,17 @@
     <ClInclude Include="include\BulletPhysics\build.h" />
     <ClInclude Include="include\BulletPhysics\BulletPhysicsSystem.h" />
     <ClInclude Include="include\BulletPhysics\Config.h" />
-    <ClInclude Include="private\Collider.h" />
+    <ClInclude Include="private\PhysicsEntity.h" />
     <ClInclude Include="private\PhysicsWorld.h" />
     <ClInclude Include="private\BulletPhysicsSystemData.h" />
-    <ClInclude Include="private\PhysTransform.h" />
     <ClInclude Include="private\RigidBody.h" />
+    <ClInclude Include="private\Util.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\BulletPhysicsSystem.cpp" />
     <ClCompile Include="source\BulletPhysicsSystemData.cpp" />
     <ClCompile Include="source\Config.cpp" />
+    <ClCompile Include="source\PhysicsEntity.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

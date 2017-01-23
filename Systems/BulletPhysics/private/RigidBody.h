@@ -1,6 +1,7 @@
 // RigidBody.h
 #pragma once
 
+#include <memory>
 #include <BulletDynamics/Dynamics/btRigidBody.h>
 #include "PhysTransform.h"
 #include "Collider.h"
@@ -19,18 +20,12 @@ namespace sge
             {
             }
 
-            ///////////////////
-            ///   Methods   ///
-        public:
-
-
-
             //////////////////
             ///   Fields   ///
         private:
 
             PhsTransform _transform;
-            alignas(btRigidBody) byte _rigid_body_buffer[sizeof(btRigidBody)];
+            std::unique_ptr<btRigidBody> _rigid_body;
         };
     }
 }

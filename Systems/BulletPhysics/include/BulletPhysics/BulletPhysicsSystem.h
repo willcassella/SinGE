@@ -3,11 +3,15 @@
 
 #include <memory>
 #include <Core/Reflection/Reflection.h>
-#include <Engine/Scene.h>
 #include "build.h"
 
 namespace sge
 {
+    struct SystemFrame;
+    struct UpdatePipeline;
+    class CBoxCollider;
+    class CRigidBody;
+
     namespace bullet_physics
     {
         struct Config;
@@ -22,24 +26,45 @@ namespace sge
         public:
 
             BulletPhysicsSystem(const Config& config);
+            ~BulletPhysicsSystem();
 
             ///////////////////
             ///   Methods   ///
         public:
 
-            void register_with_scene(Scene& scene);
-
-            void unregister_with_scene(Scene& scene);
+            void register_pipeline(UpdatePipeline& pipeline);
 
         private:
 
-            void phys_tick(SystemFrameMut& frame, float current_time, float dt);
+            void phys_tick(SystemFrame& frame, float current_time, float dt);
+
+            void initialize_world(SystemFrame& frame);
+
+            void cb_new_box_collider(
+                SystemFrame& frame,
+                FNewComponent tag,
+                TComponentId<CBoxCollider> component);
+
+            void cb_deleted_box_collider(
+                SystemFrame& frame,
+                FDestroyedComponent tag,
+                TComponentId<CBoxCollider> component);
+
+            void cb_new_rigid_body(
+                SystemFrame& frame,
+                FNewComponent tag,
+                TComponentId<CRigidBody> component);
+
+            void cb_deleted_rigid_body(
+                SystemFrame& frame,
+                FDestroyedComponent tag,
+                TComponentId<CRigidBody> component);
 
             //////////////////
             ///   Fields   ///
         private:
 
-            Scene::SystemFnToken _update_phys_token;
+            bool _initialized_world;
             std::unique_ptr<Data> _data;
         };
     }

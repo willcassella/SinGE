@@ -20,9 +20,6 @@
     <ClInclude Include="include\BulletPhysics\BulletPhysicsSystem.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="private\Collider.h">
-      <Filter>private</Filter>
-    </ClInclude>
     <ClInclude Include="private\PhysicsWorld.h">
       <Filter>private</Filter>
     </ClInclude>
@@ -35,7 +32,10 @@
     <ClInclude Include="private\RigidBody.h">
       <Filter>private</Filter>
     </ClInclude>
-    <ClInclude Include="private\PhysTransform.h">
+    <ClInclude Include="private\PhysicsEntity.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\Util.h">
       <Filter>private</Filter>
     </ClInclude>
   </ItemGroup>
@@ -47,6 +47,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\BulletPhysicsSystem.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\PhysicsEntity.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
