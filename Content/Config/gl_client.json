@@ -1,11 +1,15 @@
 {
-    "window_width": 1024,
-    "window_height": 720,
+    "window_width": 1920,
+    "window_height": 1080,
     "scene": "Content/Scenes/basic.json",
     "gl_render": {
         "viewport_vert_shader": "Content/Shaders/viewport.vert",
         "viewport_frag_shader": "Content/Shaders/viewport.frag",
         "missing_material": "Content/Materials/Misc/checkerboard.json",
         "missing_mesh": "Content/Meshes/Misc/question_mark.smesh"
-    }
+    },
+    "update_pipeline": [
+        ["bullet_physics"],
+        ["gl_render"]
+    ]
 }

@@ -3,24 +3,16 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
 #include <Core/Math/Vec4.h>
+#include <Core/Math/Quat.h>
 #include <Core/Reflection/TypeDB.h>
 #include <Resource/Archives/JsonArchive.h>
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
-#include <Engine/Components/CTransform3D.h>
-#include <Engine/Components/Display/CCamera.h>
-#include <Engine/Components/Display/CStaticMesh.h>
-#include <JavaScript/JavaScriptEngine.h>
+#include <Engine/UpdatePipeline.h>
 #include <GLRender/GLRenderSystem.h>
 #include <GLRender/Config.h>
-
-void mut_process_test(sge::SystemFrameMut& frame, float current_time, float dt)
-{
-	frame.process_entities_mut([](sge::ProcessingFrame&, sge::EntityId, sge::CTransform3D& transform, sge::CPerspectiveCamera&)
-	{
-		transform.set_local_position(transform.get_local_position() + sge::Vec3{ 0.01, 0, 0.01 });
-	});
-}
+#include <BulletPhysics/BulletPhysicsSystem.h>
+#include <BulletPhysics/Config.h>
 
 int main(int argc, char* argv[])
 {
@@ -75,6 +67,9 @@ int main(int argc, char* argv[])
 		scene_archive.deserialize_root(scene);
 	}
 
+    // Create a pipeline
+    sge::UpdatePipeline pipeline;
+
 	// Create a render system
 	sge::gl_render::Config render_config;
 	render_config.viewport_width = window_width;
@@ -86,25 +81,29 @@ int main(int argc, char* argv[])
 	}
 
 	sge::gl_render::GLRenderSystem renderSystem{ render_config };
-	renderSystem.register_with_scene(scene);
+    renderSystem.pipeline_register(pipeline);
 
-	// Create a JavaScript system
-	sge::JavaScriptEngine jsEngine{ scene };
-	jsEngine.register_type(sge::Vec2::type_info);
-	jsEngine.register_type(sge::Vec3::type_info);
-	jsEngine.register_type(sge::Vec4::type_info);
-	jsEngine.register_type(sge::CTransform3D::type_info);
-	jsEngine.register_type(sge::CPerspectiveCamera::type_info);
-	jsEngine.register_type(sge::CStaticMesh::type_info);
-	//jsEngine.load_script("Content/JavaScript/main.js");
+    // Create a bullet physics system
+    sge::bullet_physics::Config physics_config;
+    config_reader->object_member("bullet_physics", physics_config);
+    sge::bullet_physics::BulletPhysicsSystem physics_system{ physics_config };
+    physics_system.register_pipeline(pipeline);
 
-	// Create the test mutation system
-	auto system_test_token = scene.register_system_mut_fn(&mut_process_test);
+    // Load the pipeline config
+    if (config_reader->pull_object_member("update_pipeline"))
+    {
+        pipeline.configure_pipeline(*config_reader);
+        config_reader->pop();
+    }
+    else
+    {
+        assert(false /*Engine update pipeline not specified*/);
+    }
 
 	// Loop until the user closes the window
 	while (!glfwWindowShouldClose(window))
 	{
-		scene.update(0.016);
+		scene.update(pipeline, 0.016);
 
 		// Swap front and back buffers
 		glfwSwapBuffers(window);
@@ -112,10 +111,6 @@ int main(int argc, char* argv[])
 		// Poll for and process events
 		glfwPollEvents();
 	}
-
-	// Unregister systems
-	scene.unregister_system_fn(system_test_token);
-	renderSystem.unregister_with_scene(scene);
 
 	glfwTerminate();
 }

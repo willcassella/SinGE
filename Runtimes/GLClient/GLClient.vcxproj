@@ -69,25 +69,25 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
@@ -189,6 +189,9 @@
     </ProjectReference>
     <ProjectReference Include="..\..\Modules\Resource\Resource.vcxproj">
       <Project>{2254997d-f816-4644-9b73-bbab5f035212}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Systems\BulletPhysics\BulletPhysics.vcxproj">
+      <Project>{478ea17e-a118-442f-84e8-54a0f567b380}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\Systems\GLRender\GLRender.vcxproj">
       <Project>{9ef5dece-d157-4c40-a70b-fa31f4d0894e}</Project>
