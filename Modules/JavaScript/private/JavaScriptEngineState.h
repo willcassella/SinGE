@@ -9,7 +9,7 @@ namespace sge
 	struct JsForeignType;
 	struct JsTypeInfo;
 	struct Scene;
-	class SystemFrameMut;
+	struct SystemFrame;
 
 	struct JavaScriptEngine::State
 	{
@@ -31,7 +31,7 @@ namespace sge
 
 		/* Game Engine state. */
 		Scene* scene;
-		SystemFrameMut* mut_frame;
+		SystemFrame* frame;
 
 		/* JavaScript runtime state. */
 		struct Runtime

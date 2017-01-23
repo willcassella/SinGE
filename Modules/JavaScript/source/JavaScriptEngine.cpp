@@ -194,7 +194,7 @@ namespace sge
 		};
 
 		// Run the process function
-		jsEngine->mut_frame->process_entities_mut(types, numTypes, processFn);
+		jsEngine->frame->process_entities_mut(types, numTypes, processFn);
 
 		// Null out all the js arguments
 		for (int i = 0; i < numTypes; ++i)
@@ -249,7 +249,7 @@ namespace sge
 	{
 		_state = std::make_unique<State>();
 		_state->scene = &scene;
-		_state->mut_frame = nullptr;
+		_state->frame = nullptr;
 
 		// Create a runtime
 		JsCreateRuntime(JsRuntimeAttributeNone, nullptr, &_state->js_runtime.runtime);
