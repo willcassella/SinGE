@@ -8,7 +8,7 @@
 
 namespace sge
 {
-	class SystemFrame;
+	struct SystemFrame;
 
 	namespace gl_render
 	{
@@ -30,9 +30,9 @@ namespace sge
 			///   Methods   ///
 		public:
 
-			void register_with_scene(Scene& scene);
+			void pipeline_register(UpdatePipeline& pipeline);
 
-			void unregister_with_scene(Scene& scene);
+            void set_viewport(int width, int height);
 
 		private:
 
@@ -43,7 +43,6 @@ namespace sge
 		private:
 
 			std::unique_ptr<State> _state;
-			Scene::SystemFnToken _render_fn_token;
 		};
 	}
 }

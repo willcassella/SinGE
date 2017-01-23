@@ -8,6 +8,8 @@
 #include <Engine/Components/Display/CCamera.h>
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
+#include <Engine/UpdatePipeline.h>
+#include "../include/GLRender/Config.h"
 #include "../private/GLRenderSystemState.h"
 
 SGE_REFLECT_TYPE(sge::gl_render::GLRenderSystem);
@@ -16,35 +18,73 @@ namespace sge
 {
 	namespace gl_render
 	{
+        static void set_render_target_params()
+        {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        }
+
+        static void upload_render_target_data(
+            GLsizei width,
+            GLsizei height,
+            GLenum internal_format,
+            GLenum upload_format,
+            GLenum upload_type)
+        {
+            glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, upload_format, upload_type, nullptr);
+        }
+
 		static void create_gbuffer_layer(
 			GLuint layer,
 			GLenum attachment,
 			GLsizei width,
 			GLsizei height,
-			GLenum internalFormat,
-			GLenum format,
-			GLenum type)
+			GLenum internal_format,
+			GLenum upload_format,
+			GLenum upload_type)
 		{
 			glBindTexture(GL_TEXTURE_2D, layer);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, nullptr);
+            set_render_target_params();
+            upload_render_target_data(width, height, internal_format, upload_format, upload_type);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, layer, 0);
 		}
 
+        /* These constants specify the attachment index for buffer layers. */
 		static constexpr GLenum GBUFFER_DEPTH_ATTACHMENT = GL_DEPTH_ATTACHMENT;
 		static constexpr GLenum GBUFFER_POSITION_ATTACHMENT = GL_COLOR_ATTACHMENT0;
 		static constexpr GLenum GBUFFER_NORMAL_ATTACHMENT = GL_COLOR_ATTACHMENT1;
 		static constexpr GLenum GBUFFER_DIFFUSE_ATTACHMENT = GL_COLOR_ATTACHMENT2;
 		static constexpr GLenum GBUFFER_SPECULAR_ATTACHMENT = GL_COLOR_ATTACHMENT3;
 
+        /* These constants define the internal format for the gbuffer layers. */
+        static constexpr GLenum GBUFFER_DEPTH_INTERNAL_FORMAT = GL_DEPTH_COMPONENT32;
+        static constexpr GLenum GBUFFER_POSITION_INTERNAL_FORMAT = GL_RGB32F;
+        static constexpr GLenum GBUFFER_NORMAL_INTERNAL_FORMAT = GL_RGB32F;
+        static constexpr GLenum GBUFFER_DIFFUSE_INTERNAL_FORMAT = GL_RGB8;
+        static constexpr GLenum GBUFFER_SPECULAR_INTERNAL_FORMAT = GL_R8;
+        static constexpr GLenum POST_BUFFER_INTERNAL_FORMAT = GL_RGB32F;
+
+        /* These constants are used when initializing or resizing gbuffer layers.
+         * They're pretty much meaningless, but are used to ensure consistency. */
+	    static constexpr GLenum GBUFFER_DEPTH_UPLOAD_FORMAT = GL_DEPTH_COMPONENT;
+        static constexpr GLenum GBUFFER_DEPTH_UPLOAD_TYPE = GL_UNSIGNED_INT;
+        static constexpr GLenum GBUFFER_POSITION_UPLOAD_FORMAT = GL_RGB;
+        static constexpr GLenum GBUFFER_POSITION_UPLOAD_TYPE = GL_FLOAT;
+        static constexpr GLenum GBUFFER_NORMAL_UPLOAD_FORMAT = GL_RGB;
+        static constexpr GLenum GBUFFER_NORMAL_UPLOAD_TYPE = GL_FLOAT;
+        static constexpr GLenum GBUFFER_DIFFUSE_UPLOAD_FORMAT = GL_RGB;
+        static constexpr GLenum GBUFFER_DIFFUSE_UPLOAD_TYPE = GL_UNSIGNED_BYTE;
+        static constexpr GLenum GBUFFER_SPECULAR_UPLOAD_FORMAT = GL_RED;
+        static constexpr GLenum GBUFFER_SPECULAR_UPLOAD_TYPE = GL_UNSIGNED_BYTE;
+        static constexpr GLenum POST_BUFFER_UPLOAD_FORMAT = GL_RGB;
+        static constexpr GLenum POST_BUFFER_UPLOAD_TYPE = GL_FLOAT;
+
 		////////////////////////
 		///   Constructors   ///
 
 		GLRenderSystem::GLRenderSystem(const Config& config)
-			: _render_fn_token(Scene::NULL_SYSTEM_TOKEN)
 		{
 			assert(config.validate() /*The given GLRenderSystem config object is not valid*/);
 
@@ -90,9 +130,9 @@ namespace sge
 				GBUFFER_DEPTH_ATTACHMENT,
 				_state->width,
 				_state->height,
-				GL_DEPTH_COMPONENT32,
-				GL_DEPTH_COMPONENT,
-				GL_UNSIGNED_INT);
+				GBUFFER_DEPTH_INTERNAL_FORMAT,
+				GBUFFER_DEPTH_UPLOAD_FORMAT,
+				GBUFFER_DEPTH_UPLOAD_TYPE);
 
 			// Create gbuffer position layer
 			create_gbuffer_layer(
@@ -100,9 +140,9 @@ namespace sge
 				GBUFFER_POSITION_ATTACHMENT,
 				_state->width,
 				_state->height,
-				GL_RGB32F,
-				GL_RGB,
-				GL_FLOAT);
+				GBUFFER_POSITION_INTERNAL_FORMAT,
+				GBUFFER_POSITION_UPLOAD_FORMAT,
+				GBUFFER_POSITION_UPLOAD_TYPE);
 
 			// Create gbuffer normal layer
 			create_gbuffer_layer(
@@ -110,9 +150,9 @@ namespace sge
 				GBUFFER_NORMAL_ATTACHMENT,
 				_state->width,
 				_state->height,
-				GL_RGB32F,
-				GL_RGB,
-				GL_FLOAT);
+				GBUFFER_NORMAL_INTERNAL_FORMAT,
+				GBUFFER_NORMAL_UPLOAD_FORMAT,
+				GBUFFER_NORMAL_UPLOAD_TYPE);
 
 			// Create gbuffer diffuse layer
 			create_gbuffer_layer(
@@ -120,9 +160,9 @@ namespace sge
 				GBUFFER_DIFFUSE_ATTACHMENT,
 				_state->width,
 				_state->height,
-				GL_RGBA8,
-				GL_RGBA,
-				GL_UNSIGNED_BYTE);
+				GBUFFER_DIFFUSE_INTERNAL_FORMAT,
+				GBUFFER_DIFFUSE_UPLOAD_FORMAT,
+				GBUFFER_DIFFUSE_UPLOAD_TYPE);
 
 			// Create gbuffer specular layer
 			create_gbuffer_layer(
@@ -130,15 +170,29 @@ namespace sge
 				GBUFFER_SPECULAR_ATTACHMENT,
 				_state->width,
 				_state->height,
-				GL_R32F,
-				GL_RED,
-				GL_FLOAT);
+				GBUFFER_SPECULAR_INTERNAL_FORMAT,
+				GBUFFER_SPECULAR_UPLOAD_FORMAT,
+				GBUFFER_SPECULAR_UPLOAD_TYPE);
 
 			// Make sure the GBuffer was constructed successfully
 			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			{
 				std::cerr << "GLRenderSystem: Error creating GBuffer." << std::endl;
 			}
+
+            // Generate the post buffer
+            glGenTextures(1, &_state->post_buffer);
+            glBindTexture(GL_TEXTURE_2D, _state->post_buffer);
+            glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                POST_BUFFER_INTERNAL_FORMAT,
+                _state->width,
+                _state->height,
+                0,
+                POST_BUFFER_UPLOAD_FORMAT,
+                POST_BUFFER_UPLOAD_TYPE,
+                nullptr);
 
 			constexpr float QUAD_VERTEX_DATA[] = {
 				-1.f, 1.f, 0.f, 1.f,	// Top-left point
@@ -200,18 +254,72 @@ namespace sge
 		///////////////////
 		///   Methods   ///
 
-		void GLRenderSystem::register_with_scene(Scene& scene)
+		void GLRenderSystem::pipeline_register(UpdatePipeline& pipeline)
 		{
-			_render_fn_token = scene.register_system_fn(this, &GLRenderSystem::render_scene);
+			pipeline.register_system_fn("gl_render", this, &GLRenderSystem::render_scene);
 		}
 
-		void GLRenderSystem::unregister_with_scene(Scene& scene)
-		{
-			scene.unregister_system_fn(_render_fn_token);
-			_render_fn_token = Scene::NULL_SYSTEM_TOKEN;
-		}
+	    void GLRenderSystem::set_viewport(int width, int height)
+	    {
+            _state->width = width;
+            _state->height = height;
 
-		void GLRenderSystem::render_scene(SystemFrame& frame, float current_time, float dt)
+            // Resize depth layer
+            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::DEPTH]);
+            upload_render_target_data(
+                width,
+                height,
+                GBUFFER_DEPTH_INTERNAL_FORMAT,
+                GBUFFER_DEPTH_UPLOAD_FORMAT,
+                GBUFFER_DEPTH_UPLOAD_TYPE);
+
+	        // Resize normal layer
+            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::NORMAL]);
+            upload_render_target_data(
+                width,
+                height,
+                GBUFFER_NORMAL_INTERNAL_FORMAT,
+                GBUFFER_NORMAL_UPLOAD_FORMAT,
+                GBUFFER_NORMAL_UPLOAD_TYPE);
+
+            // Resize position layer
+            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::POSITION]);
+            upload_render_target_data(
+                width,
+                height,
+                GBUFFER_POSITION_INTERNAL_FORMAT,
+                GBUFFER_POSITION_UPLOAD_FORMAT,
+                GBUFFER_POSITION_UPLOAD_TYPE);
+
+            // Resize diffuse layer
+            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::DIFFUSE]);
+            upload_render_target_data(
+                width,
+                height,
+                GBUFFER_DIFFUSE_INTERNAL_FORMAT,
+                GBUFFER_DIFFUSE_UPLOAD_FORMAT,
+                GBUFFER_DIFFUSE_UPLOAD_TYPE);
+
+            // Resize specular layer
+            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::SPECULAR]);
+            upload_render_target_data(
+                width,
+                height,
+                GBUFFER_SPECULAR_INTERNAL_FORMAT,
+                GBUFFER_SPECULAR_INTERNAL_FORMAT,
+                GBUFFER_SPECULAR_UPLOAD_TYPE);
+
+            // Resize post buffer
+            glBindTexture(GL_TEXTURE_2D, _state->post_buffer);
+            upload_render_target_data(
+                width,
+                height,
+                POST_BUFFER_INTERNAL_FORMAT,
+                POST_BUFFER_UPLOAD_FORMAT,
+                POST_BUFFER_UPLOAD_TYPE);
+	    }
+
+	    void GLRenderSystem::render_scene(SystemFrame& frame, float current_time, float dt)
 		{
 			constexpr GLenum DRAW_BUFFERS[] = {
 				GBUFFER_POSITION_ATTACHMENT,

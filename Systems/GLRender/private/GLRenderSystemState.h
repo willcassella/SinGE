@@ -2,7 +2,6 @@
 #pragma once
 
 #include "../include/GLRender/GLRenderSystem.h"
-#include "../include/GLRender/Config.h"
 #include "GLShader.h"
 #include "GLMaterial.h"
 #include "GLStaticMesh.h"
@@ -42,7 +41,7 @@ namespace sge
 			//////////////////
 			///   Fields   ///
 		public:
-			
+
 			// Config
 			GLint width;
 			GLint height;
@@ -60,6 +59,7 @@ namespace sge
 
 			// GBuffer stuff
 			GLuint gbuffer_framebuffer;
+            GLuint post_buffer;
 			std::array<GLuint, GBufferLayer::NUM_LAYERS> gbuffer_layers;
 
 			// Sprite quad

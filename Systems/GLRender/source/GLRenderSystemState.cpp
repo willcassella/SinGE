@@ -48,7 +48,7 @@ namespace sge
 				// Load the material
 				JsonArchive archive;
 				auto result = archive.from_file(path.c_str());
-				
+
 				// If the material could not be loaded, create a material from the missing material object
 				if (!result)
 				{
@@ -76,7 +76,7 @@ namespace sge
 				// Load the mesh from the file
 				StaticMesh staticMesh;
 				auto result = staticMesh.from_file(path.c_str());
-				
+
 				// If the mesh could not be loaded
 				if (!result)
 				{
