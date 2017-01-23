@@ -12,8 +12,9 @@ SGE_REFLECT_TYPE(sge::CRigidBody)
 .property("mass", &CRigidBody::mass, &CRigidBody::mass)
 .property("friction", &CRigidBody::friction, &CRigidBody::friction)
 .property("rolling_friction", &CRigidBody::rolling_friction, &CRigidBody::rolling_friction)
-.property("linear_motion_factor", &CRigidBody::linear_motion_factor, &CRigidBody::linear_motion_factor)
-.property("angular_motion_factor", &CRigidBody::angular_motion_factor, &CRigidBody::angular_motion_factor);
+.property("spinning_friction", &CRigidBody::spinning_friction, &CRigidBody::spinning_friction)
+.property("linear_damping", &CRigidBody::linear_damping, &CRigidBody::linear_damping)
+.property("angular_damping", &CRigidBody::angular_damping, &CRigidBody::angular_damping);
 
 SGE_REFLECT_TYPE(sge::CRigidBody::FKinematicChanged);
 
@@ -31,8 +32,9 @@ namespace sge
             writer.object_member("m", mass);
             writer.object_member("f", friction);
             writer.object_member("rf", rolling_friction);
-            writer.object_member("lin", linear_motion_factor);
-            writer.object_member("ang", angular_motion_factor);
+            writer.object_member("sf", spinning_friction);
+            writer.object_member("lin", linear_damping);
+            writer.object_member("ang", angular_damping);
         }
 
         void from_archive(ArchiveReader& reader)
@@ -41,25 +43,28 @@ namespace sge
             reader.object_member("m", mass);
             reader.object_member("f", friction);
             reader.object_member("rf", rolling_friction);
-            reader.object_member("lin", linear_motion_factor);
-            reader.object_member("ang", angular_motion_factor);
+            reader.object_member("sf", spinning_friction);
+            reader.object_member("lin", linear_damping);
+            reader.object_member("ang", angular_damping);
         }
 
         //////////////////
         ///   Fields   ///
     public:
 
-        bool kinematic;
+        bool kinematic = false;
 
-        float mass;
+        float mass = 1.f;
 
-        float friction;
+        float friction = 0.5f;
 
-        float rolling_friction;
+        float rolling_friction = 0.f;
 
-        Vec3 linear_motion_factor;
+        float spinning_friction = 0.f;
 
-        Vec3 angular_motion_factor;
+        float linear_damping = 0.f;
+
+        float angular_damping = 0.f;
     };
 
     CRigidBody::CRigidBody(ProcessingFrame& pframe, EntityId entity, Data& data)
@@ -126,24 +131,34 @@ namespace sge
         checked_setter(value, _data->rolling_friction);
     }
 
-    Vec3 CRigidBody::linear_motion_factor() const
+    float CRigidBody::spinning_friction() const
     {
-        return _data->linear_motion_factor;
+        return _data->spinning_friction;
     }
 
-    void CRigidBody::linear_motion_factor(const Vec3& value)
+    void CRigidBody::spinning_friction(float value)
     {
-        checked_setter(value, _data->linear_motion_factor);
+        checked_setter(value, _data->spinning_friction);
     }
 
-    Vec3 CRigidBody::angular_motion_factor() const
+    float CRigidBody::linear_damping() const
     {
-        return _data->angular_motion_factor;
+        return _data->linear_damping;
     }
 
-    void CRigidBody::angular_motion_factor(const Vec3& value)
+    void CRigidBody::linear_damping(float value)
     {
-        checked_setter(value, _data->angular_motion_factor);
+        checked_setter(value, _data->linear_damping);
+    }
+
+    float CRigidBody::angular_damping() const
+    {
+        return _data->angular_damping;
+    }
+
+    void CRigidBody::angular_damping(float value)
+    {
+        checked_setter(value, _data->angular_damping);
     }
 
     void CRigidBody::prop_set_kinematic(bool value)

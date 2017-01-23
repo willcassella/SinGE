@@ -27,7 +27,7 @@ namespace sge
 	    public:
 
             Vec3 linear_velocity;
-            Quat angular_velocity;
+            Vec3 angular_velocity;
 
             /////////////////////
             ///   Operators   ///
@@ -53,9 +53,9 @@ namespace sge
 
         void linear_velocity(const Vec3& value);
 
-        Quat angular_velocity() const;
+        Vec3 angular_velocity() const;
 
-        void angular_velocity(const Quat& value);
+        void angular_velocity(const Vec3& value);
 
         Data data() const;
 

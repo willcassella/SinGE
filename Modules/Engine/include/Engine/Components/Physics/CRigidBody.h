@@ -47,13 +47,17 @@ namespace sge
 
         void rolling_friction(float value);
 
-        Vec3 linear_motion_factor() const;
+        float spinning_friction() const;
 
-        void linear_motion_factor(const Vec3& value);
+        void spinning_friction(float value);
 
-        Vec3 angular_motion_factor() const;
+        float linear_damping() const;
 
-        void angular_motion_factor(const Vec3& value);
+        void linear_damping(float value);
+
+        float angular_damping() const;
+
+        void angular_damping(float value);
 
     private:
 

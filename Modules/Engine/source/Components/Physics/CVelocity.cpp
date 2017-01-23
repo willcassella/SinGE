@@ -32,12 +32,12 @@ namespace sge
         checked_setter(value, _data->linear_velocity);
     }
 
-    Quat CVelocity::angular_velocity() const
+    Vec3 CVelocity::angular_velocity() const
     {
         return _data->angular_velocity;
     }
 
-    void CVelocity::angular_velocity(const Quat& value)
+    void CVelocity::angular_velocity(const Vec3& value)
     {
         checked_setter(value, _data->angular_velocity);
     }
