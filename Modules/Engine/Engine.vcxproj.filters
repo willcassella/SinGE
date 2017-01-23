@@ -21,12 +21,6 @@
     <Filter Include="source\Components\Physics">
       <UniqueIdentifier>{69ce79ce-243c-44ce-ba5c-deeb8a0c9e01}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\Interfaces">
-      <UniqueIdentifier>{31dd1fa3-4511-47b7-b7fa-220fc77cd492}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\Interfaces">
-      <UniqueIdentifier>{17017b05-37e7-4e19-bc79-41a4f862c4a3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\Components\Display">
       <UniqueIdentifier>{75d7ae61-5a17-4231-9782-0113743fd0dc}</UniqueIdentifier>
     </Filter>
@@ -42,7 +36,10 @@
     <Filter Include="include\Components\Logic">
       <UniqueIdentifier>{899f1a01-9ae5-4ea7-8758-f8c2aa05b65b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="source\Logic">
+    <Filter Include="include\Util">
+      <UniqueIdentifier>{2542d038-0fd9-4ebd-bee4-3497856a024a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Components\Logic">
       <UniqueIdentifier>{3bad39d5-0763-4da3-8072-008017cf6066}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -52,9 +49,6 @@
     </ClInclude>
     <ClInclude Include="include\Engine\Scene.h">
       <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\Interfaces\ISystem.h">
-      <Filter>include\Interfaces</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine\Component.h">
       <Filter>include</Filter>
@@ -76,9 +70,6 @@
     </ClInclude>
     <ClInclude Include="include\Engine\Components\Display\CStaticMesh.h">
       <Filter>include\Components\Display</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\Components\Physics\CCubeCollider.h">
-      <Filter>include\Components\Physics</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine\Components\CTransform3D.h">
       <Filter>include\Components</Filter>
@@ -104,13 +95,31 @@
     <ClInclude Include="include\Engine\Components\Display\CLightColor.h">
       <Filter>include\Components\Display</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\Util\BasicComponentContainer.h">
+      <Filter>include\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Physics\CRigidBody.h">
+      <Filter>include\Components\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\TagCallback.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Physics\CSensor.h">
+      <Filter>include\Components\Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Util\EmptyComponentContainer.h">
+      <Filter>include\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\UpdatePipeline.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Physics\CBoxCollider.h">
+      <Filter>include\Components\Physics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Scene.cpp">
       <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Interfaces\ISystem.cpp">
-      <Filter>source\Interfaces</Filter>
     </ClCompile>
     <ClCompile Include="source\Resources\Shader.cpp">
       <Filter>source\Resources</Filter>
@@ -133,14 +142,11 @@
     <ClCompile Include="source\Components\Display\CStaticMesh.cpp">
       <Filter>source\Components\Display</Filter>
     </ClCompile>
-    <ClCompile Include="source\Components\Physics\CCubeCollider.cpp">
-      <Filter>source\Components\Physics</Filter>
-    </ClCompile>
     <ClCompile Include="source\Components\CTransform3D.cpp">
       <Filter>source\Components</Filter>
     </ClCompile>
     <ClCompile Include="source\Components\Logic\CInput.cpp">
-      <Filter>source\Logic</Filter>
+      <Filter>source\Components\Logic</Filter>
     </ClCompile>
     <ClCompile Include="source\Components\Physics\CVelocity.cpp">
       <Filter>source\Components\Physics</Filter>
@@ -156,6 +162,18 @@
     </ClCompile>
     <ClCompile Include="source\Components\Display\CLightColor.cpp">
       <Filter>source\Components\Display</Filter>
+    </ClCompile>
+    <ClCompile Include="include\Engine\Components\Physics\CRigidBody.cpp">
+      <Filter>source\Components\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Physics\CSensor.cpp">
+      <Filter>source\Components\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Engine\UpdatePipeline.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Physics\CBoxCollider.cpp">
+      <Filter>source\Components\Physics</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
