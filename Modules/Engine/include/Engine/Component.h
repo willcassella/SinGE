@@ -168,6 +168,14 @@ namespace sge
 
 		virtual const TypeInfo& get_type() const = 0;
 
+        void create_tag(const TypeInfo& tag_type, void* tag);
+
+        template <typename T>
+        void create_tag(T&& tag)
+        {
+            this->create_tag(sge::get_type<T>(), &tag);
+        }
+
 	protected:
 
 		ProcessingFrame& processing_frame() const

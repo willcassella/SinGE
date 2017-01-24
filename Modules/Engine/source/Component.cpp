@@ -13,6 +13,8 @@
 #include "../include/Engine/Components/Physics/CVelocity.h"
 #include "../include/Engine/Components/Physics/CRigidBody.h"
 #include "../include/Engine/Components/Physics/CSensor.h"
+#include "../include/Engine/Components/Gameplay/CCharacterController.h"
+#include "../include/Engine/Components/Physics/CCapsuleCollider.h"
 
 SGE_REFLECT_TYPE(sge::ComponentId);
 SGE_REFLECT_TYPE(sge::FNewComponent);
@@ -49,7 +51,12 @@ namespace sge
 		});
 	}
 
-	void ComponentInterface::apply_component_modified_tag()
+    void ComponentInterface::create_tag(const TypeInfo& tag_type, void* tag)
+    {
+        processing_frame().create_tag(id(), tag_type, tag);
+    }
+
+    void ComponentInterface::apply_component_modified_tag()
 	{
 		if (!_applied_modified_tag)
 		{
@@ -70,5 +77,7 @@ namespace sge
         CVelocity::register_type(scene);
         CRigidBody::register_type(scene);
         CSensor::register_type(scene);
+        CCharacterController::register_type(scene);
+        CCapsuleCollider::register_type(scene);
 	}
 }
