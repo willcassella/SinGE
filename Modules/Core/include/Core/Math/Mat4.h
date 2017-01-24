@@ -217,7 +217,7 @@ namespace sge
 			Vec3 result;
 			result.x( lhs.get(0, 0) * rhs.x() + lhs.get(1, 0) * rhs.y() + lhs.get(2, 0) * rhs.z() + lhs.get(3, 0) );
 			result.y( lhs.get(0, 1) * rhs.x() + lhs.get(1, 1) * rhs.y() + lhs.get(2, 1) * rhs.z() + lhs.get(3, 1) );
-			result.x( lhs.get(0, 2) * rhs.x() + lhs.get(1, 2) * rhs.y() + lhs.get(2, 2) * rhs.z() + lhs.get(3, 2) );
+			result.z( lhs.get(0, 2) * rhs.x() + lhs.get(1, 2) * rhs.y() + lhs.get(2, 2) * rhs.z() + lhs.get(3, 2) );
 
 			return result;
 		}
