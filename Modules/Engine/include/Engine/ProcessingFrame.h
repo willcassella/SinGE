@@ -13,7 +13,7 @@ namespace sge
 	{
 		SGE_REFLECTED_TYPE;
 
-		/* Only 'SystemFrame' objects make construct ProcessingFrames. */
+		/* Only 'SystemFrame' objects may construct ProcessingFrames. */
 		friend SystemFrame;
 
 		////////////////////////
