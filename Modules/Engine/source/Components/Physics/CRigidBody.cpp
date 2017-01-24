@@ -2,10 +2,10 @@
 
 #include <Core/Math/Vec3.h>
 #include <Core/Reflection/ReflectionBuilder.h>
-#include "../../../../include/Engine/Components/Physics/CRigidBody.h"
-#include "../../../../include/Engine/Scene.h"
-#include "../../../../include/Engine/Util/BasicComponentContainer.h"
-#include "../../../../include/Engine/ProcessingFrame.h"
+#include "../../../include/Engine/Components/Physics/CRigidBody.h"
+#include "../../../include/Engine/Scene.h"
+#include "../../../include/Engine/Util/BasicComponentContainer.h"
+#include "../../../include/Engine/ProcessingFrame.h"
 
 SGE_REFLECT_TYPE(sge::CRigidBody)
 .property("kinematic", &CRigidBody::kinematic, &CRigidBody::prop_set_kinematic)

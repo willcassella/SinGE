@@ -42,6 +42,12 @@
     <Filter Include="source\Components\Logic">
       <UniqueIdentifier>{3bad39d5-0763-4da3-8072-008017cf6066}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Components\Gameplay">
+      <UniqueIdentifier>{036d44a3-1b68-4ee8-928f-1f96b680a345}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Components\Gameplay">
+      <UniqueIdentifier>{eca2e36e-b74f-4f75-9a8e-0b9c81cd25e0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Engine\config.h">
@@ -116,6 +122,12 @@
     <ClInclude Include="include\Engine\Components\Physics\CBoxCollider.h">
       <Filter>include\Components\Physics</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\Components\Gameplay\CCharacterController.h">
+      <Filter>include\Components\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Physics\CCapsuleCollider.h">
+      <Filter>include\Components\Physics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Scene.cpp">
@@ -163,9 +175,6 @@
     <ClCompile Include="source\Components\Display\CLightColor.cpp">
       <Filter>source\Components\Display</Filter>
     </ClCompile>
-    <ClCompile Include="include\Engine\Components\Physics\CRigidBody.cpp">
-      <Filter>source\Components\Physics</Filter>
-    </ClCompile>
     <ClCompile Include="source\Components\Physics\CSensor.cpp">
       <Filter>source\Components\Physics</Filter>
     </ClCompile>
@@ -173,6 +182,15 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\Components\Physics\CBoxCollider.cpp">
+      <Filter>source\Components\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Gameplay\CCharacterController.cpp">
+      <Filter>source\Components\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Physics\CRigidBody.cpp">
+      <Filter>source\Components\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Physics\CCapsuleCollider.cpp">
       <Filter>source\Components\Physics</Filter>
     </ClCompile>
   </ItemGroup>

@@ -117,6 +117,8 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FloatingPointModel>Fast</FloatingPointModel>
       <MinimalRebuild>false</MinimalRebuild>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
@@ -170,9 +172,11 @@
     <ClInclude Include="include\Engine\Components\Display\CLightColor.h" />
     <ClInclude Include="include\Engine\Components\Display\CSpotlight.h" />
     <ClInclude Include="include\Engine\Components\Display\CStaticMesh.h" />
+    <ClInclude Include="include\Engine\Components\Gameplay\CCharacterController.h" />
     <ClInclude Include="include\Engine\Components\Logic\CInput.h" />
     <ClInclude Include="include\Engine\Components\Physics\CBoxCollider.h" />
     <ClInclude Include="include\Engine\Components\CTransform3D.h" />
+    <ClInclude Include="include\Engine\Components\Physics\CCapsuleCollider.h" />
     <ClInclude Include="include\Engine\Components\Physics\CRigidBody.h" />
     <ClInclude Include="include\Engine\Components\Physics\CSensor.h" />
     <ClInclude Include="include\Engine\Components\Physics\CVelocity.h" />
@@ -191,15 +195,17 @@
     <ClInclude Include="include\Engine\Util\EmptyComponentContainer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="include\Engine\Components\Physics\CRigidBody.cpp" />
     <ClCompile Include="source\Component.cpp" />
     <ClCompile Include="source\Components\Display\CCamera.cpp" />
     <ClCompile Include="source\Components\Display\CLightColor.cpp" />
     <ClCompile Include="source\Components\Display\CSpotLight.cpp" />
     <ClCompile Include="source\Components\Display\CStaticMesh.cpp" />
+    <ClCompile Include="source\Components\Gameplay\CCharacterController.cpp" />
     <ClCompile Include="source\Components\Logic\CInput.cpp" />
     <ClCompile Include="source\Components\Physics\CBoxCollider.cpp" />
     <ClCompile Include="source\Components\CTransform3D.cpp" />
+    <ClCompile Include="source\Components\Physics\CCapsuleCollider.cpp" />
+    <ClCompile Include="source\Components\Physics\CRigidBody.cpp" />
     <ClCompile Include="source\Components\Physics\CSensor.cpp" />
     <ClCompile Include="source\Components\Physics\CVelocity.cpp" />
     <ClCompile Include="source\Engine\UpdatePipeline.cpp" />
