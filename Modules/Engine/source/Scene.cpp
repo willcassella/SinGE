@@ -192,9 +192,16 @@ namespace sge
                 SystemFrame frame{ *this, _scene_data, pipeline };
                 system(frame, _current_time, dt);
 
-                // Create a system frame for the tags
-                SystemFrame tag_frame{ *this, _scene_data, pipeline };
-                frame.flush_changes(tag_frame);
+                // Keep flushing changes until there are no more tags
+                while (frame.has_changes())
+                {
+                    // Create a system frame for the tags
+                    SystemFrame tag_frame{ *this, _scene_data, pipeline };
+                    frame.flush_changes(tag_frame);
+
+                    // Move the tag frame onto the current frame
+                    frame = std::move(tag_frame);
+                }
             }
 		}
 	}

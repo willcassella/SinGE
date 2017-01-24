@@ -71,8 +71,8 @@ namespace sge
 		SystemFrame(Scene& scene, SceneData& scene_data, UpdatePipeline& pipeline);
 		SystemFrame(const SystemFrame& copy) = delete;
 		SystemFrame& operator=(const SystemFrame& copy) = delete;
-		SystemFrame(SystemFrame&& move) = delete;
-		SystemFrame& operator=(SystemFrame&& move) = delete;
+		SystemFrame(SystemFrame&& move) = default;
+		SystemFrame& operator=(SystemFrame&& move) = default;
 
 		///////////////////
 		///   Methods   ///
