@@ -121,7 +121,19 @@ namespace sge
                 ComponentId{ entity, sge::get_type<TagT>() },
                 [outer, callback](SystemFrame& frame, Any<> tag, ComponentId component)
             {
-                (outer->*callback)(frame, *static_cast<std::remove_all_extents<TagT>*>(tag.object()), component.entity());
+                (outer->*callback)(frame, *static_cast<std::remove_reference_t<TagT>*>(tag.object()), component.entity());
+            });
+        }
+
+        template <typename RetT, typename TagT, typename ComponentT>
+        void register_tag_callback(
+            RetT(*callback)(SystemFrame&, TagT, TComponentId<ComponentT>))
+        {
+            this->register_tag_callback(
+                sge::get_type<TagT>(),
+                [callback](SystemFrame& frame, Any<> tag, ComponentId component) -> void
+            {
+                callback(frame, *static_cast<const std::remove_reference_t<TagT>*>(tag.object()), component.entity());
             });
         }
 
