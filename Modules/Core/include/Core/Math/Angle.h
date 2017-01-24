@@ -2,35 +2,35 @@
 #pragma once
 
 #include "../Reflection/Reflection.h"
-#include "../Reflection/ReflectionBuilder.h"
 #include "../Interfaces/IToArchive.h"
 #include "../Interfaces/IFromArchive.h"
 
 namespace sge
 {
 	/** An arithmetic value representing an angle (internally stored as radians). */
-	template <typename T>
-	struct TAngle final
+	struct SGE_CORE_API Angle
 	{
+        SGE_REFLECTED_TYPE;
+
 		/////////////////////
 		///   Constants   ///
 	public:
 
 		/** Multiplication factor for converting degrees to radians. */
-		static constexpr T Degrees_To_Radians = T{ 0.0174533f };
+		static constexpr Scalar DEGREES_TO_RADIANS = 0.0174533f;
 
 		/** Multiplication factor for converting radians to degrees. */
-		static constexpr T Radians_To_Degrees = T{ 57.2958f };
+		static constexpr Scalar RADIANS_TO_DEGREES = 57.2958f;
 
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		constexpr TAngle()
+		constexpr Angle()
 			: _radians{ 0 }
 		{
 		}
-		constexpr TAngle(T radians)
+		constexpr Angle(Scalar radians)
 			: _radians{ radians }
 		{
 		}
@@ -50,27 +50,27 @@ namespace sge
         }
 
 		/** Returns the current value in radians. */
-		constexpr T radians() const
+		Scalar radians() const
 		{
 			return _radians;
 		}
 
 		/** Sets the current value in radians. */
-		constexpr void radians(T value)
+		void radians(Scalar value)
 		{
 			_radians = value;
 		}
 
 		/** Returns the current value in degrees. */
-		constexpr T degrees() const
+		Scalar degrees() const
 		{
-			return _radians * Radians_To_Degrees;
+			return _radians * RADIANS_TO_DEGREES;
 		}
 
 		/** Sets the current value in degrees. */
-		constexpr void degrees(T value)
+		void degrees(Scalar value)
 		{
-			_radians = value * Degrees_To_Radians;
+			_radians = value * DEGREES_TO_RADIANS;
 		}
 
 		/////////////////////
@@ -78,44 +78,30 @@ namespace sge
 	public:
 
 		/** Converts this object to the underlying type. */
-		constexpr operator T() const
+		operator Scalar() const
 		{
 			return _radians;
-		}
-
-		/** Coversion operator for casting between precisions. */
-		template <typename F>
-		explicit operator TAngle<F>()
-		{
-			return{ static_cast<F>(_radians) };
 		}
 
 		//////////////////
 		///   Fields   ///
 	private:
 
-		T _radians;
+		Scalar _radians;
 	};
-
-	/** Alias for scalar angles. */
-	using Angle = TAngle<Scalar>;
 
 	/////////////////////
 	///   Functions   ///
 
 	/** Constructs an angle in radians. */
-	template <typename T>
-	constexpr TAngle<T> radians(T value)
+	constexpr Angle radians(Scalar value)
 	{
 		return{ value };
 	}
 
 	/** Constructs an angle in degrees. */
-	template <typename T>
-	constexpr TAngle<T> degrees(T value)
+	constexpr Angle degrees(Scalar value)
 	{
-		return{ value * TAngle<T>::Degrees_To_Radians };
+		return{ value * Angle::DEGREES_TO_RADIANS };
 	}
 }
-
-SGE_REFLECT_TYPE_TEMPLATE(sge::TAngle, typename T);

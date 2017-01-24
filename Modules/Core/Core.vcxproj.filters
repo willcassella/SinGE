@@ -187,5 +187,8 @@
     <ClCompile Include="source\Reflection\TypeDB.cpp">
       <Filter>source\Reflection</Filter>
     </ClCompile>
+    <ClCompile Include="source\Math\Angle.cpp">
+      <Filter>source\Math</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
