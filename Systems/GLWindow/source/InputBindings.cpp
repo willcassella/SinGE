@@ -21,21 +21,14 @@ namespace sge
             sge::from_archive(key_name, reader);
             int key = 0;
 
-            if (key_name == "W")
+            // If it's a single-character name, map the key to the name
+            if (key_name.length() == 1)
             {
-                key = GLFW_KEY_W;
+                key = int(key_name[0]);
             }
-            else if (key_name == "A")
+            else if (key_name == "SPACE")
             {
-                key = GLFW_KEY_A;
-            }
-            else if (key_name == "S")
-            {
-                key = GLFW_KEY_S;
-            }
-            else if (key_name == "D")
-            {
-                key = GLFW_KEY_D;
+                key = GLFW_KEY_SPACE;
             }
             else
             {
