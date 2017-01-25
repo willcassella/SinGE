@@ -2,17 +2,53 @@
 
 #include <iostream>
 #include <GLFW/glfw3.h>
-#include <Core/Math/Vec4.h>
 #include <Core/Math/Quat.h>
 #include <Core/Reflection/TypeDB.h>
 #include <Resource/Archives/JsonArchive.h>
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
 #include <Engine/UpdatePipeline.h>
+#include <Engine/Components/CTransform3D.h>
+#include <Engine/Components/Logic/CInput.h>
+#include <Engine/Components/Gameplay/CCharacterController.h>
 #include <GLRender/GLRenderSystem.h>
 #include <GLRender/Config.h>
 #include <BulletPhysics/BulletPhysicsSystem.h>
 #include <BulletPhysics/Config.h>
+#include <GLWindow/GLEventWindow.h>
+
+namespace sge
+{
+    void input_test(SystemFrame& frame, const CInput::FActionEvent& tag, TComponentId<CInput> component)
+    {
+        frame.process_single(component.entity(), [&tag](
+            ProcessingFrame& /*pframe*/,
+            EntityId /*entity*/,
+            const CCharacterController& controller)
+        {
+            if (tag.name == "forward")
+            {
+                controller.walk({ 0, 1 });
+            }
+            else if (tag.name == "backward")
+            {
+                controller.walk({ 0, -1 });
+            }
+            else if (tag.name == "strafe_left")
+            {
+                controller.walk({ -1, 0 });
+            }
+            else if (tag.name == "strafe_right")
+            {
+                controller.walk({ 1, 0 });
+            }
+            else if (tag.name == "jump")
+            {
+                controller.jump();
+            }
+        });
+    }
+}
 
 int main(int argc, char* argv[])
 {
@@ -36,8 +72,7 @@ int main(int argc, char* argv[])
 	config_reader->object_member("window_height", window_height);
 
 	// Create a windowed mode window and its OpenGL context
-    glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
-	auto* window = glfwCreateWindow(window_width, window_height, "SinGE GLEditorServer", nullptr, nullptr);
+    auto* window = sge::create_sge_opengl_window("SinGE GLClient", window_width, window_height);
 	if (!window)
 	{
 		std::cerr << "GLEditorServer: Could not create a window." << std::endl;
@@ -47,6 +82,12 @@ int main(int argc, char* argv[])
 
 	// Make the window's OpenGL context current
 	glfwMakeContextCurrent(window);
+
+    // Create an event window
+    sge::GLEventWindow event_window{ window };
+    sge::InputBindings input_bindings;
+    config_reader->object_member("input_bindings", input_bindings);
+    event_window.set_bindings(std::move(input_bindings));
 
 	// Create a type database
 	sge::TypeDB type_db;
@@ -69,6 +110,10 @@ int main(int argc, char* argv[])
 
     // Create a pipeline
     sge::UpdatePipeline pipeline;
+    pipeline.register_tag_callback(sge::input_test);
+
+    // Register the input window
+    event_window.register_pipeline(pipeline);
 
 	// Create a render system
 	sge::gl_render::Config render_config;

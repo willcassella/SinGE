@@ -9,7 +9,15 @@
         "missing_mesh": "Content/Meshes/Misc/question_mark.smesh"
     },
     "update_pipeline": [
+        ["gl_window_input"],
         ["bullet_physics"],
         ["gl_render"]
-    ]
+    ],
+    "input_bindings" : {
+        "forward": "W",
+        "strafe_left": "A",
+        "strafe_right": "D",
+        "backward": "S",
+        "jump": "SPACE"
+    }
 }

@@ -69,25 +69,25 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)Modules\Resource\include;$(SolutionDir)Modules\Engine\include;$(SolutionDir)Modules\JavaScript\include;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
@@ -117,6 +117,8 @@
       <SDLCheck>true</SDLCheck>
       <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
@@ -195,6 +197,9 @@
     </ProjectReference>
     <ProjectReference Include="..\..\Systems\GLRender\GLRender.vcxproj">
       <Project>{9ef5dece-d157-4c40-a70b-fa31f4d0894e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Systems\GLWindow\GLWindow.vcxproj">
+      <Project>{9db159e5-c07f-4674-8e2d-78e373883eb6}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
