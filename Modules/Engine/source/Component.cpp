@@ -51,7 +51,7 @@ namespace sge
 		});
 	}
 
-    void ComponentInterface::create_tag(const TypeInfo& tag_type, void* tag)
+    void ComponentInterface::create_tag(const TypeInfo& tag_type, void* tag) const
     {
         processing_frame().create_tag(id(), tag_type, tag);
     }

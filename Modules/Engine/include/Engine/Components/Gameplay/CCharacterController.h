@@ -62,9 +62,9 @@ namespace sge
 
         void fall_speed(float value);
 
-        void jump();
+        void jump() const;
 
-        void walk(const Vec2& direction);
+        void walk(const Vec2& direction) const;
 
         ////////////////
         ///   Data   ///

@@ -47,11 +47,11 @@ namespace sge
         ///   Fields   ///
     public:
 
-        float step_height = 1.f;
+        float step_height = 0.1f;
         Angle max_slope;
         float jump_speed = 10.f;
-        float fall_speed = 9.8f;
-        bool on_ground = false;
+        float fall_speed = 55.f;
+        bool on_ground = true;
     };
 
     CCharacterController::CCharacterController(ProcessingFrame& pframe, EntityId entity, Data& data)
@@ -116,7 +116,7 @@ namespace sge
         checked_setter(value, _data->fall_speed);
     }
 
-    void CCharacterController::jump()
+    void CCharacterController::jump() const
     {
         if (on_ground())
         {
@@ -124,8 +124,8 @@ namespace sge
         }
     }
 
-    void CCharacterController::walk(const Vec2& direction)
+    void CCharacterController::walk(const Vec2& direction) const
     {
-        create_tag(FWalkEvent{});
+        create_tag(FWalkEvent{ direction });
     }
 }
