@@ -105,6 +105,7 @@ namespace sge
         {
             this->register_tag_callback(
                 sge::get_type<TagT>(),
+                sge::get_type<ComponentT>(),
                 [outer, callback](SystemFrame& frame, Any<> tag, ComponentId component) -> void
             {
                 (outer->*callback)(frame, *static_cast<const std::remove_reference_t<TagT>*>(tag.object()), component.entity());
@@ -131,6 +132,7 @@ namespace sge
         {
             this->register_tag_callback(
                 sge::get_type<TagT>(),
+                sge::get_type<ComponentT>(),
                 [callback](SystemFrame& frame, Any<> tag, ComponentId component) -> void
             {
                 callback(frame, *static_cast<const std::remove_reference_t<TagT>*>(tag.object()), component.entity());
