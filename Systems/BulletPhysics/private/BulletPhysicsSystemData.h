@@ -8,13 +8,16 @@
 
 namespace sge
 {
-    class CBoxCollider;
-    class CRigidBody;
     class CTransform3D;
+    class CBoxCollider;
+    class CCapsuleCollider;
+    class CRigidBody;
+    class CCharacterController;
 
     namespace bullet_physics
     {
-        struct PhysicsEntity;
+        class PhysicsEntity;
+        class CharacterController;
 
         struct BulletPhysicsSystem::Data
         {
@@ -26,11 +29,20 @@ namespace sge
 
             void remove_box_collider(EntityId entity);
 
+            void add_capsule_collider(EntityId entity, const CCapsuleCollider& component);
+
+            void remove_capsule_collider(EntityId entity);
+
             void add_rigid_body(EntityId entity, const CTransform3D& transform, const CRigidBody& component);
 
             void remove_rigid_body(EntityId entity);
 
-        private:
+            void add_character_controller(
+                EntityId entity,
+                const CTransform3D& transform,
+                const CCharacterController& character_controller);
+
+            void remove_character_contoller(EntityId entity);
 
             PhysicsEntity& get_or_create_physics_entity(EntityId entity);
 
@@ -45,8 +57,6 @@ namespace sge
             std::unordered_map<EntityId, std::unique_ptr<PhysicsEntity>> physics_entities;
 
             std::vector<PhysicsEntity*> frame_transformed_entities;
-
-            std::vector<PhysicsEntity*> new_rigid_bodies;
 
             /* NOTE: This must appear last, so that it is destroyed first. */
             PhysicsWorld phys_world;

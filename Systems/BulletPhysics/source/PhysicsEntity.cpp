@@ -1,6 +1,7 @@
 // PhysicsEntity.cpp
 
 #include "../private/PhysicsEntity.h"
+#include "../private/CharacterController.h"
 #include "../private/BulletPhysicsSystemData.h"
 
 namespace sge
@@ -8,22 +9,30 @@ namespace sge
     namespace bullet_physics
     {
         PhysicsEntity::PhysicsEntity(EntityId entity, BulletPhysicsSystem::Data& data)
-            : entity(entity),
+            : features(FT_NONE),
+            entity(entity),
             collider(false),
             _data(&data)
         {
         }
 
-        void PhysicsEntity::getWorldTransform(btTransform& worldTrans) const
+        PhysicsEntity::~PhysicsEntity()
         {
-            worldTrans.setOrigin(position);
-            worldTrans.setRotation(rotation);
         }
 
-        void PhysicsEntity::setWorldTransform(const btTransform& worldTrans)
+        void PhysicsEntity::getWorldTransform(btTransform& world_trans) const
         {
-            position = worldTrans.getOrigin();
-            rotation = worldTrans.getRotation();
+            world_trans = transform;
+        }
+
+        void PhysicsEntity::setWorldTransform(const btTransform& world_trans)
+        {
+            transform = world_trans;
+            add_to_modified();
+        }
+
+        void PhysicsEntity::add_to_modified()
+        {
             _data->frame_transformed_entities.push_back(this);
         }
     }

@@ -1,10 +1,12 @@
 // BulletPhysicsSystemData.cpp
 
 #include <Engine/Components/Physics/CBoxCollider.h>
+#include <Engine/Components/Physics/CCapsuleCollider.h>
 #include <Engine/Components/Physics/CRigidBody.h>
 #include <Engine/Components/CTransform3D.h>
 #include "../private/BulletPhysicsSystemData.h"
 #include "../private/PhysicsEntity.h"
+#include "../private/CharacterController.h"
 #include "../private/Util.h"
 
 namespace sge
@@ -24,11 +26,31 @@ namespace sge
             auto& phys_entity = get_physics_entity(entity);
             assert(phys_entity.box_collider != nullptr);
 
-            // Remove the box collider from the compound, and the physisc entity
+            // Remove the box collider from the compound and the physisc entity
             phys_entity.collider.removeChildShape(phys_entity.box_collider.get());
             phys_entity.box_collider = nullptr;
 
             post_modify_physics_entity(phys_entity);
+        }
+
+        void BulletPhysicsSystem::Data::add_capsule_collider(EntityId entity, const CCapsuleCollider& component)
+        {
+            auto& physics_entity = get_or_create_physics_entity(entity);
+            assert(physics_entity.capsule_collider == nullptr);
+            physics_entity.capsule_collider = std::make_unique<btCapsuleShape>(component.radius(), component.height());
+            physics_entity.collider.addChildShape(btTransform::getIdentity(), physics_entity.capsule_collider.get());
+        }
+
+        void BulletPhysicsSystem::Data::remove_capsule_collider(EntityId entity)
+        {
+            auto& physics_entity = get_physics_entity(entity);
+            assert(physics_entity.capsule_collider != nullptr);
+
+            // Remove the capsule colider from the compound and the physics entity
+            physics_entity.collider.removeChildShape(physics_entity.capsule_collider.get());
+            physics_entity.capsule_collider = nullptr;
+
+            post_modify_physics_entity(physics_entity);
         }
 
         void BulletPhysicsSystem::Data::add_rigid_body(EntityId entity, const CTransform3D& transform, const CRigidBody& component)
@@ -36,9 +58,8 @@ namespace sge
             auto& physics_entity = get_or_create_physics_entity(entity);
             assert(physics_entity.rigid_body == nullptr);
 
-            // Move the physics entity to the point
-            physics_entity.position = to_bullet(transform.get_world_position());
-            physics_entity.rotation = to_bullet(transform.get_world_rotation());
+            // Set the entitiy's position
+            to_bullet(physics_entity.transform, transform);
 
             // Calculate local inertia from the collision shape
             btVector3 local_inertia;
@@ -59,6 +80,15 @@ namespace sge
             // Create the rigid body
             physics_entity.rigid_body = std::make_unique<btRigidBody>(cinfo);
 
+            // Set if it's kinematic or not
+            if (component.kinematic())
+            {
+                physics_entity.rigid_body->setMassProps(0, { 0, 0, 0 });
+                physics_entity.rigid_body->setActivationState(DISABLE_DEACTIVATION);
+                physics_entity.rigid_body->setCollisionFlags(
+                    physics_entity.rigid_body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+            }
+
             // Add it to the world
             phys_world.dynamics_world().addRigidBody(physics_entity.rigid_body.get());
         }
@@ -75,6 +105,47 @@ namespace sge
             physics_entity.rigid_body = nullptr;
 
             post_modify_physics_entity(physics_entity);
+        }
+
+        void BulletPhysicsSystem::Data::add_character_controller(
+            EntityId entity,
+            const CTransform3D& transform,
+            const CCharacterController& character_controller)
+        {
+            auto& physics_entity = get_physics_entity(entity);
+            assert(physics_entity.character_controller == nullptr);
+
+            // Create the ghost object
+            physics_entity.ghost_object = std::make_unique<btPairCachingGhostObject>();
+            physics_entity.ghost_object->setCollisionFlags(
+                physics_entity.ghost_object->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
+            physics_entity.ghost_object->setCollisionShape(&physics_entity.collider);
+
+            // Set the transform of the entity
+            to_bullet(physics_entity.transform, transform);
+
+            // Set the transform
+            physics_entity.ghost_object->setWorldTransform(physics_entity.transform);
+
+            // Add it to the world
+            phys_world.dynamics_world().addCollisionObject(physics_entity.ghost_object.get(),
+                btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
+
+            // Create the character controller
+            physics_entity.character_controller = std::make_unique<CharacterController>(physics_entity, character_controller);
+
+            // Add it to the world
+            phys_world.dynamics_world().addAction(physics_entity.character_controller.get());
+        }
+
+        void BulletPhysicsSystem::Data::remove_character_contoller(EntityId entity)
+        {
+            auto& phys_entity = get_physics_entity(entity);
+            assert(phys_entity.character_controller != nullptr);
+
+            // Remove it from the world
+            phys_world.dynamics_world().removeAction(phys_entity.character_controller.get());
+            phys_entity.character_controller = nullptr;
         }
 
         PhysicsEntity& BulletPhysicsSystem::Data::get_or_create_physics_entity(EntityId entity)
