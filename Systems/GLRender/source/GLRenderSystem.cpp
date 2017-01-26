@@ -6,6 +6,8 @@
 #include <Engine/Components/CTransform3D.h>
 #include <Engine/Components/Display/CStaticMesh.h>
 #include <Engine/Components/Display/CCamera.h>
+#include <Engine/Components/Display/CLightMaskReceiver.h>
+#include <Engine/Components/Display/CLightMaskObstructor.h>
 #include <Engine/Tags/FDebugDraw.h>
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
@@ -387,9 +389,11 @@ namespace sge
 			glDrawBuffers(NUM_DRAW_BUFFERS, DRAW_BUFFERS);
 
 			// Clear the GBuffer
+            glEnable(GL_STENCIL_TEST);
 			glEnable(GL_DEPTH_TEST);
             glEnable(GL_CULL_FACE);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+            glDepthFunc(GL_LESS);
 
 			// Create matrices
 			bool hasCamera = false;
@@ -415,12 +419,13 @@ namespace sge
 				return;
 			}
 
-			// Render each static mesh in the world
+			// DRAW BACKFACE OF RECEIVER
 			frame.process_entities([&](
 				ProcessingFrame& /*pframe*/,
 				EntityId /*entity*/,
 				const CTransform3D& transform,
-				const CStaticMesh& staticMesh)
+				const CStaticMesh& staticMesh,
+                const CLightMaskReceiver& /*recv*/)
 			{
 				// Get the model matrix
 				auto model = transform.get_world_matrix();
@@ -445,9 +450,193 @@ namespace sge
 				material.set_view_matrix(view);
 				material.set_projection_matrix(proj);
 
+                // Draw backfaces only
+                glCullFace(GL_FRONT);
+
+                // Disable color output
+                glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+                // Set stencil to draw
+                glStencilFunc(GL_ALWAYS, 1, 0xFF);
+                glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
 				// Draw the mesh
 				glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
 			});
+
+            // DRAW BACKFACE OF OBSTRUCTOR
+            frame.process_entities([&](
+                ProcessingFrame& /*pframe*/,
+                EntityId /*entity*/,
+                const CTransform3D& transform,
+                const CStaticMesh& staticMesh,
+                const CLightMaskObstructor& /*obst*/)
+            {
+                // Get the model matrix
+                auto model = transform.get_world_matrix();
+
+                // If the mesh or material is empty, skip it
+                if (staticMesh.mesh().empty() || staticMesh.material().empty())
+                {
+                    return;
+                }
+
+                // Get the mesh and material
+                const auto& mesh = this->_state->find_static_mesh(staticMesh.mesh());
+                const auto& material = this->_state->find_material(staticMesh.material());
+
+                // Bind the mesh and material
+                mesh.bind();
+                GLuint texIndex = GL_TEXTURE0;
+                material.bind(texIndex);
+
+                // Upload transformation matrices
+                material.set_model_matrix(model);
+                material.set_view_matrix(view);
+                material.set_projection_matrix(proj);
+
+                // Enable color output
+                glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+                // Set to replace stencil buffer with '3' wherever drawn (within backface)
+                glStencilFunc(GL_EQUAL, 0x03, 0x01);
+                glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
+
+                // Draw the mesh
+                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
+            });
+
+            // OVERWRITE DEPTH WITH FRONT FACE OF RECEIVER
+            frame.process_entities([&](
+                ProcessingFrame& /*pframe*/,
+                EntityId /*entity*/,
+                const CTransform3D& transform,
+                const CStaticMesh& staticMesh,
+                const CLightMaskReceiver& /*recv*/)
+            {
+                // Get the model matrix
+                auto model = transform.get_world_matrix();
+
+                // If the mesh or material is empty, skip it
+                if (staticMesh.mesh().empty() || staticMesh.material().empty())
+                {
+                    return;
+                }
+
+                // Get the mesh and material
+                const auto& mesh = this->_state->find_static_mesh(staticMesh.mesh());
+                const auto& material = this->_state->find_material(staticMesh.material());
+
+                // Bind the mesh and material
+                mesh.bind();
+                GLuint texIndex = GL_TEXTURE0;
+                material.bind(texIndex);
+
+                // Upload transformation matrices
+                material.set_model_matrix(model);
+                material.set_view_matrix(view);
+                material.set_projection_matrix(proj);
+
+                // Draw front faces only
+                glCullFace(GL_BACK);
+
+                // Set depth function to normal
+                glDepthFunc(GL_LESS);
+
+                // Set stencil to always pass within backface area
+                glStencilFunc(GL_LEQUAL, 1, 0xFF);
+                glStencilOp(GL_KEEP, GL_REPLACE, GL_KEEP);
+
+                // Disable color output
+                glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+                // Draw the mesh
+                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
+            });
+
+            // DRAW FRONT-FACE OF OBSTRUCTOR
+            frame.process_entities([&](
+                ProcessingFrame& /*pframe*/,
+                EntityId /*entity*/,
+                const CTransform3D& transform,
+                const CStaticMesh& staticMesh,
+                const CLightMaskObstructor& /*obst*/)
+            {
+                // Get the model matrix
+                auto model = transform.get_world_matrix();
+
+                // If the mesh or material is empty, skip it
+                if (staticMesh.mesh().empty() || staticMesh.material().empty())
+                {
+                    return;
+                }
+
+                // Get the mesh and material
+                const auto& mesh = this->_state->find_static_mesh(staticMesh.mesh());
+                const auto& material = this->_state->find_material(staticMesh.material());
+
+                // Bind the mesh and material
+                mesh.bind();
+                GLuint texIndex = GL_TEXTURE0;
+                material.bind(texIndex);
+
+                // Upload transformation matrices
+                material.set_model_matrix(model);
+                material.set_view_matrix(view);
+                material.set_projection_matrix(proj);
+
+                // Set to allow drawing where depth test passes
+                glStencilFunc(GL_LEQUAL, 1, 0xFF);
+                glStencilOp(GL_KEEP, GL_REPLACE, GL_KEEP);
+
+                // Draw the mesh
+                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
+            });
+
+            // DRAW FRONT FACE OF RECEIVER
+            frame.process_entities([&](
+                ProcessingFrame& /*pframe*/,
+                EntityId /*entity*/,
+                const CTransform3D& transform,
+                const CStaticMesh& staticMesh,
+                const CLightMaskReceiver& /*recv*/)
+            {
+                // Get the model matrix
+                auto model = transform.get_world_matrix();
+
+                // If the mesh or material is empty, skip it
+                if (staticMesh.mesh().empty() || staticMesh.material().empty())
+                {
+                    return;
+                }
+
+                // Get the mesh and material
+                const auto& mesh = this->_state->find_static_mesh(staticMesh.mesh());
+                const auto& material = this->_state->find_material(staticMesh.material());
+
+                // Bind the mesh and material
+                mesh.bind();
+                GLuint texIndex = GL_TEXTURE0;
+                material.bind(texIndex);
+
+                // Upload transformation matrices
+                material.set_model_matrix(model);
+                material.set_view_matrix(view);
+                material.set_projection_matrix(proj);
+
+                // Set depth function to always pass
+                glDepthFunc(GL_ALWAYS);
+
+                // Set stencil to always pass within backface area
+                glStencilFunc(GL_EQUAL, 1, 0xFF);
+                glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+                // Enable color output
+                glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+                // Draw the mesh
+                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
+            });
 
             // Draw debug lines
             glBindVertexArray(_state->debug_line_vao);
