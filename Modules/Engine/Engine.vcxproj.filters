@@ -33,14 +33,8 @@
     <Filter Include="source\Resources">
       <UniqueIdentifier>{3fee641b-bb43-436c-b7e4-304cad77d09c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="include\Components\Logic">
-      <UniqueIdentifier>{899f1a01-9ae5-4ea7-8758-f8c2aa05b65b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="include\Util">
       <UniqueIdentifier>{2542d038-0fd9-4ebd-bee4-3497856a024a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="source\Components\Logic">
-      <UniqueIdentifier>{3bad39d5-0763-4da3-8072-008017cf6066}</UniqueIdentifier>
     </Filter>
     <Filter Include="include\Components\Gameplay">
       <UniqueIdentifier>{036d44a3-1b68-4ee8-928f-1f96b680a345}</UniqueIdentifier>
@@ -89,9 +83,6 @@
     <ClInclude Include="include\Engine\Components\Physics\CVelocity.h">
       <Filter>include\Components\Physics</Filter>
     </ClInclude>
-    <ClInclude Include="include\Engine\Components\Logic\CInput.h">
-      <Filter>include\Components\Logic</Filter>
-    </ClInclude>
     <ClInclude Include="include\Engine\ProcessingFrame.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -137,6 +128,15 @@
     <ClInclude Include="include\Engine\Tags\FDebugDraw.h">
       <Filter>include\Tags</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\Components\Gameplay\CInput.h">
+      <Filter>include\Components\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Display\CLightMaskObstructor.h">
+      <Filter>include\Components\Display</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Components\Display\CLightMaskReceiver.h">
+      <Filter>include\Components\Display</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Scene.cpp">
@@ -165,9 +165,6 @@
     </ClCompile>
     <ClCompile Include="source\Components\CTransform3D.cpp">
       <Filter>source\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Components\Logic\CInput.cpp">
-      <Filter>source\Components\Logic</Filter>
     </ClCompile>
     <ClCompile Include="source\Components\Physics\CVelocity.cpp">
       <Filter>source\Components\Physics</Filter>
@@ -204,6 +201,15 @@
     </ClCompile>
     <ClCompile Include="source\Tags\FDebugDraw.cpp">
       <Filter>source\Tags</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Gameplay\CInput.cpp">
+      <Filter>source\Components\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Display\CLightMaskReceiver.cpp">
+      <Filter>source\Components\Display</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Display\CLightMaskObstructor.cpp">
+      <Filter>source\Components\Display</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

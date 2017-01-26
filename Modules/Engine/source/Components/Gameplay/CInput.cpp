@@ -1,7 +1,7 @@
 // CInput.cpp
 
 #include <Core/Reflection/ReflectionBuilder.h>
-#include "../../../include/Engine/Components/Logic/CInput.h"
+#include "../../../include/Engine/Components/Gameplay/CInput.h"
 #include "../../../include/Engine/Scene.h"
 #include "../../../include/Engine/Util/EmptyComponentContainer.h"
 

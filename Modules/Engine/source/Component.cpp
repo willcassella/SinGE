@@ -8,7 +8,9 @@
 #include "../include/Engine/Components/Display/CStaticMesh.h"
 #include "../include/Engine/Components/Display/CSpotlight.h"
 #include "../include/Engine/Components/Display/CLightColor.h"
-#include "../include/Engine/Components/Logic/CInput.h"
+#include "../include/Engine/Components/Display/CLightMaskReceiver.h"
+#include "../include/Engine/Components/Display/CLightMaskObstructor.h"
+#include "../include/Engine/Components/Gameplay/CInput.h"
 #include "../include/Engine/Components/Physics/CBoxCollider.h"
 #include "../include/Engine/Components/Physics/CVelocity.h"
 #include "../include/Engine/Components/Physics/CRigidBody.h"
@@ -72,6 +74,8 @@ namespace sge
 		CPerspectiveCamera::register_type(scene);
 		CSpotlight::register_type(scene);
 		CLightColor::register_type(scene);
+        CLightMaskReceiver::register_type(scene);
+        CLightMaskObstructor::register_type(scene);
         CInput::register_type(scene);
         CBoxCollider::register_type(scene);
         CVelocity::register_type(scene);
