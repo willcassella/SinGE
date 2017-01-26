@@ -2,6 +2,7 @@
 #pragma once
 
 #include <Core/Math/Vec3.h>
+#include <Engine/Tags/FDebugDraw.h>
 #include <btBulletCollisionCommon.h>
 
 namespace sge
@@ -10,17 +11,6 @@ namespace sge
     {
         class DebugDrawer final : public btIDebugDraw
         {
-            struct Line
-            {
-                //////////////////
-                ///   Fields   ///
-            public:
-
-                Vec3 start;
-                Vec3 end;
-                Vec3 color;
-            };
-
             ///////////////////
             ///   Methods   ///
         public:
@@ -53,6 +43,7 @@ namespace sge
             ///   Fields   ///
         public:
 
+            std::vector<FDebugDraw::Line> lines;
         };
     }
 }

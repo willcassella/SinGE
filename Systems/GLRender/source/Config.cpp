@@ -24,6 +24,8 @@ namespace sge
 			reader.object_member("viewport_height", viewport_height);
 			reader.object_member("viewport_vert_shader", viewport_vert_shader);
 			reader.object_member("viewport_frag_shader", viewport_frag_shader);
+            reader.object_member("debug_line_vert_shader", debug_line_vert_shader);
+            reader.object_member("debug_line_frag_shader", debug_line_frag_shader);
 			reader.object_member("missing_material", missing_material);
 			reader.object_member("missing_mesh", missing_mesh);
 		}
@@ -46,6 +48,14 @@ namespace sge
 			{
 				return false;
 			}
+            if (debug_line_vert_shader.empty())
+            {
+                return false;
+            }
+            if (debug_line_frag_shader.empty())
+            {
+                return false;
+            }
 			if (missing_material.empty())
 			{
 				return false;

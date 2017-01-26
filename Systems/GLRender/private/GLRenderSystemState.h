@@ -6,6 +6,7 @@
 #include "GLMaterial.h"
 #include "GLStaticMesh.h"
 #include "GLTexture2D.h"
+#include "DebugLine.h"
 
 namespace sge
 {
@@ -68,6 +69,18 @@ namespace sge
 
 			// Screen quad
 			GLuint screen_quad_program;
+
+            // Debug draw line buffer
+            GLuint debug_line_vao;
+            GLuint debug_line_vbo;
+
+            // Debug line shader program
+            GLuint debug_line_program;
+            GLint debug_line_view_uniform;
+            GLint debug_line_proj_uniform;
+
+            // Debug line buffer
+            std::vector<DebugLineVert> frame_debug_lines;
 		};
 	}
 }

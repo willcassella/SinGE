@@ -40,6 +40,8 @@ namespace sge
 
             void phys_tick(SystemFrame& frame, float current_time, float dt);
 
+            void debug_draw(SystemFrame& frame, float current_time, float dt);
+
             void initialize_world(SystemFrame& frame);
 
             void cb_new_box_collider(

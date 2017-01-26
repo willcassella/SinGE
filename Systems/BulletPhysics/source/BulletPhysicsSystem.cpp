@@ -12,6 +12,7 @@
 #include "../include/BulletPhysics/BulletPhysicsSystem.h"
 #include "../private/BulletPhysicsSystemData.h"
 #include "../private/PhysicsEntity.h"
+#include "../private/DebugDrawer.h"
 #include "../private/CharacterController.h"
 #include "../private/Util.h"
 
@@ -34,6 +35,7 @@ namespace sge
         void BulletPhysicsSystem::register_pipeline(UpdatePipeline& pipeline)
         {
             pipeline.register_system_fn("bullet_physics", this, &BulletPhysicsSystem::phys_tick);
+            pipeline.register_system_fn("bullet_physics_debug_draw", this, &BulletPhysicsSystem::debug_draw);
             pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_new_box_collider);
             pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_deleted_box_collider);
             pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_new_capsule_collider);
@@ -80,6 +82,28 @@ namespace sge
             }
 
             _data->frame_transformed_entities.clear();
+        }
+
+        void BulletPhysicsSystem::debug_draw(SystemFrame& frame, float current_time, float dt)
+        {
+            DebugDrawer drawer;
+
+            // Draw the world
+            _data->phys_world.dynamics_world().setDebugDrawer(&drawer);
+            _data->phys_world.dynamics_world().debugDrawWorld();
+            _data->phys_world.dynamics_world().setDebugDrawer(nullptr);
+
+            // Create tag TODO: Should be able to create tag without processing
+            frame.process_entities([&drawer](
+                ProcessingFrame& pframe,
+                EntityId /*entity*/,
+                const sge::CRigidBody& rigid_body)
+            {
+                pframe.create_tag(
+                    ComponentId{ WORLD_ENTITY, sge::get_type<CTransform3D>() },
+                    FDebugDraw{ std::move(drawer.lines) });
+                return ProcessControl::BREAK;
+            });
         }
 
         void BulletPhysicsSystem::initialize_world(SystemFrame& frame)

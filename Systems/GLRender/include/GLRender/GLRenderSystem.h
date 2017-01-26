@@ -9,6 +9,7 @@
 namespace sge
 {
 	struct SystemFrame;
+    struct FDebugDraw;
 
 	namespace gl_render
 	{
@@ -37,6 +38,8 @@ namespace sge
 		private:
 
 			void render_scene(SystemFrame& frame, float current_time, float dt);
+
+            void cb_debug_draw(SystemFrame& frame, const FDebugDraw& tag, ComponentId component);
 
 			////////////////
 			///   Data   ///

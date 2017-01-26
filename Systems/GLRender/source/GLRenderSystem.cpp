@@ -6,11 +6,13 @@
 #include <Engine/Components/CTransform3D.h>
 #include <Engine/Components/Display/CStaticMesh.h>
 #include <Engine/Components/Display/CCamera.h>
+#include <Engine/Tags/FDebugDraw.h>
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
 #include <Engine/UpdatePipeline.h>
 #include "../include/GLRender/Config.h"
 #include "../private/GLRenderSystemState.h"
+#include "../private/DebugLine.h"
 
 SGE_REFLECT_TYPE(sge::gl_render::GLRenderSystem);
 
@@ -111,6 +113,7 @@ namespace sge
 			// Initialize OpenGL
 			glClearColor(0, 0, 0, 1);
 			glClearDepth(1.f);
+            glLineWidth(3);
 			glEnable(GL_DEPTH_TEST);
 			glEnable(GL_CULL_FACE);
 			glDisable(GL_STENCIL_TEST);
@@ -210,7 +213,7 @@ namespace sge
 			glBindBuffer(GL_ARRAY_BUFFER, _state->sprite_vbo);
 			glBufferData(GL_ARRAY_BUFFER, sizeof(QUAD_VERTEX_DATA), QUAD_VERTEX_DATA, GL_STATIC_DRAW);
 
-			// Vertex specification
+			// Sprite vertex specification
 			glEnableVertexAttribArray(GLMaterial::POSITION_ATTRIB_LOCATION);
 			glEnableVertexAttribArray(GLMaterial::TEXCOORD_ATTRIB_LOCATION);
 			glVertexAttribPointer(GLMaterial::POSITION_ATTRIB_LOCATION, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, nullptr);
@@ -232,6 +235,7 @@ namespace sge
 			glDetachShader(_state->screen_quad_program, screenVShader.id());
 			glDetachShader(_state->screen_quad_program, screenFShader.id());
 
+            // Set uniforms
 			glUseProgram(_state->screen_quad_program);
 			glUniform1i(glGetUniformLocation(_state->screen_quad_program, "depth_buffer"), 0);
 			glUniform1i(glGetUniformLocation(_state->screen_quad_program, "position_buffer"), 1);
@@ -239,7 +243,53 @@ namespace sge
 			glUniform1i(glGetUniformLocation(_state->screen_quad_program, "diffuse_buffer"), 3);
 			glUniform1i(glGetUniformLocation(_state->screen_quad_program, "specular_buffer"), 4);
 
-			auto error = glGetError();
+            // Create a VAO for debug lines
+            glGenVertexArrays(1, &_state->debug_line_vao);
+            glBindVertexArray(_state->debug_line_vao);
+
+            // Create a vbo for lines
+            glGenBuffers(1, &_state->debug_line_vbo);
+            glBindBuffer(GL_ARRAY_BUFFER, _state->debug_line_vbo);
+
+            // Line vertex specification
+            glEnableVertexAttribArray(DEBUG_LINE_POSITION_ATTRIB_LOCATION);
+            glEnableVertexAttribArray(DEBUG_LINE_COLOR_ATTRIB_LOCATION);
+            glVertexAttribPointer(
+                DEBUG_LINE_POSITION_ATTRIB_LOCATION,
+                3,
+                GL_FLOAT,
+                GL_FALSE,
+                sizeof(DebugLineVert),
+                nullptr);
+            glVertexAttribPointer(
+                DEBUG_LINE_COLOR_ATTRIB_LOCATION,
+                3,
+                GL_FLOAT,
+                GL_FALSE,
+                sizeof(DebugLineVert),
+                (void*)offsetof(DebugLineVert, color_rgb));
+
+            // Create debug line program
+            GLShader debug_line_v_shader{ GL_VERTEX_SHADER, config.debug_line_vert_shader };
+            GLShader debug_line_f_shader{ GL_FRAGMENT_SHADER, config.debug_line_frag_shader };
+            _state->debug_line_program = glCreateProgram();
+            glAttachShader(_state->debug_line_program, debug_line_v_shader.id());
+            glAttachShader(_state->debug_line_program, debug_line_f_shader.id());
+
+            // Bind vertex attributes
+            glBindAttribLocation(_state->debug_line_program, DEBUG_LINE_POSITION_ATTRIB_LOCATION, DEBUG_LINE_POSITION_ATTRIB_NAME);
+            glBindAttribLocation(_state->debug_line_program, DEBUG_LINE_COLOR_ATTRIB_LOCATION, DEBUG_LINE_COLOR_ATTRIB_NAME);
+
+            // Link the program and detach shaders
+            glLinkProgram(_state->debug_line_program);
+            glDetachShader(_state->debug_line_program, debug_line_v_shader.id());
+            glDetachShader(_state->debug_line_program, debug_line_f_shader.id());
+
+            // Get uniforms
+            _state->debug_line_view_uniform = glGetUniformLocation(_state->debug_line_program, "view");
+            _state->debug_line_proj_uniform = glGetUniformLocation(_state->debug_line_program, "projection");
+
+			const auto error = glGetError();
 			if (error != GL_NO_ERROR)
 			{
 				std::cerr << "GLRenderSystem: An error occurred during startup - " << error << std::endl;
@@ -257,6 +307,7 @@ namespace sge
 		void GLRenderSystem::pipeline_register(UpdatePipeline& pipeline)
 		{
 			pipeline.register_system_fn("gl_render", this, &GLRenderSystem::render_scene);
+            pipeline.register_tag_callback(this, &GLRenderSystem::cb_debug_draw);
 		}
 
 	    void GLRenderSystem::set_viewport(int width, int height)
@@ -395,6 +446,20 @@ namespace sge
 				glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
 			});
 
+            // Draw debug lines
+            glBindVertexArray(_state->debug_line_vao);
+            glUseProgram(_state->debug_line_program);
+            glBindBuffer(GL_ARRAY_BUFFER, _state->debug_line_vbo);
+            glBufferData(
+                GL_ARRAY_BUFFER,
+                _state->frame_debug_lines.size() * sizeof(DebugLineVert),
+                _state->frame_debug_lines.data(),
+                GL_DYNAMIC_DRAW);
+		    glUniformMatrix4fv(_state->debug_line_view_uniform, 1, GL_FALSE, view.vec());
+		    glUniformMatrix4fv(_state->debug_line_proj_uniform, 1, GL_FALSE, proj.vec());
+		    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(_state->frame_debug_lines.size()));
+		    _state->frame_debug_lines.clear();
+
 			// Bind the default framebuffer for drawing
 			glBindFramebuffer(GL_FRAMEBUFFER, _state->default_framebuffer);
 
@@ -420,5 +485,35 @@ namespace sge
 			// Draw the screen quad
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
+
+	    void GLRenderSystem::cb_debug_draw(
+            SystemFrame& /*frame*/,
+            const FDebugDraw& tag,
+            ComponentId /*component*/)
+	    {
+            // Reserve space for line verts
+            _state->frame_debug_lines.reserve(_state->frame_debug_lines.size() + tag.lines.size() * 2);
+
+            // For each line
+            for (auto line : tag.lines)
+            {
+                // Create start vert
+                DebugLineVert start_vert;
+                start_vert.world_position = line.world_start;
+                start_vert.color_rgb = Vec3{
+                    static_cast<Scalar>(line.color.red()) / 255,
+                    static_cast<Scalar>(line.color.green()) / 255,
+                    static_cast<Scalar>(line.color.blue()) / 255 };
+
+                // Create end vert
+                DebugLineVert end_vert;
+                end_vert.world_position = line.world_end;
+                end_vert.color_rgb = start_vert.color_rgb;
+
+                // Add to the buffer
+                _state->frame_debug_lines.push_back(start_vert);
+                _state->frame_debug_lines.push_back(end_vert);
+            }
+	    }
 	}
 }

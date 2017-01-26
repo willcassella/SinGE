@@ -44,6 +44,9 @@
     <ClInclude Include="include\GLRender\GLRenderSystem.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="private\DebugLine.h">
+      <Filter>private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\GLMaterial.cpp">

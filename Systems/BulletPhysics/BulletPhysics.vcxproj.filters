@@ -58,5 +58,8 @@
     <ClCompile Include="source\CharacterController.cpp">
       <Filter>source</Filter>
     </ClCompile>
+    <ClCompile Include="source\DebugDrawer.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

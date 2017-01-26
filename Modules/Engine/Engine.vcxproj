@@ -181,6 +181,7 @@
     <ClInclude Include="include\Engine\Components\Physics\CSensor.h" />
     <ClInclude Include="include\Engine\Components\Physics\CVelocity.h" />
     <ClInclude Include="include\Engine\config.h" />
+    <ClInclude Include="include\Engine\Tags\FDebugDraw.h" />
     <ClInclude Include="include\Engine\UpdatePipeline.h" />
     <ClInclude Include="include\Engine\ProcessingFrame.h" />
     <ClInclude Include="include\Engine\Resources\Material.h" />
@@ -216,6 +217,7 @@
     <ClCompile Include="source\Resources\Texture.cpp" />
     <ClCompile Include="source\Scene.cpp" />
     <ClCompile Include="source\SystemFrame.cpp" />
+    <ClCompile Include="source\Tags\FDebugDraw.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">

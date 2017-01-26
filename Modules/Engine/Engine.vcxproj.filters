@@ -48,6 +48,12 @@
     <Filter Include="source\Components\Gameplay">
       <UniqueIdentifier>{eca2e36e-b74f-4f75-9a8e-0b9c81cd25e0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Tags">
+      <UniqueIdentifier>{2a160702-b594-41dc-8459-73aa08bc95e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Tags">
+      <UniqueIdentifier>{cea0a94a-edf7-4441-a0a9-4511c592deba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Engine\config.h">
@@ -128,6 +134,9 @@
     <ClInclude Include="include\Engine\Components\Physics\CCapsuleCollider.h">
       <Filter>include\Components\Physics</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\Tags\FDebugDraw.h">
+      <Filter>include\Tags</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Scene.cpp">
@@ -192,6 +201,9 @@
     </ClCompile>
     <ClCompile Include="source\Components\Physics\CCapsuleCollider.cpp">
       <Filter>source\Components\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Tags\FDebugDraw.cpp">
+      <Filter>source\Tags</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

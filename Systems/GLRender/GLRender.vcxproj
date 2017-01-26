@@ -186,6 +186,7 @@
     <ClInclude Include="include\GLRender\build.h" />
     <ClInclude Include="include\GLRender\GLRenderSystem.h" />
     <ClInclude Include="include\GLRender\Config.h" />
+    <ClInclude Include="private\DebugLine.h" />
     <ClInclude Include="private\glew.h" />
     <ClInclude Include="private\GLMaterial.h" />
     <ClInclude Include="private\GLRenderSystemState.h" />

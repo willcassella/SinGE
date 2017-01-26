@@ -209,6 +209,7 @@
     <ClCompile Include="source\BulletPhysicsSystemData.cpp" />
     <ClCompile Include="source\CharacterController.cpp" />
     <ClCompile Include="source\Config.cpp" />
+    <ClCompile Include="source\DebugDrawer.cpp" />
     <ClCompile Include="source\PhysicsEntity.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -26,7 +26,7 @@ namespace sge
 		public:
 
 			void from_archive(ArchiveReader& reader);
-			
+
 			bool validate() const;
 
 			//////////////////
@@ -40,6 +40,10 @@ namespace sge
 			std::string viewport_vert_shader;
 
 			std::string viewport_frag_shader;
+
+            std::string debug_line_vert_shader;
+
+            std::string debug_line_frag_shader;
 
 			std::string missing_material;
 
