@@ -14,7 +14,7 @@ namespace sge
             PhysicsEntity& phys_entity,
             const CCharacterController& component)
             : btKinematicCharacterController(
-                phys_entity.ghost_object.get(),
+                nullptr,
                 phys_entity.capsule_collider.get(),
                 component.step_height(),
                 btVector3{ 0, 1, 0 }),
@@ -25,8 +25,11 @@ namespace sge
             setMaxSlope(component.max_slope().radians());
             setJumpSpeed(component.jump_speed());
 
-            // Reset transform of ghost object (btKinematicCharacterController constructor messes it up)
-            getGhostObject()->setWorldTransform(phys_entity.transform);
+            // Set ghost object
+            ghost_object.setCollisionShape(phys_entity.capsule_collider.get());
+            ghost_object.setCollisionFlags(ghost_object.getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
+            ghost_object.setWorldTransform(phys_entity.transform);
+            m_ghostObject = &ghost_object;
         }
 
         void CharacterController::updateAction(btCollisionWorld* world, btScalar deltaTimeStep)

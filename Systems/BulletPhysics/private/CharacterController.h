@@ -34,6 +34,10 @@ namespace sge
 
             //////////////////
             ///   Fields   ///
+        public:
+
+            btPairCachingGhostObject ghost_object;
+
         private:
 
             Vec3 walk_dir;

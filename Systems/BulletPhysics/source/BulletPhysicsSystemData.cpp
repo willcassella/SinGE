@@ -115,26 +115,17 @@ namespace sge
             auto& physics_entity = get_physics_entity(entity);
             assert(physics_entity.character_controller == nullptr);
 
-            // Create the ghost object
-            physics_entity.ghost_object = std::make_unique<btPairCachingGhostObject>();
-            physics_entity.ghost_object->setCollisionFlags(
-                physics_entity.ghost_object->getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
-            physics_entity.ghost_object->setCollisionShape(&physics_entity.collider);
-
             // Set the transform of the entity
             to_bullet(physics_entity.transform, transform);
-
-            // Set the transform
-            physics_entity.ghost_object->setWorldTransform(physics_entity.transform);
-
-            // Add it to the world
-            phys_world.dynamics_world().addCollisionObject(physics_entity.ghost_object.get(),
-                btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
 
             // Create the character controller
             physics_entity.character_controller = std::make_unique<CharacterController>(physics_entity, character_controller);
 
-            // Add it to the world
+            // Add the ghost object to the world
+            phys_world.dynamics_world().addCollisionObject(&physics_entity.character_controller->ghost_object,
+                btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
+
+            // Add the character controller to the world
             phys_world.dynamics_world().addAction(physics_entity.character_controller.get());
         }
 
@@ -145,6 +136,7 @@ namespace sge
 
             // Remove it from the world
             phys_world.dynamics_world().removeAction(phys_entity.character_controller.get());
+            phys_world.dynamics_world().removeCollisionObject(&phys_entity.character_controller->ghost_object);
             phys_entity.character_controller = nullptr;
         }
 
