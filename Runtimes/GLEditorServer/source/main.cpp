@@ -11,8 +11,10 @@
 #include <Engine/Resources/Material.h>
 #include <Engine/Resources/Texture.h>
 #include <Engine/Scene.h>
+#include <Engine/UpdatePipeline.h>
 #include <GLRender/GLRenderSystem.h>
 #include <GLRender/Config.h>
+#include <GLWindow/GLEventWindow.h>
 #include <EditorServerSystem/EditorServerSystem.h>
 
 int main(int argc, char* argv[])
@@ -37,8 +39,7 @@ int main(int argc, char* argv[])
 	config_reader->object_member("window_height", window_height);
 
 	// Create a windowed mode window and its OpenGL context
-    glfwWindowHint(GLFW_SRGB_CAPABLE, GLFW_TRUE);
-	auto* window = glfwCreateWindow(window_width, window_height, "SinGE GLEditorServer", nullptr, nullptr);
+    auto* window = sge::create_sge_opengl_window("SinGE Editor Server", window_width, window_height);
 	if (!window)
 	{
 		std::cerr << "GLEditorServer: Could not create a window." << std::endl;
@@ -48,6 +49,12 @@ int main(int argc, char* argv[])
 
 	// Make the window's OpenGL context current
 	glfwMakeContextCurrent(window);
+
+    // Create an event window
+    sge::GLEventWindow event_window{ window };
+    sge::InputBindings input_bindings;
+    config_reader->object_member("input_bindings", input_bindings);
+    event_window.set_bindings(std::move(input_bindings));
 
 	// Create a type database
 	sge::TypeDB type_db;
@@ -71,6 +78,12 @@ int main(int argc, char* argv[])
 		scene_archive.deserialize_root(scene);
 	}
 
+    // Create a pipeline
+    sge::UpdatePipeline pipeline;
+
+    // Register the input window
+    event_window.register_pipeline(pipeline);
+
 	// Create a render system
 	sge::gl_render::Config render_config;
 	render_config.viewport_width = window_width;
@@ -81,19 +94,30 @@ int main(int argc, char* argv[])
 		assert(false /*Could not load render config from the config file.*/);
 	}
 
-	sge::gl_render::GLRenderSystem renderSystem{ render_config };
-	renderSystem.register_with_scene(scene);
+	sge::gl_render::GLRenderSystem render_system{ render_config };
+	render_system.pipeline_register(pipeline);
 
 	// Create an editor server
 	sge::EditorServerSystem editorServer{ 1995 };
 	editorServer.set_serve_time(12);
-	editorServer.register_with_scene(scene);
+    editorServer.register_pipeline(pipeline);
+
+    // Load the pipeline config
+    if (config_reader->pull_object_member("update_pipeline"))
+    {
+        pipeline.configure_pipeline(*config_reader);
+        config_reader->pop();
+    }
+    else
+    {
+        assert(false /*Engine update pipeline not specified*/);
+    }
 
 	// Loop until the user closes the window
 	while (!glfwWindowShouldClose(window))
 	{
 		// Update
-		scene.update(0.016);
+		scene.update(pipeline, 0.016);
 
 		// Swap front and back buffers
 		glfwSwapBuffers(window);
@@ -101,10 +125,6 @@ int main(int argc, char* argv[])
 		// Poll for and process events
 		glfwPollEvents();
 	}
-
-	// Unregister systems
-	editorServer.unregister_with_scene(scene);
-	renderSystem.unregister_with_scene(scene);
 
 	glfwTerminate();
 }

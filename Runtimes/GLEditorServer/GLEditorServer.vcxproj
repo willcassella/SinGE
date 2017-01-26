@@ -71,25 +71,25 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -97,7 +97,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521;4522</DisableSpecificWarnings>
       <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <PostBuildEvent>
@@ -115,7 +115,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521;4522</DisableSpecificWarnings>
       <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <PostBuildEvent>
@@ -135,7 +135,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521;4522</DisableSpecificWarnings>
       <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
@@ -157,7 +157,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521;4522</DisableSpecificWarnings>
       <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
@@ -190,6 +190,9 @@
     </ProjectReference>
     <ProjectReference Include="..\..\Systems\GLRender\GLRender.vcxproj">
       <Project>{9ef5dece-d157-4c40-a70b-fa31f4d0894e}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Systems\GLWindow\GLWindow.vcxproj">
+      <Project>{9db159e5-c07f-4674-8e2d-78e373883eb6}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
