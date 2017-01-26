@@ -362,6 +362,14 @@ namespace sge
 					break;
 				}
 
+                // If this component doesn't have an instance of this entity
+                auto inst_iter = iter->second.instances.find(entity);
+                if (inst_iter == iter->second.instances.end())
+                {
+                    satisfied = false;
+                    break;
+                }
+
 				// Try to create the component interface
 				if (!iter->second.container->create_interface(pframe, entity, interface_array[i]))
 				{
@@ -421,6 +429,13 @@ namespace sge
 			{
 				return;
 			}
+
+            // If this component doesn't have an instance of this entity
+            auto inst_iter = iter->second.instances.find(entity);
+            if (inst_iter == iter->second.instances.end())
+            {
+                return;
+            }
 
 			// Allocate space for the component interface object
 			interface_array[i] = reinterpret_cast<ComponentInterface*>(SGE_STACK_ALLOC(byte, types[i]->size()));
