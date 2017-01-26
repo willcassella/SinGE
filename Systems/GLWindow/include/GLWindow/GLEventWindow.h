@@ -56,12 +56,15 @@ namespace sge
 
         static void glfw_window_resize_callback(GLFWwindow* window, int width, int height);
 
+        static void glfw_window_focus_callback(GLFWwindow* window, int has_focus);
+
         void process_input(SystemFrame& frame, float current_time, float dt);
 
         //////////////////
         ///   Fields   ///
     private:
 
+        bool _has_focus;
         GLFWwindow* _window;
         std::function<ResizeCallbackFn> _resize_callback;
         InputBindings _bindings;

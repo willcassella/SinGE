@@ -12,7 +12,12 @@ SGE_REFLECT_TYPE(sge::CInput::FActionEvent)
 
 SGE_REFLECT_TYPE(sge::CInput::FAxisEvent)
 .field_property("name", &FAxisEvent::name)
-.field_property("value", &FAxisEvent::value);
+.field_property("value", &FAxisEvent::value)
+.field_property("max", &FAxisEvent::max);
+
+SGE_REFLECT_TYPE(sge::CInput::FSetAxis)
+.field_property("name", &FSetAxis::name)
+.field_property("value", &FSetAxis::value);
 
 namespace sge
 {

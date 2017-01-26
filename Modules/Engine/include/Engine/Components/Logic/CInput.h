@@ -38,7 +38,21 @@ namespace sge
 
 			std::string name;
 			float value;
+            float max;
 		};
+
+        /* Tag to set the value of the specified axis. */
+        struct SGE_ENGINE_API FSetAxis
+        {
+            SGE_REFLECTED_TYPE;
+
+            //////////////////
+            ///   Fields   ///
+        public:
+
+            std::string name;
+            float value;
+        };
 
         ////////////////////////
         ///   Constructors   ///
