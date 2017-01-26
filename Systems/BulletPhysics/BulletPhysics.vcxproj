@@ -103,7 +103,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SGE_BULLET_PHYSICS_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521;4522</DisableSpecificWarnings>
     </ClCompile>
     <PreBuildEvent>
       <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.4 bullet-2.85</Command>
@@ -122,7 +122,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SGE_BULLET_PHYSICS_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521;4522</DisableSpecificWarnings>
     </ClCompile>
     <PreBuildEvent>
       <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.4 bullet-2.85</Command>
@@ -144,7 +144,7 @@
       <PreprocessorDefinitions>SGE_BULLET_PHYSICS_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521;4522</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
@@ -168,7 +168,7 @@
       <PreprocessorDefinitions>SGE_BULLET_PHYSICS_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521;4522</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
