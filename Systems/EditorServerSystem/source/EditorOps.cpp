@@ -172,7 +172,7 @@ namespace sge
 				}
 			}
 
-			void new_entity_query(SystemFrameMut& frame, ArchiveReader& reader)
+			void new_entity_query(SystemFrame& frame, ArchiveReader& reader)
 			{
 				// Get the number of entities to create
 				uint32 num_entities;
@@ -189,7 +189,7 @@ namespace sge
 				}
 			}
 
-			void destroy_entity_query(SystemFrameMut& frame, ArchiveReader& reader)
+			void destroy_entity_query(SystemFrame& frame, ArchiveReader& reader)
 			{
 				// Enumerate entities to destroy
 				reader.enumerate_array_elements([&frame, &reader](std::size_t /*i*/)
@@ -204,7 +204,7 @@ namespace sge
 				});
 			}
 
-			void set_entity_name_query(SystemFrameMut& frame, ArchiveReader& reader)
+			void set_entity_name_query(SystemFrame& frame, ArchiveReader& reader)
 			{
 				// Enumerate entities to set the names of
 				reader.enumerate_object_members([&frame, &reader](const char* entity_id_str)
@@ -223,7 +223,7 @@ namespace sge
 				});
 			}
 
-			void set_entity_parent_query(SystemFrameMut& frame, ArchiveReader& reader)
+			void set_entity_parent_query(SystemFrame& frame, ArchiveReader& reader)
 			{
 				// Enumerate entities to set the names of
 				reader.enumerate_object_members([&frame, &reader](const char* entity_id_str)
@@ -242,7 +242,7 @@ namespace sge
 				});
 			}
 
-			void new_component_query(SystemFrameMut& frame, ArchiveReader& reader)
+			void new_component_query(SystemFrame& frame, ArchiveReader& reader)
 			{
 				// Enumerate entities to add components to
 				reader.enumerate_object_members([&frame, &reader](const char* entity_id_str)
@@ -270,7 +270,7 @@ namespace sge
 				});
 			}
 
-			void destroy_component_query(SystemFrameMut& frame, ArchiveReader& reader)
+			void destroy_component_query(SystemFrame& frame, ArchiveReader& reader)
 			{
 				// Enumerate componen types to destroy
 				reader.enumerate_object_members([&frame, &reader](const char* component_type_name)
@@ -372,7 +372,7 @@ namespace sge
 				});
 			}
 
-			void set_component_query(SystemFrameMut& frame, ArchiveReader& reader)
+			void set_component_query(SystemFrame& frame, ArchiveReader& reader)
 			{
 				// Enumerate types of components changed
 				reader.enumerate_object_members([&frame, &reader](const char* typeName)

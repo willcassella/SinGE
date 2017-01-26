@@ -32,7 +32,7 @@ namespace sge
 			///   Methods   ///
 		public:
 
-			SystemFrameMut& get_frame();
+			SystemFrame& get_frame();
 
 			void enequeue_message(Packet* packet);
 

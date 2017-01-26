@@ -1,7 +1,7 @@
 // EditorServerSystem.cpp
 
 #include <chrono>
-#include <Engine/Scene.h>
+#include <Engine/UpdatePipeline.h>
 #include "../private/EditorServerSystemData.h"
 
 namespace sge
@@ -10,8 +10,7 @@ namespace sge
 	///   Constructors   ///
 
 	EditorServerSystem::EditorServerSystem(uint16 port)
-		: _serve_time_ms(8),
-		_serve_fn_token(Scene::NULL_SYSTEM_TOKEN)
+		: _serve_time_ms(8)
 	{
 		_data = std::make_unique<Data>(port);
 	}
@@ -23,15 +22,9 @@ namespace sge
 	///////////////////
 	///   Methods   ///
 
-	void EditorServerSystem::register_with_scene(Scene& scene)
+	void EditorServerSystem::register_pipeline(UpdatePipeline& pipeline)
 	{
-		_serve_fn_token = scene.register_system_mut_fn(this, &EditorServerSystem::serve_fn);
-	}
-
-	void EditorServerSystem::unregister_with_scene(Scene& scene)
-	{
-		scene.unregister_system_fn(_serve_fn_token);
-		_serve_fn_token = Scene::NULL_SYSTEM_TOKEN;
+		pipeline.register_system_fn("editor_server", this, &EditorServerSystem::serve_fn);
 	}
 
 	int EditorServerSystem::get_serve_time() const
@@ -44,7 +37,7 @@ namespace sge
 		_serve_time_ms = milliseconds;
 	}
 
-	void EditorServerSystem::serve_fn(SystemFrameMut& frame, float current_time, float dt)
+	void EditorServerSystem::serve_fn(SystemFrame& frame, float current_time, float dt)
 	{
 		// Create a timer so we don't run indefinetaly
 		asio::steady_timer timer(_data->io);

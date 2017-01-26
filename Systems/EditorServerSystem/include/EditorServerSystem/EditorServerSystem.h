@@ -8,8 +8,6 @@
 
 namespace sge
 {
-	class SystemFrameMut;
-
 	struct SGE_EDITORSERVERSYSTEM_API EditorServerSystem
 	{
 		struct Data;
@@ -26,9 +24,7 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		void register_with_scene(Scene& scene);
-
-		void unregister_with_scene(Scene& scene);
+		void register_pipeline(UpdatePipeline& pipeline);
 
 		int get_serve_time() const;
 
@@ -36,7 +32,7 @@ namespace sge
 
 	private:
 
-		void serve_fn(SystemFrameMut& frame, float current_time, float dt);
+		void serve_fn(SystemFrame& frame, float current_time, float dt);
 
 		//////////////////
 		///   Fields   ///
@@ -44,6 +40,5 @@ namespace sge
 
 		int _serve_time_ms;
 		std::unique_ptr<Data> _data;
-		Scene::SystemFnToken _serve_fn_token;
 	};
 }

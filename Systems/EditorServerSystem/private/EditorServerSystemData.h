@@ -6,7 +6,6 @@
 
 namespace sge
 {
-	class SystemFrameMut;
 	using asio::ip::tcp;
 
 	struct EditorServerSystem::Data
@@ -28,7 +27,7 @@ namespace sge
 	public:
 
 		asio::io_service io;
-		SystemFrameMut* frame;
+		SystemFrame* frame;
 
 	private:
 

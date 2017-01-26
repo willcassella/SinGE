@@ -11,7 +11,7 @@ namespace sge
 {
 	namespace editor_server
 	{
-		SystemFrameMut& Session::get_frame()
+		SystemFrame& Session::get_frame()
 		{
 			return *_system_data->frame;
 		}

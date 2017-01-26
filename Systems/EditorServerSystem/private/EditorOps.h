@@ -6,8 +6,7 @@ namespace sge
 	struct Scene;
 	struct SceneData;
 	struct TypeDB;
-	class SystemFrame;
-	class SystemFrameMut;
+	struct SystemFrame;
 	class ArchiveWriter;
 	class ArchiveReader;
 
@@ -21,21 +20,21 @@ namespace sge
 
 			void get_component_types_query(const Scene& scene, ArchiveWriter& writer);
 
-			void new_entity_query(SystemFrameMut& frame, ArchiveReader& reader);
+			void new_entity_query(SystemFrame& frame, ArchiveReader& reader);
 
-			void destroy_entity_query(SystemFrameMut& frame, ArchiveReader& reader);
+			void destroy_entity_query(SystemFrame& frame, ArchiveReader& reader);
 
-			void set_entity_name_query(SystemFrameMut& frame, ArchiveReader& reader);
+			void set_entity_name_query(SystemFrame& frame, ArchiveReader& reader);
 
-			void set_entity_parent_query(SystemFrameMut& frame, ArchiveReader& reader);
+			void set_entity_parent_query(SystemFrame& frame, ArchiveReader& reader);
 
-			void new_component_query(SystemFrameMut& frame, ArchiveReader& reader);
+			void new_component_query(SystemFrame& frame, ArchiveReader& reader);
 
-			void destroy_component_query(SystemFrameMut& frame, ArchiveReader& reader);
+			void destroy_component_query(SystemFrame& frame, ArchiveReader& reader);
 
 			void get_component_query(SystemFrame& frame, ArchiveReader& reader, ArchiveWriter& writer);
 
-			void set_component_query(SystemFrameMut& frame, ArchiveReader& reader);
+			void set_component_query(SystemFrame& frame, ArchiveReader& reader);
 
 			void get_resource_query(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 
