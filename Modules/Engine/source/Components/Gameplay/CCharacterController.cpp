@@ -48,7 +48,7 @@ namespace sge
     public:
 
         float step_height = 0.1f;
-        Angle max_slope;
+        Angle max_slope = degrees(30);
         float jump_speed = 10.f;
         float fall_speed = 55.f;
         bool on_ground = true;
