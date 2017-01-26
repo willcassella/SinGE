@@ -1,5 +1,6 @@
 // main.cpp
 
+#include <chrono>
 #include <iostream>
 #include <GLFW/glfw3.h>
 #include <Core/Math/Quat.h>
@@ -9,7 +10,7 @@
 #include <Engine/SystemFrame.h>
 #include <Engine/UpdatePipeline.h>
 #include <Engine/Components/CTransform3D.h>
-#include <Engine/Components/Logic/CInput.h>
+#include <Engine/Components/Gameplay/CInput.h>
 #include <Engine/Components/Gameplay/CCharacterController.h>
 #include <GLRender/GLRenderSystem.h>
 #include <GLRender/Config.h>
@@ -52,7 +53,7 @@ namespace sge
 
 int main(int argc, char* argv[])
 {
-	/// Make sure we have a config file
+	// Make sure we have a config file
 	assert(argc == 2);
 	sge::JsonArchive config;
 	auto loaded_config = config.from_file(argv[1]);
@@ -145,10 +146,22 @@ int main(int argc, char* argv[])
         assert(false /*Engine update pipeline not specified*/);
     }
 
+    // Store the last time we printed out frame time
+    auto last_printout = std::chrono::steady_clock::now();
+
 	// Loop until the user closes the window
 	while (!glfwWindowShouldClose(window))
 	{
+        const auto start = std::chrono::high_resolution_clock::now();
 		scene.update(pipeline, 0.016);
+        const auto end = std::chrono::high_resolution_clock::now();
+        const auto duration = std::chrono::duration<double, std::milli>{ end - start }.count();
+
+        if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - last_printout).count() >= 1)
+        {
+    	    std::cout << "Scene update took " << duration << " milliseconds" << std::endl;
+            last_printout = std::chrono::steady_clock::now();
+        }
 
 		// Swap front and back buffers
 		glfwSwapBuffers(window);
