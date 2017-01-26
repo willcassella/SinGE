@@ -1,11 +1,18 @@
 {
-    "window_width": 1024,
-    "window_height": 720,
+    "window_width": 1920,
+    "window_height": 1080,
     "scene": "Content/Scenes/basic.json",
     "gl_render": {
         "viewport_vert_shader": "Content/Shaders/viewport.vert",
         "viewport_frag_shader": "Content/Shaders/viewport.frag",
+        "debug_line_vert_shader": "Content/Shaders/debug_line.vert",
+        "debug_line_frag_shader": "Content/Shaders/debug_line.frag",
         "missing_material": "Content/Materials/Misc/checkerboard.json",
         "missing_mesh": "Content/Meshes/Misc/question_mark.smesh"
-    }
+    },
+    "update_pipeline": [
+        ["gl_window_input"],
+        ["editor_server"],
+        ["gl_render"]
+    ]
 }
