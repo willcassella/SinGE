@@ -149,6 +149,9 @@
     <ClInclude Include="include\Core\Reflection\TypeDB.h">
       <Filter>include\Reflection</Filter>
     </ClInclude>
+    <ClInclude Include="include\Core\Functional\UFunction.h">
+      <Filter>include\Functional</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Math\Vec2.cpp">

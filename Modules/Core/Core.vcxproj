@@ -95,7 +95,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SGE_CORE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521;4522</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FloatingPointModel>Fast</FloatingPointModel>
       <MinimalRebuild>false</MinimalRebuild>
@@ -110,7 +110,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SGE_CORE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521;4522</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FloatingPointModel>Fast</FloatingPointModel>
       <MinimalRebuild>false</MinimalRebuild>
@@ -127,7 +127,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SGE_CORE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521;4522</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FloatingPointModel>Fast</FloatingPointModel>
@@ -148,7 +148,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>SGE_CORE_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DisableSpecificWarnings>4251;4814;4521</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4251;4814;4521;4522</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FloatingPointModel>Fast</FloatingPointModel>
@@ -165,6 +165,7 @@
     <ClInclude Include="..\Core\include\Core\env.h" />
     <ClInclude Include="include\Core\config.h" />
     <ClInclude Include="include\Core\Functional\FunctionView.h" />
+    <ClInclude Include="include\Core\Functional\UFunction.h" />
     <ClInclude Include="include\Core\Interfaces\IFromArchive.h" />
     <ClInclude Include="include\Core\Interfaces\IFromString.h" />
     <ClInclude Include="include\Core\Interfaces\IToArchive.h" />
