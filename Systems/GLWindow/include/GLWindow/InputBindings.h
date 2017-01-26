@@ -1,6 +1,7 @@
 // Input Bindings.h
 #pragma once
 
+#include <unordered_set>
 #include <unordered_map>
 #include <Core/Reflection/Reflection.h>
 
@@ -23,5 +24,8 @@ namespace sge
     public:
 
         std::unordered_map<int, std::string> bindings;
+        std::unordered_map<int, std::string> mouse_bindings;
+        std::unordered_set<std::string> mouse_x_bindings;
+        std::unordered_set<std::string> mouse_y_bindings;
     };
 }

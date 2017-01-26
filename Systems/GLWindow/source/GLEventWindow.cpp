@@ -15,7 +15,8 @@ namespace sge
     }
 
     GLEventWindow::GLEventWindow()
-        : _window(nullptr)
+        : _has_focus(true),
+        _window(nullptr)
     {
     }
 
@@ -43,6 +44,7 @@ namespace sge
         _window = window;
         glfwSetWindowUserPointer(window, this);
         glfwSetFramebufferSizeCallback(window, &glfw_window_resize_callback);
+        glfwSetWindowFocusCallback(window, &glfw_window_focus_callback);
     }
 
     void GLEventWindow::unset_window()
@@ -52,6 +54,7 @@ namespace sge
             return;
         }
 
+        glfwSetWindowFocusCallback(_window, nullptr);
         glfwSetFramebufferSizeCallback(_window, nullptr);
         glfwSetWindowUserPointer(_window, nullptr);
         _window = nullptr;
@@ -82,19 +85,58 @@ namespace sge
         }
     }
 
-    void GLEventWindow::process_input(SystemFrame& frame, float current_time, float dt)
+    void GLEventWindow::glfw_window_focus_callback(GLFWwindow* window, int has_focus)
     {
+        auto* event_window = static_cast<GLEventWindow*>(glfwGetWindowUserPointer(window));
+        event_window->_has_focus = (has_focus == GLFW_TRUE);
+    }
+
+    void GLEventWindow::process_input(SystemFrame& frame, float /*time*/, float /*dt*/)
+    {
+        if (!_has_focus)
+        {
+            return;
+        }
+
         frame.process_entities([this](
             ProcessingFrame& pframe,
             EntityId /*entity*/,
             const CInput& input)
         {
+            // For each keyboard binding
             for (const auto& key : this->_bindings.bindings)
             {
                 if (glfwGetKey(this->_window, key.first) == GLFW_PRESS)
                 {
                     pframe.create_tag(input.id(), CInput::FActionEvent{ key.second });
                 }
+            }
+
+            // For each mouse key binding
+            for (const auto& mouse_key : this->_bindings.mouse_bindings)
+            {
+                if (glfwGetMouseButton(this->_window, mouse_key.first) == GLFW_PRESS)
+                {
+                    input.create_tag(CInput::FActionEvent{ mouse_key.second });
+                }
+            }
+
+            // Get the cursor position
+            double x, y;
+            int max_x, max_y;
+            glfwGetCursorPos(this->_window, &x, &y);
+            glfwGetWindowSize(this->_window, &max_x, &max_y);
+
+            // For each mouse x-axis binding
+            for (const auto& mouse_x : this->_bindings.mouse_x_bindings)
+            {
+                input.create_tag(CInput::FAxisEvent{ mouse_x, static_cast<float>(x), static_cast<float>(max_x) });
+            }
+
+            // For each mouse y-axis binding
+            for (const auto& mouse_y : this->_bindings.mouse_y_bindings)
+            {
+                input.create_tag(CInput::FAxisEvent{ mouse_y, static_cast<float>(y), static_cast<float>(max_y) });
             }
         });
     }
