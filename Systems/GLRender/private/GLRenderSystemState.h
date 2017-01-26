@@ -16,7 +16,7 @@ namespace sge
 		{
 			enum : GLsizei
 			{
-				DEPTH,
+				DEPTH_STENCIL,
 				NORMAL,
 				POSITION,
 				DIFFUSE,

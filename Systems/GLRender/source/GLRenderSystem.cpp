@@ -54,14 +54,14 @@ namespace sge
 		}
 
         /* These constants specify the attachment index for buffer layers. */
-		static constexpr GLenum GBUFFER_DEPTH_ATTACHMENT = GL_DEPTH_ATTACHMENT;
+		static constexpr GLenum GBUFFER_DEPTH_STENCIL_ATTACHMENT = GL_DEPTH_STENCIL_ATTACHMENT;
 		static constexpr GLenum GBUFFER_POSITION_ATTACHMENT = GL_COLOR_ATTACHMENT0;
 		static constexpr GLenum GBUFFER_NORMAL_ATTACHMENT = GL_COLOR_ATTACHMENT1;
 		static constexpr GLenum GBUFFER_DIFFUSE_ATTACHMENT = GL_COLOR_ATTACHMENT2;
 		static constexpr GLenum GBUFFER_SPECULAR_ATTACHMENT = GL_COLOR_ATTACHMENT3;
 
         /* These constants define the internal format for the gbuffer layers. */
-        static constexpr GLenum GBUFFER_DEPTH_INTERNAL_FORMAT = GL_DEPTH_COMPONENT32;
+        static constexpr GLenum GBUFFER_DEPTH_STENCIL_INTERNAL_FORMAT = GL_DEPTH24_STENCIL8;
         static constexpr GLenum GBUFFER_POSITION_INTERNAL_FORMAT = GL_RGB32F;
         static constexpr GLenum GBUFFER_NORMAL_INTERNAL_FORMAT = GL_RGB32F;
         static constexpr GLenum GBUFFER_DIFFUSE_INTERNAL_FORMAT = GL_RGB8;
@@ -70,8 +70,8 @@ namespace sge
 
         /* These constants are used when initializing or resizing gbuffer layers.
          * They're pretty much meaningless, but are used to ensure consistency. */
-	    static constexpr GLenum GBUFFER_DEPTH_UPLOAD_FORMAT = GL_DEPTH_COMPONENT;
-        static constexpr GLenum GBUFFER_DEPTH_UPLOAD_TYPE = GL_UNSIGNED_INT;
+	    static constexpr GLenum GBUFFER_DEPTH_STENCIL_UPLOAD_FORMAT = GL_DEPTH_STENCIL;
+        static constexpr GLenum GBUFFER_DEPTH_STENCIL_UPLOAD_TYPE = GL_UNSIGNED_INT_24_8;
         static constexpr GLenum GBUFFER_POSITION_UPLOAD_FORMAT = GL_RGB;
         static constexpr GLenum GBUFFER_POSITION_UPLOAD_TYPE = GL_FLOAT;
         static constexpr GLenum GBUFFER_NORMAL_UPLOAD_FORMAT = GL_RGB;
@@ -111,12 +111,15 @@ namespace sge
 			glGetError(); // Sometimes GLEW initialization generates an error, pop it off the stack.
 
 			// Initialize OpenGL
+            glLineWidth(1);
 			glClearColor(0, 0, 0, 1);
 			glClearDepth(1.f);
-            glLineWidth(3);
 			glEnable(GL_DEPTH_TEST);
+            glDepthFunc(GL_LESS);
+            glEnable(GL_STENCIL_TEST);
 			glEnable(GL_CULL_FACE);
-			glDisable(GL_STENCIL_TEST);
+            glCullFace(GL_BACK);
+            glFrontFace(GL_CCW);
             glEnable(GL_FRAMEBUFFER_SRGB);
 
 			// Get the default framebuffer
@@ -129,13 +132,13 @@ namespace sge
 
 			// Create gbuffer depth layer
 			create_gbuffer_layer(
-				_state->gbuffer_layers[GBufferLayer::DEPTH],
-				GBUFFER_DEPTH_ATTACHMENT,
+				_state->gbuffer_layers[GBufferLayer::DEPTH_STENCIL],
+				GBUFFER_DEPTH_STENCIL_ATTACHMENT,
 				_state->width,
 				_state->height,
-				GBUFFER_DEPTH_INTERNAL_FORMAT,
-				GBUFFER_DEPTH_UPLOAD_FORMAT,
-				GBUFFER_DEPTH_UPLOAD_TYPE);
+				GBUFFER_DEPTH_STENCIL_INTERNAL_FORMAT,
+				GBUFFER_DEPTH_STENCIL_UPLOAD_FORMAT,
+				GBUFFER_DEPTH_STENCIL_UPLOAD_TYPE);
 
 			// Create gbuffer position layer
 			create_gbuffer_layer(
@@ -316,13 +319,13 @@ namespace sge
             _state->height = height;
 
             // Resize depth layer
-            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::DEPTH]);
+            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::DEPTH_STENCIL]);
             upload_render_target_data(
                 width,
                 height,
-                GBUFFER_DEPTH_INTERNAL_FORMAT,
-                GBUFFER_DEPTH_UPLOAD_FORMAT,
-                GBUFFER_DEPTH_UPLOAD_TYPE);
+                GBUFFER_DEPTH_STENCIL_INTERNAL_FORMAT,
+                GBUFFER_DEPTH_STENCIL_UPLOAD_FORMAT,
+                GBUFFER_DEPTH_STENCIL_UPLOAD_TYPE);
 
 	        // Resize normal layer
             glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::NORMAL]);
@@ -385,8 +388,8 @@ namespace sge
 
 			// Clear the GBuffer
 			glEnable(GL_DEPTH_TEST);
-			glDisable(GL_BLEND);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_CULL_FACE);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 			// Create matrices
 			bool hasCamera = false;
@@ -463,8 +466,11 @@ namespace sge
 			// Bind the default framebuffer for drawing
 			glBindFramebuffer(GL_FRAMEBUFFER, _state->default_framebuffer);
 
-			// Clear the frame
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			// Disable depth and culling, and clear the frame
+            glDisable(GL_CULL_FACE);
+            glDisable(GL_DEPTH_TEST);
+            glDisable(GL_STENCIL_TEST);
+			glClear(GL_COLOR_BUFFER_BIT);
 
 			// Bind the screen quad
 			glBindVertexArray(_state->sprite_vao);
@@ -472,7 +478,7 @@ namespace sge
 
 			// Bind the GBuffer's sub-buffers as textures for reading
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::DEPTH]);
+			glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::DEPTH_STENCIL]);
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::POSITION]);
 			glActiveTexture(GL_TEXTURE2);
