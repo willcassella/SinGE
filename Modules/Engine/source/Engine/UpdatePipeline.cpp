@@ -45,7 +45,8 @@ namespace sge
                     return;
                 }
 
-                step.push_back(iter->second);
+                // TODO: Develope a copyable replacement for std::function
+                step.push_back(std::move(iter->second));
             });
 
             if (step.empty())
@@ -67,7 +68,7 @@ namespace sge
         }
 
         // Run all callbacks
-        for (const auto& callback : iter->second)
+        for (auto& callback : iter->second)
         {
             if (callback.component_type && callback.component_type != component.type())
             {
@@ -83,7 +84,7 @@ namespace sge
         }
     }
 
-    void UpdatePipeline::register_system_fn(std::string name, std::function<SystemFn> system_fn)
+    void UpdatePipeline::register_system_fn(std::string name, UFunction<SystemFn> system_fn)
     {
         if (name.empty())
         {
@@ -96,7 +97,7 @@ namespace sge
 
     void UpdatePipeline::register_tag_callback(
         const TypeInfo& tag_type,
-        std::function<TagCallback::CallbackFn> callback)
+        UFunction<TagCallback::CallbackFn> callback)
     {
         TagCallback cb;
         cb.callback = std::move(callback);
@@ -107,7 +108,7 @@ namespace sge
     void UpdatePipeline::register_tag_callback(
         const TypeInfo& tag_type,
         const TypeInfo& component_type,
-        std::function<TagCallback::CallbackFn> callback)
+        UFunction<TagCallback::CallbackFn> callback)
     {
         TagCallback cb;
         cb.component_type = &component_type;
@@ -119,7 +120,7 @@ namespace sge
     void UpdatePipeline::register_tag_callback(
         const TypeInfo& tag_type,
         ComponentId component,
-        std::function<TagCallback::CallbackFn> callback)
+        UFunction<TagCallback::CallbackFn> callback)
     {
         TagCallback cb;
         cb.component_type = component.type();

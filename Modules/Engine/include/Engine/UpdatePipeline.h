@@ -19,9 +19,19 @@ namespace sge
         */
         using SystemFn = void(SystemFrame& frame, float current_time, float dt);
 
-        using PipelineStep = std::vector<std::function<SystemFn>>;
+        using PipelineStep = std::vector<UFunction<SystemFn>>;
 
         using Pipeline = std::vector<PipelineStep>;
+
+        /////////////////////////
+        ///   Constructors    ///
+    public:
+
+        UpdatePipeline() = default;
+        UpdatePipeline(const UpdatePipeline& copy) = delete;
+        UpdatePipeline& operator=(const UpdatePipeline& copy) = delete;
+        UpdatePipeline(UpdatePipeline&& move) = default;
+        UpdatePipeline& operator=(UpdatePipeline&& move) = default;
 
         ///////////////////
         ///   Methods   ///
@@ -39,7 +49,7 @@ namespace sge
         * \param system_fn The system function to call during the read phase.
         * \return The token for the system function, which may be used to unregister it.
         */
-        void register_system_fn(std::string name, std::function<SystemFn> system_fn);
+        void register_system_fn(std::string name, UFunction<SystemFn> system_fn);
 
         /**
         * \brief Registers a system member function to be called during the read phase.
@@ -68,7 +78,7 @@ namespace sge
         */
         void register_tag_callback(
             const TypeInfo& tag_type,
-            std::function<TagCallback::CallbackFn> callback);
+            UFunction<TagCallback::CallbackFn> callback);
 
         /**
         * \brief Registers a callback for when the given tag type is applied to any component of the given type.
@@ -79,7 +89,7 @@ namespace sge
         void register_tag_callback(
             const TypeInfo& tag_type,
             const TypeInfo& component_type,
-            std::function<TagCallback::CallbackFn> callback);
+            UFunction<TagCallback::CallbackFn> callback);
 
         /**
         * \brief Registers a callback for when the given tag type is applied to the given component instance.
@@ -90,7 +100,7 @@ namespace sge
         void register_tag_callback(
             const TypeInfo& tag_type,
             ComponentId component,
-            std::function<TagCallback::CallbackFn> callback);
+            UFunction<TagCallback::CallbackFn> callback);
 
         template <class OuterT, typename TagT>
         void register_tag_callback(
@@ -159,7 +169,7 @@ namespace sge
         std::vector<PipelineStep> _pipeline;
 
         /* System functions */
-        std::unordered_map<std::string, std::function<SystemFn>> _system_fns;
+        std::unordered_map<std::string, UFunction<SystemFn>> _system_fns;
 
         /* Tag callbacks */
         std::unordered_map<const TypeInfo*, std::vector<TagCallback>> _tag_callbacks;

@@ -183,7 +183,7 @@ namespace sge
         _scene_data->entity_names.erase(iter);
     }
 
-    ComponentId SystemFrame::new_component(EntityId entity, const TypeInfo& type, std::function<ComponentInitFn> init_fn)
+    ComponentId SystemFrame::new_component(EntityId entity, const TypeInfo& type, UFunction<ComponentInitFn> init_fn)
     {
         // Make sure the entity is a valid user entity
         if (entity == NULL_ENTITY || entity == WORLD_ENTITY || _scene_data->entity_parents.find(entity) == _scene_data->entity_parents.end())

@@ -2,9 +2,9 @@
 #pragma once
 
 #include <array>
-#include <functional>
 #include <unordered_map>
 #include <unordered_set>
+#include <Core/Functional/UFunction.h>
 #include "ProcessingFrame.h"
 
 namespace sge
@@ -146,7 +146,7 @@ namespace sge
         * \return The id of the component. The component will not yet have been constructed at this point.
         * If the entity is not a valid user entity or the type is not a registered component type, the returned id will be null.
         */
-        ComponentId new_component(EntityId entity, const TypeInfo& type, std::function<ComponentInitFn> init_fn);
+        ComponentId new_component(EntityId entity, const TypeInfo& type, UFunction<ComponentInitFn> init_fn);
 
         /**
         * \brief Constructs a new component of the given type on the given entity, and initializes it with the given function.
@@ -516,7 +516,7 @@ namespace sge
         std::unordered_set<EntityId> _destroyed_entities;
 
         /* All components created this frame. */
-        std::unordered_map<ComponentId, std::function<ComponentInitFn>> _new_components;
+        std::unordered_map<ComponentId, UFunction<ComponentInitFn>> _new_components;
 
         std::vector<ProcessingFrame> _pframes;
 	};

@@ -1,6 +1,7 @@
 // Tag.h
 #pragma once
 
+#include <Core/Functional/UFunction.h>
 #include "Component.h"
 
 namespace sge
@@ -28,6 +29,6 @@ namespace sge
         /**
          * \brief The tag callback.
          */
-        std::function<CallbackFn> callback;
+        UFunction<CallbackFn> callback;
     };
 }
