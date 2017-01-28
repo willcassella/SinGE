@@ -543,7 +543,7 @@ namespace sge
                 // Set depth function to normal
                 glDepthFunc(GL_LESS);
 
-                // Set stencil to always pass within backface area
+                // Set stencil to always pass within backface area, allow drawing where depth fails
                 glStencilFunc(GL_LEQUAL, 1, 0xFF);
                 glStencilOp(GL_KEEP, GL_REPLACE, GL_KEEP);
 
@@ -585,7 +585,7 @@ namespace sge
                 material.set_view_matrix(view);
                 material.set_projection_matrix(proj);
 
-                // Set to allow drawing where depth test passes
+                // Set to allow drawing where depth test fails
                 glStencilFunc(GL_LEQUAL, 1, 0xFF);
                 glStencilOp(GL_KEEP, GL_REPLACE, GL_KEEP);
 
