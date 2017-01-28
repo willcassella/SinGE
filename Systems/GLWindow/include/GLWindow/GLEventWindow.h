@@ -58,6 +58,12 @@ namespace sge
 
         static void glfw_window_focus_callback(GLFWwindow* window, int has_focus);
 
+        static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int state, int mods);
+
+        static void glfw_mouse_button_callback(GLFWwindow* window, int key, int state, int mods);
+
+        static void glfw_cursor_callback(GLFWwindow* window, double x, double y);
+
         void process_input(SystemFrame& frame, float current_time, float dt);
 
         //////////////////
@@ -68,5 +74,8 @@ namespace sge
         GLFWwindow* _window;
         std::function<ResizeCallbackFn> _resize_callback;
         InputBindings _bindings;
+        std::set<const char*> _active_action_bindings;
+        double _mouse_x;
+        double _mouse_y;
     };
 }

@@ -23,8 +23,8 @@ namespace sge
         ///   Fields   ///
     public:
 
-        std::unordered_map<int, std::string> bindings;
-        std::unordered_map<int, std::string> mouse_bindings;
+        std::unordered_map<int, std::string> key_bindings;
+        std::unordered_map<int, std::string> mouse_button_bindings;
         std::unordered_set<std::string> mouse_x_bindings;
         std::unordered_set<std::string> mouse_y_bindings;
     };

@@ -16,8 +16,8 @@ namespace sge
 {
     void InputBindings::from_archive(ArchiveReader& reader)
     {
-        bindings.clear();
-        mouse_bindings.clear();
+        key_bindings.clear();
+        mouse_button_bindings.clear();
 
         reader.enumerate_object_members([this, &reader](const char* event_name)
         {
@@ -40,20 +40,22 @@ namespace sge
                 }
                 else if (std::strcmp(mouse_input_name, "L") == 0)
                 {
-                    this->mouse_bindings[GLFW_MOUSE_BUTTON_LEFT] = event_name;
+                    this->mouse_button_bindings[GLFW_MOUSE_BUTTON_LEFT] = event_name;
                 }
                 else if (std::strcmp(mouse_input_name, "R") == 0)
                 {
-                    this->mouse_bindings[GLFW_MOUSE_BUTTON_RIGHT] = event_name;
+                    this->mouse_button_bindings[GLFW_MOUSE_BUTTON_RIGHT] = event_name;
                 }
                 else if (std::strcmp(mouse_input_name, "M") == 0)
                 {
-                    this->mouse_bindings[GLFW_MOUSE_BUTTON_MIDDLE] = event_name;
+                    this->mouse_button_bindings[GLFW_MOUSE_BUTTON_MIDDLE] = event_name;
                 }
                 else
                 {
-                    std::cout << "WARNING: Invalid moues input identifier: '" << input_name << "'" << std::endl;
+                    std::cout << "WARNING: Invalid mouse button identifier: '" << input_name << "'" << std::endl;
                 }
+
+                return;
             }
             else if (input_name == "SPACE")
             {
@@ -70,7 +72,7 @@ namespace sge
                 return;
             }
 
-            this->bindings[key] = event_name;
+            this->key_bindings[key] = event_name;
         });
     }
 }
