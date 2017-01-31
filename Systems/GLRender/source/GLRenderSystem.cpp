@@ -312,7 +312,7 @@ namespace sge
 		void GLRenderSystem::pipeline_register(UpdatePipeline& pipeline)
 		{
 			pipeline.register_system_fn("gl_render", this, &GLRenderSystem::render_scene);
-            pipeline.register_tag_callback(this, &GLRenderSystem::cb_debug_draw);
+            //pipeline.register_tag_callback(this, &GLRenderSystem::cb_debug_draw);
 		}
 
 	    void GLRenderSystem::set_viewport(int width, int height)
