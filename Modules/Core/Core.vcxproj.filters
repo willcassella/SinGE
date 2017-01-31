@@ -45,6 +45,9 @@
     <Filter Include="include\IO">
       <UniqueIdentifier>{f62532fb-bb6a-4009-97d0-bc468f051789}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Containers">
+      <UniqueIdentifier>{280e3135-e108-414d-802b-03b75f021583}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Core\include\Core\env.h">
@@ -151,6 +154,9 @@
     </ClInclude>
     <ClInclude Include="include\Core\Functional\UFunction.h">
       <Filter>include\Functional</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Containers\FixedString.h">
+      <Filter>include\Containers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
