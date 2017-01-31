@@ -13,6 +13,11 @@ namespace sge
 {
     namespace bullet_physics
     {
+        bool PhysicsEntityLess::operator()(const PhysicsEntity* lhs, const PhysicsEntity* rhs)
+        {
+            return lhs->entity < rhs->entity;
+        }
+
         void BulletPhysicsSystem::Data::add_box_collider(EntityId entity, const CBoxCollider& component)
         {
             auto& physics_entity = get_or_create_physics_entity(entity);
