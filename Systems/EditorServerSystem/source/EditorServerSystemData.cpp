@@ -11,7 +11,6 @@ namespace sge
 {
 	EditorServerSystem::Data::Data(uint16 port)
 		: frame(nullptr),
-		io(),
 		_acceptor(io, tcp::endpoint{ tcp::v4(), port })
 	{
 		io.post([this]()
