@@ -166,7 +166,7 @@ namespace sge
             return;
         }
 
-        frame.process_entities([this](
+        frame.process_entities([this, &frame](
             ProcessingFrame& pframe,
             EntityId /*entity*/,
             const CInput& input)
@@ -174,19 +174,19 @@ namespace sge
             // For each keyboard binding
             for (auto binding : this->_active_action_bindings)
             {
-                pframe.create_tag(input.id(), CInput::FActionEvent{ binding });
+                input.add_action_event(CInput::FActionEvent{ binding });
             }
 
             // For each mouse x-axis binding
             for (const auto& binding : this->_bindings.mouse_x_bindings)
             {
-                input.create_tag(CInput::FAxisEvent{ binding, static_cast<float>(this->_mouse_x), 1.f });
+                input.add_axis_event(CInput::FAxisEvent{ binding.c_str(), static_cast<float>(this->_mouse_x), 1.f });
             }
 
             // For each mouse y-axis binding
             for (const auto& binding : this->_bindings.mouse_y_bindings)
             {
-                input.create_tag(CInput::FAxisEvent{ binding, static_cast<float>(this->_mouse_y), 1.f });
+                input.add_axis_event(CInput::FAxisEvent{ binding.c_str(), static_cast<float>(this->_mouse_y), 1.f });
             }
         });
     }
