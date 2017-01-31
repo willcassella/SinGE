@@ -183,7 +183,7 @@ namespace sge
 		for (const auto& pipeline_step : pipeline.get_pipeline())
 		{
             // Run the first system TODO: ALLOW MULITPLE SYSTEMS
-            SystemFrame frame{ _scene_data };
+            SystemFrame frame{ *this, _scene_data };
             pipeline_step[0](frame, _current_time, dt);
 
             // TODO: MAKE THIS ASYNCHRONOUS (AND NOT SHITTY)

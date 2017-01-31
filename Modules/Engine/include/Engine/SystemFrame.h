@@ -57,7 +57,7 @@ namespace sge
 		///   Constructors   ///
 	private:
 
-		SystemFrame(SceneData& scene_data);
+		SystemFrame(const Scene& scene, SceneData& scene_data);
 		SystemFrame(const SystemFrame& copy) = delete;
 		SystemFrame& operator=(const SystemFrame& copy) = delete;
 		SystemFrame(SystemFrame&& move) = default;
@@ -66,6 +66,11 @@ namespace sge
 		///////////////////
 		///   Methods   ///
 	public:
+
+        /**
+         * \breif Returns the scene this system frame is operating on.
+         */
+        const Scene& scene() const;
 
 		/**
 		 * \brief Synchronizes this SystemFrame. This function blocks the calling thread until
@@ -450,7 +455,8 @@ namespace sge
 	private:
 
         bool _has_tags;
-		SceneData* _scene_data;
+        const Scene* const _scene;
+		SceneData* const _scene_data;
 
         /* All entities that have been destroyed this frame. */
         std::vector<EntityId> _ord_destroyed_entities;

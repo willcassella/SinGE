@@ -70,11 +70,17 @@ namespace sge
         return primary_iter;
     }
 
-	SystemFrame::SystemFrame(SceneData& scene_data)
+	SystemFrame::SystemFrame(const Scene& scene, SceneData& scene_data)
 		: _has_tags(false),
+        _scene(&scene),
 		_scene_data(&scene_data)
 	{
 	}
+
+    const Scene& SystemFrame::scene() const
+    {
+        return *_scene;
+    }
 
     void SystemFrame::yield()
 	{
