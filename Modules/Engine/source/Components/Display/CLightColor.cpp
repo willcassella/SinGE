@@ -37,16 +37,15 @@ namespace sge
 		Color_t color;
 	};
 
-	CLightColor::CLightColor(ProcessingFrame& pframe, EntityId entity, Data& data)
-		: TComponentInterface<sge::CLightColor>(pframe, entity),
-		_cached_color(data.color),
-		_data(&data)
-	{
-	}
-
 	void CLightColor::register_type(Scene& scene)
 	{
 		scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CLightColor, Data>>());
+	}
+
+    void CLightColor::reset(Data& data)
+	{
+        _data = &data;
+        _cached_color = data.color;
 	}
 
 	CLightColor::Color_t CLightColor::color() const
@@ -56,8 +55,11 @@ namespace sge
 
 	void CLightColor::color(Color_t value)
 	{
-		_cached_color = value;
-		update_data();
+        if (_cached_color != value)
+        {
+		    _cached_color = value;
+		    update_data();
+        }
 	}
 
 	CLightColor::Color_t::Red_t CLightColor::red() const
@@ -67,8 +69,11 @@ namespace sge
 
 	void CLightColor::red(Color_t::Red_t value)
 	{
-		_cached_color.red(value);
-		update_data();
+        if (_cached_color.red() != value)
+        {
+		    _cached_color.red(value);
+		    update_data();
+        }
 	}
 
 	CLightColor::Color_t::Green_t CLightColor::green() const
@@ -78,8 +83,11 @@ namespace sge
 
 	void CLightColor::green(Color_t::Green_t value)
 	{
-		_cached_color.green(value);
-		update_data();
+        if (_cached_color.green() != value)
+        {
+		    _cached_color.green(value);
+		    update_data();
+        }
 	}
 
 	CLightColor::Color_t::Blue_t CLightColor::blue() const
@@ -89,8 +97,11 @@ namespace sge
 
 	void CLightColor::blue(Color_t::Blue_t value)
 	{
-		_cached_color.blue(value);
-		update_data();
+        if (_cached_color.blue() != value)
+        {
+		    _cached_color.blue(value);
+		    update_data();
+        }
 	}
 
 	CLightColor::Color_t::Alpha_t CLightColor::alpha() const
@@ -100,13 +111,16 @@ namespace sge
 
 	void CLightColor::alpha(Color_t::Alpha_t value)
 	{
-		_cached_color.alpha(value);
-		update_data();
+        if (_cached_color.alpha() != value)
+        {
+		    _cached_color.alpha(value);
+		    update_data();
+        }
 	}
 
 	void CLightColor::update_data()
 	{
 		_data->color = _cached_color;
-		apply_component_modified_tag();
+		set_modified();
 	}
 }

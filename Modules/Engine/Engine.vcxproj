@@ -183,6 +183,8 @@
     <ClInclude Include="include\Engine\Components\Physics\CSensor.h" />
     <ClInclude Include="include\Engine\Components\Physics\CVelocity.h" />
     <ClInclude Include="include\Engine\config.h" />
+    <ClInclude Include="include\Engine\System.h" />
+    <ClInclude Include="include\Engine\TagBuffer.h" />
     <ClInclude Include="include\Engine\Tags\FDebugDraw.h" />
     <ClInclude Include="include\Engine\UpdatePipeline.h" />
     <ClInclude Include="include\Engine\ProcessingFrame.h" />
@@ -196,6 +198,7 @@
     <ClInclude Include="include\Engine\TagCallback.h" />
     <ClInclude Include="include\Engine\Util\BasicComponentContainer.h" />
     <ClInclude Include="include\Engine\Util\EmptyComponentContainer.h" />
+    <ClInclude Include="include\Engine\Util\VectorUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Component.cpp" />
@@ -221,7 +224,9 @@
     <ClCompile Include="source\Resources\Texture.cpp" />
     <ClCompile Include="source\Scene.cpp" />
     <ClCompile Include="source\SystemFrame.cpp" />
+    <ClCompile Include="source\TagBuffer.cpp" />
     <ClCompile Include="source\Tags\FDebugDraw.cpp" />
+    <ClCompile Include="source\Util\VectorUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">

@@ -14,17 +14,13 @@ namespace sge
 		using Color_t = color::RGBA8;
 		SGE_REFLECTED_TYPE;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		CLightColor(ProcessingFrame& pframe, EntityId entity, Data& data);
-
 		///////////////////
 		///   Methods   ///
 	public:
 
 		static void register_type(Scene& scene);
+
+        void reset(Data& data);
 
 		/**
 		 * \brief Gets the whole color value.
@@ -71,6 +67,6 @@ namespace sge
 	private:
 
 		Color_t _cached_color;
-		Data* _data;
+		Data* _data = nullptr;
 	};
 }

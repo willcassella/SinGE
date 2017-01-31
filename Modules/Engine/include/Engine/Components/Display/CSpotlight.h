@@ -25,17 +25,13 @@ namespace sge
 		struct Data;
 		SGE_REFLECTED_TYPE;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		CSpotlight(ProcessingFrame& pframe, EntityId entity, Data& data);
-
 		///////////////////
 		///   Methods   ///
 	public:
 
 		static void register_type(Scene& scene);
+
+        void reset(Data& data);
 
 		Shape shape() const;
 
@@ -69,6 +65,6 @@ namespace sge
 		///   Fields   ///
 	private:
 
-		Data* _data;
+		Data* _data = nullptr;
 	};
 }

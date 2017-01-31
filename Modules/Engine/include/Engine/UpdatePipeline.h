@@ -1,15 +1,21 @@
 // UpdatePipeline.h
 #pragma once
 
-#include "TagCallback.h"
+#include <Core/Functional/UFunction.h>
+#include "Component.h"
 
 namespace sge
 {
+    struct Scene;
+    struct SceneData;
     struct SystemFrame;
+    struct TagCallback;
 
     struct SGE_ENGINE_API UpdatePipeline
     {
         SGE_REFLECTED_TYPE;
+
+        friend Scene;
 
         /**
         * \brief Function signature used for system funtions during the read phase. This design may change in the future.
@@ -18,6 +24,16 @@ namespace sge
         * \param dt The time delta since the last frame.
         */
         using SystemFn = void(SystemFrame& frame, float current_time, float dt);
+
+        using TagCallbackFn = void(
+            SystemFrame& frame,
+            const TypeInfo& tag_type,
+            const TypeInfo& component_type,
+            const void* tags,
+            const EntityId* component_instances,
+            std::size_t num_tags);
+
+        using SystemToken = uint16;
 
         using PipelineStep = std::vector<UFunction<SystemFn>>;
 
@@ -40,8 +56,6 @@ namespace sge
         void configure_pipeline(ArchiveReader& reader);
 
         const Pipeline& get_pipeline() const;
-
-        void run_tag(Any<> tag, ComponentId component, SystemFrame& callback_frame);
 
         /**
         * \brief Registers a system function to be called during the read phase.
@@ -78,7 +92,7 @@ namespace sge
         */
         void register_tag_callback(
             const TypeInfo& tag_type,
-            UFunction<TagCallback::CallbackFn> callback);
+            UFunction<TagCallbackFn> callback);
 
         /**
         * \brief Registers a callback for when the given tag type is applied to any component of the given type.
@@ -89,7 +103,7 @@ namespace sge
         void register_tag_callback(
             const TypeInfo& tag_type,
             const TypeInfo& component_type,
-            UFunction<TagCallback::CallbackFn> callback);
+            UFunction<TagCallbackFn> callback);
 
         /**
         * \brief Registers a callback for when the given tag type is applied to the given component instance.
@@ -100,18 +114,29 @@ namespace sge
         void register_tag_callback(
             const TypeInfo& tag_type,
             ComponentId component,
-            UFunction<TagCallback::CallbackFn> callback);
+            UFunction<TagCallbackFn> callback);
 
-        template <class OuterT, typename TagT>
+        template <typename TagT, class OuterT>
         void register_tag_callback(
             OuterT* outer,
-            void(OuterT::*callback)(SystemFrame&, TagT, ComponentId))
+            void(OuterT::*callback)(
+                SystemFrame& frame,
+                const TypeInfo& component_type,
+                const TagT* tags,
+                const EntityId* component_instances,
+                std::size_t num_tags))
         {
             this->register_tag_callback(
                 sge::get_type<TagT>(),
-                [outer, callback](SystemFrame& frame, Any<> tag, ComponentId component) -> void
+                [outer, callback](
+                    SystemFrame& frame,
+                    const TypeInfo& /*tag_type*/,
+                    const TypeInfo& component_type,
+                    const void* tags,
+                    const EntityId* component_instances,
+                    std::size_t num_tags) -> void
             {
-                (outer->*callback)(frame, *static_cast<const std::remove_reference_t<TagT>*>(tag.object()), component);
+                (outer->*callback)(frame, component_type, static_cast<const TagT*>(tags), component_instances, num_tags);
             });
         }
 
@@ -121,44 +146,52 @@ namespace sge
          * \param outer The object to call this callback  member function on.
          * \param callback The callback member function to call.
          */
-        template <class OuterT, typename TagT, typename ComponentT>
+        template <typename TagT, typename ComponentT, class OuterT>
         void register_tag_callback(
             OuterT* outer,
-            void(OuterT::*callback)(SystemFrame&, TagT, TComponentId<ComponentT>))
+            void(OuterT::*callback)(
+                SystemFrame& frame,
+                const TagT* tags,
+                const EntityId* component_instances,
+                std::size_t num_tags))
         {
             this->register_tag_callback(
                 sge::get_type<TagT>(),
                 sge::get_type<ComponentT>(),
-                [outer, callback](SystemFrame& frame, Any<> tag, ComponentId component) -> void
+                [outer, callback](
+                    SystemFrame& frame,
+                    const TypeInfo& /*tag_type*/,
+                    const TypeInfo& /*component_type*/,
+                    const TagT* tags,
+                    const EntityId* component_instances,
+                    std::size_t num_tags) -> void
             {
-                (outer->*callback)(frame, *static_cast<const std::remove_reference_t<TagT>*>(tag.object()), component.entity());
+                (outer->*callback)(frame, static_cast<TagT*>(tags), component_instances, num_tags);
             });
         }
 
-        template <class OuterT, typename TagT, typename ComponentT>
+        template <typename TagT, typename ComponentT, class OuterT>
         void register_tag_callback(
             EntityId entity,
             OuterT* outer,
-            void(OuterT::*callback)(SystemFrame&, TagT, TComponentId<ComponentT>))
-        {
-            this->register_tag_callback(
-                ComponentId{ entity, sge::get_type<TagT>() },
-                [outer, callback](SystemFrame& frame, Any<> tag, ComponentId component)
-            {
-                (outer->*callback)(frame, *static_cast<std::remove_reference_t<TagT>*>(tag.object()), component.entity());
-            });
-        }
-
-        template <typename TagT, typename ComponentT>
-        void register_tag_callback(
-            void(*callback)(SystemFrame&, TagT, TComponentId<ComponentT>))
+            void(OuterT::*callback)(
+                SystemFrame& frame,
+                const TagT* tags,
+                const ComponentT* component_instances,
+                std::size_t num_tags))
         {
             this->register_tag_callback(
                 sge::get_type<TagT>(),
-                sge::get_type<ComponentT>(),
-                [callback](SystemFrame& frame, Any<> tag, ComponentId component) -> void
+                ComponentId{ entity, sge::get_type<ComponentT>() },
+                [outer, callback](
+                    SystemFrame& frame,
+                    const TypeInfo& /*tag_type*/,
+                    const TypeInfo& /*component_type*/,
+                    const void* tags,
+                    const EntityId* component_instances,
+                    std::size_t num_tags)
             {
-                callback(frame, *static_cast<const std::remove_reference_t<TagT>*>(tag.object()), component.entity());
+                (outer->*callback)(frame, static_cast<const TagT*>(tags), component_instances, num_tags);
             });
         }
 

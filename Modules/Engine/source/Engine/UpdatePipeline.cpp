@@ -5,6 +5,7 @@
 #include <Core/Interfaces/IFromArchive.h>
 #include "../../include/Engine/UpdatePipeline.h"
 #include "../../include/Engine/SystemFrame.h"
+#include "../../include/Engine/Scene.h"
 
 SGE_REFLECT_TYPE(sge::UpdatePipeline);
 
@@ -59,31 +60,6 @@ namespace sge
         });
     }
 
-    void UpdatePipeline::run_tag(Any<> tag, ComponentId component, SystemFrame& callback_frame)
-    {
-        auto iter = _tag_callbacks.find(&tag.type());
-        if (iter == _tag_callbacks.end())
-        {
-            return;
-        }
-
-        // Run all callbacks
-        for (auto& callback : iter->second)
-        {
-            if (callback.component_type && callback.component_type != component.type())
-            {
-                continue;
-            }
-
-            if (callback.entity != NULL_ENTITY && callback.entity != component.entity())
-            {
-                continue;
-            }
-
-            callback.callback(callback_frame, tag, component);
-        }
-    }
-
     void UpdatePipeline::register_system_fn(std::string name, UFunction<SystemFn> system_fn)
     {
         if (name.empty())
@@ -97,7 +73,7 @@ namespace sge
 
     void UpdatePipeline::register_tag_callback(
         const TypeInfo& tag_type,
-        UFunction<TagCallback::CallbackFn> callback)
+        UFunction<TagCallbackFn> callback)
     {
         TagCallback cb;
         cb.callback = std::move(callback);
@@ -108,7 +84,7 @@ namespace sge
     void UpdatePipeline::register_tag_callback(
         const TypeInfo& tag_type,
         const TypeInfo& component_type,
-        UFunction<TagCallback::CallbackFn> callback)
+        UFunction<TagCallbackFn> callback)
     {
         TagCallback cb;
         cb.component_type = &component_type;
@@ -120,7 +96,7 @@ namespace sge
     void UpdatePipeline::register_tag_callback(
         const TypeInfo& tag_type,
         ComponentId component,
-        UFunction<TagCallback::CallbackFn> callback)
+        UFunction<TagCallbackFn> callback)
     {
         TagCallback cb;
         cb.component_type = component.type();

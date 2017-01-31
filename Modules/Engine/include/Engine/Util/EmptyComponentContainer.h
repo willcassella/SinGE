@@ -1,7 +1,9 @@
 // EmptyComponentContainer.h
 #pragma once
 
+#include <algorithm>
 #include "../Component.h"
+#include "../Util/VectorUtils.h"
 
 namespace sge
 {
@@ -10,42 +12,64 @@ namespace sge
     {
         void reset() override
         {
+            _instance_set.clear();
         }
 
-        void to_archive(ArchiveWriter& writer, const std::set<EntityId>& est_instances) const override
+        void to_archive(ArchiveWriter& writer) const override
         {
-            for (auto instance : est_instances)
+            writer.typed_array(_instance_set.data(), _instance_set.size());
+        }
+
+        void from_archive(ArchiveReader& reader) override
+        {
+            reset();
+            std::size_t size = 0;
+            if (!reader.array_size(size))
             {
-                writer.array_element(instance);
+                return;
             }
+
+            // Fill the instance set with the components from the archive
+            _instance_set.assign(size, 0);
+            reader.typed_array(_instance_set.data(), _instance_set.size());
+
+            // Sort them
+            std::sort(_instance_set.begin(), _instance_set.end());
+
+            // Remove duplicates
+            size = compact_ord_entities(_instance_set.data(), _instance_set.size());
+            _instance_set.erase(_instance_set.begin() + size, _instance_set.end());
         }
 
-        void from_archive(ArchiveReader& reader, std::set<EntityId>& est_instances) override
+        InstanceIterator get_start_iterator() const override
         {
-            reader.enumerate_array_elements([&reader, &est_instances](std::size_t /*i*/)
-            {
-                EntityId entity = NULL_ENTITY;
-                sge::from_archive(entity, reader);
-
-                if (entity != NULL_ENTITY)
-                {
-                    est_instances.insert(entity);
-                }
-            });
+            return _instance_set.data();
         }
 
-        void create_component(EntityId /*entity*/) override
+        InstanceIterator get_end_iterator() const override
         {
+            return _instance_set.data() + _instance_set.size();
         }
 
-        void remove_component(EntityId /*entity*/) override
+        void create_instances(const EntityId* ordered_entities, std::size_t num) override
         {
+            insert_ord_entities(_instance_set, ordered_entities, num);
         }
 
-        bool create_interface(ProcessingFrame& pframe, EntityId entity, void* addr) override
+        void remove_instances(const EntityId* ordered_entities, std::size_t num) override
         {
-            new (addr) ComponentT{ pframe, entity };
-            return true;
+            remove_ord_entities(_instance_set, ordered_entities, num);
         }
+
+        void reset_interface(InstanceIterator /*instance*/, ComponentInterface* interf) override
+        {
+            static_cast<ComponentT*>(interf)->reset();
+        }
+
+        //////////////////
+        ///   Fields   ///
+    private:
+
+        std::vector<EntityId> _instance_set;
     };
 }

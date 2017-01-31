@@ -6,24 +6,20 @@
 
 namespace sge
 {
-	class SGE_ENGINE_API CPerspectiveCamera final : TComponentInterface<CPerspectiveCamera>
+	class SGE_ENGINE_API CPerspectiveCamera final : public TComponentInterface<CPerspectiveCamera>
 	{
 	public:
 
 		SGE_REFLECTED_TYPE;
 		struct Data;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		CPerspectiveCamera(ProcessingFrame& pframe, EntityId entity, Data& data);
-
 		///////////////////
 		///   Methods   ///
 	public:
 
 		static void register_type(Scene& scene);
+
+        void reset(Data& data);
 
 		float h_fov() const;
 
@@ -43,6 +39,6 @@ namespace sge
 		///   Fields   ///
 	private:
 
-		Data* _data;
+		Data* _data = nullptr;
 	};
 }

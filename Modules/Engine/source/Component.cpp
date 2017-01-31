@@ -25,10 +25,9 @@ SGE_REFLECT_TYPE(sge::FModifiedComponent);
 
 namespace sge
 {
-	ComponentInterface::ComponentInterface(ProcessingFrame& pframe, EntityId entity)
-		: _pframe(&pframe),
-	    _entity(entity),
-	    _applied_modified_tag(false)
+	ComponentInterface::ComponentInterface()
+        : _modified_current(false),
+        _destroyed_current(false)
 	{
 	}
 
@@ -53,21 +52,52 @@ namespace sge
 		});
 	}
 
-    void ComponentInterface::create_tag(const TypeInfo& tag_type, void* tag) const
+    void ComponentInterface::destroy()
     {
-        processing_frame().create_tag(id(), tag_type, tag);
+        if (!_destroyed_current)
+        {
+            _ord_destroyed.push_back(*_iter);
+            _destroyed_current = true;
+        }
     }
 
-    void ComponentInterface::apply_component_modified_tag()
-	{
-		if (!_applied_modified_tag)
-		{
-			_pframe->create_tag(id(), FModifiedComponent{});
-			_applied_modified_tag = true;
-		}
-	}
+    void ComponentInterface::set_modified()
+    {
+        if (!_modified_current)
+        {
+            _ord_modified.push_back(*_iter);
+            _modified_current = true;
+        }
+    }
 
-	void register_builtin_components(Scene& scene)
+    void ComponentInterface::generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags)
+    {
+        if (_ord_modified.empty())
+        {
+            return;
+        }
+
+        // Generate modified tags
+        if (!_ord_modified.empty())
+        {
+            const FModifiedComponent modified_tag;
+            tags[&FModifiedComponent::type_info].push_back(TagBuffer::create_from_single(
+                get_type(),
+                _ord_modified.data(),
+                &modified_tag,
+                sizeof(FModifiedComponent),
+                _ord_modified.size()));
+        }
+    }
+
+    void ComponentInterface::reset(ComponentContainer::InstanceIterator iter)
+    {
+        _iter = iter;
+        _modified_current = false;
+        _destroyed_current = false;
+    }
+
+    void register_builtin_components(Scene& scene)
 	{
 		CTransform3D::register_type(scene);
 		CStaticMesh::register_type(scene);

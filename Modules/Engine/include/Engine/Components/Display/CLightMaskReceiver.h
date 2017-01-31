@@ -11,16 +11,12 @@ namespace sge
 
         SGE_REFLECTED_TYPE;
 
-        ////////////////////////
-        ///   Constructors   ///
-    public:
-
-        CLightMaskReceiver(ProcessingFrame& pframe, EntityId entity);
-
         ///////////////////
         ///   Methods   ///
     public:
 
         static void register_type(Scene& scene);
+
+        void reset();
     };
 }

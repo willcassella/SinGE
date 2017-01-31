@@ -37,15 +37,14 @@ namespace sge
         Vec3 shape = {1, 1, 1};
     };
 
-    CBoxCollider::CBoxCollider(ProcessingFrame& pframe, EntityId entity, Data& data)
-        : TComponentInterface<sge::CBoxCollider>(pframe, entity),
-        _data(&data)
-    {
-    }
-
     void CBoxCollider::register_type(Scene& scene)
     {
         scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CBoxCollider, Data>>());
+    }
+
+    void CBoxCollider::reset(Data& data)
+    {
+        _data = &data;
     }
 
     float CBoxCollider::width() const
@@ -58,7 +57,7 @@ namespace sge
         if (width() != value)
         {
             _data->shape.x(value);
-            apply_component_modified_tag();
+            set_modified();
         }
     }
 
@@ -72,7 +71,7 @@ namespace sge
         if (height() != value)
         {
             _data->shape.y(value);
-            apply_component_modified_tag();
+            set_modified();
         }
     }
 
@@ -86,7 +85,7 @@ namespace sge
         if (depth() != value)
         {
             _data->shape.z(value);
-            apply_component_modified_tag();
+            set_modified();
         }
     }
 

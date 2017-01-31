@@ -2,10 +2,10 @@
 #pragma once
 
 #include <array>
-#include <unordered_map>
 #include <unordered_set>
 #include <Core/Functional/UFunction.h>
 #include "ProcessingFrame.h"
+#include "TagBuffer.h"
 
 namespace sge
 {
@@ -17,19 +17,15 @@ namespace sge
 	enum class ProcessControl
 	{
 		/**
-		 * \brief The process function should stop searching for matches. This has no effect for 'process_single' functions.
+		 * \brief The process function should stop searching for matches.
 		 */
 		BREAK,
 
 		/**
-		 * \brief The process function should continue searching for matches. This has no effect for 'process_single' functions.
+		 * \brief The process function should continue searching for matches.
+		 * If the processing fucntion return type is void, this is the default value used.
 		 */
-		CONTINUE,
-
-	    /**
-         * \brief For clarity, this is what should be used for 'process_single' functions. It has no effect on behavior.
-         */
-        FINISHED = BREAK,
+		CONTINUE
 	};
 
 	struct SGE_ENGINE_API SystemFrame
@@ -40,13 +36,6 @@ namespace sge
 
 		/* Only 'Scene' objects may construct SystemFrames. */
 		friend Scene;
-
-        /**
-        * \brief Function called when initializing a component.
-        * \param entity
-        * \param component
-        */
-        using ComponentInitFn = void(ProcessingFrame& pframe, EntityId entity, ComponentInterface& component);
 
 		/**
 		* \brief Function signature used for processing functions that do not perform mutation.
@@ -68,7 +57,7 @@ namespace sge
 		///   Constructors   ///
 	private:
 
-		SystemFrame(Scene& scene, SceneData& scene_data, UpdatePipeline& pipeline);
+		SystemFrame(SceneData& scene_data);
 		SystemFrame(const SystemFrame& copy) = delete;
 		SystemFrame& operator=(const SystemFrame& copy) = delete;
 		SystemFrame(SystemFrame&& move) = default;
@@ -78,43 +67,37 @@ namespace sge
 		///   Methods   ///
 	public:
 
-        bool has_changes() const;
-
-		const Scene& get_scene() const;
-
-        UpdatePipeline& get_pipeline() const;
-
 		/**
 		 * \brief Synchronizes this SystemFrame. This function blocks the calling thread until
 		 * all other system functions have called 'sync' or returned. Then it flushes all pending changes and returns.
 		 */
-		void sync();
+		void yield();
 
         /**
-        * \brief Creates a new user entity, and returns its Id.
+        * \brief Creates new user entities, and assigns their ids to the given array.
         */
-        EntityId create_entity() const;
+        void create_entities(EntityId* out_entities, std::size_t num) const;
 
         /**
-        * \brief Destroys the given entity and all of its components. This operates recursively on its children.
-        * \param entity The entity to destroy. This must be a valid user entity.
+        * \brief Destroys the given entities and all of their components. This operates recursively on its children.
+        * \param ord_entities The ordered array of entities to destroy.
         */
-        void destroy_entity(EntityId entity);
+        void destroy_entities(const EntityId* ord_entities, std::size_t num_entities);
 
 		/**
 		* \brief Returns the entity that is the parent of the given entity.
-		* \param entity The entity to get the parent of. This must be a valid user entity.
-		* \return The parent of the given entity, or NULL_ENTITY if the given entity is not a valid user entity.
+		* \param entity The entity to get the parent of.
 		*/
 		EntityId get_entity_parent(EntityId entity) const;
 
         /**
         * \brief Sets the parent of the given entity.
-        * \param entity The entity to sett the parent of. This must be a valid user entity.
-        * \param parent The parent entity to set. This must be a valid entity.
-        * NULL_ENTITY is not a valid entity, you should use WORLD_ENTITY if you wish to set no parent.
+        * \param parent The entity to make the parent. This must be a valid entity.
+        * \param ord_children An ordered array of entities to parent to the entity.
+        * \param num_children The number of children in the array.
+        * NOTE: NULL_ENTITY is not a valid entity, you should use WORLD_ENTITY if you wish to set no parent.
         */
-        void set_entity_parent(EntityId entity, EntityId parent) const;
+        void set_entities_parent(EntityId parent, const EntityId* ord_children, std::size_t num_children) const;
 
 		/**
 		* \brief Retreives the name of the given entity.
@@ -133,55 +116,24 @@ namespace sge
 
         /**
         * \brief Removes the name from the given entity.
-        * \param entity The entity to remove the name from. This has no effect if the given entity is not a valid user entity,
-        * or the entity does not currently have a name.
+        * \param entity The entity to remove the name from. This has no effect if the given entity does not currently have a name.
         */
         void remove_entity_name(EntityId entity) const;
 
         /**
-        * \brief Constructs a new component of the given type on the given entity, and initializes it with the given function.
-        * \param entity The entity to create the component on. This must be a valid user entity.
+        * \brief Requests for new instances of the given type of component to be constructed.
         * \param type The type of component to create. This must be a previously registered component type.
-        * \param init_fn The function to initialize the component with.
-        * \return The id of the component. The component will not yet have been constructed at this point.
-        * If the entity is not a valid user entity or the type is not a registered component type, the returned id will be null.
+        * \param ord_entities An ordered set of entities for which the component will be created.
         */
-        ComponentId new_component(EntityId entity, const TypeInfo& type, UFunction<ComponentInitFn> init_fn);
+        void create_components(const TypeInfo& type, const EntityId* ord_entities, std::size_t num_entities);
 
         /**
-        * \brief Constructs a new component of the given type on the given entity, and initializes it with the given function.
-        * \tparam C The type of component to create. This must be a previously registered component type.
-        * \param entity The entity to create the component on. This must be a valid user entity.
-        * \param init_fn The function to initialize the component with.
-        * \return The id of the component. The component will not yet have been constructed at this point.
-        */
-        template <class C, typename InitFn>
-        TComponentId<C> new_component(EntityId entity, InitFn&& init_fn)
-        {
-            // Generate a wrapper function
-            auto wrapper = [init_fn](EntityId entity, ComponentInterface* component) -> void {
-                init_fn(entity, *static_cast<C*>(component));
-            };
-
-            // Insert it into the table
-            this->new_component(entity, sge::get_type<C>(), std::move(wrapper));
-
-            // Generate an Id
-            return TComponentId<C>{ entity };
-        }
-
-        /**
-        * \brief Destroys the given component.
-        * \param component The id component to remove.
-        */
-        void destroy_component(ComponentId component);
-
-        /**
-        * \brief Destroys the given component.
-        * \param entity The entity that owns the component to be destroyed.
+        * \brief Requests the given instances of the given type of component to be destroyed.
         * \param type The type of component to be destroyed.
+        * \param ord_entities An ordered array of the entities for the component type to be removed from.
+        * \param num_entities The size of the array.
         */
-        void destroy_component(EntityId entity, const TypeInfo& type);
+        void destroy_components(const TypeInfo& type, const EntityId* ord_entities, std::size_t num_entities);
 
 		/**
 		 * \brief Runs a processing function across all entities that match the given component signature.
@@ -201,13 +153,15 @@ namespace sge
         * \param process_fn The processing function to call.
         */
         template <class T, typename RetT, typename ... ComponentTs>
-        void process_entities(T& outer, RetT(T::*process_fn)(ProcessingFrame&, EntityId, ComponentTs...))
+        void process_entities(
+            T* outer,
+            RetT(T::*process_fn)(ProcessingFrame&, EntityId, ComponentTs...))
         {
             using ComponentList = tmp::list<ComponentTs...>;
 
             // Create a wrapper function
-            auto wrapper = [&outer, process_fn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) -> auto {
-                return (outer.*process_fn)(pframe, entity, components...);
+            auto wrapper = [outer, process_fn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) -> auto {
+                return (outer->*process_fn)(pframe, entity, components...);
             };
 
             // Run the processing function
@@ -270,13 +224,15 @@ namespace sge
         * \param process_fn The processing function to call.
         */
         template <class T, typename RetT, class ... ComponentTs>
-        void process_entities_mut(T& outer, RetT(T::*process_fn)(ProcessingFrame&, EntityId, ComponentTs...))
+        void process_entities_mut(
+            T* outer,
+            RetT(T::*process_fn)(ProcessingFrame&, EntityId, ComponentTs...))
         {
             using ComponentList = tmp::list<ComponentTs...>;
 
             // Create a wrapper function
-            auto wrapper = [&outer, process_fn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) -> auto {
-                return (outer.*process_fn)(pframe, entity, components...);
+            auto wrapper = [outer, process_fn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) -> auto {
+                return (outer->*process_fn)(pframe, entity, components...);
             };
 
             // Run the processing function
@@ -286,39 +242,32 @@ namespace sge
         }
 
 		/**
-		 * \brief Processes a single entity, if it has the given set of component types.
-		 * \param entity The entity to process.
-		 * \param types The set of component types to process on the entity.
+		 * \brief Processes the given ordered array of entities, if they have the given set of component types.
+		 * \param ord_entities The ordered array of entities to process.
+		 * \param num_entities The number of entities given.
+		 * \param types The set of component types to process on the entities.
 		 * \param num_types The number of component types given.
 		 * \param process_fn The processing function to call.
 		 */
-		void process_single(
-			EntityId entity,
+		void process_entities(
+			const EntityId* ord_entities,
+            std::size_t num_entities,
 			const TypeInfo* const types[],
 			std::size_t num_types,
 			FunctionView<ProcessFn> process_fn);
 
-	    /**
-         * \brief Processes a single component.
-         * \param component The component to process.
-         * \param process_fn The processing function to call.
-         */
-        void process_single(
-            ComponentId component,
-            FunctionView<ProcessFn> process_fn)
-        {
-            const auto* type = component.type();
-            this->process_single(component.entity(), &type, 1, process_fn);
-        }
-
         /**
-        * \brief Processes a single entity, if it has the set of components
+        * \brief Processes the given array of entities, if they have the required set of components
         * deduced from the processing function argument list.
-        * \param entity The entity to process.
+        * \param ord_entities The ordered array of entities to process.
+        * \param num_entities The size of the array.
         * \param process_fn The processing function to call.
         */
         template <typename ProcessFnT>
-        void process_single(EntityId entity, ProcessFnT&& process_fn)
+        void process_entities(
+            const EntityId* ord_entities,
+            std::size_t num_entities,
+            ProcessFnT&& process_fn)
         {
             using FnTraits = stde::function_traits<ProcessFnT>;
             using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
@@ -327,88 +276,90 @@ namespace sge
             // Run the processing function
             auto type_array = SystemFrame::component_type_array(ComponentList{});
             auto adapted = SystemFrame::adapt_process_fn(tmp::type<RetT>{}, ComponentList{}, process_fn);
-            SystemFrame::process_single(entity, type_array.data(), type_array.size(), adapted);
+            SystemFrame::process_entities(ord_entities, num_entities, type_array.data(), type_array.size(), adapted);
         }
 
         /**
-        * \brief Processes a single entity, if it has the set of components
+        * \brief Processes the given ordered array of entities, if they match the
         * deduced from the processing member function argument list.
-        * \param entity The entity to process.
+        * \param ord_entities The ordered array of entities to process.
+        * \param num_entities The size of the array.
         * \param outer The object to call the processing member function on.
         * \param process_fn The processing member function to call.
         */
         template <class T, typename Ret, class ... ComponentTs>
-        void process_single(EntityId entity, T& outer, Ret(T::*process_fn)(ProcessingFrame&, EntityId, ComponentTs...))
+        void process_entities(
+            const EntityId* ord_entities,
+            std::size_t num_entities,
+            T* outer,
+            Ret(T::*process_fn)(ProcessingFrame&, EntityId, ComponentTs...))
         {
             using ComponentList = tmp::list<ComponentTs...>;
 
             // Create a wrapper function
-            auto wrapper = [&outer, process_fn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) -> auto {
-                return (outer.*process_fn)(pframe, entity, components...);
+            auto wrapper = [outer, process_fn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) -> auto {
+                return (outer->*process_fn)(pframe, entity, components...);
             };
 
             // Run the processing function
             auto adapted = SystemFrame::adapt_process_fn(ComponentList{}, wrapper);
-            SystemFrame::process_single(entity, adapted.first.data(), ComponentList::size(), adapted.second);
+            SystemFrame::process_entities(ord_entities, num_entities, adapted.first.data(), ComponentList::size(), adapted.second);
         }
 
         /**
-        * \brief Processes a single entity, if it has the given set of component types. Allows for mutation.
-        * \param entity The entity to process.
+        * \brief Processes the given array of entities, if they support the given component signature. Allows for mutation.
+        * \param ord_entities The ordered array of entities to process.
+        * \param num_entities The size of the array.
         * \param types The set of component types to process on the entity.
         * \param num_types The number of component types given.
         * \param process_fn The processing function to call.
         */
-        void process_single_mut(
-            EntityId entity,
+        void process_entities_mut(
+            const EntityId* ord_entities,
+            std::size_t num_entities,
             const TypeInfo* const types[],
             std::size_t num_types,
             FunctionView<ProcessMutFn> process_fn);
 
         /**
-        * \brief Processes a single component.
-        * \param component The component to process.
-        * \param process_fn The processing function to call.
-        */
-        void process_single_mut(
-            ComponentId component,
-            FunctionView<ProcessMutFn> process_fn)
-        {
-            const auto* type = component.type();
-            this->process_single_mut(component.entity(), &type, 1, process_fn);
-        }
-
-        /**
-        * \brief Processes a single entity, if it has the set of components
+        * \brief Processes the given array of entities, if they support the set of components
         * deduced from the processing member function argument list. Allows for mutation.
-        * \param entity The entity to process.
+        * \param ord_entities The ordered array of entities to process.
         * \param outer The object to call the processing member function on.
         * \param process_fn The processing member function to call.
         */
         template <class T, typename RetT, class ... ComponentTs>
-        void process_single_mut(EntityId entity, T& outer, RetT(T::*process_fn)(ProcessingFrame&, EntityId, ComponentTs...))
+        void process_entities_mut(
+            const EntityId* ord_entities,
+            std::size_t num_entities,
+            T* outer,
+            RetT(T::*process_fn)(ProcessingFrame&, EntityId, ComponentTs...))
         {
             using ComponentList = tmp::list<ComponentTs...>;
 
             // Create a wrapper function
-            auto wrapper = [&outer, process_fn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) -> auto {
-                return (outer.*process_fn)(pframe, entity, components...);
+            auto wrapper = [outer, process_fn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) -> auto {
+                return (outer->*process_fn)(pframe, entity, components...);
             };
 
             // Run the processing function
             auto type_array = SystemFrame::component_type_array(ComponentList{});
             auto adapted = SystemFrame::adapt_process_fn(tmp::type<RetT>{}, ComponentList{}, wrapper);
-            SystemFrame::process_single_mut(entity, type_array.data(), type_array.size(), adapted);
+            SystemFrame::process_entities_mut(ord_entities, num_entities, type_array.data(), type_array.size(), adapted);
         }
 
         /**
-        * \brief Processes a single entity, if it has the set of components
+        * \brief Processes the given array of entities, if the have the component set
         * deduced from the processing function argument list. Allows for mutation.
-        * \param entity The entity to process.
+        * \param ord_entities The ordered array of entities to process.
+        * \param num_entities The size of the array.
         * \param process_fn The processing function to call.
         */
         template <typename ProcessFnT>
-        void process_single_mut(EntityId entity, ProcessFnT&& process_fn)
+        void process_entities_mut(
+            const EntityId* ord_entities,
+            std::size_t num_entities,
+            ProcessFnT&& process_fn)
         {
             using FnTraits = stde::function_traits<ProcessFnT>;
             using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
@@ -417,12 +368,12 @@ namespace sge
             // Run the processing function
             auto type_array = SystemFrame::component_type_array(ComponentList{});
             auto adapted = SystemFrame::adapt_process_fn(tmp::type<RetT>{}, ComponentList{}, process_fn);
-            SystemFrame::process_single_mut(entity, type_array.data(), type_array.size(), adapted);
+            SystemFrame::process_entities_mut(ord_entities, num_entities, type_array.data(), type_array.size(), adapted);
         }
 
-	private:
+        void append_tags(const TypeInfo& tag_type, TagBuffer tag_buffer);
 
-		void flush_changes(SystemFrame& tag_callback_frame);
+	private:
 
 		template <typename ... ComponentTs>
 		static auto component_type_array(tmp::list<ComponentTs...>)
@@ -488,13 +439,8 @@ namespace sge
 
 		template <typename ProcessFnT>
 		void impl_process_entities(
-			const TypeInfo* const types[],
-			std::size_t num_types,
-			ProcessFnT& process_fn);
-
-		template <typename ProcessFnT>
-		void impl_process_single(
-			EntityId entity,
+			const EntityId* ord_entities,
+            std::size_t num_entities,
 			const TypeInfo* const types[],
 			std::size_t num_types,
 			ProcessFnT& process_fn);
@@ -503,21 +449,19 @@ namespace sge
 		///   Fields   ///
 	private:
 
-        UpdatePipeline* _pipeline;
-
-        /* Scene data */
-		Scene* _scene;
+        bool _has_tags;
 		SceneData* _scene_data;
 
-        /* All components that have been destroyed this frame. */
-        std::unordered_set<ComponentId> _destroyed_components;
-
         /* All entities that have been destroyed this frame. */
-        std::unordered_set<EntityId> _destroyed_entities;
+        std::vector<EntityId> _ord_destroyed_entities;
+
+        /* All components that have been destroyed this frame. */
+        std::map<const TypeInfo*, std::vector<EntityId>> _ord_destroyed_components;
 
         /* All components created this frame. */
-        std::unordered_map<ComponentId, UFunction<ComponentInitFn>> _new_components;
+        std::map<const TypeInfo*, std::vector<EntityId>> _ord_new_components;
 
-        std::vector<ProcessingFrame> _pframes;
+        /* All tags generated by processing frames. */
+        std::map<const TypeInfo*, std::vector<TagBuffer>> _tags;
 	};
 }

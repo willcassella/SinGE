@@ -1,8 +1,7 @@
 // Tag.h
 #pragma once
 
-#include <Core/Functional/UFunction.h>
-#include "Component.h"
+#include "UpdatePipeline.h"
 
 namespace sge
 {
@@ -10,8 +9,6 @@ namespace sge
 
     struct TagCallback
     {
-        using CallbackFn = void(SystemFrame& frame, Any<> tag, ComponentId component);
-
         //////////////////
         ///   Fields   ///
     public:
@@ -26,9 +23,11 @@ namespace sge
          */
         EntityId entity = NULL_ENTITY;
 
+        UpdatePipeline::SystemToken system;
+
         /**
          * \brief The tag callback.
          */
-        UFunction<CallbackFn> callback;
+        UFunction<UpdatePipeline::TagCallbackFn> callback;
     };
 }

@@ -1,7 +1,10 @@
 // BasicComponentContainer.h
 #pragma once
 
+#include <algorithm>
+#include <Core/Interfaces/IFromString.h>
 #include "../Component.h"
+#include "../Util/VectorUtils.h"
 
 namespace sge
 {
@@ -14,66 +17,75 @@ namespace sge
 
         void reset() override
         {
-            instances = {};
+            _instance_set.clear();
+            _instance_data.clear();
         }
 
-        void to_archive(ArchiveWriter& writer, const std::set<EntityId>& /*est_intsances*/) const override
+        void to_archive(ArchiveWriter& writer) const override
         {
-            for (const auto& instance : instances)
+            for (std::size_t i = 0; i < _instance_set.size(); ++i)
             {
-                writer.object_member(sge::to_string(instance.first).c_str(), instance.second);
+                writer.object_member(sge::to_string(_instance_set[i]).c_str(), _instance_data[i]);
             }
         }
 
-        void from_archive(ArchiveReader& reader, std::set<EntityId>& est_instances) override
+        void from_archive(ArchiveReader& reader) override
         {
-            reader.enumerate_object_members([this, &reader, &est_instances](const char* entityIdStr)
-            {
-                EntityId entity = std::strtoull(entityIdStr, nullptr, 10);
+            reset();
 
-                // See if this instance already exists
-                auto iter = this->instances.find(entity);
-                if (iter == this->instances.end())
+            reader.enumerate_object_members([this, &reader](const char* entity_id_str)
+            {
+                // Get the entity id
+                EntityId entity = NULL_ENTITY;
+                sge::from_string(entity, entity_id_str, std::strlen(entity_id_str));
+
+                // Make sure it's valid
+                if (entity == NULL_ENTITY)
                 {
-                    // If not, create one
-                    iter = instances.insert(std::make_pair(entity, ComponentDataT{})).first;
-                    est_instances.insert(entity);
+                    return;
                 }
 
-                sge::from_archive(iter->second, reader);
+                // Add the entity to the instance set
+                _instance_set.push_back(entity);
+
+                // Add the data to the data set
+                ComponentDataT data;
+                sge::from_archive(data, reader);
+                _instance_data.push_back(std::move(data));
             });
         }
 
-        void create_component(EntityId entity) override
+        InstanceIterator get_start_iterator() const override
         {
-            instances.insert(std::make_pair(entity, ComponentDataT{}));
+            return _instance_set.data();
         }
 
-        void remove_component(EntityId entity) override
+        InstanceIterator get_end_iterator() const override
         {
-            auto iter = instances.find(entity);
-            if (iter != instances.end())
-            {
-                instances.erase(iter);
-            }
+            return _instance_set.data() + _instance_set.size();
         }
 
-        bool create_interface(ProcessingFrame& pframe, EntityId entity, void* addr) override
+        void create_instances(const EntityId* ordered_instances, std::size_t num) override
         {
-            auto data = instances.find(entity);
-            if (data == instances.end())
-            {
-                return false;
-            }
+            // TODO
+        }
 
-            new (addr) ComponentT{ pframe, entity, data->second };
-            return true;
+        void remove_instances(const EntityId* sorted_instances, std::size_t num) override
+        {
+            // TODO
+        }
+
+        void reset_interface(InstanceIterator instance, ComponentInterface* interf) override
+        {
+            auto& data = _instance_data[instance - _instance_set.data()];
+            static_cast<ComponentT*>(interf)->reset(data);
         }
 
         //////////////////
         ///   Fields   ///
-    public:
+    private:
 
-        std::unordered_map<EntityId, ComponentDataT> instances;
+        std::vector<EntityId> _instance_set;
+        std::vector<ComponentDataT> _instance_data;
     };
 }

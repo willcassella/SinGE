@@ -9,13 +9,12 @@ SGE_REFLECT_TYPE(sge::CSensor);
 
 namespace sge
 {
-    CSensor::CSensor(ProcessingFrame& pframe, EntityId entity)
-        : TComponentInterface<sge::CSensor>(pframe, entity)
-    {
-    }
-
     void CSensor::register_type(Scene& scene)
     {
         scene.register_component_type(type_info, std::make_unique<EmptyComponentContainer<CSensor>>());
+    }
+
+    void CSensor::reset()
+    {
     }
 }

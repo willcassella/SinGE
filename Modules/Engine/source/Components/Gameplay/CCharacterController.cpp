@@ -4,6 +4,7 @@
 #include "../../../include/Engine/Components/Gameplay/CCharacterController.h"
 #include "../../../include/Engine/Scene.h"
 #include "../../../include/Engine/Util/BasicComponentContainer.h"
+#include "../../../include/Engine/TagBuffer.h"
 
 SGE_REFLECT_TYPE(sge::CCharacterController)
 .property("step_height", &CCharacterController::step_height, &CCharacterController::step_height)
@@ -54,15 +55,16 @@ namespace sge
         bool on_ground = true;
     };
 
-    CCharacterController::CCharacterController(ProcessingFrame& pframe, EntityId entity, Data& data)
-        : TComponentInterface<sge::CCharacterController>(pframe, entity),
-        _data(&data)
-    {
-    }
-
     void CCharacterController::register_type(Scene& scene)
     {
         scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CCharacterController, Data>>());
+    }
+
+    void CCharacterController::reset(Data& data)
+    {
+        _data = &data;
+        _current_jumped = false;
+        _current_walked = false;
     }
 
     bool CCharacterController::on_ground() const
@@ -72,8 +74,7 @@ namespace sge
 
     void CCharacterController::set_on_ground(bool value)
     {
-        // Should a tag be created for this?
-        _data->on_ground = true;
+        _data->on_ground = value;
     }
 
     float CCharacterController::step_height() const
@@ -118,14 +119,49 @@ namespace sge
 
     void CCharacterController::jump() const
     {
-        if (on_ground())
+        if (!_current_jumped && on_ground())
         {
-            create_tag(FJumpEvent{});
+            _ord_jumped.push_back(entity());
+            _current_jumped = true;
         }
     }
 
     void CCharacterController::walk(const Vec2& direction) const
     {
-        create_tag(FWalkEvent{ direction });
+        if (!_current_walked && on_ground())
+        {
+            _ord_walked_ents.push_back(entity());
+            _ord_walked_tags.push_back(FWalkEvent{ direction });
+            _current_walked = true;
+        }
+    }
+
+    void CCharacterController::generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags)
+    {
+        // Call the base implementation
+        ComponentInterface::generate_tags(tags);
+
+        // Create the jump tag
+        if (!_ord_jumped.empty())
+        {
+            FJumpEvent jump_tag;
+            tags[&FJumpEvent::type_info].push_back(TagBuffer::create_from_single(
+                type_info,
+                _ord_jumped.data(),
+                &jump_tag,
+                sizeof(FJumpEvent),
+                _ord_jumped.size()));
+        }
+
+        // Create the walk tag
+        if (!_ord_walked_ents.empty())
+        {
+            tags[&FWalkEvent::type_info].push_back(TagBuffer::create(
+                type_info,
+                _ord_walked_ents.data(),
+                _ord_walked_tags.data(),
+                sizeof(FWalkEvent),
+                _ord_walked_tags.size()));
+        }
     }
 }
