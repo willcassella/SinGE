@@ -2,10 +2,10 @@
 #pragma once
 
 #include <cassert>
+#include <cstring>
 #include <stack>
 #include <vector>
 #include <algorithm>
-#include <limits>
 #include <Core/IO/ArchiveReader.h>
 #include "BinaryArchiveNode.h"
 
@@ -69,7 +69,7 @@ namespace sge
             BinaryArchiveBool_t value;
             if (impl_value(BAN_BOOLEAN, value))
             {
-                out = (value == 1);
+                out = (value == BAN_TRUE);
                 return true;
             }
 
@@ -157,7 +157,7 @@ namespace sge
             }
 
             const std::size_t copy_len = std::min(str_len, len);
-            memcpy(out, cursor.node_value + sizeof(BinaryArchiveSize_t), copy_len);
+            std::memcpy(out, cursor.node_value + sizeof(BinaryArchiveSize_t), copy_len);
             return copy_len;
         }
 
@@ -268,13 +268,28 @@ namespace sge
             }
 
             // Back up the cursor
-            auto cursor_backup = cursor;
+            const auto cursor_backup = cursor;
 
             // Move the cursor forward to account for size and span
             cursor.node_value += sizeof(BinaryArchiveSize_t) * 2;
             cursor.in_enumeration = true;
 
+            // Loop through elements
+            for (std::size_t i = 0; i < size; ++i)
+            {
+                // Get the node type and advance the cursor past the indicator
+                cursor.node_type = static_cast<BinaryArchiveNode>(*cursor.node_value);
+                cursor.node_value += 1;
 
+                // Call the enumerator function
+                enumerator(i);
+
+                // Advance the cursor to the start of the next node
+                cursor.node_value += get_cursor_advancement();
+            }
+
+            // Restore the cursor
+            cursor = cursor_backup;
         }
 
         void enumerate_typed_array_elements(std::size_t size, FunctionView<void(std::size_t i)> enumerator)
@@ -599,7 +614,7 @@ namespace sge
 
         // Figure out how much to advance the cursor by.
         // (NOTE: This does not account for indicators, because the cursor has already advanced passed the current indicator)
-        std::size_t get_cursor_advancement()
+        std::size_t get_cursor_advancement() const
         {
             // If this node is a generic array or object
             if (cursor.node_type == BAN_ARRAY_GENERIC || cursor.node_type == BAN_OBJECT)

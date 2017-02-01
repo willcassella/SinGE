@@ -2,6 +2,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstring>
 #include <vector>
 #include <stack>
 #include <Core/IO/ArchiveWriter.h>
@@ -61,7 +62,7 @@ namespace sge
         void boolean(bool value) override
         {
             node_set_type(BAN_BOOLEAN);
-            buffer_append<BinaryArchiveBool_t>(value ? BinaryArchiveBool_t{ 1 } : BinaryArchiveBool_t{ 0 });
+            buffer_append<BinaryArchiveBool_t>(value ? BAN_TRUE : BAN_FALSE);
         }
 
         void number(int8 value) override
@@ -251,7 +252,7 @@ namespace sge
             node_stack.push(current_node);
 
             // Push the new node's name
-            buffer->insert(buffer->end(), reinterpret_cast<const byte*>(name), reinterpret_cast<const byte*>(name + strlen(name)));
+            buffer->insert(buffer->end(), reinterpret_cast<const byte*>(name), reinterpret_cast<const byte*>(name + std::strlen(name)));
             buffer->push_back(0);
 
             // Set up the new node
