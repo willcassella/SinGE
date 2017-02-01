@@ -1,6 +1,7 @@
 // SystemData.h
 #pragma once
 
+#include <set>
 #include <unordered_map>
 #include <Engine/Component.h>
 #include "../include/BulletPhysics/BulletPhysicsSystem.h"
@@ -18,6 +19,14 @@ namespace sge
     {
         class PhysicsEntity;
         class CharacterController;
+
+        /**
+         * \brief Comparison function object for PhysicsEntity pointers (maintains EntityId order).
+         */
+        struct PhysicsEntityLess
+        {
+            bool operator()(const PhysicsEntity* lhs, const PhysicsEntity* rhs);
+        };
 
         struct BulletPhysicsSystem::Data
         {
@@ -56,7 +65,7 @@ namespace sge
 
             std::unordered_map<EntityId, std::unique_ptr<PhysicsEntity>> physics_entities;
 
-            std::vector<PhysicsEntity*> frame_transformed_entities;
+            std::set<PhysicsEntity*, PhysicsEntityLess> frame_transformed_entities;
 
             /* NOTE: This must appear last, so that it is destroyed first. */
             PhysicsWorld phys_world;

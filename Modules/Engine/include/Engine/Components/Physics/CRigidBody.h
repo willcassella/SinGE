@@ -17,17 +17,13 @@ namespace sge
         struct Data;
         SGE_REFLECTED_TYPE;
 
-        ////////////////////////
-        ///   Constructors   ///
-    public:
-
-        CRigidBody(ProcessingFrame& pframe, EntityId entity, Data& data);
-
         ///////////////////
         ///   Methods   ///
     public:
 
         static void register_type(Scene& scene);
+
+        void reset(Data& data);
 
         bool kinematic() const;
 
@@ -61,12 +57,16 @@ namespace sge
 
     private:
 
+        void generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags) override;
+
         void prop_set_kinematic(bool value);
 
         //////////////////
         ///   Fields   ///
     private:
 
-        Data* _data;
+        Data* _data = nullptr;
+        mutable bool _current_changed_kinematic = false;
+        std::vector<EntityId> _ord_changed_kinematic;
     };
 }

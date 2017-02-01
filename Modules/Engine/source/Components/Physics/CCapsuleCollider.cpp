@@ -35,15 +35,14 @@ namespace sge
         Vec2 shape = {1, 1};
     };
 
-    CCapsuleCollider::CCapsuleCollider(ProcessingFrame& pframe, EntityId entity, Data& data)
-        : TComponentInterface<sge::CCapsuleCollider>(pframe, entity),
-        _data(&data)
-    {
-    }
-
     void CCapsuleCollider::register_type(Scene& scene)
     {
         scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CCapsuleCollider, Data>>());
+    }
+
+    void CCapsuleCollider::reset(Data& data)
+    {
+        _data = &data;
     }
 
     float CCapsuleCollider::radius() const
@@ -56,7 +55,7 @@ namespace sge
         if (value != radius())
         {
             _data->shape.x(value);
-            apply_component_modified_tag();
+            set_modified();
         }
     }
 
@@ -70,7 +69,7 @@ namespace sge
         if (value != height())
         {
             _data->shape.y(value);
-            apply_component_modified_tag();
+            set_modified();
         }
     }
 }

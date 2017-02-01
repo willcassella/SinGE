@@ -52,18 +52,17 @@ namespace sge
 		float z_max;
 	};
 
-	CPerspectiveCamera::CPerspectiveCamera(ProcessingFrame& pframe, EntityId entity, Data& data)
-		: TComponentInterface<sge::CPerspectiveCamera>(pframe, entity),
-		_data(&data)
-	{
-	}
-
 	void CPerspectiveCamera::register_type(Scene& scene)
 	{
 		scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CPerspectiveCamera, Data>>());
 	}
 
-	float CPerspectiveCamera::h_fov() const
+    void CPerspectiveCamera::reset(Data& data)
+    {
+        _data = &data;
+    }
+
+    float CPerspectiveCamera::h_fov() const
 	{
 		return _data->h_fov.degrees();
 	}

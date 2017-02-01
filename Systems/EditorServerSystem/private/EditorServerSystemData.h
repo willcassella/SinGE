@@ -26,8 +26,8 @@ namespace sge
 		///   Fields   ///
 	public:
 
-		asio::io_service io;
 		SystemFrame* frame;
+		asio::io_service io;
 
 	private:
 

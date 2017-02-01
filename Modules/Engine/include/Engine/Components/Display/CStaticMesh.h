@@ -14,17 +14,13 @@ namespace sge
 		SGE_REFLECTED_TYPE;
 		struct Data;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		CStaticMesh(ProcessingFrame& pframe, EntityId entity, Data& data);
-
 		///////////////////
 		///   Methods   ///
 	public:
 
 		static void register_type(Scene& scene);
+
+        void reset(Data& data);
 
 		const std::string& mesh() const;
 
@@ -33,6 +29,10 @@ namespace sge
 		const std::string& material() const;
 
 		void material(std::string material);
+
+	private:
+
+        void generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags) override;
 
 		////////////////
 		///   Tags   ///
@@ -52,7 +52,11 @@ namespace sge
 		///   Fields   ///
 	private:
 
-		Data* _data;
+		Data* _data = nullptr;
+        mutable bool _current_changed_mesh = false;
+        mutable bool _current_changed_material = false;
+        mutable std::vector<EntityId> _ord_changed_meshes;
+        mutable std::vector<EntityId> _ord_changed_materials;
 	};
 
 	/* Component applied to entities with a 'CStaticMesh' component, to override the default material parameters for that mesh. */

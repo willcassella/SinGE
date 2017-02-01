@@ -184,7 +184,8 @@ namespace sge
 				// Create the entities
 				for (uint32 i = 0; i < num_entities; ++i)
 				{
-					auto entity = frame.create_entity();
+                    EntityId entity = NULL_ENTITY;
+					frame.create_entities(&entity, 1);
 					std::cout << "Created entity " << entity << std::endl;
 				}
 			}
@@ -200,7 +201,7 @@ namespace sge
 
 					// Destroy it
 					std::cout << "Destroying entity " << entity << std::endl;
-					frame.destroy_entity(entity);
+                    frame.destroy_entities(&entity, 1);
 				});
 			}
 
@@ -237,7 +238,7 @@ namespace sge
 					sge::from_archive(parent_id, reader);
 
 					// Set the parent
-					frame.set_entity_parent(entity_id, parent_id);
+					frame.set_entities_parent(parent_id, &entity_id, 1);
 					std::cout << "Setting parent on entity " << entity_id << " to " << parent_id << std::endl;
 				});
 			}
@@ -257,14 +258,14 @@ namespace sge
 						sge::from_archive(component_type, reader);
 
 						// Get the component type
-						const auto* type = frame.get_scene().get_component_type(component_type.c_str());
+						const auto* type = frame.scene().get_component_type(component_type.c_str());
 						if (!type)
 						{
 							return;
 						}
 
 						// Create the component
-						frame.new_component(entity_id, *type, nullptr);
+						frame.create_components(*type, &entity_id, 1);
 						std::cout << "Created '" << type->name() << "' component on entity " << entity_id << std::endl;
 					});
 				});
@@ -276,7 +277,7 @@ namespace sge
 				reader.enumerate_object_members([&frame, &reader](const char* component_type_name)
 				{
 					// Get the component type
-					const auto* type = frame.get_scene().get_component_type(component_type_name);
+					const auto* type = frame.scene().get_component_type(component_type_name);
 					if (!type)
 					{
 						return;
@@ -291,14 +292,14 @@ namespace sge
 
 						// Destroy it
 						std::cout << "Destroyed '" << type->name() << "' component on entity " << entity << std::endl;
-						frame.destroy_component(entity, *type);
+						frame.destroy_components(*type, &entity, 1);
 					});
 				});
 			}
 
 			void get_scene_query(const SystemFrame& frame, ArchiveWriter& writer)
 			{
-				const auto& scene_data = frame.get_scene().get_raw_scene_data();
+				const auto& scene_data = frame.scene().get_raw_scene_data();
 				std::cout << "Sending scene information" << std::endl;
 				writer.object_member("next_entity_id", scene_data.next_entity_id);
 
@@ -317,19 +318,20 @@ namespace sge
 				writer.push_object_member("components");
 				for (const auto& component_type : scene_data.components)
 				{
-					// Skip this component if there are not entities
-					if (component_type.second.instances.empty())
+                    const auto begin = component_type.second->get_start_iterator();
+                    const auto end = component_type.second->get_end_iterator();
+                    const std::size_t len = end - begin;
+
+					// Skip this component if there are no entities
+					if (len == 0)
 					{
 						continue;
 					}
 
-					// Enumerate instances
+					// Write instances
 					writer.push_object_member(component_type.first->name().c_str());
-					for (auto instance : component_type.second.instances)
-					{
-						writer.array_element(instance);
-					}
-					writer.pop(); // type name
+                    writer.typed_array(begin, len);
+				    writer.pop(); // type name
 				}
 				writer.pop(); // "components"
 			}
@@ -342,7 +344,7 @@ namespace sge
 					writer.push_object_member(typeName);
 
 					// Get the type
-					const auto* type = frame.get_scene().get_component_type(typeName);
+					const auto* type = frame.scene().get_component_type(typeName);
 					if (!type)
 					{
 						return;
@@ -357,9 +359,10 @@ namespace sge
 						writer.push_object_member(sge::to_string(entity_id).c_str());
 
 						// Access the component
-						frame.process_single(entity_id, &type, 1, [type, &writer](ProcessingFrame&, EntityId entity, auto comp) -> ProcessControl
+						frame.process_entities(&entity_id, 1, &type, 1,
+                            [type, entity_id, &writer](ProcessingFrame&, auto comp) -> ProcessControl
 						{
-							std::cout << "Reading properties of '" << type->name() << "' component on entity '" << entity << "'" << std::endl;
+							std::cout << "Reading properties of '" << type->name() << "' component on entity '" << entity_id << "'" << std::endl;
 							ArchiveWriter* writers[] = { &writer };
 							read_properties(Any<>{ *type, comp[0] }, writers, 1);
 							return ProcessControl::BREAK;
@@ -377,7 +380,7 @@ namespace sge
 				// Enumerate types of components changed
 				reader.enumerate_object_members([&frame, &reader](const char* typeName)
 				{
-					auto* type = frame.get_scene().get_component_type(typeName);
+					auto* type = frame.scene().get_component_type(typeName);
 					if (!type)
 					{
 						return;
@@ -386,11 +389,11 @@ namespace sge
 					// Enumerate the EntityIds of components changed
 					reader.enumerate_object_members([type, &frame, &reader](const char* entityId)
 					{
-						// Get the component Id
-						ComponentId id{ std::strtoull(entityId, nullptr, 10), *type };
+                        const EntityId entity = std::strtoull(entityId, nullptr, 10);
 
-						// Process the component and deserialize it
-						frame.process_single_mut(id.entity(), &type, 1, [type, &reader](ProcessingFrame&, EntityId entity, auto comp) -> ProcessControl
+					    // Process the component and deserialize it
+						frame.process_entities_mut(&entity, 1, &type, 1,
+                            [type, entity, &reader](ProcessingFrame&, auto comp) -> ProcessControl
 						{
 							std::cout << "Writing properties of '" << type->name() << "' component on entity '" << entity << "'" << std::endl;
 							write_properties(AnyMut<>{ *type, comp[0] }, reader);

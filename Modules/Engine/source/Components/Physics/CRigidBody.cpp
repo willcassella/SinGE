@@ -6,6 +6,7 @@
 #include "../../../include/Engine/Scene.h"
 #include "../../../include/Engine/Util/BasicComponentContainer.h"
 #include "../../../include/Engine/ProcessingFrame.h"
+#include "../../../include/Engine/TagBuffer.h"
 
 SGE_REFLECT_TYPE(sge::CRigidBody)
 .property("kinematic", &CRigidBody::kinematic, &CRigidBody::prop_set_kinematic)
@@ -67,15 +68,15 @@ namespace sge
         float angular_damping = 0.f;
     };
 
-    CRigidBody::CRigidBody(ProcessingFrame& pframe, EntityId entity, Data& data)
-        : TComponentInterface<sge::CRigidBody>(pframe, entity),
-        _data(&data)
-    {
-    }
-
     void CRigidBody::register_type(Scene& scene)
     {
         scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CRigidBody, Data>>());
+    }
+
+    void CRigidBody::reset(Data& data)
+    {
+        _data = &data;
+        _current_changed_kinematic = false;
     }
 
     bool CRigidBody::kinematic() const
@@ -88,7 +89,12 @@ namespace sge
         if (!_data->kinematic)
         {
             _data->kinematic = true;
-            processing_frame().create_tag(id(), FKinematicChanged{});
+
+            if (!_current_changed_kinematic)
+            {
+                _current_changed_kinematic = true;
+                _ord_changed_kinematic.push_back(entity());
+            }
         }
     }
 
@@ -97,7 +103,12 @@ namespace sge
         if (_data->kinematic)
         {
             _data->kinematic = false;
-            processing_frame().create_tag(id(), FKinematicChanged{});
+
+            if (!_current_changed_kinematic)
+            {
+                _current_changed_kinematic = true;
+                _ord_changed_kinematic.push_back(entity());
+            }
         }
     }
 
@@ -159,6 +170,24 @@ namespace sge
     void CRigidBody::angular_damping(float value)
     {
         checked_setter(value, _data->angular_damping);
+    }
+
+    void CRigidBody::generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags)
+    {
+        // Call the base implementation
+        ComponentInterface::generate_tags(tags);
+
+        // Generate kinematic tags
+        if (!_ord_changed_kinematic.empty())
+        {
+            FKinematicChanged k_tag;
+            tags[&FKinematicChanged::type_info].push_back(TagBuffer::create_from_single(
+                type_info,
+                _ord_changed_kinematic.data(),
+                &k_tag,
+                sizeof(FKinematicChanged),
+                _ord_changed_kinematic.size()));
+        }
     }
 
     void CRigidBody::prop_set_kinematic(bool value)

@@ -33,7 +33,7 @@ namespace sge
 
         void PhysicsEntity::add_to_modified()
         {
-            _data->frame_transformed_entities.push_back(this);
+            _data->frame_transformed_entities.insert(this);
         }
     }
 }

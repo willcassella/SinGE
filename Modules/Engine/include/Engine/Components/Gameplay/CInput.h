@@ -1,11 +1,12 @@
 // CInput.h
 #pragma once
 
+#include <Core/Containers/FixedString.h>
 #include "../../Component.h"
 
 namespace sge
 {
-	class SGE_ENGINE_API CInput : public TComponentInterface<CInput>
+	class SGE_ENGINE_API CInput final : public TComponentInterface<CInput>
 	{
 	public:
 
@@ -24,7 +25,7 @@ namespace sge
 			///   Fields   ///
 		public:
 
-			std::string name;
+			FixedString<32> name;
 		};
 
 		/* Input event dispatched when an input axis changes. */
@@ -36,7 +37,7 @@ namespace sge
 			///   Fields   ///
 		public:
 
-			std::string name;
+			FixedString<32> name;
 			float value;
             float max;
 		};
@@ -50,20 +51,37 @@ namespace sge
             ///   Fields   ///
         public:
 
-            std::string name;
+            FixedString<32> name;
             float value;
         };
-
-        ////////////////////////
-        ///   Constructors   ///
-	public:
-
-        CInput(ProcessingFrame& pframe, EntityId entity);
 
         ///////////////////
         ///   Methods   ///
 	public:
 
         static void register_type(Scene& scene);
+
+        void reset();
+
+        void add_action_event(const FActionEvent& action_event) const;
+
+        void add_axis_event(const FAxisEvent& axis_event) const;
+
+        void set_axis(const FSetAxis& set_axis) const;
+
+	private:
+
+        void generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags) override;
+
+        //////////////////
+        ///   Fields   ///
+	private:
+
+        mutable std::vector<EntityId> _ord_action_event_ents;
+        mutable std::vector<FActionEvent> _ord_action_event_tags;
+        mutable std::vector<EntityId> _ord_axis_event_ents;
+        mutable std::vector<FAxisEvent> _ord_axis_event_tags;
+        mutable std::vector<EntityId> _ord_set_axis_ents;
+        mutable std::vector<FSetAxis> _ord_set_axis_tags;
 	};
 }

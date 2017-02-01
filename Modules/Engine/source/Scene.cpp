@@ -40,7 +40,7 @@ namespace sge
 
 		for (auto& component_type : _scene_data.components)
 		{
-			component_type.second.container->reset();
+			component_type.second->reset();
 		}
 	}
 
@@ -80,7 +80,7 @@ namespace sge
 		{
 			// Add the component type name as a field
 			writer.push_object_member(componentType.first->name().c_str());
-            componentType.second.container->to_archive(writer, componentType.second.instances);
+            componentType.second->to_archive(writer);
             writer.pop();
 		}
 		writer.pop();
@@ -140,7 +140,7 @@ namespace sge
 			auto storageIter = _scene_data.components.find(type);
 
 			// Deserialize the storage object
-			storageIter->second.container->from_archive(reader, storageIter->second.instances);
+			storageIter->second->from_archive(reader);
 		});
 		reader.pop();
 
@@ -169,12 +169,8 @@ namespace sge
 
 	void Scene::register_component_type(const TypeInfo& type, std::unique_ptr<ComponentContainer> container)
 	{
-		// Create the type object
-		ComponentType component_type;
-		component_type.container = std::move(container);
-
-		// Insert it into the components
-		_scene_data.components.insert(std::make_pair(&type, std::move(component_type)));
+		// Insert the type
+		_scene_data.components.insert(std::make_pair(&type, std::move(container)));
 		_type_db->new_type(type);
 	}
 
@@ -186,23 +182,37 @@ namespace sge
 		// For each step in the pipeline
 		for (const auto& pipeline_step : pipeline.get_pipeline())
 		{
-            for (const auto& system : pipeline_step)
+            // Run the first system TODO: ALLOW MULITPLE SYSTEMS
+            SystemFrame frame{ *this, _scene_data };
+            pipeline_step[0](frame, _current_time, dt);
+
+            // TODO: MAKE THIS ASYNCHRONOUS (AND NOT SHITTY)
+            auto tag_frames = apply_changes(pipeline, &frame, 1);
+            while (!tag_frames.empty())
             {
-                // Create a system frame for the system
-                SystemFrame frame{ *this, _scene_data, pipeline };
-                system(frame, _current_time, dt);
-
-                // Keep flushing changes until there are no more tags
-                while (frame.has_changes())
-                {
-                    // Create a system frame for the tags
-                    SystemFrame tag_frame{ *this, _scene_data, pipeline };
-                    frame.flush_changes(tag_frame);
-
-                    // Move the tag frame onto the current frame
-                    frame = std::move(tag_frame);
-                }
+                tag_frames = apply_changes(pipeline, tag_frames.data(), tag_frames.size());
             }
 		}
 	}
+
+    std::vector<SystemFrame> Scene::apply_changes(
+        UpdatePipeline& pipeline,
+        SystemFrame* frames,
+        std::size_t num_frames)
+    {
+        std::vector<SystemFrame> result;
+
+        // Create tags for destroyed components
+
+
+
+        std::vector<EntityId> _ord_destroyed_entities;
+
+        for (std::size_t i = 0; i < num_frames; ++i)
+        {
+
+        }
+
+        return result;
+    }
 }

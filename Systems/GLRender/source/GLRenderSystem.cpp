@@ -312,7 +312,7 @@ namespace sge
 		void GLRenderSystem::pipeline_register(UpdatePipeline& pipeline)
 		{
 			pipeline.register_system_fn("gl_render", this, &GLRenderSystem::render_scene);
-            pipeline.register_tag_callback(this, &GLRenderSystem::cb_debug_draw);
+            //pipeline.register_tag_callback(this, &GLRenderSystem::cb_debug_draw);
 		}
 
 	    void GLRenderSystem::set_viewport(int width, int height)
@@ -403,7 +403,6 @@ namespace sge
 			// Get the first camera in the scene
 			frame.process_entities([&](
 				ProcessingFrame& /*pframe*/,
-				EntityId /*entity*/,
 				const CTransform3D& transform,
 				const CPerspectiveCamera& camera)
 			{
@@ -422,7 +421,6 @@ namespace sge
 			// DRAW BACKFACE OF RECEIVER
 			frame.process_entities([&](
 				ProcessingFrame& /*pframe*/,
-				EntityId /*entity*/,
 				const CTransform3D& transform,
 				const CStaticMesh& staticMesh,
                 const CLightMaskReceiver& /*recv*/)
@@ -467,7 +465,6 @@ namespace sge
             // DRAW BACKFACE OF OBSTRUCTOR
             frame.process_entities([&](
                 ProcessingFrame& /*pframe*/,
-                EntityId /*entity*/,
                 const CTransform3D& transform,
                 const CStaticMesh& staticMesh,
                 const CLightMaskObstructor& /*obst*/)
@@ -509,7 +506,6 @@ namespace sge
             // OVERWRITE DEPTH WITH FRONT FACE OF RECEIVER
             frame.process_entities([&](
                 ProcessingFrame& /*pframe*/,
-                EntityId /*entity*/,
                 const CTransform3D& transform,
                 const CStaticMesh& staticMesh,
                 const CLightMaskReceiver& /*recv*/)
@@ -557,7 +553,6 @@ namespace sge
             // DRAW FRONT-FACE OF OBSTRUCTOR
             frame.process_entities([&](
                 ProcessingFrame& /*pframe*/,
-                EntityId /*entity*/,
                 const CTransform3D& transform,
                 const CStaticMesh& staticMesh,
                 const CLightMaskObstructor& /*obst*/)
@@ -596,7 +591,6 @@ namespace sge
             // DRAW FRONT FACE OF RECEIVER
             frame.process_entities([&](
                 ProcessingFrame& /*pframe*/,
-                EntityId /*entity*/,
                 const CTransform3D& transform,
                 const CStaticMesh& staticMesh,
                 const CLightMaskReceiver& /*recv*/)

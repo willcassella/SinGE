@@ -9,13 +9,12 @@ SGE_REFLECT_TYPE(sge::CLightMaskObstructor);
 
 namespace sge
 {
-    CLightMaskObstructor::CLightMaskObstructor(ProcessingFrame& pframe, EntityId entity)
-        : TComponentInterface<sge::CLightMaskObstructor>(pframe, entity)
-    {
-    }
-
     void CLightMaskObstructor::register_type(Scene& scene)
     {
         scene.register_component_type(type_info, std::make_unique<EmptyComponentContainer<CLightMaskObstructor>>());
+    }
+
+    void CLightMaskObstructor::reset()
+    {
     }
 }

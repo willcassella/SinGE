@@ -36,14 +36,14 @@ namespace sge
         {
             pipeline.register_system_fn("bullet_physics", this, &BulletPhysicsSystem::phys_tick);
             pipeline.register_system_fn("bullet_physics_debug_draw", this, &BulletPhysicsSystem::debug_draw);
-            pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_new_box_collider);
-            pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_deleted_box_collider);
-            pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_new_capsule_collider);
-            pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_deleted_capsule_collider);
-            pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_new_character_controller);
-            pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_deleted_character_controller);
-            pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_character_controller_walk);
-            pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_character_controller_jump);
+            //pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_new_box_collider);
+            //pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_deleted_box_collider);
+            //pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_new_capsule_collider);
+            //pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_deleted_capsule_collider);
+            //pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_new_character_controller);
+            //pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_deleted_character_controller);
+            //pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_character_controller_walk);
+            //pipeline.register_tag_callback(this, &BulletPhysicsSystem::cb_character_controller_jump);
         }
 
         void BulletPhysicsSystem::phys_tick(SystemFrame& frame, float /*current_time*/, float dt)
@@ -56,30 +56,35 @@ namespace sge
             }
 
             // Simulate physics
-            _data->phys_world.dynamics_world().stepSimulation(dt, 3);
+            _data->phys_world.dynamics_world().stepSimulation(dt, 1);
 
-            // For each entity that was moved during the simulation
+            // Create an array of the moved entities
+            std::vector<EntityId> moved_entities;
+            moved_entities.reserve(_data->frame_transformed_entities.size());
             for (auto phys_entity : _data->frame_transformed_entities)
             {
-                // Update the transform
-                frame.process_single_mut(phys_entity->entity, [phys_entity](
-                    ProcessingFrame& /*pframe*/,
-                    EntityId /*entity*/,
-                    sge::CTransform3D& transform)
-                {
-                    from_bullet(transform, phys_entity->transform);
-                });
-
-                // Update velocity
-                frame.process_single_mut(phys_entity->entity, [phys_entity](
-                    ProcessingFrame& /*pframe*/,
-                    EntityId /*entity*/,
-                    sge::CVelocity& velocity)
-                {
-                    velocity.linear_velocity(from_bullet(phys_entity->rigid_body->getInterpolationLinearVelocity()));
-                    velocity.angular_velocity(from_bullet(phys_entity->rigid_body->getInterpolationAngularVelocity()));
-                });
+                moved_entities.push_back(phys_entity->entity);
             }
+
+            // Update the transforms
+            frame.process_entities_mut(moved_entities.data(), moved_entities.size(),
+                [iter = _data->frame_transformed_entities.begin()](
+                ProcessingFrame& /*pframe*/,
+                sge::CTransform3D& transform) mutable
+            {
+                from_bullet(transform, (*iter)->transform);
+                ++iter;
+            });
+
+            // Update velocity
+            frame.process_entities_mut(moved_entities.data(), moved_entities.size(),
+                [iter = _data->frame_transformed_entities.begin()](
+                ProcessingFrame& /*pframe*/,
+                sge::CVelocity& velocity) mutable
+            {
+                velocity.linear_velocity(from_bullet((*iter)->rigid_body->getInterpolationLinearVelocity()));
+                velocity.angular_velocity(from_bullet((*iter)->rigid_body->getInterpolationAngularVelocity()));
+            });
 
             _data->frame_transformed_entities.clear();
         }
@@ -93,57 +98,43 @@ namespace sge
             _data->phys_world.dynamics_world().debugDrawWorld();
             _data->phys_world.dynamics_world().setDebugDrawer(nullptr);
 
-            // Create tag TODO: Should be able to create tag without processing
-            frame.process_entities([&drawer](
-                ProcessingFrame& pframe,
-                EntityId /*entity*/,
-                const sge::CRigidBody& rigid_body)
-            {
-                pframe.create_tag(
-                    ComponentId{ WORLD_ENTITY, sge::get_type<CTransform3D>() },
-                    FDebugDraw{ std::move(drawer.lines) });
-                return ProcessControl::BREAK;
-            });
+            // TODO
         }
 
         void BulletPhysicsSystem::initialize_world(SystemFrame& frame)
         {
             // Load all box colliders
             frame.process_entities([&data = *_data](
-                ProcessingFrame&,
-                EntityId entity,
+                ProcessingFrame& pframe,
                 const sge::CBoxCollider& box_collider)
             {
-                data.add_box_collider(entity, box_collider);
+                data.add_box_collider(pframe.entity(), box_collider);
             });
 
             // Load all capsule collider
             frame.process_entities([&data = *_data](
-                ProcessingFrame& /*pframe*/,
-                EntityId entity,
+                ProcessingFrame& pframe,
                 const sge::CCapsuleCollider& collider)
             {
-                data.add_capsule_collider(entity, collider);
+                data.add_capsule_collider(pframe.entity(), collider);
             });
 
             // Load all rigid bodies
             frame.process_entities([&data = *_data](
-                ProcessingFrame& /*pframe*/,
-                EntityId entity,
+                ProcessingFrame& pframe,
                 const sge::CRigidBody& rigid_body,
                 const sge::CTransform3D& transform)
             {
-                data.add_rigid_body(entity, transform, rigid_body);
+                data.add_rigid_body(pframe.entity(), transform, rigid_body);
             });
 
             // Load all character controllers
             frame.process_entities([&data = *_data](
-                ProcessingFrame& /*pframe*/,
-                EntityId entity,
+                ProcessingFrame& pframe,
                 const sge::CCharacterController& character_controller,
                 const sge::CTransform3D& transform)
             {
-                data.add_character_controller(entity, transform, character_controller);
+                data.add_character_controller(pframe.entity(), transform, character_controller);
             });
         }
 
@@ -152,13 +143,13 @@ namespace sge
             FNewComponent /*tag*/,
             TComponentId<CBoxCollider> component)
         {
-            frame.process_single(component.entity(), [&data = *_data](
-                ProcessingFrame& /*pframe*/,
-                EntityId entity,
-                const CBoxCollider& box_collider)
-            {
-                data.add_box_collider(entity, box_collider);
-            });
+            //frame.process_single(component.entity(), [&data = *_data](
+            //    ProcessingFrame& /*pframe*/,
+            //    EntityId entity,
+            //    const CBoxCollider& box_collider)
+            //{
+            //    data.add_box_collider(entity, box_collider);
+            //});
         }
 
         void BulletPhysicsSystem::cb_deleted_box_collider(
@@ -174,13 +165,13 @@ namespace sge
             FNewComponent /*tag*/,
             TComponentId<CCapsuleCollider> component)
         {
-            frame.process_single(component.entity(), [&data = *_data](
-                ProcessingFrame& /*pframe*/,
-                EntityId entity,
-                const CCapsuleCollider& collider)
-            {
-                data.add_capsule_collider(entity, collider);
-            });
+            //frame.process_single(component.entity(), [&data = *_data](
+            //    ProcessingFrame& /*pframe*/,
+            //    EntityId entity,
+            //    const CCapsuleCollider& collider)
+            //{
+            //    data.add_capsule_collider(entity, collider);
+            //});
         }
 
         void BulletPhysicsSystem::cb_deleted_capsule_collider(
@@ -196,16 +187,16 @@ namespace sge
             FNewComponent /*tag*/,
             TComponentId<CRigidBody> component)
         {
-            bool created = false;
-            frame.process_single(component.entity(), [&created, &data = *_data](
-                ProcessingFrame& /*pframe*/,
-                EntityId entity,
-                const sge::CTransform3D& transform,
-                const sge::CRigidBody& rigid_body)
-            {
-                created = true;
-                data.add_rigid_body(entity, transform, rigid_body);
-            });
+            //bool created = false;
+            //frame.process_single(component.entity(), [&created, &data = *_data](
+            //    ProcessingFrame& /*pframe*/,
+            //    EntityId entity,
+            //    const sge::CTransform3D& transform,
+            //    const sge::CRigidBody& rigid_body)
+            //{
+            //    created = true;
+            //    data.add_rigid_body(entity, transform, rigid_body);
+            //});
         }
 
         void BulletPhysicsSystem::cb_deleted_rigid_body(
@@ -221,14 +212,14 @@ namespace sge
             FNewComponent /*tag*/,
             TComponentId<CCharacterController> component)
         {
-            frame.process_single(component.entity(), [&data = *_data](
-                ProcessingFrame& /*pframe*/,
-                EntityId entity,
-                const CCharacterController& character_controller,
-                const CTransform3D& transform)
-            {
-                data.add_character_controller(entity, transform, character_controller);
-            });
+            //frame.process_single(component.entity(), [&data = *_data](
+            //    ProcessingFrame& /*pframe*/,
+            //    EntityId entity,
+            //    const CCharacterController& character_controller,
+            //    const CTransform3D& transform)
+            //{
+            //    data.add_character_controller(entity, transform, character_controller);
+            //});
         }
 
         void BulletPhysicsSystem::cb_deleted_character_controller(

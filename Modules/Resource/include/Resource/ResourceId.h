@@ -9,6 +9,8 @@ namespace sge
 	template <typename T>
 	struct ResourceId
 	{
+        SGE_REFLECTED_TYPE;
+
 		////////////////////////
 		///   Constructors   ///
 	public:
@@ -50,4 +52,5 @@ namespace sge
 	};
 }
 
-SGE_REFLECT_TYPE_TEMPLATE(sge::ResourceId, typename T);
+template <typename T>
+SGE_REFLECT_TYPE_TEMPLATE(sge::ResourceId, T);

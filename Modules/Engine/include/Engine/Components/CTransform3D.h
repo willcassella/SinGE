@@ -13,17 +13,13 @@ namespace sge
 		SGE_REFLECTED_TYPE;
 		struct Data;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		CTransform3D(ProcessingFrame& pframe, EntityId entity, Data& data);
-
 		///////////////////
 		///   Methods   ///
 	public:
 
 		static void register_type(Scene& scene);
+
+        void reset(Data& data);
 
 		bool has_parent() const;
 
@@ -55,26 +51,21 @@ namespace sge
 
 	private:
 
-		Mat4 get_parent_matrix() const;
+        void generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags) override;
 
-		void apply_transform_changed_tag();
+		Mat4 get_parent_matrix() const;
 
 		//////////////////
 		///   Fields   ///
 	private:
 
-		Data* _data;
-		bool _applied_transform_changed_tag;
-		bool _applied_parent_changed_tag;
+		Data* _data = nullptr;
+		bool _current_changed_parent = false;
+        std::vector<EntityId> _ord_changed_parent;
 
 		////////////////
 		///   Tags   ///
 	public:
-
-		struct SGE_ENGINE_API FTransformChanged
-		{
-			SGE_REFLECTED_TYPE;
-		};
 
 		struct SGE_ENGINE_API FParentChanged
 		{

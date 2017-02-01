@@ -88,6 +88,19 @@ namespace sge
 				color |= static_cast<Color_t>(value);
 			}
 
+            /////////////////////
+            ///   Operators   ///
+		public:
+
+            friend bool operator==(const RGBA8& lhs, const RGBA8& rhs)
+            {
+                return lhs.color == rhs.color;
+            }
+            friend bool operator!=(const RGBA8& lhs, const RGBA8& rhs)
+            {
+                return lhs.color != rhs.color;
+            }
+
 			//////////////////
 			///   Fields   ///
 		public:

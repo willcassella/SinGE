@@ -170,12 +170,11 @@ namespace sge
 
 		// Wrapper function to call
 		auto processFn = [jsProcessFn = args[argc - 1], jsArgs, numTypes, foreignObjectBuffer, types, jsProtos](
-			ProcessingFrame&,
-			EntityId entity,
+			ProcessingFrame& pframe,
 			ComponentInterface* const components[]) -> ProcessControl
 		{
 			// Get the entity ID as an int TODO: FIX THIS
-			JsIntToNumber(static_cast<int>(entity), &jsArgs[2]);
+			JsIntToNumber(static_cast<int>(pframe.entity()), &jsArgs[2]);
 
 			// Initialize all of the component arguments
 			for (int i = 0; i < numTypes; ++i)

@@ -11,15 +11,14 @@ SGE_REFLECT_TYPE(sge::CVelocity)
 
 namespace sge
 {
-    CVelocity::CVelocity(ProcessingFrame& pframe, EntityId entity, Data& data)
-        : TComponentInterface<sge::CVelocity>(pframe, entity),
-        _data(&data)
-    {
-    }
-
     void CVelocity::register_type(Scene& scene)
     {
         scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CVelocity, Data>>());
+    }
+
+    void CVelocity::reset(Data& data)
+    {
+        _data = &data;
     }
 
     Vec3 CVelocity::linear_velocity() const

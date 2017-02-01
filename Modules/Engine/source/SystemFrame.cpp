@@ -6,97 +6,106 @@
 #include "../include/Engine/ProcessingFrame.h"
 #include "../include/Engine/Scene.h"
 #include "../include/Engine/UpdatePipeline.h"
+#include "../include/Engine/Util/VectorUtils.h"
 
 SGE_REFLECT_TYPE(sge::SystemFrame);
 
 namespace sge
 {
-	SystemFrame::SystemFrame(Scene& scene, SceneData& scene_data, UpdatePipeline& pipeline)
-		: _pipeline(&pipeline),
+    static ComponentContainer::InstanceIterator instance_union(
+        ComponentContainer::InstanceIterator primary_iter,
+        const ComponentContainer::InstanceIterator primary_iter_end,
+        ComponentContainer::InstanceIterator* const iters,
+        const ComponentContainer::InstanceIterator* const end_iters,
+        const std::size_t num_secondary)
+    {
+        // Make sure we haven't reached the end
+        if (primary_iter == primary_iter_end)
+        {
+            return primary_iter_end;
+        }
+
+        // For each secondary iterator
+        for (std::size_t i = 0; i < num_secondary;)
+        {
+            while (true)
+            {
+                // If we've reached the end of this iterator
+                if (iters[i] == end_iters[i])
+                {
+                    return primary_iter_end;
+                }
+
+                // If the iterator is less than the primary iterator (most likely case)
+                if (*iters[i] < *primary_iter)
+                {
+                    // Keep incrementing
+                    ++iters[i];
+                    continue;
+                }
+
+                // If the iter is equal to the primary
+                if (*iters[i] == *primary_iter)
+                {
+                    // Go on to the next iterator
+                    ++i;
+                    break;
+                }
+
+                // The iterator must be greater than the target
+                // Start over
+                i = 0;
+                ++primary_iter;
+
+                // If we've reached the end of the primary iterator
+                if (primary_iter == primary_iter_end)
+                {
+                    return primary_iter_end;
+                }
+
+                break;
+            }
+        }
+
+        return primary_iter;
+    }
+
+	SystemFrame::SystemFrame(const Scene& scene, SceneData& scene_data)
+		: _has_tags(false),
         _scene(&scene),
 		_scene_data(&scene_data)
 	{
 	}
 
-    bool SystemFrame::has_changes() const
+    const Scene& SystemFrame::scene() const
     {
-        if (!_destroyed_components.empty())
-        {
-            return true;
-        }
-
-        if (!_new_components.empty())
-        {
-            return true;
-        }
-
-        if (!_destroyed_entities.empty())
-        {
-            return true;
-        }
-
-        for (auto& pframe : _pframes)
-        {
-            if (pframe.has_tags())
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return *_scene;
     }
 
-	const Scene& SystemFrame::get_scene() const
-	{
-		return *_scene;
-	}
-
-    UpdatePipeline& SystemFrame::get_pipeline() const
-    {
-        return *_pipeline;
-    }
-
-    void SystemFrame::sync()
+    void SystemFrame::yield()
 	{
 	}
 
-    EntityId SystemFrame::create_entity() const
+    void SystemFrame::create_entities(EntityId* out_entities, std::size_t num) const
     {
-        auto id = _scene_data->next_entity_id++;
-        _scene_data->entity_parents[id] = WORLD_ENTITY;
-
-        return id;
+        for (std::size_t i = 0; i < num; ++i)
+        {
+            out_entities[i] = _scene_data->next_entity_id++;
+        }
     }
 
-    void SystemFrame::destroy_entity(EntityId entity)
+    void SystemFrame::destroy_entities(const EntityId* ordered_entities, std::size_t num_entities)
     {
-        // Get the size before we mark the entity as destroyed
-        const auto old_size = _destroyed_entities.size();
-        _destroyed_entities.insert(entity);
+        // Add the entities to the destroyed set
+        insert_ord_entities(_ord_destroyed_entities, ordered_entities, num_entities);
 
-        // If adding the entity didn't change the size, the entity was already destroyed
-        if (old_size == _destroyed_entities.size())
+        // Destroy all children of these entities
+        for (std::size_t i = 0; i < num_entities; ++i)
         {
-            return;
-        }
-
-        // Destroy all components of this entity
-        for (auto& component_type : _scene_data->components)
-        {
-            // If this component type has an instance on this entity
-            auto iter = component_type.second.instances.find(entity);
-            if (iter != component_type.second.instances.end())
+            auto iter = _scene_data->entity_children.find(ordered_entities[i]);
+            if (iter != _scene_data->entity_children.end())
             {
-                _destroyed_components.insert(ComponentId{ entity, *component_type.first });
-            }
-        }
-
-        // Destroy all children of this entity
-        for (auto parent_entry : _scene_data->entity_parents)
-        {
-            if (parent_entry.second == entity)
-            {
-                destroy_entity(parent_entry.first);
+                destroy_entities(iter->second.data(), iter->second.size());
             }
         }
     }
@@ -109,32 +118,33 @@ namespace sge
 		}
 
 		auto iter = _scene_data->entity_parents.find(entity);
-		return iter != _scene_data->entity_parents.end() ? iter->second : NULL_ENTITY;
+		return iter != _scene_data->entity_parents.end() ? iter->second : WORLD_ENTITY;
 	}
 
-    void SystemFrame::set_entity_parent(EntityId entity, EntityId parent) const
+    void SystemFrame::set_entities_parent(EntityId parent, const EntityId* ord_children, std::size_t num_children) const
     {
-        if (entity == NULL_ENTITY || entity == WORLD_ENTITY || parent == NULL_ENTITY)
+        // Make sure the parent is a valid parent
+        if (parent == NULL_ENTITY || parent >= _scene_data->next_entity_id)
         {
             return;
         }
 
-        // Make sure the target entity actually exists
-        auto iter = _scene_data->entity_parents.find(entity);
-        if (iter == _scene_data->entity_parents.end())
+        // Make sure the children are valid
+        for (std::size_t i = 0; i < num_children; ++i)
         {
-            return;
+            if (ord_children[i] == NULL_ENTITY || ord_children[i] >= _scene_data->next_entity_id)
+            {
+                return;
+            }
         }
 
-        // Make sure the parent entity actually exists
-        auto parentIter = _scene_data->entity_parents.find(parent);
-        if (parentIter == _scene_data->entity_parents.end())
-        {
-            return;
-        }
+        // Set the parents
+        insert_ord_entities(_scene_data->entity_children[parent], ord_children, num_children);
 
-        // TODO: Check for entity parent cycle
-        iter->second = parent;
+        for (std::size_t i = 0; i < num_children; ++i)
+        {
+
+        }
     }
 
 	std::string SystemFrame::get_entity_name(EntityId entity) const
@@ -162,12 +172,6 @@ namespace sge
             return;
         }
 
-        // Make sure the entity is a valid user entity
-        if (_scene_data->entity_parents.find(entity) == _scene_data->entity_parents.end())
-        {
-            return;
-        }
-
         // Insert the name
         _scene_data->entity_names[entity] = std::move(name);
     }
@@ -183,277 +187,211 @@ namespace sge
         _scene_data->entity_names.erase(iter);
     }
 
-    ComponentId SystemFrame::new_component(EntityId entity, const TypeInfo& type, UFunction<ComponentInitFn> init_fn)
+    void SystemFrame::create_components(const TypeInfo& type, const EntityId* ord_entities, std::size_t num_entities)
     {
-        // Make sure the entity is a valid user entity
-        if (entity == NULL_ENTITY || entity == WORLD_ENTITY || _scene_data->entity_parents.find(entity) == _scene_data->entity_parents.end())
+        // Make sure all of the entities are valid entities
+        for (std::size_t i = 0; i < num_entities; ++i)
         {
-            return ComponentId::null();
+            if (ord_entities[i] == NULL_ENTITY || ord_entities[i] >= _scene_data->next_entity_id)
+            {
+                return;
+            }
         }
 
-        // Create an Id for the component
-        ComponentId id{ entity, type };
-
-        // Insert it into the table
-        _new_components.insert(std::make_pair(id, std::move(init_fn)));
-
-        return id;
+        // Insert the request
+        insert_ord_entities(_ord_new_components[&type], ord_entities, num_entities);
     }
 
-    void SystemFrame::destroy_component(ComponentId component)
+    void SystemFrame::destroy_components(
+        const TypeInfo& type,
+        const EntityId* ord_entities,
+        std::size_t num_entities)
     {
-        _destroyed_components.insert(component);
+        insert_ord_entities(_ord_destroyed_components[&type], ord_entities, num_entities);
     }
 
-    void SystemFrame::destroy_component(EntityId entity, const TypeInfo& type)
-    {
-        destroy_component(ComponentId{ entity, type });
-    }
-
-	void SystemFrame::process_entities(const TypeInfo* const types[], std::size_t num_types, FunctionView<ProcessFn> process_fn)
+	void SystemFrame::process_entities(
+        const TypeInfo* const types[],
+        std::size_t num_types,
+        FunctionView<ProcessFn> process_fn)
 	{
-        impl_process_entities(types, num_types, process_fn);
+        impl_process_entities(nullptr, 0, types, num_types, process_fn);
 	}
 
-    void SystemFrame::process_entities_mut(const TypeInfo* const types[], std::size_t num_types, FunctionView<ProcessMutFn> process_fn)
+    void SystemFrame::process_entities_mut(
+        const TypeInfo* const types[],
+        std::size_t num_types,
+        FunctionView<ProcessMutFn> process_fn)
     {
-        impl_process_entities(types, num_types, process_fn);
+        impl_process_entities(nullptr, 0, types, num_types, process_fn);
     }
 
-	void SystemFrame::process_single(EntityId entity, const TypeInfo* const types[], std::size_t num_types, FunctionView<ProcessFn> process_fn)
+	void SystemFrame::process_entities(
+        const EntityId* ord_entities,
+        std::size_t num_entities,
+        const TypeInfo* const types[],
+        std::size_t num_types,
+        FunctionView<ProcessFn> process_fn)
 	{
-		impl_process_single(entity, types, num_types, process_fn);
+        if (num_entities == 0)
+        {
+            return;
+        }
+
+		impl_process_entities(ord_entities, num_entities, types, num_types, process_fn);
 	}
 
-    void SystemFrame::process_single_mut(EntityId entity, const TypeInfo* const types[], std::size_t num_types, FunctionView<ProcessMutFn> process_fn)
+    void SystemFrame::process_entities_mut(
+        const EntityId* ord_entities,
+        std::size_t num_entities,
+        const TypeInfo*
+        const types[],
+        std::size_t num_types,
+        FunctionView<ProcessMutFn> process_fn)
     {
-        impl_process_single(entity, types, num_types, process_fn);
+        if (num_entities == 0)
+        {
+            return;
+        }
+
+        impl_process_entities(ord_entities, num_entities, types, num_types, process_fn);
     }
 
-    void SystemFrame::flush_changes(SystemFrame& tag_callback_frame)
+    void SystemFrame::append_tags(const TypeInfo& tag_type, TagBuffer tag_buffer)
     {
-        // For each component destroyed
-        for (auto component : _destroyed_components)
-        {
-            // Find the container
-            auto type_iter = _scene_data->components.find(component.type());
-            if (type_iter == _scene_data->components.end())
-            {
-                continue;
-            }
-
-            // Find the entity
-            auto entity_iter = type_iter->second.instances.find(component.entity());
-            if (entity_iter == type_iter->second.instances.end())
-            {
-                continue;
-            }
-
-            // Run the tag
-            FDestroyedComponent tag;
-            _pipeline->run_tag(tag, component, tag_callback_frame);
-
-            // Destroy the component
-            type_iter->second.container->remove_component(*entity_iter);
-            type_iter->second.instances.erase(entity_iter);
-        }
-        _destroyed_components.clear();
-
-        // For each entity destroyed
-        for (auto entity : _destroyed_entities)
-        {
-            // Find the entity
-            auto entity_iter = _scene_data->entity_parents.find(entity);
-            if (entity_iter == _scene_data->entity_parents.end())
-            {
-                continue;
-            }
-
-            // Remove it
-            _scene_data->entity_parents.erase(entity_iter);
-
-            // Remove the name, if it exists
-            auto name_iter = _scene_data->entity_names.find(entity);
-            if (name_iter == _scene_data->entity_names.end())
-            {
-                continue;
-            }
-
-            // Remove the name
-            _scene_data->entity_names.erase(name_iter);
-        }
-        _destroyed_entities.clear();
-
-        // For each new component
-        for (auto& component : _new_components)
-        {
-            // Search for the container
-            auto type_iter = _scene_data->components.find(component.first.type());
-            if (type_iter == _scene_data->components.end())
-            {
-                continue;
-            }
-
-            // Create the component
-            type_iter->second.container->create_component(component.first.entity());
-            type_iter->second.instances.insert(component.first.entity());
-
-            // If the user supplied an init function
-            if (component.second)
-            {
-                // TODO
-            }
-
-            // Run the new component tag
-            FNewComponent tag;
-            _pipeline->run_tag(tag, component.first, tag_callback_frame);
-        }
-        _new_components.clear();
-
-        // Flush all tags
-        for (auto& pframe : _pframes)
-        {
-            pframe.dispatch_tags(*_pipeline, tag_callback_frame);
-        }
-
-        _pframes.clear();
+        _tags[&tag_type].push_back(std::move(tag_buffer));
     }
 
 	template <typename ProcessFnT>
 	void SystemFrame::impl_process_entities(
+		const EntityId* ord_entities,
+        const std::size_t num_entities,
 		const TypeInfo* const types[],
-		std::size_t num_types,
+		const std::size_t num_types,
 		ProcessFnT& process_fn)
 	{
-		if (num_types == 0)
-		{
-			return;
-		}
+        if (num_types == 0)
+        {
+            return;
+        }
 
-		auto primary_type = _scene_data->components.find(types[0]);
-		if (primary_type == _scene_data->components.end())
-		{
-			return;
-		}
+        // Create the array of component interfaces
+        auto** const comp_interfaces = SGE_STACK_ALLOC(ComponentInterface*, num_types);
 
-		// Create a processing frame
-		ProcessingFrame pframe;
+        // Create arrays for component iterators
+        auto* const instance_iters = SGE_STACK_ALLOC(ComponentContainer::InstanceIterator, num_types);
+        auto* const end_iters = SGE_STACK_ALLOC(ComponentContainer::InstanceIterator, num_types);
 
-		// Create the array of component interfaces
-		ComponentInterface** interface_array = SGE_STACK_ALLOC(ComponentInterface*, num_types);
+        // Create an array of component containers
+        auto* const containers = SGE_STACK_ALLOC(ComponentContainer*, num_types);
 
-		// Fill the interface array
-		for (std::size_t i = 0; i < num_types; ++i)
-		{
-			interface_array[i] = reinterpret_cast<ComponentInterface*>(SGE_STACK_ALLOC(byte, types[i]->size()));
-		}
-
-		// Iterate through all entities that the primary component type appears on
-		for (EntityId entity : primary_type->second.instances)
-		{
-			bool satisfied = true;
-			for (std::size_t i = 1; i < num_types; ++i)
-			{
-				// If this type does not exist in the scene
-				auto iter = _scene_data->components.find(types[i]);
-				if (iter == _scene_data->components.end())
-				{
-					satisfied = false;
-					break;
-				}
-
-                // If this component doesn't have an instance of this entity
-                auto inst_iter = iter->second.instances.find(entity);
-                if (inst_iter == iter->second.instances.end())
+        // Fill the interface array
+        for (std::size_t i = 0; i < num_types; ++i)
+        {
+            // Make sure the type exists in the scene
+            auto cont_iter = _scene_data->components.find(types[i]);
+            if (cont_iter == _scene_data->components.end())
+            {
+                // Destroy existing interfaces
+                for (; i > 0; --i)
                 {
-                    satisfied = false;
-                    break;
+                    comp_interfaces[i - 1]->~ComponentInterface();
                 }
 
-				// Try to create the component interface
-				if (!iter->second.container->create_interface(pframe, entity, interface_array[i]))
-				{
-					satisfied = false;
-					break;
-				}
-			}
-
-			// If all further requirements were satisfied
-			if (satisfied)
-			{
-				// Create the primary component interface
-				primary_type->second.container->create_interface(pframe, entity, interface_array[0]);
-
-				// Call the processing function
-				auto control = process_fn(pframe, entity, interface_array);
-
-				// Handle the control result
-				if (control == ProcessControl::BREAK)
-				{
-					break;
-				}
-			}
-		}
-
-        // Store the pframe so we can dispatch its tag callbacks later
-        if (pframe.has_tags())
-        {
-            _pframes.push_back(std::move(pframe));
-        }
-	}
-
-	template <typename ProcessFnT>
-	void SystemFrame::impl_process_single(
-		EntityId entity,
-		const TypeInfo* const types[],
-		std::size_t num_types,
-		ProcessFnT& process_fn)
-	{
-		if (num_types == 0)
-		{
-			return;
-		}
-
-		// Create a processing frame
-		ProcessingFrame pframe;
-
-		// Create the array of component interfaces
-		ComponentInterface** interface_array = SGE_STACK_ALLOC(ComponentInterface*, num_types);
-
-		// Fill the interface array
-		for (std::size_t i = 0; i < num_types; ++i)
-		{
-			// Make sure this type is supported by the scene
-			auto iter = _scene_data->components.find(types[i]);
-			if (iter == _scene_data->components.end())
-			{
-				return;
-			}
-
-            // If this component doesn't have an instance of this entity
-            auto inst_iter = iter->second.instances.find(entity);
-            if (inst_iter == iter->second.instances.end())
-            {
                 return;
             }
 
-			// Allocate space for the component interface object
-			interface_array[i] = reinterpret_cast<ComponentInterface*>(SGE_STACK_ALLOC(byte, types[i]->size()));
+            // Create the interface
+            comp_interfaces[i] = reinterpret_cast<ComponentInterface*>(SGE_STACK_ALLOC(byte, types[i]->size()));
+            types[i]->init(comp_interfaces[i]);
 
-			// Try to get the component interface from the entity
-			if (!iter->second.container->create_interface(pframe, entity, interface_array[i]))
-			{
-				return;
-			}
-		}
+            // Create the iterators
+            instance_iters[i] = cont_iter->second->get_start_iterator();
+            end_iters[i] = cont_iter->second->get_end_iterator();
 
-		// Call the processing function
-		process_fn(pframe, entity, interface_array);
+            // Create the component container pointer
+            containers[i] = cont_iter->second.get();
+        }
 
-        // Store the pframe so we can process the tag callbacks later
-        if (pframe.has_tags())
+        // Create a processing frame
+        ProcessingFrame pframe;
+
+        // Create the iterators
+        const EntityId** primary_iter;
+        const EntityId* primary_iter_end;
+        const EntityId** secondary_iters;
+        const EntityId** secondary_end_iters;
+        std::size_t num_secondary_iters;
+
+        // If we were given an ordered array of entities
+        if (ord_entities != nullptr)
         {
-            _pframes.push_back(std::move(pframe));
+            primary_iter = &ord_entities;
+            primary_iter_end = ord_entities + num_entities;
+            secondary_iters = instance_iters;
+            secondary_end_iters = end_iters;
+            num_secondary_iters = num_types;
+        }
+        else
+        {
+            primary_iter = &instance_iters[0];
+            primary_iter_end = end_iters[0];
+            secondary_iters = instance_iters + 1;
+            secondary_end_iters = end_iters + 1;
+            num_secondary_iters = num_types - 1;
+        }
+
+        // Search for matches
+        for (std::size_t frame_index = 0, iteration_index = 0; true; ++frame_index)
+        {
+            // Find the next match
+            auto advanced_iter = instance_union(*primary_iter, primary_iter_end, secondary_iters, secondary_end_iters, num_secondary_iters);
+            iteration_index += advanced_iter - *primary_iter;
+            *primary_iter = advanced_iter;
+
+            // If there are no more, quit searching
+            if (*primary_iter == primary_iter_end)
+            {
+                break;
+            }
+
+            // Advance the interfaces
+            for (std::size_t i = 0; i < num_types; ++i)
+            {
+                comp_interfaces[i]->reset(instance_iters[i]);
+                containers[i]->reset_interface(instance_iters[i], comp_interfaces[i]);
+            }
+
+            // Set up the processing frame
+            pframe._entity = **primary_iter;
+            pframe._frame_index = frame_index;
+            pframe._iteration_index = iteration_index;
+
+            // Call the processing function
+            auto control = process_fn(pframe, comp_interfaces);
+            if (control == ProcessControl::BREAK)
+            {
+                break;
+            }
+
+            // Increment the primary iterator (to prevent matching the same entity again)
+            ++*primary_iter;
+        }
+
+        // Generate tags and destroy interfaces
+        for (std::size_t i = 0; i < num_types; ++i)
+        {
+            // Insert the destroyed components
+            insert_ord_entities(
+                _ord_destroyed_components[types[i]],
+                comp_interfaces[i]->_ord_destroyed.data(),
+                comp_interfaces[i]->_ord_destroyed.size());
+
+            // Insert other tags
+            comp_interfaces[i]->generate_tags(_tags);
+
+            // Destroy the interface
+            comp_interfaces[i]->~ComponentInterface();
         }
 	}
 }

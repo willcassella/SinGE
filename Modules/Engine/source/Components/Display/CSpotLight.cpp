@@ -67,41 +67,37 @@ namespace sge
 		float intensity = 1.f;
 	};
 
-	CSpotlight::CSpotlight(ProcessingFrame& pframe, EntityId entity, Data& data)
-		: TComponentInterface<CSpotlight>(pframe, entity),
-		_data(&data)
-	{
-	}
-
 	void CSpotlight::register_type(Scene& scene)
 	{
 		scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CSpotlight, Data>>());
 	}
 
-	CSpotlight::Shape CSpotlight::shape() const
+    void CSpotlight::reset(Data& data)
+    {
+        _data = &data;
+    }
+
+    CSpotlight::Shape CSpotlight::shape() const
 	{
 		return _data->shape;
 	}
 
 	void CSpotlight::shape(Shape shape)
 	{
-		_data->shape = shape;
-		apply_component_modified_tag();
+        checked_setter(shape, _data->shape);
 	}
 
 	void CSpotlight::set_cone(float radius)
 	{
-		_data->shape = Shape::CONE;
-		_data->cone_radius = radius;
-		apply_component_modified_tag();
+        checked_setter(Shape::CONE, _data->shape);
+        checked_setter(radius, _data->cone_radius);
 	}
 
 	void CSpotlight::set_frustum(float width, float height)
 	{
-		_data->shape = Shape::FRUSTUM;
-		_data->frustum_width = width;
-		_data->frustum_height = height;
-		apply_component_modified_tag();
+        checked_setter(Shape::FRUSTUM, _data->shape);
+        checked_setter(width, _data->frustum_width);
+        checked_setter(height, _data->frustum_height);
 	}
 
 	float CSpotlight::distance() const
@@ -111,8 +107,7 @@ namespace sge
 
 	void CSpotlight::distance(float value)
 	{
-		_data->distance = value;
-		apply_component_modified_tag();
+        checked_setter(value, _data->distance);
 	}
 
 	float CSpotlight::intensity() const
@@ -122,8 +117,7 @@ namespace sge
 
 	void CSpotlight::intensity(float value)
 	{
-		_data->intensity = value;
-		apply_component_modified_tag();
+        checked_setter(value, _data->intensity);
 	}
 
 	float CSpotlight::cone_radius() const
@@ -133,8 +127,7 @@ namespace sge
 
 	void CSpotlight::cone_radius(float value)
 	{
-		_data->cone_radius = value;
-		apply_component_modified_tag();
+        checked_setter(value, _data->cone_radius);
 	}
 
 	float CSpotlight::frustum_width() const
@@ -144,8 +137,7 @@ namespace sge
 
 	void CSpotlight::frustum_width(float value)
 	{
-		_data->frustum_width = value;
-		apply_component_modified_tag();
+        checked_setter(value, _data->frustum_width);
 	}
 
 	float CSpotlight::frustum_height() const
@@ -155,7 +147,6 @@ namespace sge
 
 	void CSpotlight::frustum_height(float value)
 	{
-		_data->frustum_height = value;
-		apply_component_modified_tag();
+        checked_setter(value, _data->frustum_height);
 	}
 }

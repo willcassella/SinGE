@@ -13,17 +13,13 @@ namespace sge
 		SGE_REFLECTED_TYPE;
 		struct Data;
 
-        ////////////////////////
-        ///   Constructors   ///
-	public:
-
-        CBoxCollider(ProcessingFrame& pframe, EntityId entity, Data& data);
-
 		////////////////////
 		////   Methods   ///
 	public:
 
         static void register_type(Scene& scene);
+
+        void reset(Data& data);
 
 		float width() const;
 
@@ -45,6 +41,6 @@ namespace sge
 		///   Fields   ///
 	private:
 
-		Data* _data;
+		Data* _data = nullptr;
 	};
 }

@@ -1,6 +1,7 @@
 // GLEventWindow.h
 #pragma once
 
+#include <set>
 #include <functional>
 #include <GLFW/glfw3.h>
 #include "InputBindings.h"

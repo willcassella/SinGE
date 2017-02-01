@@ -164,6 +164,7 @@
   <ItemGroup>
     <ClInclude Include="..\Core\include\Core\env.h" />
     <ClInclude Include="include\Core\config.h" />
+    <ClInclude Include="include\Core\Containers\FixedString.h" />
     <ClInclude Include="include\Core\Functional\FunctionView.h" />
     <ClInclude Include="include\Core\Functional\UFunction.h" />
     <ClInclude Include="include\Core\Interfaces\IFromArchive.h" />

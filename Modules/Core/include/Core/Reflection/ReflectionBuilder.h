@@ -546,18 +546,5 @@ namespace sge
 /* Use this macro in the source file for an interface to define its reflection data. */
 #define SGE_REFLECT_INTERFACE(INTERF)	const ::sge::InterfaceInfo INTERF::interface_info = ::sge::InterfaceInfoBuilder<INTERF>(#INTERF)
 
-/* Use this macro in the header file for a template type to define its reflection datas. */
-#define SGE_REFLECT_TYPE_TEMPLATE(TYPE, ...)							\
-	namespace sge { namespace specialized {								\
-	template <__VA_ARGS__> struct GetType < TYPE<__VA_ARGS__> >{		\
-		static const ::sge::NativeTypeInfo type_info;					\
-		static const auto& get_type() {									\
-			return type_info;											\
-		}																\
-		static const auto& get_type(const TYPE<__VA_ARGS__>&) {			\
-			return type_info;											\
-		}																\
-	};																	\
-	template <__VA_ARGS__>												\
-	const ::sge::NativeTypeInfo GetType<TYPE<__VA_ARGS__>>::type_info =	\
-		NativeTypeInfoBuilder<TYPE<__VA_ARGS__>>(#TYPE); }}
+/* Use this macro in the header file for a template type to define its reflection data. */
+#define SGE_REFLECT_TYPE_TEMPLATE(TYPE, ...) const ::sge::NativeTypeInfo TYPE<__VA_ARGS__>::type_info = ::sge::NativeTypeInfoBuilder<TYPE<__VA_ARGS__>>(#TYPE)

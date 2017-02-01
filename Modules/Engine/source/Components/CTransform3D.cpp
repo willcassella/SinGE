@@ -49,23 +49,20 @@ namespace sge
 	.property("world_scale", &CTransform3D::get_world_scale, nullptr)
 	.property("world_rotation", &CTransform3D::get_world_rotation, nullptr);
 
-	SGE_REFLECT_TYPE(sge::CTransform3D::FTransformChanged);
 	SGE_REFLECT_TYPE(sge::CTransform3D::FParentChanged);
-
-	CTransform3D::CTransform3D(ProcessingFrame& pframe, EntityId entity, Data& data)
-		: TComponentInterface<sge::CTransform3D>(pframe, entity),
-		_data(&data)
-	{
-		_applied_parent_changed_tag = false;
-		_applied_transform_changed_tag = false;
-	}
 
 	void CTransform3D::register_type(Scene& scene)
 	{
 		scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CTransform3D, Data>>());
 	}
 
-	bool CTransform3D::has_parent() const
+    void CTransform3D::reset(Data& data)
+    {
+        _data = &data;
+        _current_changed_parent = false;
+    }
+
+    bool CTransform3D::has_parent() const
 	{
 		return _data->parent != WORLD_ENTITY;
 	}
@@ -77,11 +74,16 @@ namespace sge
 
 	void CTransform3D::set_parent(const CTransform3D& parent)
 	{
+        if (_data->parent == parent.entity())
+        {
+            return;
+        }
+
 		_data->parent = parent.entity();
-		if (!_applied_parent_changed_tag)
+		if (!_current_changed_parent)
 		{
-			processing_frame().create_tag(this->id(), FParentChanged{});
-			_applied_parent_changed_tag = true;
+            _current_changed_parent = true;
+            _ord_changed_parent.push_back(entity());
 		}
 	}
 
@@ -92,8 +94,7 @@ namespace sge
 
 	void CTransform3D::set_local_position(Vec3 pos)
 	{
-		_data->local_position = pos;
-		apply_transform_changed_tag();
+        checked_setter(pos, _data->local_position);
 	}
 
 	Vec3 CTransform3D::get_local_scale() const
@@ -103,8 +104,7 @@ namespace sge
 
 	void CTransform3D::set_local_scale(Vec3 scale)
 	{
-		_data->local_scale = scale;
-		apply_transform_changed_tag();
+        checked_setter(scale, _data->local_scale);
 	}
 
 	Quat CTransform3D::get_local_rotation() const
@@ -114,8 +114,7 @@ namespace sge
 
 	void CTransform3D::set_local_rotation(Quat rot)
 	{
-		_data->local_rotation = rot;
-		apply_transform_changed_tag();
+        checked_setter(rot, _data->local_rotation);
 	}
 
 	Mat4 CTransform3D::get_local_matrix() const
@@ -169,7 +168,25 @@ namespace sge
 		return get_parent_matrix() * get_local_matrix();
 	}
 
-	Mat4 CTransform3D::get_parent_matrix() const
+    void CTransform3D::generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags)
+    {
+        // Call base implementation
+        ComponentInterface::generate_tags(tags);
+
+        // Add changed parent tag
+        if (!_ord_changed_parent.empty())
+        {
+            FParentChanged p_tag;
+            tags[&FParentChanged::type_info].push_back(TagBuffer::create_from_single(
+                type_info,
+                _ord_changed_parent.data(),
+                &p_tag,
+                sizeof(FParentChanged),
+                _ord_changed_parent.size()));
+        }
+    }
+
+    Mat4 CTransform3D::get_parent_matrix() const
 	{
 		if (has_parent())
 		{
@@ -179,15 +196,6 @@ namespace sge
 		//else
 		{
 			return Mat4{};
-		}
-	}
-
-	void CTransform3D::apply_transform_changed_tag()
-	{
-		if (!_applied_transform_changed_tag)
-		{
-			processing_frame().create_tag(this->id(), FTransformChanged{});
-			_applied_transform_changed_tag = true;
 		}
 	}
 }

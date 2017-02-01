@@ -84,6 +84,13 @@ namespace sge
 		 */
 		void update(UpdatePipeline& pipeline, float dt);
 
+	private:
+
+        std::vector<SystemFrame> apply_changes(
+            UpdatePipeline& pipeline,
+            SystemFrame* frames,
+            std::size_t num_frames);
+
 		//////////////////
 		///   Fields   ///
 	private:

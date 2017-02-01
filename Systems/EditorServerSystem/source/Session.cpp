@@ -134,7 +134,7 @@ namespace sge
 					}
 
 					// Synchronize the frame, so we can see changes that were made
-					self->get_frame().sync();
+					self->get_frame().yield();
 
 					// Handle a query to set the properties on a component
 					if (in_reader->pull_object_member("set_component"))
@@ -152,7 +152,7 @@ namespace sge
 					if (in_reader->pull_object_member("get_component_types"))
 					{
 						out_writer->push_object_member("get_component_types");
-						ops::get_component_types_query(self->get_frame().get_scene(), *out_writer);
+						ops::get_component_types_query(self->get_frame().scene(), *out_writer);
 						out_writer->pop();
 						in_reader->pop();
 						wrote_output = true;
@@ -162,7 +162,7 @@ namespace sge
 					if (in_reader->pull_object_member("get_type_info"))
 					{
 						out_writer->push_object_member("get_type_info");
-						ops::get_type_info_query(self->get_frame().get_scene().get_type_db(), *in_reader, *out_writer);
+						ops::get_type_info_query(self->get_frame().scene().get_type_db(), *in_reader, *out_writer);
 						out_writer->pop();
 						in_reader->pop();
 						wrote_output = true;
@@ -192,7 +192,7 @@ namespace sge
 					if (in_reader->pull_object_member("get_resource"))
 					{
 						out_writer->push_object_member("get_resource");
-						ops::get_resource_query(self->get_frame().get_scene(), *in_reader, *out_writer);
+						ops::get_resource_query(self->get_frame().scene(), *in_reader, *out_writer);
 						in_reader->pop();
 						out_writer->pop();
 						wrote_output = true;
@@ -201,7 +201,7 @@ namespace sge
 					// Handle a save query
 					if (in_reader->pull_object_member("save_scene"))
 					{
-						ops::save_scene_query(self->get_frame().get_scene(), *in_reader);
+						ops::save_scene_query(self->get_frame().scene(), *in_reader);
 						in_reader->pop();
 					}
 

@@ -48,6 +48,9 @@
     <Filter Include="source\Tags">
       <UniqueIdentifier>{cea0a94a-edf7-4441-a0a9-4511c592deba}</UniqueIdentifier>
     </Filter>
+    <Filter Include="source\Util">
+      <UniqueIdentifier>{66040f94-0ac4-4be2-823a-203fe8f16738}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Engine\config.h">
@@ -137,6 +140,15 @@
     <ClInclude Include="include\Engine\Components\Display\CLightMaskReceiver.h">
       <Filter>include\Components\Display</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\System.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\TagBuffer.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Util\VectorUtils.h">
+      <Filter>include\Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Scene.cpp">
@@ -210,6 +222,12 @@
     </ClCompile>
     <ClCompile Include="source\Components\Display\CLightMaskObstructor.cpp">
       <Filter>source\Components\Display</Filter>
+    </ClCompile>
+    <ClCompile Include="source\TagBuffer.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Util\VectorUtils.cpp">
+      <Filter>source\Util</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

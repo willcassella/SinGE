@@ -37,17 +37,13 @@ namespace sge
             bool operator!=(const Data& rhs) const;
         };
 
-        ////////////////////////
-        ///   Constructors   ///
-	public:
-
-        CVelocity(ProcessingFrame& pframe, EntityId entity, Data& data);
-
         ///////////////////
         ///   Methods   ///
 	public:
 
         static void register_type(Scene& scene);
+
+        void reset(Data& data);
 
         Vec3 linear_velocity() const;
 
@@ -65,6 +61,6 @@ namespace sge
 		///   Fields   ///
 	private:
 
-        Data* _data;
+        Data* _data = nullptr;
 	};
 }

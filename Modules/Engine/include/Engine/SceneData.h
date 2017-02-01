@@ -1,26 +1,12 @@
 // SceneData.h
 #pragma once
 
-#include <set>
 #include <memory>
 #include <unordered_map>
 #include "Component.h"
 
 namespace sge
 {
-	struct ComponentType
-	{
-		//////////////////
-		///   Fields   ///
-	public:
-
-		/* All entities which have an instance of this component. */
-		std::set<EntityId> instances;
-
-		/* The container for this component. */
-		std::unique_ptr<ComponentContainer> container;
-	};
-
 	struct SGE_ENGINE_API SceneData
 	{
 		////////////////////////
@@ -41,10 +27,11 @@ namespace sge
 		EntityId next_entity_id;
 
 		/* Entity Data */
-		std::unordered_map<EntityId, EntityId> entity_parents;
 		std::unordered_map<EntityId, std::string> entity_names;
+		std::unordered_map<EntityId, EntityId> entity_parents;
+        std::unordered_map<EntityId, std::vector<EntityId>> entity_children;
 
 		/* Component Data */
-		std::unordered_map<const TypeInfo*, ComponentType> components;
+		std::unordered_map<const TypeInfo*, std::unique_ptr<ComponentContainer>> components;
 	};
 }

@@ -30,17 +30,13 @@ namespace sge
             Vec2 direction;
         };
 
-        ////////////////////////
-        ///   Constructors   ///
-    public:
-
-        CCharacterController(ProcessingFrame& pframe, EntityId entity, Data& data);
-
         ///////////////////
         ///   Methods   ///
     public:
 
         static void register_type(Scene& scene);
+
+        void reset(Data& data);
 
         bool on_ground() const;
 
@@ -66,10 +62,19 @@ namespace sge
 
         void walk(const Vec2& direction) const;
 
+    private:
+
+        void generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags) override;
+
         ////////////////
         ///   Data   ///
     private:
 
-        Data* _data;
+        Data* _data = nullptr;
+        mutable bool _current_jumped = false;
+        mutable bool _current_walked = false;
+        mutable std::vector<EntityId> _ord_jumped;
+        mutable std::vector<EntityId> _ord_walked_ents;
+        mutable std::vector<FWalkEvent> _ord_walked_tags;
     };
 }

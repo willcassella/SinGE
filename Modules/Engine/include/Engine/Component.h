@@ -1,17 +1,20 @@
 // Component.h
 #pragma once
 
-#include <set>
 #include <Core/Util/StringUtils.h>
 #include <Core/Reflection/Reflection.h>
 #include <Core/Interfaces/IToArchive.h>
 #include <Core/Interfaces/IFromArchive.h>
+#include <Core/Reflection/ReflectionBuilder.h>
 #include "config.h"
 
 namespace sge
 {
 	struct Scene;
+    struct TagBuffer;
+    struct SystemFrame;
 	struct ProcessingFrame;
+    class ComponentInterface;
 
 	template <class C>
 	struct TComponentId;
@@ -87,6 +90,22 @@ namespace sge
 		{
 			return !(lhs == rhs);
 		}
+        friend bool operator<(const ComponentId& lhs, const ComponentId& rhs)
+        {
+            return lhs._type < rhs._type || lhs._type == rhs._type && lhs._entity < rhs._entity;
+        }
+	    friend bool operator>(const ComponentId& lhs, const ComponentId& rhs)
+        {
+            return lhs._type > rhs._type || lhs._type == rhs._type && lhs._entity > rhs._entity;
+        }
+        friend bool operator<=(const ComponentId& lhs, const ComponentId& rhs)
+        {
+            return lhs < rhs || lhs == rhs;
+        }
+        friend bool operator>=(const ComponentId& lhs, const ComponentId& rhs)
+        {
+            return lhs > rhs || lhs == rhs;
+        }
 
 		//////////////////
 		///   Fields   ///
@@ -103,6 +122,8 @@ namespace sge
 	template <class C>
 	struct TComponentId
 	{
+        SGE_REFLECTED_TYPE;
+
 		////////////////////////
 		///   Constructors   ///
 	public:
@@ -142,13 +163,52 @@ namespace sge
 		EntityId _entity;
 	};
 
+    class SGE_ENGINE_API ComponentContainer
+    {
+    public:
+
+        using InstanceIterator = const EntityId*;
+
+        ////////////////////////
+        ///   Constructors   ///
+    public:
+
+        virtual ~ComponentContainer() = default;
+
+        ///////////////////
+        ///   Methods   ///
+    public:
+
+        virtual void reset() = 0;
+
+        virtual void to_archive(ArchiveWriter& writer) const = 0;
+
+        virtual void from_archive(ArchiveReader& reader) = 0;
+
+        virtual InstanceIterator get_start_iterator() const = 0;
+
+        virtual InstanceIterator get_end_iterator() const = 0;
+
+        virtual void create_instances(const EntityId* ord_entities, std::size_t num) = 0;
+
+        virtual void remove_instances(const EntityId* ord_instances, std::size_t num) = 0;
+
+        virtual void reset_interface(InstanceIterator instance, ComponentInterface* interf) = 0;
+    };
+
+    /**
+	 * \brief Provides access to a component within a processing frame.
+	 */
 	class SGE_ENGINE_API ComponentInterface
 	{
+        friend SystemFrame;
+
 		////////////////////////
 		///   Constructors   ///
 	public:
 
-		ComponentInterface(ProcessingFrame& pframe, EntityId entity);
+		ComponentInterface();
+        virtual ~ComponentInterface() = default;
 
 		///////////////////
 		///   Methods   ///
@@ -156,34 +216,22 @@ namespace sge
 
 		EntityId entity() const
 		{
-			return _entity;
+            return *_iter;
 		}
 
-		ComponentId id() const
-		{
-			return{ _entity, get_type() };
-		}
-
-		void from_property_archive(ArchiveReader& reader);
+        ComponentId id() const;
 
 		virtual const TypeInfo& get_type() const = 0;
 
-        void create_tag(const TypeInfo& tag_type, void* tag) const;
+		void from_property_archive(ArchiveReader& reader);
 
-        template <typename T>
-        void create_tag(T&& tag) const
-        {
-            this->create_tag(sge::get_type<T>(), &tag);
-        }
+        void destroy();
 
 	protected:
 
-		ProcessingFrame& processing_frame() const
-		{
-			return *_pframe;
-		}
+        virtual void generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags);
 
-		void apply_component_modified_tag();
+        void set_modified();
 
         template <typename T>
         void checked_setter(const T& new_value, T& old_value)
@@ -191,31 +239,28 @@ namespace sge
             if (new_value != old_value)
             {
                 old_value = new_value;
-                apply_component_modified_tag();
+                set_modified();
             }
         }
 
-		//////////////////
+	private:
+
+        void reset(ComponentContainer::InstanceIterator iter);
+
+	    //////////////////
 		///   Fields   ///
 	private:
 
-		ProcessingFrame* _pframe;
-		EntityId _entity;
-		bool _applied_modified_tag;
+        ComponentContainer::InstanceIterator _iter;
+        std::vector<EntityId> _ord_modified;
+        std::vector<EntityId> _ord_destroyed;
+		bool _modified_current;
+        bool _destroyed_current;
 	};
 
 	template <class ComponentT>
 	class TComponentInterface : public ComponentInterface
 	{
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		TComponentInterface(ProcessingFrame& pframe, EntityId entity)
-			: ComponentInterface(pframe, entity)
-		{
-		}
-
 		///////////////////
 		///   Methods   ///
 	public:
@@ -224,31 +269,6 @@ namespace sge
 		{
 			return{ this->entity() };
 		}
-	};
-
-	class SGE_ENGINE_API ComponentContainer
-	{
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		virtual ~ComponentContainer() = default;
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		virtual void reset() = 0;
-
-		virtual void to_archive(ArchiveWriter& writer, const std::set<EntityId>& est_instances) const = 0;
-
-		virtual void from_archive(ArchiveReader& reader, std::set<EntityId>& est_instances) = 0;
-
-		virtual void create_component(EntityId entity) = 0;
-
-		virtual void remove_component(EntityId entity) = 0;
-
-		virtual bool create_interface(ProcessingFrame& pframe, EntityId entity, void* addr) = 0;
 	};
 
 	/**
@@ -293,3 +313,6 @@ namespace std
 		}
 	};
 }
+
+template <class C>
+SGE_REFLECT_TYPE_TEMPLATE(sge::TComponentId, C);
