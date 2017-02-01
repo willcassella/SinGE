@@ -9,7 +9,6 @@ namespace sge
 	struct SystemFrame;
     struct UpdatePipeline;
 
-    // TODO: Make this useful again (I have a few ideas)
 	struct SGE_ENGINE_API ProcessingFrame
 	{
 		SGE_REFLECTED_TYPE;
@@ -19,16 +18,30 @@ namespace sge
 
 		////////////////////////
 		///   Constructors   ///
-	public:
-
-	    ProcessingFrame(ProcessingFrame&& move);
-		~ProcessingFrame();
-
 	private:
 
 		ProcessingFrame();
 		ProcessingFrame(const ProcessingFrame& copy) = delete;
-		ProcessingFrame& operator=(const ProcessingFrame& copy) = delete;
-        ProcessingFrame& operator=(ProcessingFrame&& move) = delete;
+	    ProcessingFrame& operator=(const ProcessingFrame& copy) = delete;
+        ProcessingFrame(ProcessingFrame&& move) = delete;
+	    ProcessingFrame& operator=(ProcessingFrame&& move) = delete;
+
+        ///////////////////
+        ///   Methods   ///
+	public:
+
+        EntityId entity() const;
+
+        std::size_t frame_index() const;
+
+        std::size_t iteration_index() const;
+
+        //////////////////
+        ///   Fields   ///
+	private:
+
+        EntityId _entity;
+        std::size_t _frame_index;
+        std::size_t _iteration_index;
 	};
 }
