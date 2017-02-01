@@ -70,7 +70,6 @@ namespace sge
             frame.process_entities_mut(moved_entities.data(), moved_entities.size(),
                 [iter = _data->frame_transformed_entities.begin()](
                 ProcessingFrame& /*pframe*/,
-                EntityId /*entity*/,
                 sge::CTransform3D& transform) mutable
             {
                 from_bullet(transform, (*iter)->transform);
@@ -81,7 +80,6 @@ namespace sge
             frame.process_entities_mut(moved_entities.data(), moved_entities.size(),
                 [iter = _data->frame_transformed_entities.begin()](
                 ProcessingFrame& /*pframe*/,
-                EntityId /*entity*/,
                 sge::CVelocity& velocity) mutable
             {
                 velocity.linear_velocity(from_bullet((*iter)->rigid_body->getInterpolationLinearVelocity()));
@@ -107,40 +105,36 @@ namespace sge
         {
             // Load all box colliders
             frame.process_entities([&data = *_data](
-                ProcessingFrame&,
-                EntityId entity,
+                ProcessingFrame& pframe,
                 const sge::CBoxCollider& box_collider)
             {
-                data.add_box_collider(entity, box_collider);
+                data.add_box_collider(pframe.entity(), box_collider);
             });
 
             // Load all capsule collider
             frame.process_entities([&data = *_data](
-                ProcessingFrame& /*pframe*/,
-                EntityId entity,
+                ProcessingFrame& pframe,
                 const sge::CCapsuleCollider& collider)
             {
-                data.add_capsule_collider(entity, collider);
+                data.add_capsule_collider(pframe.entity(), collider);
             });
 
             // Load all rigid bodies
             frame.process_entities([&data = *_data](
-                ProcessingFrame& /*pframe*/,
-                EntityId entity,
+                ProcessingFrame& pframe,
                 const sge::CRigidBody& rigid_body,
                 const sge::CTransform3D& transform)
             {
-                data.add_rigid_body(entity, transform, rigid_body);
+                data.add_rigid_body(pframe.entity(), transform, rigid_body);
             });
 
             // Load all character controllers
             frame.process_entities([&data = *_data](
-                ProcessingFrame& /*pframe*/,
-                EntityId entity,
+                ProcessingFrame& pframe,
                 const sge::CCharacterController& character_controller,
                 const sge::CTransform3D& transform)
             {
-                data.add_character_controller(entity, transform, character_controller);
+                data.add_character_controller(pframe.entity(), transform, character_controller);
             });
         }
 

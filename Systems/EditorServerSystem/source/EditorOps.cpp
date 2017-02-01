@@ -360,9 +360,9 @@ namespace sge
 
 						// Access the component
 						frame.process_entities(&entity_id, 1, &type, 1,
-                            [type, &writer](ProcessingFrame&, EntityId entity, auto comp) -> ProcessControl
+                            [type, entity_id, &writer](ProcessingFrame&, auto comp) -> ProcessControl
 						{
-							std::cout << "Reading properties of '" << type->name() << "' component on entity '" << entity << "'" << std::endl;
+							std::cout << "Reading properties of '" << type->name() << "' component on entity '" << entity_id << "'" << std::endl;
 							ArchiveWriter* writers[] = { &writer };
 							read_properties(Any<>{ *type, comp[0] }, writers, 1);
 							return ProcessControl::BREAK;
@@ -393,7 +393,7 @@ namespace sge
 
 					    // Process the component and deserialize it
 						frame.process_entities_mut(&entity, 1, &type, 1,
-                            [type, &reader](ProcessingFrame&, EntityId entity, auto comp) -> ProcessControl
+                            [type, entity, &reader](ProcessingFrame&, auto comp) -> ProcessControl
 						{
 							std::cout << "Writing properties of '" << type->name() << "' component on entity '" << entity << "'" << std::endl;
 							write_properties(AnyMut<>{ *type, comp[0] }, reader);

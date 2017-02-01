@@ -43,7 +43,7 @@ namespace sge
 		* \param entity The entity currently being processed.
 		* \param components The components attached to this entity currently being processed.
 		*/
-		using ProcessFn = ProcessControl(ProcessingFrame& pframe, EntityId entity, const ComponentInterface* const components[]);
+		using ProcessFn = ProcessControl(ProcessingFrame& pframe, const ComponentInterface* const components[]);
 
         /**
         * \brief Function signature used for processing functions that perform mutation.
@@ -51,7 +51,7 @@ namespace sge
         * \param entity The entity currently being processed.
         * \param components The components attached to this entity currently being processed.
         */
-        using ProcessMutFn = ProcessControl(ProcessingFrame& pframe, EntityId entity, ComponentInterface* const components[]);
+        using ProcessMutFn = ProcessControl(ProcessingFrame& pframe, ComponentInterface* const components[]);
 
 		////////////////////////
 		///   Constructors   ///
@@ -160,13 +160,13 @@ namespace sge
         template <class T, typename RetT, typename ... ComponentTs>
         void process_entities(
             T* outer,
-            RetT(T::*process_fn)(ProcessingFrame&, EntityId, ComponentTs...))
+            RetT(T::*process_fn)(ProcessingFrame&, ComponentTs...))
         {
             using ComponentList = tmp::list<ComponentTs...>;
 
             // Create a wrapper function
-            auto wrapper = [outer, process_fn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) -> auto {
-                return (outer->*process_fn)(pframe, entity, components...);
+            auto wrapper = [outer, process_fn](ProcessingFrame& pframe, ComponentTs ... components) -> auto {
+                return (outer->*process_fn)(pframe, components...);
             };
 
             // Run the processing function
@@ -184,7 +184,7 @@ namespace sge
         void process_entities(ProcessFnT&& process_fn)
         {
             using FnTraits = stde::function_traits<ProcessFnT>;
-            using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
+            using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 1>;
             using RetT = typename FnTraits::return_type;
 
             // Run the process function
@@ -213,7 +213,7 @@ namespace sge
         void process_entities_mut(ProcessFnT&& process_fn)
         {
             using FnTraits = stde::function_traits<ProcessFnT>;
-            using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
+            using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 1>;
             using RetT = typename FnTraits::return_type;
 
             // Run the process functions
@@ -231,13 +231,13 @@ namespace sge
         template <class T, typename RetT, class ... ComponentTs>
         void process_entities_mut(
             T* outer,
-            RetT(T::*process_fn)(ProcessingFrame&, EntityId, ComponentTs...))
+            RetT(T::*process_fn)(ProcessingFrame&, ComponentTs...))
         {
             using ComponentList = tmp::list<ComponentTs...>;
 
             // Create a wrapper function
-            auto wrapper = [outer, process_fn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) -> auto {
-                return (outer->*process_fn)(pframe, entity, components...);
+            auto wrapper = [outer, process_fn](ProcessingFrame& pframe, ComponentTs ... components) -> auto {
+                return (outer->*process_fn)(pframe, components...);
             };
 
             // Run the processing function
@@ -275,7 +275,7 @@ namespace sge
             ProcessFnT&& process_fn)
         {
             using FnTraits = stde::function_traits<ProcessFnT>;
-            using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
+            using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 1>;
             using RetT = typename FnTraits::return_type;
 
             // Run the processing function
@@ -297,13 +297,13 @@ namespace sge
             const EntityId* ord_entities,
             std::size_t num_entities,
             T* outer,
-            Ret(T::*process_fn)(ProcessingFrame&, EntityId, ComponentTs...))
+            Ret(T::*process_fn)(ProcessingFrame&, ComponentTs...))
         {
             using ComponentList = tmp::list<ComponentTs...>;
 
             // Create a wrapper function
-            auto wrapper = [outer, process_fn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) -> auto {
-                return (outer->*process_fn)(pframe, entity, components...);
+            auto wrapper = [outer, process_fn](ProcessingFrame& pframe, ComponentTs ... components) -> auto {
+                return (outer->*process_fn)(pframe, components...);
             };
 
             // Run the processing function
@@ -338,13 +338,13 @@ namespace sge
             const EntityId* ord_entities,
             std::size_t num_entities,
             T* outer,
-            RetT(T::*process_fn)(ProcessingFrame&, EntityId, ComponentTs...))
+            RetT(T::*process_fn)(ProcessingFrame&, ComponentTs...))
         {
             using ComponentList = tmp::list<ComponentTs...>;
 
             // Create a wrapper function
-            auto wrapper = [outer, process_fn](ProcessingFrame& pframe, EntityId entity, ComponentTs ... components) -> auto {
-                return (outer->*process_fn)(pframe, entity, components...);
+            auto wrapper = [outer, process_fn](ProcessingFrame& pframe, ComponentTs ... components) -> auto {
+                return (outer->*process_fn)(pframe, components...);
             };
 
             // Run the processing function
@@ -367,7 +367,7 @@ namespace sge
             ProcessFnT&& process_fn)
         {
             using FnTraits = stde::function_traits<ProcessFnT>;
-            using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 2>;
+            using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 1>;
             using RetT = typename FnTraits::return_type;
 
             // Run the processing function
@@ -390,8 +390,8 @@ namespace sge
 		static auto adapt_process_fn(tmp::type<ProcessControl>, tmp::list<ComponentTs...>, ProcessFnT& process_fn)
 		{
 			// Case where return type is 'ProcessControl', return what they return
-			return [&process_fn](ProcessingFrame& pframe, EntityId entity, auto components) -> ProcessControl {
-				return SystemFrame::invoke_process_fn(tmp::list<ComponentTs...>{}, process_fn, pframe, entity, components);
+			return [&process_fn](ProcessingFrame& pframe, auto components) -> ProcessControl {
+				return SystemFrame::invoke_process_fn(tmp::list<ComponentTs...>{}, process_fn, pframe, components);
 			};
 		}
 
@@ -399,8 +399,8 @@ namespace sge
 		static auto adapt_process_fn(tmp::type<void>, tmp::list<ComponentTs...>, ProcessFnT& process_fn)
 		{
 			// Case where return type is void, just assume they want to unconditionally continue.
-			return [&process_fn](ProcessingFrame& pframe, EntityId entity, auto components) -> ProcessControl {
-				SystemFrame::invoke_process_fn(tmp::list<ComponentTs...>{}, process_fn, pframe, entity, components);
+			return [&process_fn](ProcessingFrame& pframe, auto components) -> ProcessControl {
+				SystemFrame::invoke_process_fn(tmp::list<ComponentTs...>{}, process_fn, pframe, components);
 				return ProcessControl::CONTINUE;
 			};
 		}
@@ -416,7 +416,6 @@ namespace sge
 			tmp::list<FrontCT, RestCTs...>,
 			ProcessFnT& process_fn,
 			ProcessingFrame& pframe,
-			EntityId entity,
 			const ComponentIT* components,
 			ConvertedCTs&... converted)
 		{
@@ -424,7 +423,6 @@ namespace sge
 				tmp::list<RestCTs...>{},
 				process_fn,
 				pframe,
-				entity,
 				components + 1,
 				converted...,
 				*static_cast<std::remove_reference_t<FrontCT>*>(*components));
@@ -435,11 +433,10 @@ namespace sge
 			tmp::list<>,
 			ProcessFnT& process_fn,
 			ProcessingFrame& pframe,
-			EntityId entity,
 			const ComponentIT* /*components*/,
 			ConvertedCTs&... converted)
 		{
-			return process_fn(pframe, entity, converted...);
+			return process_fn(pframe, converted...);
 		}
 
 		template <typename ProcessFnT>

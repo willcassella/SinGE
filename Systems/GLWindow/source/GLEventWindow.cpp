@@ -168,7 +168,6 @@ namespace sge
 
         frame.process_entities([this, &frame](
             ProcessingFrame& pframe,
-            EntityId /*entity*/,
             const CInput& input)
         {
             // For each keyboard binding

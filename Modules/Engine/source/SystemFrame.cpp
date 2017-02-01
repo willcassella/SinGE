@@ -342,10 +342,12 @@ namespace sge
         }
 
         // Search for matches
-        while (true)
+        for (std::size_t frame_index = 0, iteration_index = 0; true; ++frame_index)
         {
             // Find the next match
-            *primary_iter = instance_union(*primary_iter, primary_iter_end, secondary_iters, secondary_end_iters, num_secondary_iters);
+            auto advanced_iter = instance_union(*primary_iter, primary_iter_end, secondary_iters, secondary_end_iters, num_secondary_iters);
+            iteration_index += advanced_iter - *primary_iter;
+            *primary_iter = advanced_iter;
 
             // If there are no more, quit searching
             if (*primary_iter == primary_iter_end)
@@ -360,8 +362,13 @@ namespace sge
                 containers[i]->reset_interface(instance_iters[i], comp_interfaces[i]);
             }
 
+            // Set up the processing frame
+            pframe._entity = **primary_iter;
+            pframe._frame_index = frame_index;
+            pframe._iteration_index = iteration_index;
+
             // Call the processing function
-            auto control = process_fn(pframe, **primary_iter, comp_interfaces);
+            auto control = process_fn(pframe, comp_interfaces);
             if (control == ProcessControl::BREAK)
             {
                 break;
