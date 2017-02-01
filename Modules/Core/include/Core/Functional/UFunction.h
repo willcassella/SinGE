@@ -146,8 +146,8 @@ namespace sge
         {
             using ValueFnT = std::remove_reference_t<FnObjectT>;
 
-            // If the type fits in the local buffer with no alignment issues, AND is trivially move constructible
-            if (sizeof(ValueFnT) <= LOCAL_BUFFER_SIZE && alignof(ValueFnT) <= alignof(Data) && std::is_trivially_move_constructible<ValueFnT>::value)
+            // If the type fits in the local buffer with no alignment issues, AND is trivially destructible
+            if (sizeof(ValueFnT) <= LOCAL_BUFFER_SIZE && alignof(ValueFnT) <= alignof(Data) && std::is_trivially_destructible<ValueFnT>::value)
             {
                 new (_data.erased_local_fobj) ValueFnT(std::forward<FnObjectT>(fn));
                 _invoker = &invoke_erased_local_fobj<ValueFnT>;
