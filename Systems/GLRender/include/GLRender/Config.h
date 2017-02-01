@@ -1,7 +1,6 @@
 // GLRenderSystemConfig.h
 #pragma once
 
-#include <string>
 #include <Core/Reflection/Reflection.h>
 #include "build.h"
 
