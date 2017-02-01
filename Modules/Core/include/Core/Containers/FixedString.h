@@ -36,6 +36,39 @@ namespace sge
             std::strncpy(_value, str, Size);
         }
 
+        /////////////////////
+        ///   Operators   ///
+    public:
+
+        friend bool operator==(const FixedString& lhs, const char* rhs)
+        {
+            return std::strcmp(lhs.c_str(), rhs) == 0;
+        }
+        friend bool operator==(const char* lhs, const FixedString& rhs)
+        {
+            return std::strcmp(lhs, rhs.c_str()) == 0;
+        }
+        friend bool operator!=(const FixedString& lhs, const char* rhs)
+        {
+            return !(lhs == rhs);
+        }
+        friend bool operator!=(const char* lhs, const FixedString& rhs)
+        {
+            return !(lhs == rhs);
+        }
+
+        template <std::size_t RhsSize>
+        friend bool operator==(const FixedString& lhs, const FixedString<RhsSize>& rhs)
+        {
+            return std::strcmp(lhs.c_str(), rhs.c_str()) == 0;
+        }
+
+        template <std::size_t RhsSize>
+        friend bool operator!=(const FixedString& lhs, const FixedString<RhsSize>& rhs)
+        {
+            return !(lhs == rhs);
+        }
+
         //////////////////
         ///   Fields   ///
     private:
