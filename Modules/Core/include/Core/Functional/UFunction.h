@@ -127,12 +127,6 @@ namespace sge
             return (*reinterpret_cast<const FnT*>(data.erased_local_fobj))(std::forward<ArgTs>(args)...);
         }
 
-        template <typename FnT>
-        static void destroy_erased_local_fobj(Data& data)
-        {
-            reinterpret_cast<FnT*>(data.erased_local_fobj)->~FnT();
-        }
-
         void destroy()
         {
             if (_destructor)
@@ -151,7 +145,7 @@ namespace sge
             {
                 new (_data.erased_local_fobj) ValueFnT(std::forward<FnObjectT>(fn));
                 _invoker = &invoke_erased_local_fobj<ValueFnT>;
-                _destructor = &destroy_erased_local_fobj<ValueFnT>;
+                _destructor = nullptr;
             }
             else
             {
