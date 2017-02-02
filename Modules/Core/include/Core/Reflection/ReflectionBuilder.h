@@ -36,18 +36,10 @@ namespace sge
 			: base_type_data(std::move(name))
 		{
 			base_type_data.flags = TF_NATIVE;
-
-			if (std::is_empty<T>::value)
-			{
-				base_type_data.size = 0;
-			}
-			else
-			{
-				base_type_data.size = sizeof(T);
-			}
-
+			base_type_data.size = sizeof(T);
 			base_type_data.alignment = alignof(T&);
 			base_type_data.native_type_info = &typeid(T);
+            base_type_data.is_empty = std::is_empty<T>::value;
 
 			Self::set_init<T>(0);
 			Self::set_copy_init<T>(0);

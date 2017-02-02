@@ -69,7 +69,8 @@ namespace sge
 				size(0),
 				alignment(0),
 				base(nullptr),
-				native_type_info(nullptr)
+				native_type_info(nullptr),
+                is_empty(false)
 			{
 			}
 
@@ -83,6 +84,7 @@ namespace sge
 			std::size_t alignment;
 			const TypeInfo* base;
 			const std::type_info* native_type_info;
+            bool is_empty;
 		};
 
 		////////////////////////
@@ -186,7 +188,7 @@ namespace sge
 		 */
 		bool is_empty() const
 		{
-			return size() == 0;
+            return _data.is_empty;
 		}
 
 		/**
