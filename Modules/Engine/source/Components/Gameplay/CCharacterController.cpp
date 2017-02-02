@@ -64,7 +64,6 @@ namespace sge
     {
         _data = &data;
         _current_jumped = false;
-        _current_walked = false;
     }
 
     bool CCharacterController::on_ground() const
@@ -128,11 +127,10 @@ namespace sge
 
     void CCharacterController::walk(const Vec2& direction) const
     {
-        if (!_current_walked && on_ground())
+        if (on_ground())
         {
             _ord_walked_ents.push_back(entity());
             _ord_walked_tags.push_back(FWalkEvent{ direction });
-            _current_walked = true;
         }
     }
 

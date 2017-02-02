@@ -72,7 +72,6 @@ namespace sge
 
         Data* _data = nullptr;
         mutable bool _current_jumped = false;
-        mutable bool _current_walked = false;
         mutable std::vector<EntityId> _ord_jumped;
         mutable std::vector<EntityId> _ord_walked_ents;
         mutable std::vector<FWalkEvent> _ord_walked_tags;
