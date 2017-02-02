@@ -1,5 +1,6 @@
 // InputBindings.cpp
 
+#include <cstring>
 #include <iostream>
 #include <GLFW/glfw3.h>
 #include <Core/Reflection/ReflectionBuilder.h>
