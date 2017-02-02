@@ -7,6 +7,8 @@
 #include "../include/Engine/SystemFrame.h"
 #include "../include/Engine/ProcessingFrame.h"
 #include "../include/Engine/UpdatePipeline.h"
+#include "../include/Engine/TagCallbackInfo.h"
+#include "../include/Engine/SystemInfo.h"
 
 SGE_REFLECT_TYPE(sge::Scene)
 .implements<IToArchive>()
@@ -182,11 +184,25 @@ namespace sge
 		// For each step in the pipeline
 		for (const auto& pipeline_step : pipeline.get_pipeline())
 		{
-            // Run the first system TODO: ALLOW MULITPLE SYSTEMS
-            SystemFrame frame{ UpdatePipeline::NO_SYSTEM, *this, _scene_data };
-            pipeline_step[0](frame, _current_time, dt);
+            std::vector<SystemFrame> tag_frames;
 
-            auto tag_frames = apply_changes(pipeline, &frame, 1);
+            // For each system in the step TODO: Make this asynchronous
+            for (const auto& system : pipeline_step)
+            {
+                // Create a frame for the system
+                SystemFrame frame{ system->system_token, *this, _scene_data };
+
+                // Call the system
+                system->system_fn(frame, _current_time, dt);
+
+                // If it has tags, add it to the tag frames array
+                if (frame._has_tags)
+                {
+                    tag_frames.push_back(std::move(frame));
+                }
+            }
+
+            // Keep running the tag frames until there are no tags left
             while (!tag_frames.empty())
             {
                 tag_frames = apply_changes(pipeline, tag_frames.data(), tag_frames.size());

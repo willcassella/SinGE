@@ -1,4 +1,4 @@
-// Tag.h
+// TagCallbackInfo.h
 #pragma once
 
 #include "UpdatePipeline.h"
@@ -7,7 +7,7 @@ namespace sge
 {
     struct SystemFrame;
 
-    struct TagCallback
+    struct TagCallbackInfo
     {
         //////////////////
         ///   Fields   ///

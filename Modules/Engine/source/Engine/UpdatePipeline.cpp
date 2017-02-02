@@ -6,6 +6,8 @@
 #include "../../include/Engine/UpdatePipeline.h"
 #include "../../include/Engine/SystemFrame.h"
 #include "../../include/Engine/Scene.h"
+#include "../../include/Engine/SystemInfo.h"
+#include "../../include/Engine/TagCallbackInfo.h"
 
 SGE_REFLECT_TYPE(sge::UpdatePipeline);
 
@@ -16,7 +18,7 @@ namespace sge
         return _pipeline;
     }
 
-    UpdatePipeline::AsyncToken UpdatePipeline::get_async_token()
+    UpdatePipeline::AsyncToken UpdatePipeline::new_async_token()
     {
         return _next_async_token++;
     }
@@ -25,6 +27,10 @@ namespace sge
     {
         _next_async_token = 1;
         _next_system_token = 1;
+    }
+
+    UpdatePipeline::~UpdatePipeline()
+    {
     }
 
     void UpdatePipeline::configure_pipeline(ArchiveReader& reader)
@@ -42,8 +48,8 @@ namespace sge
                 sge::from_archive(system_fn_name, reader);
 
                 // Search for the system
-                auto iter = this->_system_fns.find(system_fn_name);
-                if (iter == this->_system_fns.end())
+                auto iter = this->_systems.find(system_fn_name);
+                if (iter == this->_systems.end())
                 {
                     if (system_fn_name.empty())
                     {
@@ -57,8 +63,7 @@ namespace sge
                     return;
                 }
 
-                // TODO: Develope a copyable replacement for std::function
-                step.push_back(std::move(iter->second));
+                step.push_back(iter->second.get());
             });
 
             if (step.empty())
@@ -71,7 +76,10 @@ namespace sge
         });
     }
 
-    UpdatePipeline::SystemToken UpdatePipeline::register_system_fn(std::string name, UFunction<SystemFn> system_fn)
+    UpdatePipeline::SystemToken UpdatePipeline::register_system_fn(
+        std::string name,
+        AsyncToken async_token,
+        UFunction<SystemFn> system_fn)
     {
         if (name.empty())
         {
@@ -79,8 +87,19 @@ namespace sge
             return NO_SYSTEM;
         }
 
-        _system_fns.insert(std::make_pair(std::move(name), std::move(system_fn)));
-        return _next_system_token++;
+        // Generate a system token for the system
+        const auto system_token = _next_system_token++;
+
+        // Create the system info
+        auto info = std::make_unique<SystemInfo>();
+        info->name = name;
+        info->system_token = system_token;
+        info->async_token = async_token;
+        info->system_fn = std::move(system_fn);
+
+        // Register the system
+        _systems.insert(std::make_pair(std::move(name), std::move(info)));
+        return system_token;
     }
 
     void UpdatePipeline::register_tag_callback(
@@ -90,12 +109,14 @@ namespace sge
         const TypeInfo& tag_type,
         UFunction<TagCallbackFn> callback)
     {
-        TagCallback cb;
-        cb.system = system_token;
-        cb.options = options;
-        cb.callback = std::move(callback);
+        // Create the tag calback info
+        TagCallbackInfo info;
+        info.system = system_token;
+        info.options = options;
+        info.callback = std::move(callback);
 
-        _tag_callbacks[&tag_type][async_token].push_back(std::move(cb));
+        // Register it
+        _tag_callbacks[&tag_type][async_token].push_back(std::move(info));
     }
 
     void UpdatePipeline::register_tag_callback(
@@ -106,12 +127,14 @@ namespace sge
         const TypeInfo& component_type,
         UFunction<TagCallbackFn> callback)
     {
-        TagCallback cb;
-        cb.system = system_token,
-        cb.component_type = &component_type;
-        cb.options = options;
-        cb.callback = std::move(callback);
+        // Create the tag callback info
+        TagCallbackInfo info;
+        info.system = system_token,
+        info.component_type = &component_type;
+        info.options = options;
+        info.callback = std::move(callback);
 
-        _tag_callbacks[&tag_type][async_token].push_back(std::move(cb));
+        // Register it
+        _tag_callbacks[&tag_type][async_token].push_back(std::move(info));
     }
 }

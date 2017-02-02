@@ -143,7 +143,10 @@
     <ClInclude Include="include\Engine\Util\VectorUtils.h">
       <Filter>include\Util</Filter>
     </ClInclude>
-    <ClInclude Include="include\Engine\TagCallback.h">
+    <ClInclude Include="include\Engine\SystemInfo.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\TagCallbackInfo.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>

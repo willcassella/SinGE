@@ -1,6 +1,7 @@
 // UpdatePipeline.h
 #pragma once
 
+#include <memory>
 #include <Core/Functional/UFunction.h>
 #include "Component.h"
 
@@ -9,7 +10,8 @@ namespace sge
     struct Scene;
     struct SceneData;
     struct SystemFrame;
-    struct TagCallback;
+    struct SystemInfo;
+    struct TagCallbackInfo;
 
     using TagCallbackOptions_t = uint32;
     enum : TagCallbackOptions_t
@@ -76,7 +78,7 @@ namespace sge
          */
         static constexpr AsyncToken FULLY_ASYNC = 0;
 
-        using PipelineStep = std::vector<UFunction<SystemFn>>;
+        using PipelineStep = std::vector<SystemInfo*>;
         using Pipeline = std::vector<PipelineStep>;
 
         /////////////////////////
@@ -84,10 +86,11 @@ namespace sge
     public:
 
         UpdatePipeline();
+        ~UpdatePipeline();
         UpdatePipeline(const UpdatePipeline& copy) = delete;
         UpdatePipeline& operator=(const UpdatePipeline& copy) = delete;
-        UpdatePipeline(UpdatePipeline&& move) = default;
-        UpdatePipeline& operator=(UpdatePipeline&& move) = default;
+        UpdatePipeline(UpdatePipeline&& move) = delete;
+        UpdatePipeline& operator=(UpdatePipeline&& move) = delete;
 
         ///////////////////
         ///   Methods   ///
@@ -97,7 +100,7 @@ namespace sge
 
         const Pipeline& get_pipeline() const;
 
-        AsyncToken get_async_token();
+        AsyncToken new_async_token();
 
         /**
         * \brief Registers a system function to be called during the read phase.
@@ -105,7 +108,10 @@ namespace sge
         * \param system_fn The system function to call during the read phase.
         * \return The token for the system function, which may be used to unregister it.
         */
-        SystemToken register_system_fn(std::string name, UFunction<SystemFn> system_fn);
+        SystemToken register_system_fn(
+            std::string name,
+            AsyncToken async_token,
+            UFunction<SystemFn> system_fn);
 
         /**
         * \brief Registers a system member function to be called during the read phase.
@@ -117,10 +123,11 @@ namespace sge
         template <typename T>
         SystemToken register_system_fn(
             std::string name,
+            AsyncToken async_token,
             T* outer,
             void(T::*system_fn)(SystemFrame& frame, float current_time, float dt))
         {
-            return this->register_system_fn(std::move(name), [outer, system_fn]
+            return this->register_system_fn(std::move(name), async_token, [outer, system_fn]
                 (SystemFrame& frame, float current_time, float dt)
             {
                 (outer->*system_fn)(frame, current_time, dt);
@@ -251,9 +258,9 @@ namespace sge
         std::vector<PipelineStep> _pipeline;
 
         /* System functions */
-        std::unordered_map<std::string, UFunction<SystemFn>> _system_fns;
+        std::unordered_map<std::string, std::unique_ptr<SystemInfo>> _systems;
 
         /* Tag callbacks */
-        std::unordered_map<const TypeInfo*, std::map<AsyncToken, std::vector<TagCallback>>> _tag_callbacks;
+        std::unordered_map<const TypeInfo*, std::map<AsyncToken, std::vector<TagCallbackInfo>>> _tag_callbacks;
     };
 }
