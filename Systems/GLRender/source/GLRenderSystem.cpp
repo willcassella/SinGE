@@ -311,7 +311,12 @@ namespace sge
 
 		void GLRenderSystem::pipeline_register(UpdatePipeline& pipeline)
 		{
-			pipeline.register_system_fn("gl_render", this, &GLRenderSystem::render_scene);
+            const auto async_token = pipeline.new_async_token();
+			pipeline.register_system_fn(
+                "gl_render",
+                async_token,
+                this,
+                &GLRenderSystem::render_scene);
             //pipeline.register_tag_callback(this, &GLRenderSystem::cb_debug_draw);
 		}
 
