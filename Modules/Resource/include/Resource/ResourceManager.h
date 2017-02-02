@@ -119,7 +119,7 @@ namespace sge
 		{
 			return this->async_write_resource(id.uri(), sge::get_type<T>(), token,
 				[fn = std::move(writeFn)](void* resource) -> void {
-				writeFn(*static_cast<T*>(resource));
+				fn(*static_cast<T*>(resource));
 			});
 		}
 
