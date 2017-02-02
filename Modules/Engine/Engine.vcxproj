@@ -183,8 +183,8 @@
     <ClInclude Include="include\Engine\Components\Physics\CSensor.h" />
     <ClInclude Include="include\Engine\Components\Physics\CVelocity.h" />
     <ClInclude Include="include\Engine\config.h" />
-    <ClInclude Include="include\Engine\System.h" />
     <ClInclude Include="include\Engine\TagBuffer.h" />
+    <ClInclude Include="include\Engine\TagCallback.h" />
     <ClInclude Include="include\Engine\Tags\FDebugDraw.h" />
     <ClInclude Include="include\Engine\UpdatePipeline.h" />
     <ClInclude Include="include\Engine\ProcessingFrame.h" />
@@ -195,7 +195,6 @@
     <ClInclude Include="include\Engine\Scene.h" />
     <ClInclude Include="include\Engine\SceneData.h" />
     <ClInclude Include="include\Engine\SystemFrame.h" />
-    <ClInclude Include="include\Engine\TagCallback.h" />
     <ClInclude Include="include\Engine\Util\BasicComponentContainer.h" />
     <ClInclude Include="include\Engine\Util\EmptyComponentContainer.h" />
     <ClInclude Include="include\Engine\Util\VectorUtils.h" />

@@ -70,12 +70,18 @@ namespace sge
         return primary_iter;
     }
 
-	SystemFrame::SystemFrame(const Scene& scene, SceneData& scene_data)
-		: _has_tags(false),
+	SystemFrame::SystemFrame(UpdatePipeline::SystemToken system_token, const Scene& scene, SceneData& scene_data)
+		: _system_token(system_token),
+        _has_tags(false),
         _scene(&scene),
 		_scene_data(&scene_data)
 	{
 	}
+
+    UpdatePipeline::SystemToken SystemFrame::system_token() const
+    {
+        return _system_token;
+    }
 
     const Scene& SystemFrame::scene() const
     {
@@ -96,6 +102,8 @@ namespace sge
 
     void SystemFrame::destroy_entities(const EntityId* ordered_entities, std::size_t num_entities)
     {
+        _has_tags = true;
+
         // Add the entities to the destroyed set
         insert_ord_entities(_ord_destroyed_entities, ordered_entities, num_entities);
 
@@ -189,6 +197,8 @@ namespace sge
 
     void SystemFrame::create_components(const TypeInfo& type, const EntityId* ord_entities, std::size_t num_entities)
     {
+        _has_tags = true;
+
         // Make sure all of the entities are valid entities
         for (std::size_t i = 0; i < num_entities; ++i)
         {
@@ -207,6 +217,7 @@ namespace sge
         const EntityId* ord_entities,
         std::size_t num_entities)
     {
+        _has_tags = true;
         insert_ord_entities(_ord_destroyed_components[&type], ord_entities, num_entities);
     }
 
@@ -259,6 +270,7 @@ namespace sge
 
     void SystemFrame::append_tags(const TypeInfo& tag_type, TagBuffer tag_buffer)
     {
+        _has_tags = true;
         _tags[&tag_type].push_back(std::move(tag_buffer));
     }
 
@@ -376,11 +388,14 @@ namespace sge
 
             // Increment the primary iterator (to prevent matching the same entity again)
             ++*primary_iter;
+            ++iteration_index;
         }
 
         // Generate tags and destroy interfaces
         for (std::size_t i = 0; i < num_types; ++i)
         {
+            _has_tags = true;
+
             // Insert the destroyed components
             insert_ord_entities(
                 _ord_destroyed_components[types[i]],

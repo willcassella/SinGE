@@ -183,10 +183,9 @@ namespace sge
 		for (const auto& pipeline_step : pipeline.get_pipeline())
 		{
             // Run the first system TODO: ALLOW MULITPLE SYSTEMS
-            SystemFrame frame{ *this, _scene_data };
+            SystemFrame frame{ UpdatePipeline::NO_SYSTEM, *this, _scene_data };
             pipeline_step[0](frame, _current_time, dt);
 
-            // TODO: MAKE THIS ASYNCHRONOUS (AND NOT SHITTY)
             auto tag_frames = apply_changes(pipeline, &frame, 1);
             while (!tag_frames.empty())
             {
@@ -202,15 +201,61 @@ namespace sge
     {
         std::vector<SystemFrame> result;
 
-        // Create tags for destroyed components
-
-
-
-        std::vector<EntityId> _ord_destroyed_entities;
-
+        // For each frame
         for (std::size_t i = 0; i < num_frames; ++i)
         {
+            // For each type of tag in the frame
+            for (const auto& tag_type : frames[i]._tags)
+            {
+                auto iter = pipeline._tag_callbacks.find(tag_type.first);
+                if (iter == pipeline._tag_callbacks.end())
+                {
+                    continue;
+                }
 
+                // TODO: MAKE THIS ASYNCHRONOUS (AND NOT SHITTY)
+                // For each tag callback set
+                for (auto& tag_cb_set : iter->second)
+                {
+                    // For each tag callback
+                    for (auto& tag_cb : tag_cb_set.second)
+                    {
+                        // Make sure this tag callback is compatible with this frame
+                        if (tag_cb.system != UpdatePipeline::NO_SYSTEM && tag_cb.system == frames[i].system_token())
+                        {
+                            continue;
+                        }
+
+                        // For each tag set
+                        for (const auto& tag_set : tag_type.second)
+                        {
+                            // Make sure this callback is compatible with the set
+                            if (tag_cb.component_type != nullptr && tag_cb.component_type != &tag_set.component_type())
+                            {
+                                continue;
+                            }
+
+                            // Create a system frame for the callback
+                            SystemFrame tag_frame{ tag_cb.system, *this, _scene_data };
+
+                            // Call the tag callback
+                            tag_cb.callback(
+                                tag_frame,
+                                *tag_type.first,
+                                tag_set.component_type(),
+                                tag_set.get_buffer(),
+                                tag_set.get_ord_entities(),
+                                tag_set.num_tags());
+
+                            // If the frame has changes, add it to the list
+                            if (tag_frame._has_tags)
+                            {
+                                result.push_back(std::move(tag_frame));
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         return result;

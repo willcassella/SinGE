@@ -6,13 +6,13 @@
 #include <Core/Functional/UFunction.h>
 #include "ProcessingFrame.h"
 #include "TagBuffer.h"
+#include "UpdatePipeline.h"
 
 namespace sge
 {
 	struct ProcessingFrame;
 	struct SceneData;
 	struct Scene;
-    struct UpdatePipeline;
 
 	enum class ProcessControl
 	{
@@ -55,20 +55,28 @@ namespace sge
 
 		////////////////////////
 		///   Constructors   ///
+	public:
+
+		SystemFrame(SystemFrame&& move) = default;
+
 	private:
 
-		SystemFrame(const Scene& scene, SceneData& scene_data);
+		SystemFrame(UpdatePipeline::SystemToken system_token, const Scene& scene, SceneData& scene_data);
 		SystemFrame(const SystemFrame& copy) = delete;
 		SystemFrame& operator=(const SystemFrame& copy) = delete;
-		SystemFrame(SystemFrame&& move) = default;
-		SystemFrame& operator=(SystemFrame&& move) = default;
+		SystemFrame& operator=(SystemFrame&& move) = delete;
 
 		///////////////////
 		///   Methods   ///
 	public:
 
         /**
-         * \breif Returns the scene this system frame is operating on.
+         * \brief Returns the token for the system
+         */
+        UpdatePipeline::SystemToken system_token() const;
+
+        /**
+         * \brief Returns the scene this system frame is operating on.
          */
         const Scene& scene() const;
 
@@ -451,6 +459,7 @@ namespace sge
 		///   Fields   ///
 	private:
 
+        UpdatePipeline::SystemToken _system_token;
         bool _has_tags;
         const Scene* const _scene;
 		SceneData* const _scene_data;

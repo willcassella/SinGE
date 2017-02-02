@@ -11,6 +11,20 @@ namespace sge
     struct SystemFrame;
     struct TagCallback;
 
+    using TagCallbackOptions_t = uint32;
+    enum : TagCallbackOptions_t
+    {
+        /**
+         * \brief There are no special options associated with this tag callback.
+         */
+        TCO_NONE,
+
+        /**
+         * \brief The tag callback may be called asynchronously with respect to itself.
+         */
+        TCO_SELF_ASYNC = (1 << 0)
+    };
+
     struct SGE_ENGINE_API UpdatePipeline
     {
         SGE_REFLECTED_TYPE;
@@ -25,6 +39,15 @@ namespace sge
         */
         using SystemFn = void(SystemFrame& frame, float current_time, float dt);
 
+        /**
+         * \brief Function signature used for tag callback functions.
+         * \param frame The system frame the callback may use.
+         * \param tag_type The type of tag this callback is being called for.
+         * \param component_type The type of component the tag was applied to.
+         * \param tags An array of tag objects that were applied to the components.
+         * \param component_instances An ordered array of entities the components are attached to that the tags were applied to.
+         * \param num_tags The number of tags in the array.
+         */
         using TagCallbackFn = void(
             SystemFrame& frame,
             const TypeInfo& tag_type,
@@ -33,17 +56,34 @@ namespace sge
             const EntityId* component_instances,
             std::size_t num_tags);
 
+        /**
+         * \brief Uniquely identifies a System.
+         */
         using SystemToken = uint16;
 
-        using PipelineStep = std::vector<UFunction<SystemFn>>;
+        /**
+         * \brief Used for tag callbacks to indicate that they should not be associated with any particular system.
+         */
+        static constexpr SystemToken NO_SYSTEM = 0;
 
+        /**
+         * \brief Tag callbacks with the same AsyncToken will be run synchronously.
+         */
+        using AsyncToken = uint16;
+
+        /**
+         * \brief Async token used to define tag callbacks that have no syncrhonous dependencies.
+         */
+        static constexpr AsyncToken FULLY_ASYNC = 0;
+
+        using PipelineStep = std::vector<UFunction<SystemFn>>;
         using Pipeline = std::vector<PipelineStep>;
 
         /////////////////////////
         ///   Constructors    ///
     public:
 
-        UpdatePipeline() = default;
+        UpdatePipeline();
         UpdatePipeline(const UpdatePipeline& copy) = delete;
         UpdatePipeline& operator=(const UpdatePipeline& copy) = delete;
         UpdatePipeline(UpdatePipeline&& move) = default;
@@ -57,13 +97,15 @@ namespace sge
 
         const Pipeline& get_pipeline() const;
 
+        AsyncToken get_async_token();
+
         /**
         * \brief Registers a system function to be called during the read phase.
         * This design may change in the future.
         * \param system_fn The system function to call during the read phase.
         * \return The token for the system function, which may be used to unregister it.
         */
-        void register_system_fn(std::string name, UFunction<SystemFn> system_fn);
+        SystemToken register_system_fn(std::string name, UFunction<SystemFn> system_fn);
 
         /**
         * \brief Registers a system member function to be called during the read phase.
@@ -73,51 +115,71 @@ namespace sge
         * \return The token for the system function, which may be used to unregister it.
         */
         template <typename T>
-        void register_system_fn(
+        SystemToken register_system_fn(
             std::string name,
             T* outer,
             void(T::*system_fn)(SystemFrame& frame, float current_time, float dt))
         {
-            this->register_system_fn(std::move(name), [outer, system_fn]
+            return this->register_system_fn(std::move(name), [outer, system_fn]
                 (SystemFrame& frame, float current_time, float dt)
             {
                 (outer->*system_fn)(frame, current_time, dt);
             });
         }
 
-        /**
-        * \brief Registers a callback for when the given tag type is applied to any component.
-        * \param tag_type The type of tag to be called for.
-        * \param callback The callback to call.
-        */
         void register_tag_callback(
+            SystemToken system_token,
+            AsyncToken async_token,
+            TagCallbackOptions_t options,
             const TypeInfo& tag_type,
             UFunction<TagCallbackFn> callback);
 
-        /**
-        * \brief Registers a callback for when the given tag type is applied to any component of the given type.
-        * \param tag_type The type of tag to be called for.
-        * \param component_type The type of component to be called for.
-        * \param callback The callback to call.
-        */
         void register_tag_callback(
+            SystemToken system_token,
+            AsyncToken async_token,
+            TagCallbackOptions_t options,
             const TypeInfo& tag_type,
             const TypeInfo& component_type,
             UFunction<TagCallbackFn> callback);
 
-        /**
-        * \brief Registers a callback for when the given tag type is applied to the given component instance.
-        * \param tag_type The type of tag to be called for.
-        * \param component The component instance to be called for.
-        * \param callback The callback to call.
-        */
+        template <typename ComponentT, typename TagT>
         void register_tag_callback(
-            const TypeInfo& tag_type,
-            ComponentId component,
-            UFunction<TagCallbackFn> callback);
+            SystemToken system_token,
+            AsyncToken async_token,
+            TagCallbackOptions_t options,
+            void(*callback)(
+                SystemFrame& frame,
+                const TagT* tags,
+                const EntityId* components,
+                std::size_t num_tags))
+        {
+            this->register_tag_callback(
+                system_token,
+                async_token,
+                options,
+                sge::get_type<TagT>(),
+                sge::get_type<ComponentT>(),
+                [callback](
+                    SystemFrame& frame,
+                    const TypeInfo& /*tag_type*/,
+                    const TypeInfo& /*component_type*/,
+                    const void* tags,
+                    const EntityId* component_instances,
+                    std::size_t num_tags) -> void
+            {
+                callback(
+                    frame,
+                    static_cast<const TagT*>(tags),
+                    component_instances,
+                    num_tags);
+            });
+        }
 
         template <typename TagT, class OuterT>
         void register_tag_callback(
+            SystemToken system_token,
+            AsyncToken async_token,
+            TagCallbackOptions_t options,
             OuterT* outer,
             void(OuterT::*callback)(
                 SystemFrame& frame,
@@ -127,6 +189,9 @@ namespace sge
                 std::size_t num_tags))
         {
             this->register_tag_callback(
+                system_token,
+                async_token,
+                options,
                 sge::get_type<TagT>(),
                 [outer, callback](
                     SystemFrame& frame,
@@ -146,8 +211,11 @@ namespace sge
          * \param outer The object to call this callback  member function on.
          * \param callback The callback member function to call.
          */
-        template <typename TagT, typename ComponentT, class OuterT>
+        template <typename ComponentT, typename TagT, class OuterT>
         void register_tag_callback(
+            SystemToken system_token,
+            AsyncToken async_token,
+            TagCallbackOptions_t options,
             OuterT* outer,
             void(OuterT::*callback)(
                 SystemFrame& frame,
@@ -156,40 +224,18 @@ namespace sge
                 std::size_t num_tags))
         {
             this->register_tag_callback(
+                system_token,
+                async_token,
+                options,
                 sge::get_type<TagT>(),
                 sge::get_type<ComponentT>(),
                 [outer, callback](
                     SystemFrame& frame,
                     const TypeInfo& /*tag_type*/,
                     const TypeInfo& /*component_type*/,
-                    const TagT* tags,
-                    const EntityId* component_instances,
-                    std::size_t num_tags) -> void
-            {
-                (outer->*callback)(frame, static_cast<TagT*>(tags), component_instances, num_tags);
-            });
-        }
-
-        template <typename TagT, typename ComponentT, class OuterT>
-        void register_tag_callback(
-            EntityId entity,
-            OuterT* outer,
-            void(OuterT::*callback)(
-                SystemFrame& frame,
-                const TagT* tags,
-                const ComponentT* component_instances,
-                std::size_t num_tags))
-        {
-            this->register_tag_callback(
-                sge::get_type<TagT>(),
-                ComponentId{ entity, sge::get_type<ComponentT>() },
-                [outer, callback](
-                    SystemFrame& frame,
-                    const TypeInfo& /*tag_type*/,
-                    const TypeInfo& /*component_type*/,
                     const void* tags,
                     const EntityId* component_instances,
-                    std::size_t num_tags)
+                    std::size_t num_tags) -> void
             {
                 (outer->*callback)(frame, static_cast<const TagT*>(tags), component_instances, num_tags);
             });
@@ -199,12 +245,15 @@ namespace sge
         ///   Fields   ///
     private:
 
+        SystemToken _next_system_token;
+        AsyncToken _next_async_token;
+
         std::vector<PipelineStep> _pipeline;
 
         /* System functions */
         std::unordered_map<std::string, UFunction<SystemFn>> _system_fns;
 
         /* Tag callbacks */
-        std::unordered_map<const TypeInfo*, std::vector<TagCallback>> _tag_callbacks;
+        std::unordered_map<const TypeInfo*, std::map<AsyncToken, std::vector<TagCallback>>> _tag_callbacks;
     };
 }
