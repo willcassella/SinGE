@@ -20,32 +20,50 @@
 
 namespace sge
 {
-    void input_test(SystemFrame& frame, const CInput::FActionEvent& tag, TComponentId<CInput> component)
+    void input_test(
+        SystemFrame& frame,
+        const CInput::FActionEvent* tags,
+        const EntityId* comps,
+        std::size_t num)
     {
-        frame.process_single(component.entity(), [&tag](
-            ProcessingFrame& /*pframe*/,
-            EntityId /*entity*/,
-            const CCharacterController& controller)
+        frame.process_entities_mut(comps, num, [tags](
+            ProcessingFrame& pframe,
+            CCharacterController& controller,
+            CTransform3D& transform)
         {
-            if (tag.name == "forward")
+            auto input = tags[pframe.iteration_index()];
+
+            if (input.name == "forward")
             {
                 controller.walk({ 0, 1 });
             }
-            else if (tag.name == "backward")
+            else if (input.name == "backward")
             {
                 controller.walk({ 0, -1 });
             }
-            else if (tag.name == "strafe_left")
+            else if (input.name == "strafe_left")
             {
                 controller.walk({ -1, 0 });
             }
-            else if (tag.name == "strafe_right")
+            else if (input.name == "strafe_right")
             {
                 controller.walk({ 1, 0 });
             }
-            else if (tag.name == "jump")
+            else if (input.name == "jump")
             {
                 controller.jump();
+            }
+            else if (input.name == "turn_left")
+            {
+                auto rot = transform.get_local_rotation();
+                rot.rotate_by_axis_angle({ 0, 1, 0 }, degrees(1), false);
+                transform.set_local_rotation(rot);
+            }
+            else if (input.name == "turn_right")
+            {
+                auto rot = transform.get_local_rotation();
+                rot.rotate_by_axis_angle({ 0, 1, 0 }, degrees(-1), false);
+                transform.set_local_rotation(rot);
             }
         });
     }
@@ -111,7 +129,11 @@ int main(int argc, char* argv[])
 
     // Create a pipeline
     sge::UpdatePipeline pipeline;
-    pipeline.register_tag_callback(sge::input_test);
+    pipeline.register_tag_callback<sge::CInput>(
+        sge::UpdatePipeline::NO_SYSTEM,
+        sge::UpdatePipeline::FULLY_ASYNC,
+        sge::TCO_NONE,
+        sge::input_test);
 
     // Register the input window
     event_window.register_pipeline(pipeline);
