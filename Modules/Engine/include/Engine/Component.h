@@ -92,11 +92,11 @@ namespace sge
 		}
         friend bool operator<(const ComponentId& lhs, const ComponentId& rhs)
         {
-            return lhs._type < rhs._type || lhs._type == rhs._type && lhs._entity < rhs._entity;
+            return lhs._type < rhs._type || (lhs._type == rhs._type && lhs._entity < rhs._entity);
         }
 	    friend bool operator>(const ComponentId& lhs, const ComponentId& rhs)
         {
-            return lhs._type > rhs._type || lhs._type == rhs._type && lhs._entity > rhs._entity;
+            return lhs._type > rhs._type || (lhs._type == rhs._type && lhs._entity > rhs._entity);
         }
         friend bool operator<=(const ComponentId& lhs, const ComponentId& rhs)
         {

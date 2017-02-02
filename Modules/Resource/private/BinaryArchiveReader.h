@@ -163,7 +163,7 @@ namespace sge
 
         bool is_array() const override
         {
-            return cursor.node_type >= BAN_ARRAY_INT8 && cursor.node_type <= BAN_ARRAY_FLOAT || cursor.node_type == BAN_ARRAY_GENERIC;
+            return (cursor.node_type >= BAN_ARRAY_INT8 && cursor.node_type <= BAN_ARRAY_FLOAT) || cursor.node_type == BAN_ARRAY_GENERIC;
         }
 
         bool array_size(std::size_t& out) const override
