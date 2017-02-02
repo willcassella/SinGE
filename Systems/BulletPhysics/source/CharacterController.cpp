@@ -35,7 +35,10 @@ namespace sge
         void CharacterController::updateAction(btCollisionWorld* world, btScalar deltaTimeStep)
         {
             // Set walk direction
-            setWalkDirection(to_bullet(walk_dir.normalized()) / 10);
+            setWalkDirection(to_bullet(_walk_dir.normalized()) / 10);
+
+            // Set angular velocity
+            setAngularVelocity(btVector3{ 0, _turn_amount.degrees(), 0 });
 
             // Call base implementation
             btKinematicCharacterController::updateAction(world, deltaTimeStep);
@@ -47,13 +50,22 @@ namespace sge
 
             // Reset walk direction
             setWalkDirection(btVector3{ 0, 0, 0 });
-            walk_dir = Vec3::zero();
+            _walk_dir = Vec3::zero();
+
+            // Reset turn amount
+            setAngularVelocity(btVector3{ 0, 0, 0 });
+            _turn_amount = 0;
         }
 
         void CharacterController::walk(Vec2 dir)
         {
             const Vec3 added_walk_dir{ dir.x(), 0, -dir.y() };
-            walk_dir += Mat4::rotate(from_bullet(_phys_entity->transform.getRotation())) * added_walk_dir;
+            _walk_dir += Mat4::rotate(from_bullet(_phys_entity->transform.getRotation())) * added_walk_dir;
+        }
+
+        void CharacterController::turn(Angle amount)
+        {
+            _turn_amount = _turn_amount + amount;
         }
     }
 }

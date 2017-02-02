@@ -55,7 +55,7 @@ namespace sge
 
             PhysicsEntity& get_or_create_physics_entity(EntityId entity);
 
-            PhysicsEntity& get_physics_entity(EntityId entity);
+            PhysicsEntity* get_physics_entity(EntityId entity);
 
             void post_modify_physics_entity(PhysicsEntity& phys_entity);
 

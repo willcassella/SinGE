@@ -32,6 +32,8 @@ namespace sge
 
             void walk(Vec2 dir);
 
+            void turn(Angle amount);
+
             //////////////////
             ///   Fields   ///
         public:
@@ -40,8 +42,9 @@ namespace sge
 
         private:
 
-            Vec3 walk_dir;
             PhysicsEntity* _phys_entity;
+            Angle _turn_amount;
+            Vec3 _walk_dir;
         };
     }
 }

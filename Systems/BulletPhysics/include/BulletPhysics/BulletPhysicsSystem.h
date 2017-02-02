@@ -44,55 +44,77 @@ namespace sge
 
             void initialize_world(SystemFrame& frame);
 
+            void cb_modified_transform(
+                SystemFrame& frame,
+                const FModifiedComponent* tags,
+                const EntityId* entities,
+                std::size_t num_tags);
+
             void cb_new_box_collider(
                 SystemFrame& frame,
-                FNewComponent tag,
-                TComponentId<CBoxCollider> component);
+                const FNewComponent* tags,
+                const EntityId* entities,
+                std::size_t num);
 
             void cb_deleted_box_collider(
                 SystemFrame& frame,
-                FDestroyedComponent tag,
-                TComponentId<CBoxCollider> component);
+                const FDestroyedComponent* tags,
+                const EntityId* entities,
+                std::size_t num);
 
             void cb_new_capsule_collider(
                 SystemFrame& frame,
-                FNewComponent tag,
-                TComponentId<CCapsuleCollider> component);
+                const FNewComponent* tags,
+                const EntityId* entities,
+                std::size_t num);
 
             void cb_deleted_capsule_collider(
                 SystemFrame& frame,
-                FDestroyedComponent tag,
-                TComponentId<CCapsuleCollider> component);
+                const FDestroyedComponent* tags,
+                const EntityId* entities,
+                std::size_t num);
 
             void cb_new_rigid_body(
                 SystemFrame& frame,
-                FNewComponent tag,
-                TComponentId<CRigidBody> component);
+                const FNewComponent* tags,
+                const EntityId* entities,
+                std::size_t num);
 
             void cb_deleted_rigid_body(
                 SystemFrame& frame,
-                FDestroyedComponent tag,
-                TComponentId<CRigidBody> component);
+                const FDestroyedComponent* tags,
+                const EntityId* entities,
+                std::size_t num);
 
             void cb_new_character_controller(
                 SystemFrame& frame,
-                FNewComponent tag,
-                TComponentId<CCharacterController> component);
+                const FNewComponent* tags,
+                const EntityId* entities,
+                std::size_t num);
 
             void cb_deleted_character_controller(
                 SystemFrame& frame,
-                FDestroyedComponent tag,
-                TComponentId<CCharacterController> component);
-
-            void cb_character_controller_walk(
-                SystemFrame& frame,
-                CCharacterController::FWalkEvent tag,
-                TComponentId<CCharacterController> component);
+                const FDestroyedComponent* tags,
+                const EntityId* entities,
+                std::size_t num);
 
             void cb_character_controller_jump(
                 SystemFrame& frame,
-                CCharacterController::FJumpEvent tag,
-                TComponentId<CCharacterController> component);
+                const CCharacterController::FJumpEvent* tags,
+                const EntityId* entities,
+                std::size_t num);
+
+            void cb_character_controller_walk(
+                SystemFrame& frame,
+                const CCharacterController::FWalkEvent* tags,
+                const EntityId* entities,
+                std::size_t num);
+
+            void cb_character_controller_turn(
+                SystemFrame& frame,
+                const CCharacterController::FTurnEvent* tags,
+                const EntityId* entities,
+                std::size_t num);
 
             //////////////////
             ///   Fields   ///

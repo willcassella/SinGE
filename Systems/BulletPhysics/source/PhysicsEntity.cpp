@@ -35,5 +35,32 @@ namespace sge
         {
             _data->frame_transformed_entities.insert(this);
         }
+
+        void PhysicsEntity::extern_set_transform(const btTransform& trans)
+        {
+            // Set the main transform
+            transform = trans;
+
+            // Set the rigid body transform
+            if (rigid_body)
+            {
+                rigid_body->setWorldTransform(trans);
+                rigid_body->setInterpolationWorldTransform(trans);
+            }
+
+            // Set the ghost object trnasform
+            if (ghost_object)
+            {
+                ghost_object->setWorldTransform(trans);
+                ghost_object->setInterpolationWorldTransform(trans);
+            }
+
+            // Set the character controller transform
+            if (character_controller)
+            {
+                character_controller->ghost_object.setWorldTransform(trans);
+                character_controller->ghost_object.setInterpolationWorldTransform(trans);
+            }
+        }
     }
 }

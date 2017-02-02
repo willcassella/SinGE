@@ -45,6 +45,8 @@ namespace sge
 
             void add_to_modified();
 
+            void extern_set_transform(const btTransform& transform);
+
             //////////////////
             ///   Fields   ///
         public:
