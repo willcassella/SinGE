@@ -78,7 +78,11 @@ namespace sge
 
     void GLEventWindow::register_pipeline(UpdatePipeline& pipeline)
     {
-        pipeline.register_system_fn("gl_window_input", this, &GLEventWindow::process_input);
+        pipeline.register_system_fn(
+            "gl_window_input",
+            UpdatePipeline::FULLY_ASYNC,
+            this,
+            &GLEventWindow::process_input);
     }
 
     void GLEventWindow::set_bindings(InputBindings bindings)
