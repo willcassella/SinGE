@@ -18,6 +18,9 @@ SGE_REFLECT_TYPE(sge::CCharacterController::FJumpEvent);
 SGE_REFLECT_TYPE(sge::CCharacterController::FWalkEvent)
 .field_property("direction", &FWalkEvent::direction);
 
+SGE_REFLECT_TYPE(sge::CCharacterController::FTurnEvent)
+.field_property("amount", &FTurnEvent::amount);
+
 namespace sge
 {
     struct CCharacterController::Data
@@ -134,6 +137,12 @@ namespace sge
         }
     }
 
+    void CCharacterController::turn(Angle amount) const
+    {
+        _ord_turned_ents.push_back(entity());
+        _ord_turned_tags.push_back(FTurnEvent{ amount });
+    }
+
     void CCharacterController::generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags)
     {
         // Call the base implementation
@@ -160,6 +169,17 @@ namespace sge
                 _ord_walked_tags.data(),
                 sizeof(FWalkEvent),
                 _ord_walked_tags.size()));
+        }
+
+        // Create the turn tag
+        if (!_ord_turned_ents.empty())
+        {
+            tags[&FTurnEvent::type_info].push_back(TagBuffer::create(
+                type_info,
+                _ord_turned_ents.data(),
+                _ord_turned_tags.data(),
+                sizeof(FTurnEvent),
+                _ord_turned_tags.size()));
         }
     }
 }

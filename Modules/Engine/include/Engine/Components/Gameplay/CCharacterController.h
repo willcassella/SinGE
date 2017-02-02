@@ -30,6 +30,18 @@ namespace sge
             Vec2 direction;
         };
 
+        struct SGE_ENGINE_API FTurnEvent
+        {
+            SGE_REFLECTED_TYPE;
+
+            //////////////////
+            ///   Fields   ///
+        public:
+
+            /* Amount to turn clockwise. */
+            Angle amount;
+        };
+
         ///////////////////
         ///   Methods   ///
     public:
@@ -62,6 +74,8 @@ namespace sge
 
         void walk(const Vec2& direction) const;
 
+        void turn(Angle amount) const;
+
     private:
 
         void generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags) override;
@@ -75,5 +89,7 @@ namespace sge
         mutable std::vector<EntityId> _ord_jumped;
         mutable std::vector<EntityId> _ord_walked_ents;
         mutable std::vector<FWalkEvent> _ord_walked_tags;
+        mutable std::vector<EntityId> _ord_turned_ents;
+        mutable std::vector<FTurnEvent> _ord_turned_tags;
     };
 }
