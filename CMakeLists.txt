@@ -25,6 +25,8 @@ add_subdirectory(Modules/Engine)
 
 # Add Systems
 add_subdirectory(Systems/GLRender)
+add_subdirectory(Systems/BulletPhysics)
+add_subdirectory(Systems/GLWindow)
 add_subdirectory(Systems/EditorServerSystem)
 
 # Add Runtimes
