@@ -53,6 +53,15 @@ namespace sge
                 sge::from_archive(data, reader);
                 _instance_data.push_back(std::move(data));
             });
+
+            // Make sure the data is ordered properly
+            std::size_t num_dups = 0;
+            const bool ordered = is_ordered(_instance_set.data(), _instance_set.size(), num_dups);
+            if (!ordered || num_dups != 0)
+            {
+                assert(false);
+                reset();
+            }
         }
 
         InstanceIterator get_start_iterator() const override
@@ -65,14 +74,14 @@ namespace sge
             return _instance_set.data() + _instance_set.size();
         }
 
-        void create_instances(const EntityId* ordered_instances, std::size_t num) override
+        void create_instances(const EntityId* ordered_instances, std::size_t num, std::size_t num_dups) override
         {
-            // TODO
+            compact_merge_ord_entities(_instance_set, _instance_data, ordered_instances, num, num_dups);
         }
 
-        void remove_instances(const EntityId* sorted_instances, std::size_t num) override
+        void remove_instances(const EntityId* ordered_instances, std::size_t num) override
         {
-            // TODO
+            erase_ord_entities(_instance_set, _instance_data, ordered_instances, num);
         }
 
         void reset_interface(InstanceIterator instance, ComponentInterface* interf) override

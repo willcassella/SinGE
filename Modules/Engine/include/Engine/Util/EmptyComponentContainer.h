@@ -51,9 +51,11 @@ namespace sge
             return _instance_set.data() + _instance_set.size();
         }
 
-        void create_instances(const EntityId* ordered_entities, std::size_t num) override
+        void create_instances(const EntityId* ordered_entities, std::size_t num, std::size_t /*num_dups*/) override
         {
             insert_ord_entities(_instance_set, ordered_entities, num);
+            auto size = compact_ord_entities(_instance_set.data(), _instance_set.size());
+            _instance_set.erase(_instance_set.begin() + size, _instance_set.end());
         }
 
         void remove_instances(const EntityId* ordered_entities, std::size_t num) override

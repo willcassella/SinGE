@@ -189,7 +189,7 @@ namespace sge
 
         virtual InstanceIterator get_end_iterator() const = 0;
 
-        virtual void create_instances(const EntityId* ord_entities, std::size_t num) = 0;
+        virtual void create_instances(const EntityId* ord_entities, std::size_t num, std::size_t num_dups) = 0;
 
         virtual void remove_instances(const EntityId* ord_instances, std::size_t num) = 0;
 
