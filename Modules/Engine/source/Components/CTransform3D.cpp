@@ -6,6 +6,7 @@
 #include "../../include/Engine/ProcessingFrame.h"
 #include "../../include/Engine/Scene.h"
 #include "../../include/Engine/Util/BasicComponentContainer.h"
+#include "../../include/Engine/TagBuffer.h"
 
 namespace sge
 {
@@ -59,7 +60,6 @@ namespace sge
     void CTransform3D::reset(Data& data)
     {
         _data = &data;
-        _current_changed_parent = false;
     }
 
     bool CTransform3D::has_parent() const
@@ -80,11 +80,7 @@ namespace sge
         }
 
 		_data->parent = parent.entity();
-		if (!_current_changed_parent)
-		{
-            _current_changed_parent = true;
-            _ord_changed_parent.push_back(entity());
-		}
+        _parent_changed_tags.add_single_tag(entity(), FParentChanged{});
 	}
 
 	Vec3 CTransform3D::get_local_position() const
@@ -173,17 +169,8 @@ namespace sge
         // Call base implementation
         ComponentInterface::generate_tags(tags);
 
-        // Add changed parent tag
-        if (!_ord_changed_parent.empty())
-        {
-            FParentChanged p_tag;
-            tags[&FParentChanged::type_info].push_back(TagBuffer::create_from_single(
-                type_info,
-                _ord_changed_parent.data(),
-                &p_tag,
-                sizeof(FParentChanged),
-                _ord_changed_parent.size()));
-        }
+        // Create tags
+        _parent_changed_tags.create_buffer(type_info, tags);
     }
 
     Mat4 CTransform3D::get_parent_matrix() const

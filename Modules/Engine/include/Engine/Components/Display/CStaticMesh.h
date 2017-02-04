@@ -3,6 +3,7 @@
 
 #include "../../Resources/Material.h"
 #include "../../Component.h"
+#include "../../Util/TagStorage.h"
 
 namespace sge
 {
@@ -53,10 +54,8 @@ namespace sge
 	private:
 
 		Data* _data = nullptr;
-        mutable bool _current_changed_mesh = false;
-        mutable bool _current_changed_material = false;
-        mutable std::vector<EntityId> _ord_changed_meshes;
-        mutable std::vector<EntityId> _ord_changed_materials;
+        TagStorage<FMeshChanged> _mesh_changed;
+        TagStorage<FMaterialChanged> _material_changed;
 	};
 
 	/* Component applied to entities with a 'CStaticMesh' component, to override the default material parameters for that mesh. */

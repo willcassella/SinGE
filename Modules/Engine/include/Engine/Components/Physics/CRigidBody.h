@@ -1,7 +1,7 @@
 // CRigidBody.h
 #pragma once
 
-#include "../../Component.h"
+#include "../../Util/TagStorage.h"
 
 namespace sge
 {
@@ -66,7 +66,6 @@ namespace sge
     private:
 
         Data* _data = nullptr;
-        mutable bool _current_changed_kinematic = false;
-        std::vector<EntityId> _ord_changed_kinematic;
+        TagStorage<FKinematicChanged> _kinematic_changed_tags;
     };
 }

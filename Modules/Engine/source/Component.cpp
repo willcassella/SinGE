@@ -3,6 +3,7 @@
 #include <Core/Reflection/ReflectionBuilder.h>
 #include "../include/Engine/Scene.h"
 #include "../include/Engine/ProcessingFrame.h"
+#include "../include/Engine/TagBuffer.h"
 #include "../include/Engine/Components/CTransform3D.h"
 #include "../include/Engine/Components/Display/CCamera.h"
 #include "../include/Engine/Components/Display/CStaticMesh.h"
@@ -26,7 +27,8 @@ SGE_REFLECT_TYPE(sge::FModifiedComponent);
 namespace sge
 {
 	ComponentInterface::ComponentInterface()
-        : _modified_current(false),
+        : _iter(nullptr),
+        _modified_current(false),
         _destroyed_current(false)
 	{
 	}
@@ -80,12 +82,9 @@ namespace sge
         // Generate modified tags
         if (!_ord_modified.empty())
         {
-            const FModifiedComponent modified_tag;
-            tags[&FModifiedComponent::type_info].push_back(TagBuffer::create_from_single(
+            tags[&FModifiedComponent::type_info].push_back(TagBuffer::create_single_empty(
                 get_type(),
                 _ord_modified.data(),
-                &modified_tag,
-                sizeof(FModifiedComponent),
                 _ord_modified.size()));
         }
     }

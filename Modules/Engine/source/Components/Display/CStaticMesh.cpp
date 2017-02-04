@@ -50,8 +50,6 @@ namespace sge
     void CStaticMesh::reset(Data& data)
 	{
         _data = &data;
-        _current_changed_mesh = false;
-        _current_changed_material = false;
 	}
 
 	const std::string& CStaticMesh::mesh() const
@@ -64,12 +62,7 @@ namespace sge
         if (mesh != _data->mesh)
         {
 		    _data->mesh = std::move(mesh);
-
-            if (!_current_changed_mesh)
-            {
-                _current_changed_mesh = true;
-                _ord_changed_meshes.push_back(entity());
-            }
+            _mesh_changed.add_single_tag(entity(), FMeshChanged{});
         }
 	}
 
@@ -83,12 +76,7 @@ namespace sge
         if (material != _data->material)
         {
 		    _data->material = std::move(material);
-
-            if (!_current_changed_material)
-            {
-                _current_changed_material = true;
-                _ord_changed_materials.push_back(entity());
-            }
+            _material_changed.add_single_tag(entity(), FMaterialChanged{});
         }
 	}
 
@@ -97,28 +85,8 @@ namespace sge
         // Call the base implementation
         ComponentInterface::generate_tags(tags);
 
-        // Generate the changed mesh tags
-        if (!_ord_changed_meshes.empty())
-        {
-            FMeshChanged mesh_tag;
-            tags[&FMeshChanged::type_info].push_back(TagBuffer::create_from_single(
-                type_info,
-                _ord_changed_meshes.data(),
-                &mesh_tag,
-                sizeof(FMeshChanged),
-                _ord_changed_meshes.size()));
-        }
-
-        // Generate the changed material tags
-        if (!_ord_changed_materials.empty())
-        {
-	        FMaterialChanged mat_tag;
-            tags[&FMaterialChanged::type_info].push_back(TagBuffer::create_from_single(
-                type_info,
-                _ord_changed_materials.data(),
-                &mat_tag,
-                sizeof(FMaterialChanged),
-                _ord_changed_materials.size()));
-        }
+        // Add tags
+        _mesh_changed.create_buffer(type_info, tags);
+        _material_changed.create_buffer(type_info, tags);
     }
 }

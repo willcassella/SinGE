@@ -2,7 +2,7 @@
 #pragma once
 
 #include <Core/Containers/FixedString.h>
-#include "../../Component.h"
+#include "../../Util/TagStorage.h"
 
 namespace sge
 {
@@ -77,11 +77,8 @@ namespace sge
         ///   Fields   ///
 	private:
 
-        mutable std::vector<EntityId> _ord_action_event_ents;
-        mutable std::vector<FActionEvent> _ord_action_event_tags;
-        mutable std::vector<EntityId> _ord_axis_event_ents;
-        mutable std::vector<FAxisEvent> _ord_axis_event_tags;
-        mutable std::vector<EntityId> _ord_set_axis_ents;
-        mutable std::vector<FSetAxis> _ord_set_axis_tags;
+        mutable TagStorage<FActionEvent> _action_tags;
+        mutable TagStorage<FAxisEvent> _axis_tags;
+        mutable TagStorage<FSetAxis> _set_axis_tags;
 	};
 }

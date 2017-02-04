@@ -2,7 +2,7 @@
 #pragma once
 
 #include <Core/Math/Mat4.h>
-#include "../Component.h"
+#include "../Util/TagStorage.h"
 
 namespace sge
 {
@@ -12,6 +12,11 @@ namespace sge
 
 		SGE_REFLECTED_TYPE;
 		struct Data;
+
+        struct SGE_ENGINE_API FParentChanged
+        {
+            SGE_REFLECTED_TYPE;
+        };
 
 		///////////////////
 		///   Methods   ///
@@ -60,16 +65,6 @@ namespace sge
 	private:
 
 		Data* _data = nullptr;
-		bool _current_changed_parent = false;
-        std::vector<EntityId> _ord_changed_parent;
-
-		////////////////
-		///   Tags   ///
-	public:
-
-		struct SGE_ENGINE_API FParentChanged
-		{
-			SGE_REFLECTED_TYPE;
-		};
+        TagStorage<FParentChanged> _parent_changed_tags;
 	};
 }

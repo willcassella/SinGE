@@ -1,11 +1,9 @@
 // CRigidBody.cpp
 
-#include <Core/Math/Vec3.h>
 #include <Core/Reflection/ReflectionBuilder.h>
 #include "../../../include/Engine/Components/Physics/CRigidBody.h"
 #include "../../../include/Engine/Scene.h"
 #include "../../../include/Engine/Util/BasicComponentContainer.h"
-#include "../../../include/Engine/ProcessingFrame.h"
 #include "../../../include/Engine/TagBuffer.h"
 
 SGE_REFLECT_TYPE(sge::CRigidBody)
@@ -76,7 +74,6 @@ namespace sge
     void CRigidBody::reset(Data& data)
     {
         _data = &data;
-        _current_changed_kinematic = false;
     }
 
     bool CRigidBody::kinematic() const
@@ -89,12 +86,7 @@ namespace sge
         if (!_data->kinematic)
         {
             _data->kinematic = true;
-
-            if (!_current_changed_kinematic)
-            {
-                _current_changed_kinematic = true;
-                _ord_changed_kinematic.push_back(entity());
-            }
+            _kinematic_changed_tags.add_single_tag(entity(), FKinematicChanged{});
         }
     }
 
@@ -103,12 +95,7 @@ namespace sge
         if (_data->kinematic)
         {
             _data->kinematic = false;
-
-            if (!_current_changed_kinematic)
-            {
-                _current_changed_kinematic = true;
-                _ord_changed_kinematic.push_back(entity());
-            }
+            _kinematic_changed_tags.add_single_tag(entity(), FKinematicChanged{});
         }
     }
 
@@ -177,17 +164,8 @@ namespace sge
         // Call the base implementation
         ComponentInterface::generate_tags(tags);
 
-        // Generate kinematic tags
-        if (!_ord_changed_kinematic.empty())
-        {
-            FKinematicChanged k_tag;
-            tags[&FKinematicChanged::type_info].push_back(TagBuffer::create_from_single(
-                type_info,
-                _ord_changed_kinematic.data(),
-                &k_tag,
-                sizeof(FKinematicChanged),
-                _ord_changed_kinematic.size()));
-        }
+        // Create tags
+        _kinematic_changed_tags.create_buffer(type_info, tags);
     }
 
     void CRigidBody::prop_set_kinematic(bool value)

@@ -66,7 +66,6 @@ namespace sge
     void CCharacterController::reset(Data& data)
     {
         _data = &data;
-        _current_jumped = false;
     }
 
     bool CCharacterController::on_ground() const
@@ -121,10 +120,9 @@ namespace sge
 
     void CCharacterController::jump() const
     {
-        if (!_current_jumped && on_ground())
+        if (on_ground())
         {
-            _ord_jumped.push_back(entity());
-            _current_jumped = true;
+            _jump_tags.add_single_tag(entity(), FJumpEvent{});
         }
     }
 
@@ -132,15 +130,13 @@ namespace sge
     {
         if (on_ground())
         {
-            _ord_walked_ents.push_back(entity());
-            _ord_walked_tags.push_back(FWalkEvent{ direction });
+            _walk_tags.add_tag(entity(), FWalkEvent{ direction });
         }
     }
 
     void CCharacterController::turn(Angle amount) const
     {
-        _ord_turned_ents.push_back(entity());
-        _ord_turned_tags.push_back(FTurnEvent{ amount });
+        _turn_tags.add_tag(entity(), FTurnEvent{ amount });
     }
 
     void CCharacterController::generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags)
@@ -148,38 +144,9 @@ namespace sge
         // Call the base implementation
         ComponentInterface::generate_tags(tags);
 
-        // Create the jump tag
-        if (!_ord_jumped.empty())
-        {
-            FJumpEvent jump_tag;
-            tags[&FJumpEvent::type_info].push_back(TagBuffer::create_from_single(
-                type_info,
-                _ord_jumped.data(),
-                &jump_tag,
-                sizeof(FJumpEvent),
-                _ord_jumped.size()));
-        }
-
-        // Create the walk tag
-        if (!_ord_walked_ents.empty())
-        {
-            tags[&FWalkEvent::type_info].push_back(TagBuffer::create(
-                type_info,
-                _ord_walked_ents.data(),
-                _ord_walked_tags.data(),
-                sizeof(FWalkEvent),
-                _ord_walked_tags.size()));
-        }
-
-        // Create the turn tag
-        if (!_ord_turned_ents.empty())
-        {
-            tags[&FTurnEvent::type_info].push_back(TagBuffer::create(
-                type_info,
-                _ord_turned_ents.data(),
-                _ord_turned_tags.data(),
-                sizeof(FTurnEvent),
-                _ord_turned_tags.size()));
-        }
+        // Create tags
+        _jump_tags.create_buffer(type_info, tags);
+        _walk_tags.create_buffer(type_info, tags);
+        _turn_tags.create_buffer(type_info, tags);
     }
 }

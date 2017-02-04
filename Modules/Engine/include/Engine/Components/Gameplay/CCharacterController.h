@@ -3,7 +3,7 @@
 
 #include <Core/Math/Angle.h>
 #include <Core/Math/Vec2.h>
-#include "../../Component.h"
+#include "../../Util/TagStorage.h"
 
 namespace sge
 {
@@ -85,11 +85,8 @@ namespace sge
     private:
 
         Data* _data = nullptr;
-        mutable bool _current_jumped = false;
-        mutable std::vector<EntityId> _ord_jumped;
-        mutable std::vector<EntityId> _ord_walked_ents;
-        mutable std::vector<FWalkEvent> _ord_walked_tags;
-        mutable std::vector<EntityId> _ord_turned_ents;
-        mutable std::vector<FTurnEvent> _ord_turned_tags;
+        mutable TagStorage<FJumpEvent> _jump_tags;
+        mutable TagStorage<FWalkEvent> _walk_tags;
+        mutable TagStorage<FTurnEvent> _turn_tags;
     };
 }
