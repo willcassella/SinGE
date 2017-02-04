@@ -48,54 +48,61 @@ namespace sge
                 this,
                 &BulletPhysicsSystem::debug_draw);
 
-            pipeline.register_tag_callback<CBoxCollider>(
+            pipeline.register_tag_callback<CBoxCollider, FNewComponent>(
                 phys_system,
                 phys_async_token,
                 TCO_NONE,
                 this,
                 &BulletPhysicsSystem::cb_new_box_collider);
 
-            pipeline.register_tag_callback<CBoxCollider>(
+            pipeline.register_tag_callback<CBoxCollider, FDestroyedComponent>(
                 phys_system,
                 phys_async_token,
                 TCO_NONE,
                 this,
                 &BulletPhysicsSystem::cb_deleted_box_collider);
 
-            pipeline.register_tag_callback<CCapsuleCollider>(
+            pipeline.register_tag_callback<CCapsuleCollider, FNewComponent>(
                 phys_system,
                 phys_async_token,
                 TCO_NONE,
                 this,
                 &BulletPhysicsSystem::cb_new_capsule_collider);
 
-            pipeline.register_tag_callback<CCapsuleCollider>(
+            pipeline.register_tag_callback<CCapsuleCollider, FDestroyedComponent>(
                 phys_system,
                 phys_async_token,
                 TCO_NONE,
                 this,
                 &BulletPhysicsSystem::cb_deleted_capsule_collider);
 
-            pipeline.register_tag_callback<CCharacterController>(
+            pipeline.register_tag_callback<CCharacterController, FNewComponent>(
                 phys_system,
                 phys_async_token,
                 TCO_NONE,
                 this,
                 &BulletPhysicsSystem::cb_new_character_controller);
 
-            pipeline.register_tag_callback<CCharacterController>(
+            pipeline.register_tag_callback<CCharacterController, FDestroyedComponent>(
                 phys_system,
                 phys_async_token,
                 TCO_NONE,
                 this,
                 &BulletPhysicsSystem::cb_deleted_character_controller);
 
-            pipeline.register_tag_callback<CTransform3D>(
+            pipeline.register_tag_callback<CTransform3D, FModifiedComponent>(
                 phys_system,
                 phys_async_token,
                 TCO_NONE,
                 this,
                 &BulletPhysicsSystem::cb_modified_transform);
+
+            pipeline.register_tag_callback<CCharacterController, CCharacterController::FJumpEvent>(
+                phys_system,
+                phys_async_token,
+                TCO_NONE,
+                this,
+                &BulletPhysicsSystem::cb_character_controller_jump);
 
             pipeline.register_tag_callback<CCharacterController>(
                 phys_system,
@@ -103,13 +110,6 @@ namespace sge
                 TCO_NONE,
                 this,
                 &BulletPhysicsSystem::cb_character_controller_walk);
-
-            pipeline.register_tag_callback<CCharacterController>(
-                phys_system,
-                phys_async_token,
-                TCO_NONE,
-                this,
-                &BulletPhysicsSystem::cb_character_controller_jump);
 
             pipeline.register_tag_callback<CCharacterController>(
                 phys_system,
@@ -140,7 +140,7 @@ namespace sge
             }
 
             // Update the transforms
-            frame.process_entities_mut(moved_entities.data(), moved_entities.size(),
+            frame.process_entities_mut(zip_ord_ents(moved_entities.data(), moved_entities.size()),
                 [iter = _data->frame_transformed_entities.begin()](
                 ProcessingFrame& /*pframe*/,
                 sge::CTransform3D& transform) mutable
@@ -150,7 +150,7 @@ namespace sge
             });
 
             // Update velocity
-            frame.process_entities_mut(moved_entities.data(), moved_entities.size(),
+            frame.process_entities_mut(zip_ord_ents(moved_entities.data(), moved_entities.size()),
                 [iter = _data->frame_transformed_entities.begin()](
                 ProcessingFrame& /*pframe*/,
                 sge::CVelocity& velocity) mutable
@@ -211,13 +211,20 @@ namespace sge
             });
         }
 
+        void BulletPhysicsSystem::cb_new_transform(
+            SystemFrame& frame,
+            const EntityId* entities,
+            std::size_t num)
+        {
+
+        }
+
         void BulletPhysicsSystem::cb_modified_transform(
             SystemFrame& frame,
-            const FModifiedComponent* /*tags*/,
             const EntityId* entities,
             std::size_t num_tags)
         {
-            frame.process_entities(entities, num_tags, [&data = *_data](
+            frame.process_entities(zip_ord_ents(entities, num_tags), [&data = *_data](
                 ProcessingFrame& pframe,
                 const CTransform3D& transform)
             {
@@ -237,11 +244,11 @@ namespace sge
 
         void BulletPhysicsSystem::cb_new_box_collider(
             SystemFrame& frame,
-            const FNewComponent* /*tags*/,
             const EntityId* entities,
             std::size_t num)
         {
-            frame.process_entities(entities, num, [&data = *_data](
+            frame.process_entities(zip_ord_ents(entities, num),
+                [&data = *_data](
                 ProcessingFrame& pframe,
                 const CBoxCollider& box_collider)
             {
@@ -251,7 +258,6 @@ namespace sge
 
         void BulletPhysicsSystem::cb_deleted_box_collider(
             SystemFrame& /*frame*/,
-            const FDestroyedComponent* /*tags*/,
             const EntityId* entities,
             std::size_t num)
         {
@@ -263,11 +269,11 @@ namespace sge
 
         void BulletPhysicsSystem::cb_new_capsule_collider(
             SystemFrame& frame,
-            const FNewComponent* /*tags*/,
             const EntityId* entities,
             std::size_t num)
         {
-            frame.process_entities(entities, num, [&data = *_data](
+            frame.process_entities(zip_ord_ents(entities, num),
+                [&data = *_data](
                 ProcessingFrame& pframe,
                 const CCapsuleCollider& collider)
             {
@@ -277,7 +283,6 @@ namespace sge
 
         void BulletPhysicsSystem::cb_deleted_capsule_collider(
             SystemFrame& /*frame*/,
-            const FDestroyedComponent* /*tags*/,
             const EntityId* entities,
             std::size_t num)
         {
@@ -289,11 +294,11 @@ namespace sge
 
         void BulletPhysicsSystem::cb_new_rigid_body(
             SystemFrame& frame,
-            const FNewComponent* /*tags*/,
             const EntityId* entities,
             std::size_t num)
         {
-            frame.process_entities(entities, num, [&data = *_data](
+            frame.process_entities(zip_ord_ents(entities, num),
+                [&data = *_data](
                 ProcessingFrame& pframe,
                 const sge::CTransform3D& transform,
                 const sge::CRigidBody& rigid_body)
@@ -304,7 +309,6 @@ namespace sge
 
         void BulletPhysicsSystem::cb_deleted_rigid_body(
             SystemFrame& /*frame*/,
-            const FDestroyedComponent* /*tags*/,
             const EntityId* entities,
             std::size_t num)
         {
@@ -316,11 +320,11 @@ namespace sge
 
         void BulletPhysicsSystem::cb_new_character_controller(
             SystemFrame& frame,
-            const FNewComponent* /*tags*/,
             const EntityId* entities,
             std::size_t num)
         {
-            frame.process_entities(entities, num, [&data = *_data](
+            frame.process_entities(zip_ord_ents(entities, num),
+                [&data = *_data](
                 ProcessingFrame& pframe,
                 const CCharacterController& character_controller,
                 const CTransform3D& transform)
@@ -331,7 +335,6 @@ namespace sge
 
         void BulletPhysicsSystem::cb_deleted_character_controller(
             SystemFrame& /*frame*/,
-            const FDestroyedComponent* /*tags*/,
             const EntityId* entities,
             std::size_t num)
         {
@@ -342,8 +345,7 @@ namespace sge
         }
 
         void BulletPhysicsSystem::cb_character_controller_jump(
-            SystemFrame& frame,
-            const CCharacterController::FJumpEvent* /*tags*/,
+            SystemFrame& /*frame*/,
             const EntityId* entities,
             std::size_t num)
         {
@@ -358,43 +360,46 @@ namespace sge
 
                 if (phys_entity->character_controller->canJump())
                 {
-                    phys_entity->character_controller->jump();
+                    phys_entity->character_controller->jump(btVector3{ 0, 0, 0 });
                 }
             }
         }
 
         void BulletPhysicsSystem::cb_character_controller_walk(
             SystemFrame& /*frame*/,
-            const CCharacterController::FWalkEvent* tags,
             const EntityId* entities,
-            std::size_t num)
+            const TagCount_t* tag_counts,
+            std::size_t num_ents,
+            const CCharacterController::FWalkEvent* tags)
         {
-            for (std::size_t i = 0; i < num; ++i)
+            for (std::size_t i = 0; i < num_ents; ++i)
             {
-                _data->get_physics_entity(entities[i])->character_controller->walk(tags[i].direction);
+                auto* phys_entity = _data->get_physics_entity(entities[i]);
+
+                for (TagCount_t count_i = 0; count_i < tag_counts[i]; ++count_i, ++tags)
+                {
+                    phys_entity->character_controller->walk(tags->direction);
+                }
             }
         }
 
         void BulletPhysicsSystem::cb_character_controller_turn(
-            SystemFrame& frame,
-            const CCharacterController::FTurnEvent* tags,
+            SystemFrame& /*frame*/,
             const EntityId* entities,
-            std::size_t num)
+            const TagCount_t* tag_counts,
+            std::size_t num_ents,
+            const CCharacterController::FTurnEvent* tags)
         {
-            frame.process_entities_mut(entities, num, [tags, &data = *_data](
-                ProcessingFrame& pframe,
-                const CTransform3D& transform)
+            for (std::size_t i = 0; i < num_ents; ++i)
             {
-                auto* phys_entity = data.get_physics_entity(pframe.entity());
+                auto* phys_entity = _data->get_physics_entity(entities[i]);
                 if (!phys_entity || !phys_entity->character_controller)
                 {
-                    return ProcessControl::CONTINUE;
+                    continue;
                 }
 
-                phys_entity->character_controller->turn(tags[pframe.iteration_index()].amount);
-
-                return ProcessControl::CONTINUE;
-            });
+                phys_entity->character_controller->turn(tags[i].amount);
+            }
         }
     }
 }
