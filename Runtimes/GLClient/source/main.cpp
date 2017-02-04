@@ -22,48 +22,55 @@ namespace sge
 {
     void input_test(
         SystemFrame& frame,
-        const CInput::FActionEvent* tags,
-        const EntityId* comps,
-        std::size_t num)
+        const EntityId* entities,
+        const TagCount_t* tag_counts,
+        std::size_t num_ents,
+        const CInput::FActionEvent* action_events)
     {
-        frame.process_entities_mut(comps, num, [tags](
+        frame.process_entities_mut(zip_ord_ents(entities, num_ents),
+            [&action_events, tag_counts](
             ProcessingFrame& pframe,
-            CCharacterController& controller,
+            CCharacterController& character,
             CTransform3D& transform)
         {
-            auto input = tags[pframe.iteration_index()];
+            const std::size_t input_index = pframe.user_iterator_index(0);
 
-            if (input.name == "forward")
+            for (auto end = action_events + tag_counts[input_index]; action_events != end; ++action_events)
             {
-                controller.walk({ 0, 1 });
-            }
-            else if (input.name == "backward")
-            {
-                controller.walk({ 0, -1 });
-            }
-            else if (input.name == "strafe_left")
-            {
-                controller.walk({ -1, 0 });
-            }
-            else if (input.name == "strafe_right")
-            {
-                controller.walk({ 1, 0 });
-            }
-            else if (input.name == "jump")
-            {
-                controller.jump();
-            }
-            else if (input.name == "turn_left")
-            {
-                auto rot = transform.get_local_rotation();
-                rot.rotate_by_axis_angle({ 0, 1, 0 }, degrees(1), false);
-                transform.set_local_rotation(rot);
-            }
-            else if (input.name == "turn_right")
-            {
-                auto rot = transform.get_local_rotation();
-                rot.rotate_by_axis_angle({ 0, 1, 0 }, degrees(-1), false);
-                transform.set_local_rotation(rot);
+                auto input = *action_events;
+                Vec3 dir;
+                const Scalar speed = 0.1;
+
+                if (input.name == "forward")
+                {
+                    dir.z(-speed);
+                }
+                else if (input.name == "backward")
+                {
+                    dir.z(speed);
+                }
+                else if (input.name == "strafe_left")
+                {
+                    dir.x(-speed);
+                }
+                else if (input.name == "strafe_right")
+                {
+                    dir.x(speed);
+                }
+                else if (input.name == "jump")
+                {
+                    character.jump();
+                }
+                else if (input.name == "turn_left")
+                {
+                    character.turn(degrees(1));
+                }
+                else if (input.name == "turn_right")
+                {
+                    character.turn(degrees(-1));
+                }
+
+                character.walk(Vec2{ dir.x(), -dir.z() });
             }
         });
     }
