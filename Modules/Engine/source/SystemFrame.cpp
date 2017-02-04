@@ -12,64 +12,6 @@ SGE_REFLECT_TYPE(sge::SystemFrame);
 
 namespace sge
 {
-    static ComponentContainer::InstanceIterator instance_union(
-        ComponentContainer::InstanceIterator primary_iter,
-        const ComponentContainer::InstanceIterator primary_iter_end,
-        ComponentContainer::InstanceIterator* const iters,
-        const ComponentContainer::InstanceIterator* const end_iters,
-        const std::size_t num_secondary)
-    {
-        // Make sure we haven't reached the end
-        if (primary_iter == primary_iter_end)
-        {
-            return primary_iter_end;
-        }
-
-        // For each secondary iterator
-        for (std::size_t i = 0; i < num_secondary;)
-        {
-            while (true)
-            {
-                // If we've reached the end of this iterator
-                if (iters[i] == end_iters[i])
-                {
-                    return primary_iter_end;
-                }
-
-                // If the iterator is less than the primary iterator (most likely case)
-                if (*iters[i] < *primary_iter)
-                {
-                    // Keep incrementing
-                    ++iters[i];
-                    continue;
-                }
-
-                // If the iter is equal to the primary
-                if (*iters[i] == *primary_iter)
-                {
-                    // Go on to the next iterator
-                    ++i;
-                    break;
-                }
-
-                // The iterator must be greater than the target
-                // Start over
-                i = 0;
-                ++primary_iter;
-
-                // If we've reached the end of the primary iterator
-                if (primary_iter == primary_iter_end)
-                {
-                    return primary_iter_end;
-                }
-
-                break;
-            }
-        }
-
-        return primary_iter;
-    }
-
 	SystemFrame::SystemFrame(UpdatePipeline::SystemToken system_token, const Scene& scene, SceneData& scene_data)
 		: _system_token(system_token),
         _has_tags(false),
@@ -137,16 +79,8 @@ namespace sge
             return;
         }
 
-        // Make sure the children are valid
-        for (std::size_t i = 0; i < num_children; ++i)
-        {
-            if (ord_children[i] == NULL_ENTITY || ord_children[i] >= _scene_data->next_entity_id)
-            {
-                return;
-            }
-        }
-
         // Set the parents
+        auto& children = _scene_data->entity_children[parent];
         insert_ord_entities(_scene_data->entity_children[parent], ord_children, num_children);
 
         for (std::size_t i = 0; i < num_children; ++i)
@@ -226,7 +160,12 @@ namespace sge
         std::size_t num_types,
         FunctionView<ProcessFn> process_fn)
 	{
-        impl_process_entities(nullptr, 0, types, num_types, process_fn);
+        if (num_types == 0)
+        {
+            return;
+        }
+
+        impl_process_entities(nullptr, nullptr, 0, types, num_types, process_fn);
 	}
 
     void SystemFrame::process_entities_mut(
@@ -234,38 +173,44 @@ namespace sge
         std::size_t num_types,
         FunctionView<ProcessMutFn> process_fn)
     {
-        impl_process_entities(nullptr, 0, types, num_types, process_fn);
+        if (num_types == 0)
+        {
+            return;
+        }
+
+        impl_process_entities(nullptr, nullptr, 0, types, num_types, process_fn);
     }
 
 	void SystemFrame::process_entities(
-        const EntityId* ord_entities,
-        std::size_t num_entities,
+        const EntityId* const* SGE_RESTRICT user_start_iters,
+        const EntityId* const* SGE_RESTRICT user_end_iters,
+        std::size_t num_user_iters,
         const TypeInfo* const types[],
         std::size_t num_types,
         FunctionView<ProcessFn> process_fn)
 	{
-        if (num_entities == 0)
+        if (num_user_iters == 0)
         {
             return;
         }
 
-		impl_process_entities(ord_entities, num_entities, types, num_types, process_fn);
+		impl_process_entities(user_start_iters, user_end_iters, num_user_iters, types, num_types, process_fn);
 	}
 
     void SystemFrame::process_entities_mut(
-        const EntityId* ord_entities,
-        std::size_t num_entities,
-        const TypeInfo*
-        const types[],
+        const EntityId* const* SGE_RESTRICT user_start_iters,
+        const EntityId* const* SGE_RESTRICT user_end_iters,
+        std::size_t num_user_iters,
+        const TypeInfo* const* types,
         std::size_t num_types,
         FunctionView<ProcessMutFn> process_fn)
     {
-        if (num_entities == 0)
+        if (num_user_iters == 0)
         {
             return;
         }
 
-        impl_process_entities(ord_entities, num_entities, types, num_types, process_fn);
+        impl_process_entities(user_start_iters, user_end_iters, num_user_iters, types, num_types, process_fn);
     }
 
     void SystemFrame::append_tags(const TypeInfo& tag_type, TagBuffer tag_buffer)
@@ -276,28 +221,24 @@ namespace sge
 
 	template <typename ProcessFnT>
 	void SystemFrame::impl_process_entities(
-		const EntityId* ord_entities,
-        const std::size_t num_entities,
+		const EntityId* const* SGE_RESTRICT user_start_iters,
+        const EntityId* const* SGE_RESTRICT user_end_iters,
+        const std::size_t num_user_iters,
 		const TypeInfo* const types[],
 		const std::size_t num_types,
 		ProcessFnT& process_fn)
 	{
-        if (num_types == 0)
-        {
-            return;
-        }
-
-        // Create the array of component interfaces
-        auto** const comp_interfaces = SGE_STACK_ALLOC(ComponentInterface*, num_types);
-
-        // Create arrays for component iterators
-        auto* const instance_iters = SGE_STACK_ALLOC(ComponentContainer::InstanceIterator, num_types);
-        auto* const end_iters = SGE_STACK_ALLOC(ComponentContainer::InstanceIterator, num_types);
+        // Create arrays for entity iterators
+        auto* const instance_iters = SGE_STACK_ALLOC(ComponentContainer::InstanceIterator, num_types + num_user_iters);
+        auto* const end_iters = SGE_STACK_ALLOC(ComponentContainer::InstanceIterator, num_types + num_user_iters);
 
         // Create an array of component containers
         auto* const containers = SGE_STACK_ALLOC(ComponentContainer*, num_types);
 
-        // Fill the interface array
+        // Create the array of component interfaces
+        auto** const comp_interfaces = SGE_STACK_ALLOC(ComponentInterface*, num_types);
+
+        // Get all of the component containers, iterators, and interfaces
         for (std::size_t i = 0; i < num_types; ++i)
         {
             // Make sure the type exists in the scene
@@ -325,44 +266,28 @@ namespace sge
             containers[i] = cont_iter->second.get();
         }
 
+	    // Add the user-supplied iterators
+        for (std::size_t i = 0; i < num_user_iters; ++i)
+        {
+            instance_iters[num_types + i] = user_start_iters[i];
+            end_iters[num_types + i] = user_end_iters[i];
+        }
+
         // Create a processing frame
         ProcessingFrame pframe;
-
-        // Create the iterators
-        const EntityId** primary_iter;
-        const EntityId* primary_iter_end;
-        const EntityId** secondary_iters;
-        const EntityId** secondary_end_iters;
-        std::size_t num_secondary_iters;
-
-        // If we were given an ordered array of entities
-        if (ord_entities != nullptr)
-        {
-            primary_iter = &ord_entities;
-            primary_iter_end = ord_entities + num_entities;
-            secondary_iters = instance_iters;
-            secondary_end_iters = end_iters;
-            num_secondary_iters = num_types;
-        }
-        else
-        {
-            primary_iter = &instance_iters[0];
-            primary_iter_end = end_iters[0];
-            secondary_iters = instance_iters + 1;
-            secondary_end_iters = end_iters + 1;
-            num_secondary_iters = num_types - 1;
-        }
+        pframe._user_iterators = instance_iters + num_types;
+        pframe._user_start_iterators = user_start_iters;
+        pframe._user_end_iterators = user_end_iters;
+        pframe._num_user_iterators = num_user_iters;
 
         // Search for matches
         for (std::size_t frame_index = 0, iteration_index = 0; true; ++frame_index)
         {
             // Find the next match
-            auto advanced_iter = instance_union(*primary_iter, primary_iter_end, secondary_iters, secondary_end_iters, num_secondary_iters);
-            iteration_index += advanced_iter - *primary_iter;
-            *primary_iter = advanced_iter;
+            auto entity = ord_entity_union(instance_iters, end_iters, num_types + num_user_iters);
 
             // If there are no more, quit searching
-            if (*primary_iter == primary_iter_end)
+            if (entity == NULL_ENTITY)
             {
                 break;
             }
@@ -370,14 +295,14 @@ namespace sge
             // Advance the interfaces
             for (std::size_t i = 0; i < num_types; ++i)
             {
-                comp_interfaces[i]->reset(instance_iters[i]);
+                // Call custom 'reset' function before ComponentInterface one, to allow interfaces to access old entity data
                 containers[i]->reset_interface(instance_iters[i], comp_interfaces[i]);
+                comp_interfaces[i]->reset(instance_iters[i]);
             }
 
             // Set up the processing frame
-            pframe._entity = **primary_iter;
+            pframe._entity = entity;
             pframe._frame_index = frame_index;
-            pframe._iteration_index = iteration_index;
 
             // Call the processing function
             auto control = process_fn(pframe, comp_interfaces);
@@ -386,9 +311,11 @@ namespace sge
                 break;
             }
 
-            // Increment the primary iterator (to prevent matching the same entity again)
-            ++*primary_iter;
-            ++iteration_index;
+            // Increment iterators (so we don't hit the same match again)
+            for (std::size_t i = 0; i < num_types + num_user_iters; ++i)
+            {
+                ++instance_iters[i];
+            }
         }
 
         // Generate tags and destroy interfaces

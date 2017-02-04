@@ -2,7 +2,6 @@
 #pragma once
 
 #include "Component.h"
-#include "TagBuffer.h"
 
 namespace sge
 {
@@ -34,7 +33,15 @@ namespace sge
 
         std::size_t frame_index() const;
 
-        std::size_t iteration_index() const;
+        const EntityId* const* user_iterators() const;
+
+        const EntityId* const* user_start_iterators() const;
+
+        const EntityId* const* user_end_iterators() const;
+
+        std::size_t num_user_iterators() const;
+
+        std::size_t user_iterator_index(std::size_t iter_index) const;
 
         //////////////////
         ///   Fields   ///
@@ -42,6 +49,9 @@ namespace sge
 
         EntityId _entity;
         std::size_t _frame_index;
-        std::size_t _iteration_index;
+        const EntityId* const* _user_iterators;
+        const EntityId* const* _user_start_iterators;
+        const EntityId* const* _user_end_iterators;
+        std::size_t _num_user_iterators;
 	};
 }

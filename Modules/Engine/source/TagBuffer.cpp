@@ -8,68 +8,98 @@ namespace sge
     TagBuffer TagBuffer::create(
         const TypeInfo& component_type,
         const EntityId* ord_entities,
-        const void* tags,
-        std::size_t tag_size,
-        std::size_t num_tags)
+        const TagCount_t* tag_counts,
+        std::size_t num_ents,
+        const void* tag_buffer,
+        std::size_t tag_buffer_size)
     {
         TagBuffer result;
 
         // Initialize the result
         result._component_type = &component_type;
-        result._ord_entities.insert(result._ord_entities.begin(), ord_entities, ord_entities + num_tags);
-        result._size = tag_size * num_tags;
-        result._buffer = sge::malloc(result._size);
+        result._ord_entities.insert(result._ord_entities.begin(), ord_entities, ord_entities + num_ents);
+        result._tag_counts.insert(result._tag_counts.begin(), tag_counts, tag_counts + num_ents);
 
-        // Copy the tags into the buffer
-        std::memcpy(result._buffer, tags, result._size);
+        // Copy in the tags
+        result._tag_buffer = sge::malloc(tag_buffer_size);
+        std::memcpy(result._tag_buffer, tag_buffer, tag_buffer_size);
+        result._tag_buffer_size = tag_buffer_size;
 
         return result;
     }
 
-    TagBuffer TagBuffer::create_from_single(
+    TagBuffer TagBuffer::create_single(
         const TypeInfo& component_type,
         const EntityId* ord_entities,
-        const void* single_tag,
-        std::size_t tag_size,
-        std::size_t num_tags)
+        std::size_t num_ents,
+        const void* tag_buffer,
+        std::size_t tag_buffer_size)
     {
         TagBuffer result;
 
         // Initialize the result
         result._component_type = &component_type;
-        result._ord_entities.insert(result._ord_entities.begin(), ord_entities, ord_entities + num_tags);
-        result._size = tag_size * num_tags;
-        result._buffer = sge::malloc(result._size);
+        result._ord_entities.insert(result._ord_entities.begin(), ord_entities, ord_entities + num_ents);
 
-        // Copy the tag into the buffer
-        for (std::size_t i = 0; i < num_tags; ++i)
-        {
-            std::memcpy(static_cast<byte*>(result._buffer) + tag_size * i, single_tag, tag_size);
-        }
+        // Copy in the tags
+        result._tag_buffer = sge::malloc(tag_buffer_size);
+        std::memcpy(result._tag_buffer, tag_buffer, tag_buffer_size);
+        result._tag_buffer_size = tag_buffer_size;
+
+        return result;
+    }
+
+    TagBuffer TagBuffer::create_empty(
+        const TypeInfo& component_type,
+        const EntityId* ord_entities,
+        const TagCount_t* tag_counts,
+        std::size_t num_ents)
+    {
+        TagBuffer result;
+
+        // Initialize the result
+        result._component_type = &component_type;
+        result._ord_entities.insert(result._ord_entities.begin(), ord_entities, ord_entities + num_ents);
+        result._tag_counts.insert(result._tag_counts.begin(), tag_counts, tag_counts + num_ents);
+
+        return result;
+    }
+
+    TagBuffer TagBuffer::create_single_empty(
+        const TypeInfo& component_type,
+        const EntityId* ord_entities,
+        std::size_t num_ents)
+    {
+        TagBuffer result;
+
+        // Initialize the result
+        result._component_type = &component_type;
+        result._ord_entities.insert(result._ord_entities.begin(), ord_entities, ord_entities + num_ents);
 
         return result;
     }
 
     TagBuffer::~TagBuffer()
     {
-        sge::free(_buffer);
+        sge::free(_tag_buffer);
     }
 
     TagBuffer::TagBuffer(TagBuffer&& move)
         : _component_type(move._component_type),
         _ord_entities(std::move(move._ord_entities)),
-        _buffer(move._buffer),
-        _size(move._size)
+        _tag_counts(std::move(move._tag_counts)),
+        _tag_buffer(move._tag_buffer),
+        _tag_buffer_size(move._tag_buffer_size)
     {
         move._component_type = nullptr;
-        move._buffer = nullptr;
-        move._size = 0;
+        move._tag_buffer = nullptr;
+        move._tag_buffer_size = 0;
     }
 
     TagBuffer::TagBuffer()
         : _component_type(nullptr),
-        _buffer(nullptr),
-        _size(0)
+        _tag_buffer(nullptr),
+        _tag_buffer_size(0)
     {
     }
 
@@ -83,18 +113,38 @@ namespace sge
         return _ord_entities.data();
     }
 
-    std::size_t TagBuffer::num_tags() const
+    std::size_t TagBuffer::get_num_entities() const
     {
         return _ord_entities.size();
     }
 
+    const TagCount_t* TagBuffer::get_tag_counts() const
+    {
+        if (_tag_counts.empty())
+        {
+            return nullptr;
+        }
+
+        return _tag_counts.data();
+    }
+
     const void* TagBuffer::get_buffer() const
     {
-        return _buffer;
+        return _tag_buffer;
     }
 
     std::size_t TagBuffer::buffer_size() const
     {
-        return _size;
+        return _tag_buffer_size;
+    }
+
+    bool TagBuffer::tags_single() const
+    {
+        return _tag_counts.empty();
+    }
+
+    bool TagBuffer::tags_empty() const
+    {
+        return _tag_buffer == nullptr;
     }
 }

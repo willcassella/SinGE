@@ -1,5 +1,6 @@
 // VectorUtils.cpp
 
+#include <algorithm>
 #include "../../include/Engine/Util/VectorUtils.h"
 
 namespace sge
@@ -130,5 +131,49 @@ namespace sge
         }
 
         return true;
+    }
+
+    EntityId ord_entity_union(
+        const EntityId** SGE_RESTRICT iters,
+        const EntityId* const* SGE_RESTRICT end_iters,
+        std::size_t num_iters)
+    {
+        EntityId target = NULL_ENTITY;
+
+        while (true)
+        {
+            for (std::size_t i = 0; i < num_iters; ++i)
+            {
+                auto upper = std::upper_bound(iters[i], end_iters[i], target);
+                iters[i] = std::lower_bound(iters[i], upper, target);
+            }
+
+            bool found = true;
+            for (std::size_t i = 0; i < num_iters; ++i)
+            {
+                // If this iterator reached its end
+                if (iters[i] == end_iters[i])
+                {
+                    return NULL_ENTITY;
+                }
+
+                // If this iterator is equal to the target
+                if (*iters[i] == target)
+                {
+                    continue;
+                }
+
+                // This iterator isn't at the target, keep searching
+                target = std::max(target, *iters[i]);
+
+                // If this is the first iterator, the others may fail at the same value and we can consider it a match
+                found = i == 0;
+            }
+
+            if (found)
+            {
+                return target;
+            }
+        }
     }
 }

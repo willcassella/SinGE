@@ -1,4 +1,4 @@
-// System.h
+// SystemInfo.h
 #pragma once
 
 #include "UpdatePipeline.h"

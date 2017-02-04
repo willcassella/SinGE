@@ -37,8 +37,9 @@ namespace sge
 	{
 		_current_time = 0;
 		_scene_data.next_entity_id = 2;
-		_scene_data.entity_parents = {};
 		_scene_data.entity_names = {};
+		_scene_data.entity_parents = {};
+        _scene_data.entity_children = {};
 
 		for (auto& component_type : _scene_data.components)
 		{
@@ -144,8 +145,8 @@ namespace sge
 			// Deserialize the storage object
 			storageIter->second->from_archive(reader);
 		});
-		reader.pop();
 
+	    reader.pop();
 	}
 
 	TypeDB& Scene::get_type_db()
@@ -223,6 +224,7 @@ namespace sge
             // For each type of tag in the frame
             for (const auto& tag_type : frames[i]._tags)
             {
+                // Get the callbacks registered for this type of tag
                 auto iter = pipeline._tag_callbacks.find(tag_type.first);
                 if (iter == pipeline._tag_callbacks.end())
                 {
@@ -259,9 +261,10 @@ namespace sge
                                 tag_frame,
                                 *tag_type.first,
                                 tag_set.component_type(),
-                                tag_set.get_buffer(),
                                 tag_set.get_ord_entities(),
-                                tag_set.num_tags());
+                                tag_set.get_tag_counts(),
+                                tag_set.get_num_entities(),
+                                tag_set.get_buffer());
 
                             // If the frame has changes, add it to the list
                             if (tag_frame._has_tags)

@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <Core/Functional/UFunction.h>
-#include "Component.h"
+#include "TagBuffer.h"
 
 namespace sge
 {
@@ -54,9 +54,10 @@ namespace sge
             SystemFrame& frame,
             const TypeInfo& tag_type,
             const TypeInfo& component_type,
-            const void* tags,
-            const EntityId* component_instances,
-            std::size_t num_tags);
+            const EntityId* entities,
+            const TagCount_t* tag_counts,
+            std::size_t num_ents,
+            const void* tag_buffer);
 
         /**
          * \brief Uniquely identifies a System.
@@ -156,9 +157,10 @@ namespace sge
             TagCallbackOptions_t options,
             void(*callback)(
                 SystemFrame& frame,
-                const TagT* tags,
-                const EntityId* components,
-                std::size_t num_tags))
+                const EntityId* entities,
+                const TagCount_t* tag_counts,
+                std::size_t num_ents,
+                const TagT* tags))
         {
             this->register_tag_callback(
                 system_token,
@@ -170,45 +172,12 @@ namespace sge
                     SystemFrame& frame,
                     const TypeInfo& /*tag_type*/,
                     const TypeInfo& /*component_type*/,
-                    const void* tags,
-                    const EntityId* component_instances,
-                    std::size_t num_tags) -> void
+                    const EntityId* entities,
+                    const TagCount_t* tag_counts,
+                    std::size_t num_ents,
+                    const void* tag_buffer) -> void
             {
-                callback(
-                    frame,
-                    static_cast<const TagT*>(tags),
-                    component_instances,
-                    num_tags);
-            });
-        }
-
-        template <typename TagT, class OuterT>
-        void register_tag_callback(
-            SystemToken system_token,
-            AsyncToken async_token,
-            TagCallbackOptions_t options,
-            OuterT* outer,
-            void(OuterT::*callback)(
-                SystemFrame& frame,
-                const TypeInfo& component_type,
-                const TagT* tags,
-                const EntityId* component_instances,
-                std::size_t num_tags))
-        {
-            this->register_tag_callback(
-                system_token,
-                async_token,
-                options,
-                sge::get_type<TagT>(),
-                [outer, callback](
-                    SystemFrame& frame,
-                    const TypeInfo& /*tag_type*/,
-                    const TypeInfo& component_type,
-                    const void* tags,
-                    const EntityId* component_instances,
-                    std::size_t num_tags) -> void
-            {
-                (outer->*callback)(frame, component_type, static_cast<const TagT*>(tags), component_instances, num_tags);
+                callback(frame, entities, tag_counts, num_ents, static_cast<const TagT*>(tag_buffer));
             });
         }
 
@@ -226,9 +195,10 @@ namespace sge
             OuterT* outer,
             void(OuterT::*callback)(
                 SystemFrame& frame,
-                const TagT* tags,
-                const EntityId* component_instances,
-                std::size_t num_tags))
+                const EntityId* entities,
+                const TagCount_t* tag_counts,
+                std::size_t num_ents,
+                const TagT* tags))
         {
             this->register_tag_callback(
                 system_token,
@@ -240,11 +210,42 @@ namespace sge
                     SystemFrame& frame,
                     const TypeInfo& /*tag_type*/,
                     const TypeInfo& /*component_type*/,
-                    const void* tags,
-                    const EntityId* component_instances,
-                    std::size_t num_tags) -> void
+                    const EntityId* entities,
+                    const TagCount_t* tag_counts,
+                    std::size_t num_ents,
+                    const void* tags) -> void
             {
-                (outer->*callback)(frame, static_cast<const TagT*>(tags), component_instances, num_tags);
+                (outer->*callback)(frame, entities, tag_counts, num_ents, static_cast<const TagT*>(tags));
+            });
+        }
+
+        template <typename ComponentT, typename TagT, class OuterT>
+        void register_tag_callback(
+            SystemToken system_token,
+            AsyncToken async_token,
+            TagCallbackOptions_t options,
+            OuterT* outer,
+            void (OuterT::*callback)(
+                SystemFrame& frame,
+                const EntityId* entities,
+                std::size_t num_ents))
+        {
+            this->register_tag_callback(
+                system_token,
+                async_token,
+                options,
+                sge::get_type<TagT>(),
+                sge::get_type<ComponentT>(),
+                [outer, callback](
+                    SystemFrame& frame,
+                    const TypeInfo& /*tag_type*/,
+                    const TypeInfo& /*component_type*/,
+                    const EntityId* entities,
+                    const TagCount_t* /*tag_counts*/,
+                    std::size_t num_ents,
+                    const void* /*tags*/) -> void
+            {
+                (outer->*callback)(frame, entities, num_ents);
             });
         }
 

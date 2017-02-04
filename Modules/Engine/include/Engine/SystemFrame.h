@@ -7,6 +7,7 @@
 #include "ProcessingFrame.h"
 #include "TagBuffer.h"
 #include "UpdatePipeline.h"
+#include "Util/EntityRangePack.h"
 
 namespace sge
 {
@@ -42,8 +43,9 @@ namespace sge
 		* \param pframe The processing frame for this processing function.
 		* \param entity The entity currently being processed.
 		* \param components The components attached to this entity currently being processed.
+		* \param The current value of the user-supplied iterators.
 		*/
-		using ProcessFn = ProcessControl(ProcessingFrame& pframe, const ComponentInterface* const components[]);
+		using ProcessFn = ProcessControl(ProcessingFrame& pframe, const ComponentInterface* const* components);
 
         /**
         * \brief Function signature used for processing functions that perform mutation.
@@ -51,7 +53,7 @@ namespace sge
         * \param entity The entity currently being processed.
         * \param components The components attached to this entity currently being processed.
         */
-        using ProcessMutFn = ProcessControl(ProcessingFrame& pframe, ComponentInterface* const components[]);
+        using ProcessMutFn = ProcessControl(ProcessingFrame& pframe, ComponentInterface* const* components);
 
 		////////////////////////
 		///   Constructors   ///
@@ -82,12 +84,13 @@ namespace sge
 
 		/**
 		 * \brief Synchronizes this SystemFrame. This function blocks the calling thread until
-		 * all other system functions have called 'sync' or returned. Then it flushes all pending changes and returns.
+		 * all other system functions have called 'yield' or returned. Tag callbacks are run, and then this function is allowed to resume.
 		 */
 		void yield();
 
         /**
         * \brief Creates new user entities, and assigns their ids to the given array.
+        * The result will be an ordered array of entities.
         */
         void create_entities(EntityId* out_entities, std::size_t num) const;
 
@@ -104,7 +107,7 @@ namespace sge
 		EntityId get_entity_parent(EntityId entity) const;
 
         /**
-        * \brief Sets the parent of the given entity.
+        * \brief Sets the parent of the given entities.
         * \param parent The entity to make the parent. This must be a valid entity.
         * \param ord_children An ordered array of entities to parent to the entity.
         * \param num_children The number of children in the array.
@@ -255,55 +258,59 @@ namespace sge
         }
 
 		/**
-		 * \brief Processes the given ordered array of entities, if they have the given set of component types.
-		 * \param ord_entities The ordered array of entities to process.
-		 * \param num_entities The number of entities given.
+		 * \brief Processes the union of all entities in the given iterators, as well as those taken from the component containers.
+		 * \param user_start_iters An array of start iterators to include in the union function.
+		 * \param user_start_iters An array of end iterators to include in the union function.
+		 * \param num_user_iters The number of supplied user iterators.
 		 * \param types The set of component types to process on the entities.
 		 * \param num_types The number of component types given.
 		 * \param process_fn The processing function to call.
 		 */
 		void process_entities(
-			const EntityId* ord_entities,
-            std::size_t num_entities,
+			const EntityId* const* SGE_RESTRICT user_start_iters,
+            const EntityId* const* SGE_RESTRICT user_end_iters,
+            std::size_t num_user_iters,
 			const TypeInfo* const types[],
 			std::size_t num_types,
 			FunctionView<ProcessFn> process_fn);
 
         /**
-        * \brief Processes the given array of entities, if they have the required set of components
-        * deduced from the processing function argument list.
-        * \param ord_entities The ordered array of entities to process.
-        * \param num_entities The size of the array.
+        * \brief Processes the union of the given ranges of entities.
         * \param process_fn The processing function to call.
         */
-        template <typename ProcessFnT>
+        template <typename ... RangeTs, typename ProcessFnT>
         void process_entities(
-            const EntityId* ord_entities,
-            std::size_t num_entities,
+            EntityRangePack<RangeTs...> user_ranges,
             ProcessFnT&& process_fn)
         {
             using FnTraits = stde::function_traits<ProcessFnT>;
             using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 1>;
             using RetT = typename FnTraits::return_type;
 
+            // Create the user iterators arrays
+            auto ord_entities_start = user_ranges.get_start_iterators();
+            auto ord_entities_end = user_ranges.get_end_iterators();
+
             // Run the processing function
             auto type_array = SystemFrame::component_type_array(ComponentList{});
             auto adapted = SystemFrame::adapt_process_fn(tmp::type<RetT>{}, ComponentList{}, process_fn);
-            SystemFrame::process_entities(ord_entities, num_entities, type_array.data(), type_array.size(), adapted);
+            SystemFrame::process_entities(
+                ord_entities_start.data(),
+                ord_entities_end.data(),
+                user_ranges.NUM_ITERATORS,
+                type_array.data(),
+                type_array.size(),
+                adapted);
         }
 
         /**
-        * \brief Processes the given ordered array of entities, if they match the
-        * deduced from the processing member function argument list.
-        * \param ord_entities The ordered array of entities to process.
-        * \param num_entities The size of the array.
+        * \brief Processes the union of the given range of entities.
         * \param outer The object to call the processing member function on.
         * \param process_fn The processing member function to call.
         */
-        template <class T, typename Ret, class ... ComponentTs>
+        template <typename ... RangeTs, class T, typename Ret, class ... ComponentTs>
         void process_entities(
-            const EntityId* ord_entities,
-            std::size_t num_entities,
+            EntityRangePack<RangeTs...> user_ranges,
             T* outer,
             Ret(T::*process_fn)(ProcessingFrame&, ComponentTs...))
         {
@@ -314,37 +321,48 @@ namespace sge
                 return (outer->*process_fn)(pframe, components...);
             };
 
+            // Create user iterator arrays
+            auto user_start_iters = user_ranges.get_start_iterators();
+            auto user_end_iters = user_ranges.get_end_iterators();
+
             // Run the processing function
-            auto adapted = SystemFrame::adapt_process_fn(ComponentList{}, wrapper);
-            SystemFrame::process_entities(ord_entities, num_entities, adapted.first.data(), ComponentList::size(), adapted.second);
+            auto type_array = SystemFrame::component_type_array(ComponentList{});
+            auto adapted = SystemFrame::adapt_process_fn(tmp::type<Ret>{}, ComponentList{}, wrapper);
+            SystemFrame::process_entities(
+                user_start_iters.data(),
+                user_end_iters.data(),
+                user_ranges.NUM_ITERATORS,
+                adapted.first.data(),
+                ComponentList::size(),
+                adapted.second);
         }
 
         /**
-        * \brief Processes the given array of entities, if they support the given component signature. Allows for mutation.
-        * \param ord_entities The ordered array of entities to process.
-        * \param num_entities The size of the array.
+        * \brief Processes the union of the given entity ranges. Allows for mutation.
+        * \param user_start_iters An array of start iterators to include in the union.
+        * \param user_end_iters An array of end iterators to process.
+        * \param num_user_iters The number of user iterators given.
         * \param types The set of component types to process on the entity.
         * \param num_types The number of component types given.
         * \param process_fn The processing function to call.
         */
         void process_entities_mut(
-            const EntityId* ord_entities,
-            std::size_t num_entities,
+            const EntityId* const* SGE_RESTRICT user_start_iters,
+            const EntityId* const* SGE_RESTRICT user_end_iters,
+            std::size_t num_user_iters,
             const TypeInfo* const types[],
             std::size_t num_types,
             FunctionView<ProcessMutFn> process_fn);
 
         /**
-        * \brief Processes the given array of entities, if they support the set of components
-        * deduced from the processing member function argument list. Allows for mutation.
-        * \param ord_entities The ordered array of entities to process.
+        * \brief Processes the union of the specified ranges of entities. Allows for mutation.
+        * \param user_ranges The user-specified ranges to include in the union.
         * \param outer The object to call the processing member function on.
         * \param process_fn The processing member function to call.
         */
-        template <class T, typename RetT, class ... ComponentTs>
+        template <typename ... RangeTs, class T, typename RetT, class ... ComponentTs>
         void process_entities_mut(
-            const EntityId* ord_entities,
-            std::size_t num_entities,
+            EntityRangePack<RangeTs...> user_ranges,
             T* outer,
             RetT(T::*process_fn)(ProcessingFrame&, ComponentTs...))
         {
@@ -355,35 +373,57 @@ namespace sge
                 return (outer->*process_fn)(pframe, components...);
             };
 
+            // Create user iterator arrays
+            auto user_start_iters = user_ranges.get_start_iterators();
+            auto user_end_iters = user_ranges.get_end_iterators();
+
             // Run the processing function
             auto type_array = SystemFrame::component_type_array(ComponentList{});
             auto adapted = SystemFrame::adapt_process_fn(tmp::type<RetT>{}, ComponentList{}, wrapper);
-            SystemFrame::process_entities_mut(ord_entities, num_entities, type_array.data(), type_array.size(), adapted);
+            SystemFrame::process_entities_mut(
+                user_start_iters.data(),
+                user_end_iters.data(),
+                user_ranges.NUM_ITERATORS,
+                type_array.data(),
+                type_array.size(),
+                adapted);
         }
 
         /**
-        * \brief Processes the given array of entities, if the have the component set
-        * deduced from the processing function argument list. Allows for mutation.
-        * \param ord_entities The ordered array of entities to process.
-        * \param num_entities The size of the array.
+        * \brief Processes the union of the specified ranges of entities. Allows for mutation.
+        * \param user_ranges The user-specified ranges to include in the union.
         * \param process_fn The processing function to call.
         */
-        template <typename ProcessFnT>
+        template <typename ... RangeTs, typename ProcessFnT>
         void process_entities_mut(
-            const EntityId* ord_entities,
-            std::size_t num_entities,
+            EntityRangePack<RangeTs...> user_ranges,
             ProcessFnT&& process_fn)
         {
             using FnTraits = stde::function_traits<ProcessFnT>;
             using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 1>;
             using RetT = typename FnTraits::return_type;
 
+            // Create the user iterator arrays
+            auto user_start_iters = user_ranges.get_start_iterators();
+            auto user_end_iters = user_ranges.get_end_iterators();
+
             // Run the processing function
             auto type_array = SystemFrame::component_type_array(ComponentList{});
             auto adapted = SystemFrame::adapt_process_fn(tmp::type<RetT>{}, ComponentList{}, process_fn);
-            SystemFrame::process_entities_mut(ord_entities, num_entities, type_array.data(), type_array.size(), adapted);
+            SystemFrame::process_entities_mut(
+                user_start_iters.data(),
+                user_end_iters.data(),
+                user_ranges.NUM_ITERATORS,
+                type_array.data(),
+                type_array.size(),
+                adapted);
         }
 
+	    /**
+         * \brief Appends the specified tag buffer to this system's internal tag buffer set.
+         * \param tag_type The type of tag being appended.
+         * \param tag_buffer The buffer of tags.
+         */
         void append_tags(const TypeInfo& tag_type, TagBuffer tag_buffer);
 
 	private:
@@ -449,8 +489,9 @@ namespace sge
 
 		template <typename ProcessFnT>
 		void impl_process_entities(
-			const EntityId* ord_entities,
-            std::size_t num_entities,
+			const EntityId* const* SGE_RESTRICT user_start_iters,
+            const EntityId* const* SGE_RESTRICT user_end_iters,
+            std::size_t num_user_iters,
 			const TypeInfo* const types[],
 			std::size_t num_types,
 			ProcessFnT& process_fn);

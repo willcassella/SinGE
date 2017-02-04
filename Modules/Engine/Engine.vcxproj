@@ -198,6 +198,8 @@
     <ClInclude Include="include\Engine\SystemFrame.h" />
     <ClInclude Include="include\Engine\Util\BasicComponentContainer.h" />
     <ClInclude Include="include\Engine\Util\EmptyComponentContainer.h" />
+    <ClInclude Include="include\Engine\Util\EntityRangePack.h" />
+    <ClInclude Include="include\Engine\Util\TagStorage.h" />
     <ClInclude Include="include\Engine\Util\VectorUtils.h" />
   </ItemGroup>
   <ItemGroup>
