@@ -37,7 +37,7 @@ namespace sge
         IteratorArray get_start_iterators(IteratorIndex<I>, IteratorArray& array) const
         {
             using std::begin;
-            array[I] = begin(std::get<I>(iterators));
+            array[I] = begin(std::get<I>(ranges));
             return get_start_iterators(IteratorIndex<I + 1>{}, array);
         }
 
@@ -50,7 +50,7 @@ namespace sge
         IteratorArray get_end_iterators(IteratorIndex<I>, IteratorArray& array) const
         {
             using std::end;
-            array[I] = end(std::get<I>(iterators));
+            array[I] = end(std::get<I>(ranges));
             return get_end_iterators(IteratorIndex<I + 1>{}, array);
         }
 
