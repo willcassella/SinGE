@@ -90,6 +90,9 @@ namespace sge
 #	define SGE_FORCEINLINE inline
 #endif
 
+/** Enables optimizations where pointer-aliasing does not occur. */
+#define SGE_RESTRICT __restrict
+
 /** Macro useful for macros that expect to be given an API specification, but can't be given one. */
 #define SGE_NO_API
 
