@@ -24,7 +24,7 @@ namespace sge
 
 		/**
 		 * \brief The process function should continue searching for matches.
-		 * If the processing fucntion return type is void, this is the default value used.
+		 * If the processing function return type is void, this is the default value used.
 		 */
 		CONTINUE
 	};
@@ -82,11 +82,6 @@ namespace sge
          */
         const Scene& scene() const;
 
-		/**
-		 * \brief Synchronizes this SystemFrame. This function blocks the calling thread until
-		 * all other system functions have called 'yield' or returned. Tag callbacks are run, and then this function is allowed to resume.
-		 */
-		void yield();
 
         /**
         * \brief Creates new user entities, and assigns their ids to the given array.

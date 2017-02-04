@@ -30,10 +30,6 @@ namespace sge
         return *_scene;
     }
 
-    void SystemFrame::yield()
-	{
-	}
-
     void SystemFrame::create_entities(EntityId* out_entities, std::size_t num) const
     {
         for (std::size_t i = 0; i < num; ++i)
