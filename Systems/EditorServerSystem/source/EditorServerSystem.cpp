@@ -24,7 +24,12 @@ namespace sge
 
 	void EditorServerSystem::register_pipeline(UpdatePipeline& pipeline)
 	{
-		pipeline.register_system_fn("editor_server", this, &EditorServerSystem::serve_fn);
+        auto async_token = pipeline.new_async_token();
+        pipeline.register_system_fn(
+            "editor_server_serve",
+            async_token,
+            this,
+            &EditorServerSystem::serve_fn);
 	}
 
 	int EditorServerSystem::get_serve_time() const
@@ -39,16 +44,8 @@ namespace sge
 
 	void EditorServerSystem::serve_fn(SystemFrame& frame, float current_time, float dt)
 	{
-		// Create a timer so we don't run indefinetaly
-		asio::steady_timer timer(_data->io);
-		timer.expires_from_now(std::chrono::milliseconds{ _serve_time_ms });
-		timer.async_wait([&io = _data->io](std::error_code /*error*/)
-		{
-			io.stop();
-		});
-
 		// Run the service
 		_data->frame = &frame;
-		_data->io.run();
+        _data->io.poll();
 	}
 }

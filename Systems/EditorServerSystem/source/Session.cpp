@@ -54,190 +54,198 @@ namespace sge
 			});
 		}
 
-		void Session::async_receive_client_message_header()
-		{
-			asio::async_read(socket, asio::buffer(_in_header),
-				[self = shared_from_this()](const std::error_code& error, std::size_t /*len*/)
-			{
-				if (!error)
-				{
-					// Allocate space for content
-					self->_in_content.assign(Packet::content_length(self->_in_header), 0);
+        void Session::async_receive_message()
+        {
+            asio::async_read(socket, asio::buffer(_in_header),
+                [self = shared_from_this()](const std::error_code& error, std::size_t /*len*/)
+            {
+                if (error)
+                {
+                    report_error(error);
+                    return;
+                }
 
-					// Read content
-					self->async_receive_message();
-				}
-				else
-				{
-					report_error(error);
-				}
-			});
-		}
+                // Allocate space for content
+                self->_in_content.assign(Packet::content_length(self->_in_header), 0);
 
-		void Session::async_receive_message()
-		{
-			const auto in_sequence_number = Packet::sequence_number(_in_header);
-			asio::async_read(socket, asio::buffer(&_in_content[0], _in_content.size()),
-				[self = shared_from_this(), in_sequence_number](const std::error_code& error, std::size_t /*len*/)
-			{
-				if (!error)
-				{
-					// Log query time
-					const auto message_time = std::chrono::system_clock::now();
-					std::cout << "Received query at " << std::chrono::system_clock::to_time_t(message_time) << std::endl;
+                // Read content
+                asio::read(self->socket, asio::buffer(&self->_in_content[0], self->_in_content.size()));
 
-					// Deserialze the string
-					JsonArchive archive;
-					archive.from_string(self->_in_content.c_str());
-					auto* in_reader = archive.read_root();
+                // Deserialze the string
+                self->_in_archive.from_string(self->_in_content.c_str());
 
-					// Handle a query to create an entity
-					if (in_reader->pull_object_member("new_entity"))
-					{
-						ops::new_entity_query(self->get_frame(), *in_reader);
-						in_reader->pop();
-					}
+                // Run write operations
+                self->write_ops();
+            });
+        }
 
-					// Handle a query to set an entity's name
-					if (in_reader->pull_object_member("set_entity_name"))
-					{
-						ops::set_entity_name_query(self->get_frame(), *in_reader);
-						in_reader->pop();
-					}
+	    void Session::write_ops()
+	    {
+		    // Log query time
+            const auto message_time = std::chrono::system_clock::now();
+            std::cout << "Received query at " << std::chrono::system_clock::to_time_t(message_time) << std::endl;
 
-					// Handle a query to set an entity's parent
-					if (in_reader->pull_object_member("set_entity_parent"))
-					{
-						ops::set_entity_parent_query(self->get_frame(), *in_reader);
-						in_reader->pop();
-					}
+		    // Create a reader for the input
+		    auto* in_reader = _in_archive.read_root();
 
-					// Handle a query to destroy a component
-					if (in_reader->pull_object_member("destroy_component"))
-					{
-						ops::destroy_component_query(self->get_frame(), *in_reader);
-						in_reader->pop();
-					}
+            // Handle a query to create an entity
+            if (in_reader->pull_object_member("new_entity"))
+            {
+                ops::new_entity_query(get_frame(), *in_reader);
+                in_reader->pop();
+            }
 
-					// Handle a query to destroy an entity
-					if (in_reader->pull_object_member("destroy_entity"))
-					{
-						ops::destroy_entity_query(self->get_frame(), *in_reader);
-						in_reader->pop();
-					}
+            // Handle a query to set an entity's name
+            if (in_reader->pull_object_member("set_entity_name"))
+            {
+                ops::set_entity_name_query(get_frame(), *in_reader);
+                in_reader->pop();
+            }
 
-					// Handle a query to create a component
-					if (in_reader->pull_object_member("new_component"))
-					{
-						ops::new_component_query(self->get_frame(), *in_reader);
-						in_reader->pop();
-					}
+            // Handle a query to set an entity's parent
+            if (in_reader->pull_object_member("set_entity_parent"))
+            {
+                ops::set_entity_parent_query(get_frame(), *in_reader);
+                in_reader->pop();
+            }
 
-					// Synchronize the frame, so we can see changes that were made
-					self->get_frame().yield();
+            // Handle a query to destroy a component
+            if (in_reader->pull_object_member("destroy_component"))
+            {
+                ops::destroy_component_query(get_frame(), *in_reader);
+                in_reader->pop();
+            }
 
-					// Handle a query to set the properties on a component
-					if (in_reader->pull_object_member("set_component"))
-					{
-						ops::set_component_query(self->get_frame(), *in_reader);
-						in_reader->pop();
-					}
+            // Handle a query to destroy an entity
+            if (in_reader->pull_object_member("destroy_entity"))
+            {
+                ops::destroy_entity_query(get_frame(), *in_reader);
+                in_reader->pop();
+            }
 
-					// Create an output archive
-					JsonArchive out;
-					auto* out_writer = out.write_root();
-					bool wrote_output = false;
+            // Handle a query to create a component
+            if (in_reader->pull_object_member("new_component"))
+            {
+                ops::new_component_query(get_frame(), *in_reader);
+                in_reader->pop();
+            }
 
-					// Handle a query for all component types
-					if (in_reader->pull_object_member("get_component_types"))
-					{
-						out_writer->push_object_member("get_component_types");
-						ops::get_component_types_query(self->get_frame().scene(), *out_writer);
-						out_writer->pop();
-						in_reader->pop();
-						wrote_output = true;
-					}
+            // Queue up operations to be run after writing
+            async_post_write_ops();
+	    }
 
-					// Handle a property info query
-					if (in_reader->pull_object_member("get_type_info"))
-					{
-						out_writer->push_object_member("get_type_info");
-						ops::get_type_info_query(self->get_frame().scene().get_type_db(), *in_reader, *out_writer);
-						out_writer->pop();
-						in_reader->pop();
-						wrote_output = true;
-					}
+        void Session::async_post_write_ops()
+        {
+            // Get the sequence number
+            const auto in_sequence_number = Packet::sequence_number(_in_header);
 
-					// Handle a query for acessing the scene structure
-					if (in_reader->pull_object_member("get_scene"))
-					{
-						out_writer->push_object_member("get_scene");
-						ops::get_scene_query(self->get_frame(), *out_writer);
-						out_writer->pop();
-						in_reader->pop();
-						wrote_output = true;
-					}
+            // Post the job to read
+            socket.get_io_service().post(
+                [self = shared_from_this(), in_sequence_number] () -> void
+            {
+                // Create an output archive
+                JsonArchive out;
+                auto* out_writer = out.write_root();
+                bool wrote_output = false;
 
-					// Handle an object property query
-					if (in_reader->pull_object_member("get_component"))
-					{
-						out_writer->push_object_member("get_component");
-						ops::get_component_query(self->get_frame(), *in_reader, *out_writer);
-						in_reader->pop();
-						out_writer->pop();
-						wrote_output = true;
-					}
+                // Get a reader for the input archive
+                auto in_reader = self->_in_archive.read_root();
 
-					// Handle a resource query
-					if (in_reader->pull_object_member("get_resource"))
-					{
-						out_writer->push_object_member("get_resource");
-						ops::get_resource_query(self->get_frame().scene(), *in_reader, *out_writer);
-						in_reader->pop();
-						out_writer->pop();
-						wrote_output = true;
-					}
+                // Handle a query to set the properties on a component
+                if (in_reader->pull_object_member("set_component"))
+                {
+                    ops::set_component_query(self->get_frame(), *in_reader);
+                    in_reader->pop();
+                }
 
-					// Handle a save query
-					if (in_reader->pull_object_member("save_scene"))
-					{
-						ops::save_scene_query(self->get_frame().scene(), *in_reader);
-						in_reader->pop();
-					}
+                // Handle a query for all component types
+                if (in_reader->pull_object_member("get_component_types"))
+                {
+                    out_writer->push_object_member("get_component_types");
+                    ops::get_component_types_query(self->get_frame().scene(), *out_writer);
+                    out_writer->pop();
+                    in_reader->pop();
+                    wrote_output = true;
+                }
 
-					// Close reader and writer
-					in_reader->pop();
-					out_writer->pop();
+                // Handle a property info query
+                if (in_reader->pull_object_member("get_type_info"))
+                {
+                    out_writer->push_object_member("get_type_info");
+                    ops::get_type_info_query(self->get_frame().scene().get_type_db(), *in_reader, *out_writer);
+                    out_writer->pop();
+                    in_reader->pop();
+                    wrote_output = true;
+                }
 
-					// Log completion time
-					auto completed_time = std::chrono::system_clock::now();
-					std::cout << "Completed query at " << std::chrono::system_clock::to_time_t(completed_time) << std::endl;
-					std::cout << std::endl;
+                // Handle a query for acessing the scene structure
+                if (in_reader->pull_object_member("get_scene"))
+                {
+                    out_writer->push_object_member("get_scene");
+                    ops::get_scene_query(self->get_frame(), *out_writer);
+                    out_writer->pop();
+                    in_reader->pop();
+                    wrote_output = true;
+                }
 
-					// If we wrote something, send it
-					if (wrote_output)
-					{
-						// Write result
-						std::string result = out.to_string();
-						auto* packet = Packet::encode_packet(
-							in_sequence_number,
-							result.c_str(),
-							static_cast<Packet::ContentLength_t>(result.size()));
+                // Handle an object property query
+                if (in_reader->pull_object_member("get_component"))
+                {
+                    out_writer->push_object_member("get_component");
+                    ops::get_component_query(self->get_frame(), *in_reader, *out_writer);
+                    in_reader->pop();
+                    out_writer->pop();
+                    wrote_output = true;
+                }
 
-						self->enequeue_message(packet);
-					}
+                // Handle a resource query
+                if (in_reader->pull_object_member("get_resource"))
+                {
+                    out_writer->push_object_member("get_resource");
+                    ops::get_resource_query(self->get_frame().scene(), *in_reader, *out_writer);
+                    in_reader->pop();
+                    out_writer->pop();
+                    wrote_output = true;
+                }
 
-					// Wait for a new message
-					self->async_receive_client_message_header();
-				}
-				else
-				{
-					report_error(error);
-				}
-			});
-		}
+                // Handle a save query
+                if (in_reader->pull_object_member("save_scene"))
+                {
+                    ops::save_scene_query(self->get_frame().scene(), *in_reader);
+                    in_reader->pop();
+                }
 
-		void Session::report_error(std::error_code error)
+                // Close reader and writer
+                in_reader->pop();
+                out_writer->pop();
+
+                // Log completion time
+                auto completed_time = std::chrono::system_clock::now();
+                std::cout << "Completed query at " << std::chrono::system_clock::to_time_t(completed_time) << std::endl;
+                std::cout << std::endl;
+
+                // If we wrote something, send it
+                if (wrote_output)
+                {
+                    // Write result
+                    std::string result = out.to_string();
+                    auto* packet = Packet::encode_packet(
+                        in_sequence_number,
+                        result.c_str(),
+                        static_cast<Packet::ContentLength_t>(result.size()));
+
+                    self->enequeue_message(packet);
+                }
+
+                // Wait for a new message
+                self->async_receive_message();
+            });
+
+            // Stop the io service
+            socket.get_io_service().stop();
+        }
+
+	    void Session::report_error(std::error_code error)
 		{
 			std::cout << "Error occurred: '" << error << "', this may be expected." << std::endl;
 		}

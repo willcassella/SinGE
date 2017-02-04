@@ -32,7 +32,7 @@ namespace sge
 
 	private:
 
-		void serve_fn(SystemFrame& frame, float current_time, float dt);
+        void serve_fn(SystemFrame& frame, float current_time, float dt);
 
 		//////////////////
 		///   Fields   ///

@@ -4,6 +4,7 @@
 #include <queue>
 #include <memory>
 #include <asio.hpp>
+#include <Resource/Archives/JsonArchive.h>
 #include "EditorServerSystemData.h"
 #include "Packet.h"
 
@@ -42,13 +43,12 @@ namespace sge
 			 */
 			void async_send_message();
 
-			/**
-			 * \brief Handles the first part of receiving a message from the client, which is
-			 */
-			void async_receive_client_message_header();
-
-			/* Handles a change received from the client, reads the JSON body of the packet. */
+			/* Receives a message from the client. */
 			void async_receive_message();
+
+            void write_ops();
+
+            void async_post_write_ops();
 
 			static void report_error(std::error_code error);
 
@@ -69,6 +69,7 @@ namespace sge
 			/* Incoming message */
 			Packet::Header_t _in_header;
 			std::string _in_content;
+            JsonArchive _in_archive;
 		};
 	}
 }

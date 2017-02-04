@@ -12,7 +12,7 @@
     },
     "update_pipeline": [
         ["gl_window_input"],
-        ["editor_server"],
+        ["editor_server_serve"],
         ["gl_render"]
     ]
 }

@@ -359,7 +359,9 @@ namespace sge
 						writer.push_object_member(sge::to_string(entity_id).c_str());
 
 						// Access the component
-						frame.process_entities(&entity_id, 1, &type, 1,
+                        const EntityId* start_range[] = { &entity_id };
+                        const EntityId* end_range[] = { &entity_id + 1 };
+						frame.process_entities(start_range, end_range, 1, &type, 1,
                             [type, entity_id, &writer](ProcessingFrame&, auto comp) -> ProcessControl
 						{
 							std::cout << "Reading properties of '" << type->name() << "' component on entity '" << entity_id << "'" << std::endl;
@@ -389,13 +391,15 @@ namespace sge
 					// Enumerate the EntityIds of components changed
 					reader.enumerate_object_members([type, &frame, &reader](const char* entityId)
 					{
-                        const EntityId entity = std::strtoull(entityId, nullptr, 10);
+                        const EntityId entity_id = std::strtoull(entityId, nullptr, 10);
 
 					    // Process the component and deserialize it
-						frame.process_entities_mut(&entity, 1, &type, 1,
-                            [type, entity, &reader](ProcessingFrame&, auto comp) -> ProcessControl
+                        const EntityId* start_range[] = { &entity_id };
+                        const EntityId* end_range[] = { &entity_id + 1 };
+						frame.process_entities_mut(start_range, end_range, 1, &type, 1,
+                            [type, &reader](ProcessingFrame& pframe, auto comp) -> ProcessControl
 						{
-							std::cout << "Writing properties of '" << type->name() << "' component on entity '" << entity << "'" << std::endl;
+							std::cout << "Writing properties of '" << type->name() << "' component on entity '" << pframe.entity() << "'" << std::endl;
 							write_properties(AnyMut<>{ *type, comp[0] }, reader);
 							return ProcessControl::BREAK;
 						});

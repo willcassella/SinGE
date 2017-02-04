@@ -31,7 +31,7 @@ namespace sge
 			std::cout << "Session opened with " << session->socket.remote_endpoint() << std::endl;
 
 			// Start the session
-			session->async_receive_client_message_header();
+			session->async_receive_message();
 		});
 	}
 }
