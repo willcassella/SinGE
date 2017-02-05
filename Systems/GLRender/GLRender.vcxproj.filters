@@ -29,9 +29,6 @@
     <ClInclude Include="private\GLStaticMesh.h">
       <Filter>private</Filter>
     </ClInclude>
-    <ClInclude Include="private\RenderQueue.h">
-      <Filter>private</Filter>
-    </ClInclude>
     <ClInclude Include="private\GLTexture2D.h">
       <Filter>private</Filter>
     </ClInclude>
@@ -45,6 +42,9 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="private\DebugLine.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\RenderScene.h">
       <Filter>private</Filter>
     </ClInclude>
   </ItemGroup>
@@ -68,6 +68,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\Config.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderScene.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

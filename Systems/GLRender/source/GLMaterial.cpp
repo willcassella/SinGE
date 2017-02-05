@@ -13,11 +13,11 @@ namespace sge
 		{
 			_id = glCreateProgram();
 
-			auto vShader = renderState.find_shader(mat.vertex_shader()).id();
-			auto fShader = renderState.find_shader(mat.pixel_shader()).id();
+			const GLShader::Id v_shader = renderState.get_shader_resource(mat.vertex_shader());
+			const GLShader::Id f_shader = renderState.get_shader_resource(mat.pixel_shader());
 
-			glAttachShader(_id, vShader);
-			glAttachShader(_id, fShader);
+			glAttachShader(_id, v_shader);
+			glAttachShader(_id, f_shader);
 			glBindAttribLocation(_id, POSITION_ATTRIB_LOCATION, POSITION_ATTRIB_NAME);
 			glBindAttribLocation(_id, NORMAL_ATTRIB_LOCATION, NORMAL_ATTRIB_NAME);
 			glBindAttribLocation(_id, TEXCOORD_ATTRIB_LOCATION, TEXCOORD_ATTRIB_NAME);
@@ -40,14 +40,14 @@ namespace sge
 			_view = glGetUniformLocation(_id, "view");
 			_projection = glGetUniformLocation(_id, "projection");
 
-			glDetachShader(_id, vShader);
-			glDetachShader(_id, fShader);
+			glDetachShader(_id, v_shader);
+			glDetachShader(_id, f_shader);
 
 			// Set default parameters
 			for (const auto& param : mat.param_table().texture_params)
 			{
-				GLint location = glGetUniformLocation(_id, param.first.c_str());
-				auto tex = renderState.find_texture_2d(param.second).id();
+				const GLint location = glGetUniformLocation(_id, param.first.c_str());
+				const GLTexture2D::Id tex = renderState.get_texture_2d_resource(param.second);
 				_texture_params[location] = tex;
 			}
 		}
@@ -155,9 +155,9 @@ namespace sge
 
 			for (const auto& param : params.texture_params)
 			{
-				auto texture = renderState.find_texture_2d(param.first).id();
+				const GLTexture2D::Id tex = renderState.get_texture_2d_resource(param.first);
 				glActiveTexture(texIndex);
-				glBindTexture(GL_TEXTURE_2D, texture);
+				glBindTexture(GL_TEXTURE_2D, tex);
 
 				auto location = get_uniform_location(param.first);
 				glUniform1i(location, texIndex);

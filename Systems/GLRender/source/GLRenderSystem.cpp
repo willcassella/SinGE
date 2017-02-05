@@ -97,20 +97,40 @@ namespace sge
 			_state->width = config.viewport_width;
 			_state->height = config.viewport_height;
 
-			// Create the default resources for the internal state object
-			_state->missing_mesh.from_file(config.missing_mesh.c_str());
-
-			// Create the default material resource
-			{
-				JsonArchive missing_material_archive;
-				missing_material_archive.from_file(config.missing_material.c_str());
-				missing_material_archive.deserialize_root(_state->missing_material);
-			}
-
 			// Initialize GLEW
 			glewExperimental = GL_TRUE;
 			glewInit();
 			glGetError(); // Sometimes GLEW initialization generates an error, pop it off the stack.
+
+		    // Create the default mesh object
+            {
+                // Load the mesh
+                StaticMesh missing_mesh;
+                missing_mesh.from_file(config.missing_mesh.c_str());
+                GLStaticMesh gl_missing_mesh{ missing_mesh };
+
+                // Insert it into the resource table
+                const auto vao = gl_missing_mesh.vao();
+                _state->missing_mesh = vao;
+                _state->static_mesh_resources[config.missing_mesh] = vao;
+                _state->static_meshes.insert(std::make_pair(vao, std::move(gl_missing_mesh)));
+            }
+
+			// Create the default material resource
+			{
+                // Load the material
+                Material missing_material;
+				JsonArchive missing_material_archive;
+				missing_material_archive.from_file(config.missing_material.c_str());
+				missing_material_archive.deserialize_root(missing_material);
+                GLMaterial gl_missing_material{ *_state, missing_material };
+
+                // Insert it into the resource table
+                const auto id = gl_missing_material.id();
+                _state->missing_material = id;
+                _state->material_resources[config.missing_material] = id;
+                _state->materials.insert(std::make_pair(id, std::move(gl_missing_material)));
+			}
 
 			// Initialize OpenGL
             glLineWidth(1);
@@ -317,7 +337,6 @@ namespace sge
                 async_token,
                 this,
                 &GLRenderSystem::render_scene);
-            //pipeline.register_tag_callback(this, &GLRenderSystem::cb_debug_draw);
 		}
 
 	    void GLRenderSystem::set_viewport(int width, int height)
@@ -382,6 +401,13 @@ namespace sge
 
 	    void GLRenderSystem::render_scene(SystemFrame& frame, float current_time, float dt)
 		{
+            // Initialize the render scene data structure, if we haven't already
+            if (!_state->initialized_render_scene)
+            {
+                init_render_scene(*_state, frame);
+                _state->initialized_render_scene = true;
+            }
+
 			constexpr GLenum DRAW_BUFFERS[] = {
 				GBUFFER_POSITION_ATTACHMENT,
 				GBUFFER_NORMAL_ATTACHMENT,
@@ -418,224 +444,14 @@ namespace sge
 			});
 
 			// If no camera was found, return
-			if (!hasCamera)
-			{
-				return;
-			}
-
-			// DRAW BACKFACE OF RECEIVER
-			frame.process_entities([&](
-				ProcessingFrame& /*pframe*/,
-				const CTransform3D& transform,
-				const CStaticMesh& staticMesh,
-                const CLightMaskReceiver& /*recv*/)
-			{
-				// Get the model matrix
-				auto model = transform.get_world_matrix();
-
-				// If the mesh or material is empty, skip it
-				if (staticMesh.mesh().empty() || staticMesh.material().empty())
-				{
-					return;
-				}
-
-				// Get the mesh and material
-				const auto& mesh = this->_state->find_static_mesh(staticMesh.mesh());
-				const auto& material = this->_state->find_material(staticMesh.material());
-
-				// Bind the mesh and material
-				mesh.bind();
-				GLuint texIndex = GL_TEXTURE0;
-				material.bind(texIndex);
-
-				// Upload transformation matrices
-				material.set_model_matrix(model);
-				material.set_view_matrix(view);
-				material.set_projection_matrix(proj);
-
-                // Draw backfaces only
-                glCullFace(GL_FRONT);
-
-                // Disable color output
-                glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-
-                // Set stencil to draw
-                glStencilFunc(GL_ALWAYS, 1, 0xFF);
-                glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-
-				// Draw the mesh
-				glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
-			});
-
-            // DRAW BACKFACE OF OBSTRUCTOR
-            frame.process_entities([&](
-                ProcessingFrame& /*pframe*/,
-                const CTransform3D& transform,
-                const CStaticMesh& staticMesh,
-                const CLightMaskObstructor& /*obst*/)
+            if (!hasCamera)
             {
-                // Get the model matrix
-                auto model = transform.get_world_matrix();
+                return;
+            }
 
-                // If the mesh or material is empty, skip it
-                if (staticMesh.mesh().empty() || staticMesh.material().empty())
-                {
-                    return;
-                }
-
-                // Get the mesh and material
-                const auto& mesh = this->_state->find_static_mesh(staticMesh.mesh());
-                const auto& material = this->_state->find_material(staticMesh.material());
-
-                // Bind the mesh and material
-                mesh.bind();
-                GLuint texIndex = GL_TEXTURE0;
-                material.bind(texIndex);
-
-                // Upload transformation matrices
-                material.set_model_matrix(model);
-                material.set_view_matrix(view);
-                material.set_projection_matrix(proj);
-
-                // Enable color output
-                glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-
-                // Set to replace stencil buffer with '3' wherever drawn (within backface)
-                glStencilFunc(GL_EQUAL, 0x03, 0x01);
-                glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
-
-                // Draw the mesh
-                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
-            });
-
-            // OVERWRITE DEPTH WITH FRONT FACE OF RECEIVER
-            frame.process_entities([&](
-                ProcessingFrame& /*pframe*/,
-                const CTransform3D& transform,
-                const CStaticMesh& staticMesh,
-                const CLightMaskReceiver& /*recv*/)
-            {
-                // Get the model matrix
-                auto model = transform.get_world_matrix();
-
-                // If the mesh or material is empty, skip it
-                if (staticMesh.mesh().empty() || staticMesh.material().empty())
-                {
-                    return;
-                }
-
-                // Get the mesh and material
-                const auto& mesh = this->_state->find_static_mesh(staticMesh.mesh());
-                const auto& material = this->_state->find_material(staticMesh.material());
-
-                // Bind the mesh and material
-                mesh.bind();
-                GLuint texIndex = GL_TEXTURE0;
-                material.bind(texIndex);
-
-                // Upload transformation matrices
-                material.set_model_matrix(model);
-                material.set_view_matrix(view);
-                material.set_projection_matrix(proj);
-
-                // Draw front faces only
-                glCullFace(GL_BACK);
-
-                // Set depth function to normal
-                glDepthFunc(GL_LESS);
-
-                // Set stencil to always pass within backface area, allow drawing where depth fails
-                glStencilFunc(GL_LEQUAL, 1, 0xFF);
-                glStencilOp(GL_KEEP, GL_REPLACE, GL_KEEP);
-
-                // Disable color output
-                glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-
-                // Draw the mesh
-                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
-            });
-
-            // DRAW FRONT-FACE OF OBSTRUCTOR
-            frame.process_entities([&](
-                ProcessingFrame& /*pframe*/,
-                const CTransform3D& transform,
-                const CStaticMesh& staticMesh,
-                const CLightMaskObstructor& /*obst*/)
-            {
-                // Get the model matrix
-                auto model = transform.get_world_matrix();
-
-                // If the mesh or material is empty, skip it
-                if (staticMesh.mesh().empty() || staticMesh.material().empty())
-                {
-                    return;
-                }
-
-                // Get the mesh and material
-                const auto& mesh = this->_state->find_static_mesh(staticMesh.mesh());
-                const auto& material = this->_state->find_material(staticMesh.material());
-
-                // Bind the mesh and material
-                mesh.bind();
-                GLuint texIndex = GL_TEXTURE0;
-                material.bind(texIndex);
-
-                // Upload transformation matrices
-                material.set_model_matrix(model);
-                material.set_view_matrix(view);
-                material.set_projection_matrix(proj);
-
-                // Set to allow drawing where depth test fails
-                glStencilFunc(GL_LEQUAL, 1, 0xFF);
-                glStencilOp(GL_KEEP, GL_REPLACE, GL_KEEP);
-
-                // Draw the mesh
-                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
-            });
-
-            // DRAW FRONT FACE OF RECEIVER
-            frame.process_entities([&](
-                ProcessingFrame& /*pframe*/,
-                const CTransform3D& transform,
-                const CStaticMesh& staticMesh,
-                const CLightMaskReceiver& /*recv*/)
-            {
-                // Get the model matrix
-                auto model = transform.get_world_matrix();
-
-                // If the mesh or material is empty, skip it
-                if (staticMesh.mesh().empty() || staticMesh.material().empty())
-                {
-                    return;
-                }
-
-                // Get the mesh and material
-                const auto& mesh = this->_state->find_static_mesh(staticMesh.mesh());
-                const auto& material = this->_state->find_material(staticMesh.material());
-
-                // Bind the mesh and material
-                mesh.bind();
-                GLuint texIndex = GL_TEXTURE0;
-                material.bind(texIndex);
-
-                // Upload transformation matrices
-                material.set_model_matrix(model);
-                material.set_view_matrix(view);
-                material.set_projection_matrix(proj);
-
-                // Set depth function to always pass
-                glDepthFunc(GL_ALWAYS);
-
-                // Set stencil to always pass within backface area
-                glStencilFunc(GL_EQUAL, 1, 0xFF);
-                glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
-                // Enable color output
-                glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-
-                // Draw the mesh
-                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
-            });
+            // Render the scene
+            render_scene_render_normal(*_state, view, proj);
+            render_scene_render_lightmasks(*_state, view, proj);
 
             // Draw debug lines
             glBindVertexArray(_state->debug_line_vao);

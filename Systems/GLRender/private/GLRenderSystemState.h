@@ -7,6 +7,7 @@
 #include "GLStaticMesh.h"
 #include "GLTexture2D.h"
 #include "DebugLine.h"
+#include "RenderScene.h"
 
 namespace sge
 {
@@ -31,13 +32,13 @@ namespace sge
 			///   Methods   ///
 		public:
 
-			const GLShader& find_shader(const std::string& path);
+			GLShader::Id get_shader_resource(const std::string& path);
 
-			const GLMaterial& find_material(const std::string& path);
+			GLMaterial::Id get_material_resource(const std::string& path);
 
-			const GLStaticMesh& find_static_mesh(const std::string& path);
+			GLStaticMesh::VAO get_static_mesh_resource(const std::string& path);
 
-			const GLTexture2D& find_texture_2d(const std::string& path);
+			GLTexture2D::Id get_texture_2d_resource(const std::string& path);
 
 			//////////////////
 			///   Fields   ///
@@ -46,14 +47,19 @@ namespace sge
 			// Config
 			GLint width;
 			GLint height;
-			StaticMesh missing_mesh;
-			Material missing_material;
+			GLStaticMesh::VAO missing_mesh;
+			GLMaterial::Id missing_material;
 
 			// Resources
-			std::unordered_map<std::string, GLShader> shaders;
-			std::unordered_map<std::string, GLMaterial> materials;
-			std::unordered_map<std::string, GLStaticMesh> static_meshes;
-			std::unordered_map<std::string, GLTexture2D> textures;
+			std::unordered_map<std::string, GLShader::Id> shader_resources;
+			std::unordered_map<std::string, GLMaterial::Id> material_resources;
+			std::unordered_map<std::string, GLStaticMesh::VAO> static_mesh_resources;
+			std::unordered_map<std::string, GLTexture2D::Id> texture_2d_resources;
+
+            std::map<GLShader::Id, GLShader> shaders;
+            std::map<GLMaterial::Id, GLMaterial> materials;
+            std::map<GLStaticMesh::VAO, GLStaticMesh> static_meshes;
+            std::map<GLTexture2D::Id, GLTexture2D> texture_2ds;
 
 			// The default framebuffer
 			GLint default_framebuffer;
@@ -81,6 +87,10 @@ namespace sge
 
             // Debug line buffer
             std::vector<DebugLineVert> frame_debug_lines;
+
+            // Scene data
+            bool initialized_render_scene = false;
+            RenderScene render_scene;
 		};
 	}
 }
