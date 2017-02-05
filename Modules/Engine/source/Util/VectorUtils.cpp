@@ -176,4 +176,52 @@ namespace sge
             }
         }
     }
+
+    EntityId ord_entities_match(
+        const EntityId* const* ord_entity_arrays,
+        const std::size_t* lens,
+        std::size_t* iters,
+        std::size_t required_len,
+        std::size_t num_arrays,
+        EntityId target)
+    {
+        while (true)
+        {
+            for (std::size_t i = 0; i < num_arrays; ++i)
+            {
+                const auto upper = std::upper_bound(ord_entity_arrays[i] + iters[i], ord_entity_arrays[i] + lens[i], target);
+                const auto lower = std::lower_bound(ord_entity_arrays[i] + iters[i], upper, target);
+                iters[i] = lower - ord_entity_arrays[i];
+            }
+
+            bool found = true;
+            for (std::size_t i = 0; i < required_len; ++i)
+            {
+                // If this iterator reached its end
+                if (iters[i] == lens[i])
+                {
+                    return NULL_ENTITY;
+                }
+
+                const auto iter_entity = ord_entity_arrays[i][iters[i]];
+
+                // If this iterator is equal to the target
+                if (iter_entity == target)
+                {
+                    continue;
+                }
+
+                // This iterator isn't at the target, keep searching
+                target = std::max(target, iter_entity);
+
+                // If this is the first iterator, the others may fail at the same value and we can consider it a match
+                found = i == 0;
+            }
+
+            if (found)
+            {
+                return target;
+            }
+        }
+    }
 }

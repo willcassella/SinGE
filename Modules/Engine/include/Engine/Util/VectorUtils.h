@@ -26,8 +26,16 @@ namespace sge
 
     EntityId SGE_ENGINE_API ord_entity_union(
         const EntityId** SGE_RESTRICT iters,
-        const EntityId* const* SGE_RESTRICT iter_lens,
+        const EntityId* const* SGE_RESTRICT end_iters,
         std::size_t num_iters);
+
+    EntityId SGE_ENGINE_API ord_entities_match(
+        const EntityId* const* ord_entity_arrays,
+        const std::size_t* SGE_RESTRICT lens,
+        std::size_t* SGE_RESTRICT iters,
+        std::size_t required_len,
+        std::size_t num_arrays,
+        EntityId target = NULL_ENTITY);
 
     template <typename ContentContainerT>
     void compact_merge_ord_entities(
