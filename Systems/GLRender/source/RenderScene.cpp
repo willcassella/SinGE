@@ -106,8 +106,16 @@ namespace sge
                 render_scene.ord_lightmask_obstructors.size(),
             };
 
-            // Set stencil function
-            glStencilFunc(GL_ALWAYS, 0, 0xFF);
+            // Disable stencil testing
+            glDisable(GL_STENCIL_TEST);
+
+            // Cull back faces
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
+
+            // User normal depth testing
+            glEnable(GL_DEPTH_TEST);
+            glDepthFunc(GL_LEQUAL);
 
             // Draw all normal objects
             while (const auto entity = ord_entities_match(ord_arrays, ord_array_lens, iters, 2, 4))
@@ -172,7 +180,21 @@ namespace sge
                 render_scene.ord_lightmask_obstructors.size()
             };
 
-            // DRAW BACKFACE OF RECEIVERS
+            // Enable stencil testing
+            glEnable(GL_STENCIL_TEST);
+
+            /*--- DRAW BACKFACES OF LIGHTMASK RECEIVERS ---*/
+
+            // Draw back faces only
+            glCullFace(GL_FRONT);
+
+            // Disable color output
+            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+
+            // Set stencil
+            glStencilFunc(GL_ALWAYS, 1, 0xFF);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
             while (const auto entity = ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
@@ -182,34 +204,21 @@ namespace sge
                 // Prepare for rendering
                 render_prepare(mesh, material, model, view, proj);
 
-                // Disable face culling
-                glDisable(GL_CULL_FACE);
-
-                // Disable color output
-                glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-
-                // Set stencil
-                glStencilFunc(GL_ALWAYS, 1, 0xFF);
-                glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-
                 // Draw the mesh
-                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
-
-                // Disable stencil writing
-                glStencilFunc(GL_EQUAL, 1, 0xFF);
-                glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
-                // Set depth function to greater than
-                glDepthFunc(GL_GREATER);
-
-                // Draw
                 glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
 
                 // Increment iter
                 ++obj_iter;
             }
 
-            /*--- DRAW BACKFACE OF OBSTRUCTORS ---*/
+            /*--- DRAW BACKFACE OF LIGHTMASK OBSTRUCTORS ---*/
+
+            // Enable color output
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
+            // Set to replace stencil buffer with '3' wherever drawn (within backface)
+            glStencilFunc(GL_EQUAL, 0x03, 0x01);
+            glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
 
             // Reset iterators
             std::memset(iters, 0, sizeof(iters));
@@ -222,20 +231,6 @@ namespace sge
                 // Prepare for rendering
                 render_prepare(mesh, material, model, view, proj);
 
-                // Set depth function back to normal (less than)
-                glDepthFunc(GL_LESS);
-
-                // Draw backfaces only
-                glEnable(GL_CULL_FACE);
-                glCullFace(GL_FRONT);
-
-                // Enable color output
-                glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-
-                // Set to replace stencil buffer with '3' wherever drawn (within backface)
-                glStencilFunc(GL_EQUAL, 0x03, 0x01);
-                glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
-
                 // Draw the mesh
                 glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
 
@@ -247,9 +242,6 @@ namespace sge
 
             // Draw front faces only
             glCullFace(GL_BACK);
-
-            // Set depth function to normal
-            glDepthFunc(GL_LESS);
 
             // Set stencil to always pass within backface area, allow drawing where depth fails
             glStencilFunc(GL_LEQUAL, 1, 0xFF);
