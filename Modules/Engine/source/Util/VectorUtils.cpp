@@ -182,6 +182,7 @@ namespace sge
         const std::size_t* lens,
         std::size_t* iters,
         std::size_t required_len,
+        std::size_t inv_required_len,
         std::size_t num_arrays,
         EntityId target)
     {
@@ -194,6 +195,7 @@ namespace sge
                 iters[i] = lower - ord_entity_arrays[i];
             }
 
+            // Make sure all of the required iterators landed on the same valiue
             bool found = true;
             for (std::size_t i = 0; i < required_len; ++i)
             {
@@ -218,9 +220,39 @@ namespace sge
                 found = i == 0;
             }
 
+            if (!found)
+            {
+                continue;
+            }
+
+            // Make sure none of the inverse required iterators landed on the same value
+            for (std::size_t i = 0; i < inv_required_len; ++i)
+            {
+                // If this iterator reached its end
+                if (iters[i + required_len] == lens[i + required_len])
+                {
+                    continue;
+                }
+
+                const auto iter_entity = ord_entity_arrays[i + required_len][iters[i + required_len]];
+
+                // If this iterator is equal to the target
+                if (iter_entity == target)
+                {
+                    found = false;
+                }
+            }
+
+            // If none of the inverse required iterators landed on the target
             if (found)
             {
                 return target;
+            }
+
+            // Increment the required iterators
+            for (std::size_t i = 0; i < required_len; ++i)
+            {
+                ++iters[i];
             }
         }
     }

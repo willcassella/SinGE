@@ -34,6 +34,7 @@ namespace sge
         const std::size_t* SGE_RESTRICT lens,
         std::size_t* SGE_RESTRICT iters,
         std::size_t required_len,
+        std::size_t inv_required_len,
         std::size_t num_arrays,
         EntityId target = NULL_ENTITY);
 

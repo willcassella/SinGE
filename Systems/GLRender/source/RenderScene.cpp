@@ -118,22 +118,8 @@ namespace sge
             glDepthFunc(GL_LEQUAL);
 
             // Draw all normal objects
-            while (const auto entity = ord_entities_match(ord_arrays, ord_array_lens, iters, 2, 4))
+            while (const auto entity = ord_entities_match(ord_arrays, ord_array_lens, iters, 2, 2, 4))
             {
-                // Make sure we didn't hit a lightmask receiver object
-                if (recv_iter != render_scene.ord_lightmask_receivers.size() && entity == render_scene.ord_lightmask_receivers[recv_iter])
-                {
-                    ++obj_iter;
-                    continue;
-                }
-
-                // Make sure we didn't hit a lightmask obstructor object
-                if (obst_iter != render_scene.ord_lightmask_obstructors.size() && entity == render_scene.ord_lightmask_obstructors[obst_iter])
-                {
-                    ++obj_iter;
-                    continue;
-                }
-
                 // Get the object properties
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
                 const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
@@ -183,19 +169,43 @@ namespace sge
             // Enable stencil testing
             glEnable(GL_STENCIL_TEST);
 
-            /*--- DRAW BACKFACES OF LIGHTMASK RECEIVERS ---*/
+            /*--- DRAW FRONTFACES OF LIGHTMASK RECEIVERS ---*/
 
-            // Draw back faces only
-            glCullFace(GL_FRONT);
-
-            // Disable color output
+            // Disable color and depth output
             glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+            glDepthMask(GL_FALSE);
 
             // Set stencil
             glStencilFunc(GL_ALWAYS, 1, 0xFF);
             glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-            while (const auto entity = ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 3))
+            while (const auto entity = ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
+            {
+                const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
+                const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
+                const auto& material = state.materials.find(render_scene.ord_mesh_entity_materials[mesh_iter])->second;
+
+                // Prepare for rendering
+                render_prepare(mesh, material, model, view, proj);
+
+                // Draw the mesh
+                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
+
+                // Increment iter
+                ++obj_iter;
+            }
+
+            /*--- DRAW BACKFACES OF LIGHTMASK RECEIVERS ---*/
+
+            // Draw back faces only
+            glCullFace(GL_FRONT);
+
+            // Enable depth output
+            glDepthMask(GL_TRUE);
+
+            // Reset iterators
+            std::memset(iters, 0, sizeof(iters));
+            while (const auto entity = ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
                 const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
@@ -222,7 +232,7 @@ namespace sge
 
             // Reset iterators
             std::memset(iters, 0, sizeof(iters));
-            while (const auto entity = ord_entities_match(obst_pass_ord_arrays, obst_pass_ord_array_lens, iters, 3, 3))
+            while (const auto entity = ord_entities_match(obst_pass_ord_arrays, obst_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
                 const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
@@ -252,7 +262,7 @@ namespace sge
 
             // Reset iterators
             std::memset(iters, 0, sizeof(iters));
-            while (const auto entity = ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 3))
+            while (const auto entity = ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
                 const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
@@ -277,7 +287,7 @@ namespace sge
 
             // Reset iterators
             std::memset(iters, 0, sizeof(iters));
-            while (const auto entity = ord_entities_match(obst_pass_ord_arrays, obst_pass_ord_array_lens, iters, 3, 3))
+            while (const auto entity = ord_entities_match(obst_pass_ord_arrays, obst_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
                 const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
@@ -307,7 +317,7 @@ namespace sge
 
             // Reset iterators
             std::memset(iters, 0, sizeof(iters));
-            while (const auto entity = ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 3))
+            while (const auto entity = ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
                 const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
