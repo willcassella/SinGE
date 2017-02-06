@@ -63,6 +63,7 @@ namespace sge
         {
 		    _data->mesh = std::move(mesh);
             _mesh_changed.add_single_tag(entity(), FMeshChanged{});
+            set_modified();
         }
 	}
 
@@ -77,6 +78,7 @@ namespace sge
         {
 		    _data->material = std::move(material);
             _material_changed.add_single_tag(entity(), FMaterialChanged{});
+            set_modified();
         }
 	}
 

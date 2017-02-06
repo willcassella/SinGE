@@ -82,7 +82,6 @@ namespace sge
          */
         const Scene& scene() const;
 
-
         /**
         * \brief Creates new user entities, and assigns their ids to the given array.
         * The result will be an ordered array of entities.
