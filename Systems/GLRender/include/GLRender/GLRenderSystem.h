@@ -41,6 +41,16 @@ namespace sge
 
             void cb_debug_draw(SystemFrame& frame, const FDebugDraw& tag, ComponentId component);
 
+            void cb_modified_transform(
+                SystemFrame& frame,
+                const EntityId* ord_entities,
+                std::size_t num_entities);
+
+            void cb_modified_static_mesh(
+                SystemFrame& frame,
+                const EntityId* ord_entities,
+                std::size_t num_entities);
+
 			////////////////
 			///   Data   ///
 		private:

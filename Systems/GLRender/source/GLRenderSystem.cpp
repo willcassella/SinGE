@@ -332,11 +332,25 @@ namespace sge
 		void GLRenderSystem::pipeline_register(UpdatePipeline& pipeline)
 		{
             const auto async_token = pipeline.new_async_token();
-			pipeline.register_system_fn(
+			const auto system_token = pipeline.register_system_fn(
                 "gl_render",
                 async_token,
                 this,
                 &GLRenderSystem::render_scene);
+
+            pipeline.register_tag_callback<CTransform3D, FModifiedComponent>(
+                system_token,
+                async_token,
+                TCO_NONE,
+                this,
+                &GLRenderSystem::cb_modified_transform);
+
+            pipeline.register_tag_callback<CStaticMesh, FModifiedComponent>(
+                system_token,
+                async_token,
+                TCO_NONE,
+                this,
+                &GLRenderSystem::cb_modified_static_mesh);
 		}
 
 	    void GLRenderSystem::set_viewport(int width, int height)
@@ -524,6 +538,37 @@ namespace sge
                 _state->frame_debug_lines.push_back(start_vert);
                 _state->frame_debug_lines.push_back(end_vert);
             }
+	    }
+
+	    void GLRenderSystem::cb_modified_transform(
+            SystemFrame& frame,
+            const EntityId* ord_entities,
+            std::size_t num_entities)
+	    {
+            frame.process_entities(zip(ord_ents_range(ord_entities, num_entities), ord_ents_range(_state->render_scene.ord_render_entities)),
+                [&render_scene = _state->render_scene] (
+                    ProcessingFrame& pframe,
+                    const CTransform3D& transform)
+            {
+                const auto matrix_index = pframe.user_iterator_index(1);
+                render_scene.ord_render_entities_matrices[matrix_index] = transform.get_world_matrix();
+            });
+	    }
+
+	    void GLRenderSystem::cb_modified_static_mesh(
+            SystemFrame& frame,
+            const EntityId* ord_entities,
+            std::size_t num_entities)
+	    {
+            frame.process_entities(zip(ord_ents_range(ord_entities, num_entities), ord_ents_range(_state->render_scene.ord_mesh_entities)),
+                [&state = *_state, &render_scene = _state->render_scene] (
+                    ProcessingFrame& pframe,
+                    const CStaticMesh& mesh)
+            {
+                const auto mesh_index = pframe.user_iterator_index(1);
+                render_scene.ord_mesh_entity_meshes[mesh_index] = state.get_static_mesh_resource(mesh.mesh());
+                render_scene.ord_mesh_entity_materials[mesh_index] = state.get_material_resource(mesh.material());
+            });
 	    }
 	}
 }
