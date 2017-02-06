@@ -12,6 +12,7 @@
 #include <Engine/Components/CTransform3D.h>
 #include <Engine/Components/Gameplay/CInput.h>
 #include <Engine/Components/Gameplay/CCharacterController.h>
+#include <Engine/Components/Display/CCamera.h>
 #include <GLRender/GLRenderSystem.h>
 #include <GLRender/Config.h>
 #include <BulletPhysics/BulletPhysicsSystem.h>
@@ -71,6 +72,64 @@ namespace sge
                 }
 
                 character.walk(Vec2{ dir.x(), -dir.z() });
+            }
+        });
+    }
+
+    void axis_test(
+        SystemFrame& frame,
+        const EntityId* entities,
+        const TagCount_t* tag_counts,
+        std::size_t num_ents,
+        const CInput::FAxisEvent* axis_events)
+    {
+        std::vector<EntityId> process_children;
+
+        frame.process_entities_mut(zip_ord_ents(entities, num_ents),
+            [&axis_events, &process_children, tag_counts](
+                ProcessingFrame& pframe,
+                const CCharacterController& /*character*/,
+                CTransform3D& transform,
+                CInput& input)
+        {
+            // Get the children of the transform (so we can rotate the camera)
+            process_children = transform.get_children();
+
+            // Rotate the main body
+            for (std::size_t i = 0; i < *tag_counts; ++i)
+            {
+                const auto& axis = axis_events[i];
+
+                if (axis.name == "turn")
+                {
+                    auto rot = transform.get_local_rotation();
+                    rot.rotate_by_axis_angle(Vec3::up(), degrees(axis.norm_distance_from_half() * 20), true);
+                    transform.set_local_rotation(rot);
+                }
+
+                // Reset the axis
+                input.set_axis(CInput::FSetAxis{ axis.name, axis.axis_half() });
+            }
+
+            return ProcessControl::BREAK;
+        });
+
+        frame.process_entities_mut(zip(ord_ents_range(process_children)),
+            [tag_counts, axis_events](
+                ProcessingFrame& pframe,
+                CPerspectiveCamera& cam,
+                CTransform3D& transform)
+        {
+            for (std::size_t i = 0; i < *tag_counts; ++i)
+            {
+                const auto& axis = axis_events[i];
+
+                if (axis.name == "look")
+                {
+                    auto rot = transform.get_local_rotation();
+                    rot.rotate_by_axis_angle(Vec3::right(), degrees(axis.norm_distance_from_half() * 20), true);
+                    transform.set_local_rotation(rot);
+                }
             }
         });
     }
@@ -141,6 +200,11 @@ int main(int argc, char* argv[])
         sge::UpdatePipeline::FULLY_ASYNC,
         sge::TCO_NONE,
         sge::input_test);
+    pipeline.register_tag_callback<sge::CInput>(
+        sge::UpdatePipeline::NO_SYSTEM,
+        sge::UpdatePipeline::FULLY_ASYNC,
+        sge::TCO_NONE,
+        sge::axis_test);
 
     // Register the input window
     event_window.register_pipeline(pipeline);

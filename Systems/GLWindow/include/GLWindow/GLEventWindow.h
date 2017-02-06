@@ -57,6 +57,8 @@ namespace sge
 
         static void glfw_window_resize_callback(GLFWwindow* window, int width, int height);
 
+        static void glfw_window_pos_callback(GLFWwindow* window, int x, int y);
+
         static void glfw_window_focus_callback(GLFWwindow* window, int has_focus);
 
         static void glfw_key_callback(GLFWwindow* window, int key, int scancode, int state, int mods);
@@ -67,6 +69,13 @@ namespace sge
 
         void process_input(SystemFrame& frame, float current_time, float dt);
 
+        void cb_set_axis(
+            SystemFrame& frame,
+            const EntityId* ents,
+            const TagCount_t* tag_counts,
+            std::size_t num_ents,
+            const CInput::FSetAxis* events);
+
         //////////////////
         ///   Fields   ///
     private:
@@ -76,6 +85,10 @@ namespace sge
         std::function<ResizeCallbackFn> _resize_callback;
         InputBindings _bindings;
         std::set<const char*> _active_action_bindings;
+        int _window_width;
+        int _window_height;
+        int _window_x;
+        int _window_y;
         double _mouse_x;
         double _mouse_y;
     };

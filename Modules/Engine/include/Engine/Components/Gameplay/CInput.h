@@ -33,12 +33,37 @@ namespace sge
 		{
 			SGE_REFLECTED_TYPE;
 
+            ///////////////////
+            ///   Methods   ///
+		public:
+
+            float axis_half() const
+            {
+                return min + (max - min) * 0.5f;
+            }
+
+            float norm_axis_half() const
+            {
+                return axis_half() / (max - axis_half());
+            }
+
+            float distance_from_half() const
+            {
+                return value - axis_half();
+            }
+
+            float norm_distance_from_half() const
+            {
+                return distance_from_half() / (max - axis_half());
+            }
+
 			//////////////////
 			///   Fields   ///
 		public:
 
 			FixedString<32> name;
 			float value;
+            float min;
             float max;
 		};
 
