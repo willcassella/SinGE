@@ -27,5 +27,7 @@ namespace sge
         std::unordered_map<int, std::string> mouse_button_bindings;
         std::unordered_set<std::string> mouse_x_bindings;
         std::unordered_set<std::string> mouse_y_bindings;
+        std::unordered_set<std::string> mouse_delta_x_bindings;
+        std::unordered_set<std::string> mouse_delta_y_bindings;
     };
 }

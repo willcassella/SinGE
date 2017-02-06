@@ -16,6 +16,8 @@ namespace sge
 		///   Tags   ///
 	public:
 
+        using Name_t = FixedString<32>;
+
 		/* Input event dispatched when an 'action' occurs. */
 		struct SGE_ENGINE_API FActionEvent
 		{
@@ -25,7 +27,7 @@ namespace sge
 			///   Fields   ///
 		public:
 
-			FixedString<32> name;
+			Name_t name;
 		};
 
 		/* Input event dispatched when an input axis changes. */
@@ -61,24 +63,11 @@ namespace sge
 			///   Fields   ///
 		public:
 
-			FixedString<32> name;
+			Name_t name;
 			float value;
             float min;
             float max;
 		};
-
-        /* Tag to set the value of the specified axis. */
-        struct SGE_ENGINE_API FSetAxis
-        {
-            SGE_REFLECTED_TYPE;
-
-            //////////////////
-            ///   Fields   ///
-        public:
-
-            FixedString<32> name;
-            float value;
-        };
 
         ///////////////////
         ///   Methods   ///
@@ -88,11 +77,9 @@ namespace sge
 
         void reset();
 
-        void add_action_event(const FActionEvent& action_event) const;
+        void add_action_event(Name_t action_name) const;
 
-        void add_axis_event(const FAxisEvent& axis_event) const;
-
-        void set_axis(const FSetAxis& set_axis) const;
+        void add_axis_event(Name_t axis_name, float value, float min, float max) const;
 
 	private:
 
@@ -104,6 +91,5 @@ namespace sge
 
         mutable TagStorage<FActionEvent> _action_tags;
         mutable TagStorage<FAxisEvent> _axis_tags;
-        mutable TagStorage<FSetAxis> _set_axis_tags;
 	};
 }

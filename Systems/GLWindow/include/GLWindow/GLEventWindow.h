@@ -53,6 +53,8 @@ namespace sge
 
         void set_bindings(InputBindings bindings);
 
+        void capture_mouse(bool value);
+
     private:
 
         static void glfw_window_resize_callback(GLFWwindow* window, int width, int height);
@@ -69,13 +71,6 @@ namespace sge
 
         void process_input(SystemFrame& frame, float current_time, float dt);
 
-        void cb_set_axis(
-            SystemFrame& frame,
-            const EntityId* ents,
-            const TagCount_t* tag_counts,
-            std::size_t num_ents,
-            const CInput::FSetAxis* events);
-
         //////////////////
         ///   Fields   ///
     private:
@@ -91,5 +86,7 @@ namespace sge
         int _window_y;
         double _mouse_x;
         double _mouse_y;
+        double _mouse_delta_x;
+        double _mouse_delta_y;
     };
 }

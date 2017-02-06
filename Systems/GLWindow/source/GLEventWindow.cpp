@@ -21,7 +21,9 @@ namespace sge
         : _has_focus(true),
         _window(nullptr),
         _mouse_x(0.0),
-        _mouse_y(0.0)
+        _mouse_y(0.0),
+        _mouse_delta_x(0.0),
+        _mouse_delta_y(0.0)
     {
     }
 
@@ -89,18 +91,23 @@ namespace sge
             UpdatePipeline::FULLY_ASYNC,
             this,
             &GLEventWindow::process_input);
-
-        pipeline.register_tag_callback<CInput, CInput::FSetAxis>(
-            UpdatePipeline::NO_SYSTEM,
-            UpdatePipeline::FULLY_ASYNC,
-            TCO_NONE,
-            this,
-            &GLEventWindow::cb_set_axis);
     }
 
     void GLEventWindow::set_bindings(InputBindings bindings)
     {
         _bindings = std::move(bindings);
+    }
+
+    void GLEventWindow::capture_mouse(bool value)
+    {
+        if (value)
+        {
+            glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        }
+        else
+        {
+            glfwSetInputMode(_window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
     }
 
     void GLEventWindow::glfw_window_resize_callback(GLFWwindow* window, int width, int height)
@@ -180,6 +187,10 @@ namespace sge
     {
         auto event_window = static_cast<GLEventWindow*>(glfwGetWindowUserPointer(window));
 
+        // Update delta
+        event_window->_mouse_delta_x = -(x - event_window->_mouse_x);
+        event_window->_mouse_delta_y = -(y - event_window->_mouse_y);
+
         // Update mouse X and Y
         event_window->_mouse_x = x;
         event_window->_mouse_y = y;
@@ -199,61 +210,54 @@ namespace sge
             // For each keyboard binding
             for (auto binding : this->_active_action_bindings)
             {
-                input.add_action_event(CInput::FActionEvent{ binding });
+                input.add_action_event(binding);
             }
 
             // For each mouse x-axis binding
             for (const auto& binding : this->_bindings.mouse_x_bindings)
             {
-                input.add_axis_event(CInput::FAxisEvent{
+                input.add_axis_event(
                     binding.c_str(),
                     static_cast<float>(this->_mouse_x), // value
                     static_cast<float>(this->_window_width), // min
                     static_cast<float>(0) // max
-                });
+                );
             }
 
             // For each mouse y-axis binding
             for (const auto& binding : this->_bindings.mouse_y_bindings)
             {
-                input.add_axis_event(CInput::FAxisEvent{
+                input.add_axis_event(
                     binding.c_str(),
                     static_cast<float>(this->_mouse_y), // value
                     static_cast<float>(this->_window_height), // min
                     static_cast<float>(0) // max
-                });
+                );
             }
-        });
-    }
 
-    void GLEventWindow::cb_set_axis(
-        SystemFrame& /*frame*/,
-        const EntityId* /*ents*/,
-        const TagCount_t* tag_counts,
-        std::size_t num_ents,
-        const CInput::FSetAxis* events)
-    {
-        for (std::size_t i = 0; i < num_ents; ++i)
-        {
-            for (std::size_t j = 0; j < tag_counts[i]; ++j, ++events)
+            // For each mouse delta-x binding
+            for (const auto& binding : this->_bindings.mouse_delta_x_bindings)
             {
-                // See if the axis exists in the x-axis bindings
-                const auto x_iter = _bindings.mouse_x_bindings.find(events->name.c_str());
-                if (x_iter != _bindings.mouse_x_bindings.end())
-                {
-                    _mouse_x = events->value;
-                    glfwSetCursorPos(_window, events->value, _mouse_y);
-                    continue;
-                }
-
-                // See if the axis exists in the y-axis bindings
-                const auto y_iter = _bindings.mouse_y_bindings.find(events->name.c_str());
-                if (y_iter != _bindings.mouse_y_bindings.end())
-                {
-                    _mouse_y = events->value;
-                    glfwSetCursorPos(_window, _mouse_x, events->value);
-                }
+                input.add_axis_event(
+                    binding.c_str(),
+                    static_cast<float>(this->_mouse_delta_x), // value
+                    0.f,
+                    0.f
+                );
             }
-        }
+            this->_mouse_delta_x = 0;
+
+            // For each mouse delta-y binding
+            for (const auto& binding : this->_bindings.mouse_delta_y_bindings)
+            {
+                input.add_axis_event(
+                    binding.c_str(),
+                    static_cast<float>(this->_mouse_delta_y), //value
+                    0.f,
+                    0.f
+                );
+            }
+            this->_mouse_delta_y = 0;
+        });
     }
 }

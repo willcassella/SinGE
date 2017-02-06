@@ -39,6 +39,14 @@ namespace sge
                 {
                     this->mouse_y_bindings.insert(event_name);
                 }
+                else if (std::strcmp(mouse_input_name, "DX") == 0)
+                {
+                    this->mouse_delta_x_bindings.insert(event_name);
+                }
+                else if (std::strcmp(mouse_input_name, "DY") == 0)
+                {
+                    this->mouse_delta_y_bindings.insert(event_name);
+                }
                 else if (std::strcmp(mouse_input_name, "L") == 0)
                 {
                     this->mouse_button_bindings[GLFW_MOUSE_BUTTON_LEFT] = event_name;
