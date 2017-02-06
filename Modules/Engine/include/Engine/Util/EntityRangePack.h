@@ -70,7 +70,7 @@ namespace sge
     EntityRangePack<RangeTs...> zip(RangeTs... ranges)
     {
         EntityRangePack<RangeTs...> result;
-        result.ranges = std::make_tuple(std::move(ranges...));
+        result.ranges = std::make_tuple(std::move(ranges)...);
         return result;
     }
 
@@ -97,6 +97,21 @@ namespace sge
         const EntityId* ord_entities;
         std::size_t size;
     };
+
+    inline OrdEntityRange ord_ents_range(const EntityId* ord_entities, std::size_t num)
+    {
+        return OrdEntityRange{ ord_entities, num };
+    }
+
+    inline OrdEntityRange ord_ents_range(const EntityId* ord_entities_start, const EntityId* ord_entities_end)
+    {
+        return OrdEntityRange{ ord_entities_start, static_cast<std::size_t>(ord_entities_end - ord_entities_start) };
+    }
+
+    inline OrdEntityRange ord_ents_range(const std::vector<EntityId>& ord_entities)
+    {
+        return OrdEntityRange{ ord_entities.data(), ord_entities.size() };
+    }
 
     inline EntityRangePack<OrdEntityRange> zip_ord_ents(const EntityId* ord_entities, std::size_t num)
     {
