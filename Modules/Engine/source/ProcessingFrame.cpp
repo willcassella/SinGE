@@ -51,6 +51,6 @@ namespace sge
 
     std::size_t ProcessingFrame::user_iterator_index(std::size_t iter_index) const
     {
-        return user_iterators()[iter_index] - user_iterators()[iter_index];
+        return user_iterators()[iter_index] - user_start_iterators()[iter_index];
     }
 }
