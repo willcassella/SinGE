@@ -103,12 +103,9 @@ namespace sge
                 if (axis.name == "turn")
                 {
                     auto rot = transform.get_local_rotation();
-                    rot.rotate_by_axis_angle(Vec3::up(), degrees(axis.norm_distance_from_half() * 20), true);
+                    rot.rotate_by_axis_angle(Vec3::up(), degrees(axis.value) / 5, true);
                     transform.set_local_rotation(rot);
                 }
-
-                // Reset the axis
-                input.set_axis(CInput::FSetAxis{ axis.name, axis.axis_half() });
             }
 
             return ProcessControl::BREAK;
@@ -127,7 +124,7 @@ namespace sge
                 if (axis.name == "look")
                 {
                     auto rot = transform.get_local_rotation();
-                    rot.rotate_by_axis_angle(Vec3::right(), degrees(axis.norm_distance_from_half() * 20), true);
+                    rot.rotate_by_axis_angle(Vec3::right(), degrees(axis.value) / 5, true);
                     transform.set_local_rotation(rot);
                 }
             }
@@ -173,6 +170,7 @@ int main(int argc, char* argv[])
     sge::InputBindings input_bindings;
     config_reader->object_member("input_bindings", input_bindings);
     event_window.set_bindings(std::move(input_bindings));
+    event_window.capture_mouse(true);
 
 	// Create a type database
 	sge::TypeDB type_db;

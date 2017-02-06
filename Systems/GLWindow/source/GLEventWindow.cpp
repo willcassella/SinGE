@@ -20,6 +20,10 @@ namespace sge
     GLEventWindow::GLEventWindow()
         : _has_focus(true),
         _window(nullptr),
+        _window_x(0),
+        _window_y(0),
+        _window_width(0),
+        _window_height(0),
         _mouse_x(0.0),
         _mouse_y(0.0),
         _mouse_delta_x(0.0),
@@ -53,13 +57,16 @@ namespace sge
         glfwSetWindowPosCallback(window, &glfw_window_pos_callback);
         glfwSetFramebufferSizeCallback(window, &glfw_window_resize_callback);
         glfwSetWindowFocusCallback(window, &glfw_window_focus_callback);
-        glfwSetKeyCallback(_window, &glfw_key_callback);
-        glfwSetMouseButtonCallback(_window, &glfw_mouse_button_callback);
+        glfwSetKeyCallback(window, &glfw_key_callback);
+        glfwSetMouseButtonCallback(window, &glfw_mouse_button_callback);
         glfwSetCursorPosCallback(window, &glfw_cursor_callback);
 
         // Get window initial properties
         glfwGetWindowPos(window, &_window_x, &_window_y);
         glfwGetWindowSize(window, &_window_width, &_window_height);
+        glfwGetCursorPos(window, &_mouse_x, &_mouse_y);
+        _mouse_delta_x = 0;
+        _mouse_delta_y = 0;
     }
 
     void GLEventWindow::unset_window()
