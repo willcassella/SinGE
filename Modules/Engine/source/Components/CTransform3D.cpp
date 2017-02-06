@@ -5,7 +5,7 @@
 #include "../../include/Engine/Components/CTransform3D.h"
 #include "../../include/Engine/ProcessingFrame.h"
 #include "../../include/Engine/Scene.h"
-#include "../../include/Engine/Util/BasicComponentContainer.h"
+#include "../../include/Engine/Util/MapComponentContainer.h"
 #include "../../include/Engine/TagBuffer.h"
 
 namespace sge
@@ -42,6 +42,31 @@ namespace sge
 		EntityId parent = WORLD_ENTITY;
 	};
 
+    static Mat4 generate_matrix(const Vec3& pos, const Vec3& scale, const Quat& rot)
+    {
+        Mat4 result;
+        result *= Mat4::translation(pos);
+        result *= Mat4::rotate(rot);
+        result *= Mat4::scale(scale);
+
+        return result;
+    }
+
+    static Mat4 generate_world_matrix(const CTransform3D::Data& data, const std::map<EntityId, CTransform3D::Data>& data_map)
+    {
+        // Calculate this entity's matrix
+        auto mat = generate_matrix(data.local_position, data.local_scale, data.local_rotation);
+
+        if (data.parent != WORLD_ENTITY)
+        {
+            return generate_world_matrix(data_map.find(data.parent)->second, data_map) * mat;
+        }
+        else
+        {
+            return mat;
+        }
+    }
+
 	SGE_REFLECT_TYPE(sge::CTransform3D)
 	.property("local_position", &CTransform3D::get_local_position, &CTransform3D::set_local_position)
 	.property("local_scale", &CTransform3D::get_local_scale, &CTransform3D::set_local_scale)
@@ -54,12 +79,13 @@ namespace sge
 
 	void CTransform3D::register_type(Scene& scene)
 	{
-		scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CTransform3D, Data>>());
+		scene.register_component_type(type_info, std::make_unique<MapComponentContainer<CTransform3D, Data>>());
 	}
 
-    void CTransform3D::reset(Data& data)
+    void CTransform3D::reset(Data& data, std::map<EntityId, Data>& cont_data)
     {
         _data = &data;
+        _data_map = &cont_data;
     }
 
     bool CTransform3D::has_parent() const
@@ -72,18 +98,36 @@ namespace sge
 		return _data->parent;
 	}
 
-	void CTransform3D::set_parent(const CTransform3D& parent)
+	void CTransform3D::set_parent(TComponentId<CTransform3D> parent)
 	{
         if (_data->parent == parent.entity())
         {
             return;
         }
 
+        // TODO: Check for parent cycle
 		_data->parent = parent.entity();
         _parent_changed_tags.add_single_tag(entity(), FParentChanged{});
 	}
 
-	Vec3 CTransform3D::get_local_position() const
+    std::vector<EntityId> CTransform3D::get_children() const
+    {
+        // I know this is literally HORRIBLE, but I don't have time to change it.
+	    // If it becomes a performance problem, I can fix it in the future
+        std::vector<EntityId> result;
+
+        for (const auto& elem : *_data_map)
+        {
+            if (elem.second.parent == entity())
+            {
+                result.push_back(elem.first);
+            }
+        }
+
+        return result;
+    }
+
+    Vec3 CTransform3D::get_local_position() const
 	{
 		return _data->local_position;
 	}
@@ -115,12 +159,7 @@ namespace sge
 
 	Mat4 CTransform3D::get_local_matrix() const
 	{
-		Mat4 result;
-		result *= Mat4::translation(_data->local_position);
-		result *= Mat4::rotate(_data->local_rotation);
-		result *= Mat4::scale(_data->local_scale);
-
-		return result;
+        return generate_matrix(_data->local_position, _data->local_scale, _data->local_rotation);
 	}
 
 	Vec3 CTransform3D::get_world_position() const
@@ -155,7 +194,7 @@ namespace sge
 		}
 		else
 		{
-			return /*get_parent_matrix(self, scene) **/ get_local_rotation(); // TODO
+			return /*get_parent_matrix(self, scene) **/ get_local_rotation();
 		}
 	}
 
@@ -175,14 +214,11 @@ namespace sge
 
     Mat4 CTransform3D::get_parent_matrix() const
 	{
-		if (has_parent())
+		if (!has_parent())
 		{
-			//auto parent = frame.scene().get_component(self->_parent);
-			//return get_parent_matrix(parent, frame);
+            return Mat4{};
 		}
-		//else
-		{
-			return Mat4{};
-		}
+
+        return generate_world_matrix(_data_map->find(_data->parent)->second, *_data_map);
 	}
 }

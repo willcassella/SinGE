@@ -24,13 +24,15 @@ namespace sge
 
 		static void register_type(Scene& scene);
 
-        void reset(Data& data);
+        void reset(Data& data, std::map<EntityId, Data>& cont_data);
 
 		bool has_parent() const;
 
 		TComponentId<CTransform3D> get_parent() const;
 
-		void set_parent(const CTransform3D& parent);
+		void set_parent(TComponentId<CTransform3D> parent);
+
+        std::vector<EntityId> get_children() const;
 
 		Vec3 get_local_position() const;
 
@@ -65,6 +67,7 @@ namespace sge
 	private:
 
 		Data* _data = nullptr;
+        const std::map<EntityId, Data>* _data_map = nullptr;
         TagStorage<FParentChanged> _parent_changed_tags;
 	};
 }
