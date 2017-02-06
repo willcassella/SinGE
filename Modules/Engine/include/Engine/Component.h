@@ -165,10 +165,6 @@ namespace sge
 
     class SGE_ENGINE_API ComponentContainer
     {
-    public:
-
-        using InstanceIterator = const EntityId*;
-
         ////////////////////////
         ///   Constructors   ///
     public:
@@ -185,15 +181,20 @@ namespace sge
 
         virtual void from_archive(ArchiveReader& reader) = 0;
 
-        virtual InstanceIterator get_start_iterator() const = 0;
+        virtual const EntityId* get_instance_set() const = 0;
 
-        virtual InstanceIterator get_end_iterator() const = 0;
+        virtual std::size_t get_num_instances() const = 0;
 
-        virtual void create_instances(const EntityId* ord_entities, std::size_t num, std::size_t num_dups) = 0;
+        virtual void create_instances(
+            const EntityId* const* ord_ents_arrays,
+            const std::size_t* num_ents,
+            std::size_t num_arrays,
+            std::size_t num_new,
+            EntityId* out_new_ents) = 0;
 
         virtual void remove_instances(const EntityId* ord_instances, std::size_t num) = 0;
 
-        virtual void reset_interface(InstanceIterator instance, ComponentInterface* interf) = 0;
+        virtual void reset_interface(std::size_t instance_index, ComponentInterface* interf) = 0;
     };
 
     /**
@@ -216,7 +217,7 @@ namespace sge
 
 		EntityId entity() const
 		{
-            return *_iter;
+            return _entity;
 		}
 
         ComponentId id() const;
@@ -245,13 +246,13 @@ namespace sge
 
 	private:
 
-        void reset(ComponentContainer::InstanceIterator iter);
+        void reset(EntityId entity);
 
 	    //////////////////
 		///   Fields   ///
 	private:
 
-        ComponentContainer::InstanceIterator _iter;
+        EntityId _entity;
         std::vector<EntityId> _ord_modified;
         std::vector<EntityId> _ord_destroyed;
 		bool _modified_current;

@@ -64,26 +64,38 @@ namespace sge
             }
         }
 
-        InstanceIterator get_start_iterator() const override
+        const EntityId* get_instance_set() const override
         {
             return instance_set.data();
         }
 
-        InstanceIterator get_end_iterator() const override
+        std::size_t get_num_instances() const override
         {
-            return instance_set.data() + instance_set.size();
+            return instance_set.size();
         }
 
-        void create_instances(const EntityId* ordered_instances, std::size_t num, std::size_t num_dups) override
+        void create_instances(
+            const EntityId* const* ordered_instances,
+            const std::size_t* lens,
+            std::size_t num_arrays,
+            std::size_t num_new_instances,
+            EntityId* out_new_instances) override
         {
-            insert_ord_entities(instance_set, ordered_instances, num);
-            const auto len = compact_ord_entities(instance_set.data(), instance_set.size());
-            instance_set.erase(instance_set.begin() + len, instance_set.end());
+            const std::size_t old_len = instance_set.size();
+            instance_set.insert(instance_set.end(), num_new_instances, NULL_ENTITY);
 
-            for (std::size_t i = 0; i < num; ++i)
+            rev_multi_insert(instance_set.data(), old_len, instance_set.size(), ordered_instances, lens, num_arrays,
+                [&](std::size_t new_index, std::size_t old_index) // Swap function
             {
-                instance_data.insert(std::make_pair(ordered_instances[i], ComponentDataT{}));
-            }
+                instance_set[new_index] = instance_set[old_index];
+            },
+                [&](EntityId new_entity, std::size_t index) // Insert function
+            {
+                instance_set[index] = new_entity;
+                instance_data[new_entity] = ComponentDataT{};
+                out_new_instances[num_new_instances - 1] = new_entity;
+                --num_new_instances;
+            });
         }
 
         void remove_instances(const EntityId* ordered_instances, std::size_t num) override
@@ -96,9 +108,10 @@ namespace sge
             }
         }
 
-        void reset_interface(InstanceIterator instance, ComponentInterface* interf) override
+        void reset_interface(std::size_t instance_index, ComponentInterface* interf) override
         {
-            auto& data = instance_data[*instance];
+            const auto entity = instance_set[instance_index];
+            auto& data = instance_data[entity];
             static_cast<ComponentT*>(interf)->reset(data, instance_data);
         }
 

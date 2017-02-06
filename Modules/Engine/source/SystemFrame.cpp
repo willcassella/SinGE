@@ -12,13 +12,13 @@ SGE_REFLECT_TYPE(sge::SystemFrame);
 
 namespace sge
 {
-	SystemFrame::SystemFrame(UpdatePipeline::SystemToken system_token, const Scene& scene, SceneData& scene_data)
-		: _system_token(system_token),
+    SystemFrame::SystemFrame(UpdatePipeline::SystemToken system_token, const Scene& scene, SceneData& scene_data)
+        : _system_token(system_token),
         _has_tags(false),
         _scene(&scene),
-		_scene_data(&scene_data)
-	{
-	}
+        _scene_data(&scene_data)
+    {
+    }
 
     UpdatePipeline::SystemToken SystemFrame::system_token() const
     {
@@ -56,16 +56,16 @@ namespace sge
         }
     }
 
-	EntityId SystemFrame::get_entity_parent(EntityId entity) const
-	{
-		if (entity == NULL_ENTITY || entity == WORLD_ENTITY)
-		{
-			return NULL_ENTITY;
-		}
+    EntityId SystemFrame::get_entity_parent(EntityId entity) const
+    {
+        if (entity == NULL_ENTITY || entity == WORLD_ENTITY)
+        {
+            return NULL_ENTITY;
+        }
 
-		auto iter = _scene_data->entity_parents.find(entity);
-		return iter != _scene_data->entity_parents.end() ? iter->second : WORLD_ENTITY;
-	}
+        auto iter = _scene_data->entity_parents.find(entity);
+        return iter != _scene_data->entity_parents.end() ? iter->second : WORLD_ENTITY;
+    }
 
     void SystemFrame::set_entities_parent(EntityId parent, const EntityId* ord_children, std::size_t num_children) const
     {
@@ -85,22 +85,22 @@ namespace sge
         }
     }
 
-	std::string SystemFrame::get_entity_name(EntityId entity) const
-	{
-		if (entity == NULL_ENTITY)
-		{
-			return "null";
-		}
+    std::string SystemFrame::get_entity_name(EntityId entity) const
+    {
+        if (entity == NULL_ENTITY)
+        {
+            return "null";
+        }
 
-		if (entity == WORLD_ENTITY)
-		{
-			return "World";
-		}
+        if (entity == WORLD_ENTITY)
+        {
+            return "World";
+        }
 
-		// Search for the name
-		auto iter = _scene_data->entity_names.find(entity);
-		return iter != _scene_data->entity_names.end() ? iter->second : "";
-	}
+        // Search for the name
+        auto iter = _scene_data->entity_names.find(entity);
+        return iter != _scene_data->entity_names.end() ? iter->second : "";
+    }
 
     void SystemFrame::set_entity_name(EntityId entity, std::string name) const
     {
@@ -151,18 +151,18 @@ namespace sge
         insert_ord_entities(_ord_destroyed_components[&type], ord_entities, num_entities);
     }
 
-	void SystemFrame::process_entities(
+    void SystemFrame::process_entities(
         const TypeInfo* const types[],
         std::size_t num_types,
         FunctionView<ProcessFn> process_fn)
-	{
+    {
         if (num_types == 0)
         {
             return;
         }
 
         impl_process_entities(nullptr, nullptr, 0, types, num_types, process_fn);
-	}
+    }
 
     void SystemFrame::process_entities_mut(
         const TypeInfo* const types[],
@@ -177,21 +177,21 @@ namespace sge
         impl_process_entities(nullptr, nullptr, 0, types, num_types, process_fn);
     }
 
-	void SystemFrame::process_entities(
+    void SystemFrame::process_entities(
         const EntityId* const* SGE_RESTRICT user_start_iters,
         const EntityId* const* SGE_RESTRICT user_end_iters,
         std::size_t num_user_iters,
         const TypeInfo* const types[],
         std::size_t num_types,
         FunctionView<ProcessFn> process_fn)
-	{
+    {
         if (num_user_iters == 0)
         {
             return;
         }
 
-		impl_process_entities(user_start_iters, user_end_iters, num_user_iters, types, num_types, process_fn);
-	}
+        impl_process_entities(user_start_iters, user_end_iters, num_user_iters, types, num_types, process_fn);
+    }
 
     void SystemFrame::process_entities_mut(
         const EntityId* const* SGE_RESTRICT user_start_iters,
@@ -215,18 +215,18 @@ namespace sge
         _tags[&tag_type].push_back(std::move(tag_buffer));
     }
 
-	template <typename ProcessFnT>
-	void SystemFrame::impl_process_entities(
-		const EntityId* const* SGE_RESTRICT user_start_iters,
+    template <typename ProcessFnT>
+    void SystemFrame::impl_process_entities(
+        const EntityId* const* SGE_RESTRICT user_start_iters,
         const EntityId* const* SGE_RESTRICT user_end_iters,
         const std::size_t num_user_iters,
-		const TypeInfo* const types[],
-		const std::size_t num_types,
-		ProcessFnT& process_fn)
-	{
+        const TypeInfo* const types[],
+        const std::size_t num_types,
+        ProcessFnT& process_fn)
+    {
         // Create arrays for entity iterators
-        auto* const instance_iters = SGE_STACK_ALLOC(ComponentContainer::InstanceIterator, num_types + num_user_iters);
-        auto* const end_iters = SGE_STACK_ALLOC(ComponentContainer::InstanceIterator, num_types + num_user_iters);
+        auto* const instance_iters = SGE_STACK_ALLOC(const EntityId*, num_types + num_user_iters);
+        auto* const end_iters = SGE_STACK_ALLOC(const EntityId*, num_types + num_user_iters);
 
         // Create an array of component containers
         auto* const containers = SGE_STACK_ALLOC(ComponentContainer*, num_types);
@@ -255,14 +255,14 @@ namespace sge
             types[i]->init(comp_interfaces[i]);
 
             // Create the iterators
-            instance_iters[i] = cont_iter->second->get_start_iterator();
-            end_iters[i] = cont_iter->second->get_end_iterator();
+            instance_iters[i] = cont_iter->second->get_instance_set();
+            end_iters[i] = instance_iters[i] + cont_iter->second->get_num_instances();
 
             // Create the component container pointer
             containers[i] = cont_iter->second.get();
         }
 
-	    // Add the user-supplied iterators
+        // Add the user-supplied iterators
         for (std::size_t i = 0; i < num_user_iters; ++i)
         {
             instance_iters[num_types + i] = user_start_iters[i];
@@ -291,9 +291,8 @@ namespace sge
             // Advance the interfaces
             for (std::size_t i = 0; i < num_types; ++i)
             {
-                // Call custom 'reset' function before ComponentInterface one, to allow interfaces to access old entity data
-                containers[i]->reset_interface(instance_iters[i], comp_interfaces[i]);
-                comp_interfaces[i]->reset(instance_iters[i]);
+                comp_interfaces[i]->reset(*instance_iters[i]);
+                containers[i]->reset_interface(instance_iters[i] - containers[i]->get_instance_set(), comp_interfaces[i]);
             }
 
             // Set up the processing frame
@@ -331,5 +330,5 @@ namespace sge
             // Destroy the interface
             comp_interfaces[i]->~ComponentInterface();
         }
-	}
+    }
 }

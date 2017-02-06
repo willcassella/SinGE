@@ -1,6 +1,7 @@
 // VectorUtils.h
 #pragma once
 
+#include <Core/Memory/Functions.h>
 #include "../Component.h"
 
 namespace sge
@@ -38,102 +39,125 @@ namespace sge
         std::size_t num_arrays,
         EntityId target = NULL_ENTITY);
 
-    template <typename ContentContainerT>
-    void compact_merge_ord_entities(
-        std::vector<EntityId>& target_ord_instances,
-        ContentContainerT& content_container,
-        const EntityId* ord_new_instances,
-        std::size_t num_new_instances,
-        std::size_t min_est_dups)
+    std::size_t SGE_ENGINE_API rev_count_dups(
+        const EntityId* const* ord_ent_arrays,
+        const std::size_t* lens,
+        std::size_t num_arrays);
+
+    template <typename InsertFn, typename SwapFn>
+    void rev_multi_insert(
+        const EntityId* target_ord_instances,
+        std::size_t target_original_len,
+        std::size_t target_new_len,
+        const EntityId* const* ord_new_instances,
+        const std::size_t* lens,
+        std::size_t num_arrays,
+        SwapFn&& swap_fn,
+        InsertFn&& insert_fn)
     {
-        target_ord_instances.insert(target_ord_instances.end(), num_new_instances - min_est_dups, NULL_ENTITY);
-        content_container.insert(content_container.end(), num_new_instances - min_est_dups, {});
-        auto target_back_iter = target_ord_instances.rbegin();
-        auto content_back_iter = content_container.rbegin();
-        std::size_t i = num_new_instances;
+        std::size_t num_to_insert = target_new_len - target_original_len;
 
         // Start at the back, and iterate forwards
-        auto target_front_iter = target_ord_instances.rbegin() + num_new_instances - min_est_dups;
-        auto content_front_iter = content_container.rbegin() + num_new_instances - min_est_dups;
+        auto target_rev_back_iter = target_new_len;
+        auto target_rev_front_iter = target_original_len;
 
-        EntityId last_new_instance = 0;
-        for (const auto target_rend = target_ord_instances.rend(); i > 0 && target_front_iter != target_rend;)
+        // Create a buffer to hold the iterators
+        auto* iters = SGE_STACK_ALLOC(std::size_t, num_arrays);
+        std::memcpy(iters, lens, sizeof(std::size_t) * num_arrays);
+
+        while (target_rev_front_iter != 0 && num_to_insert != 0)
         {
-            // Get the new instance
-            EntityId new_instance = ord_new_instances[i - 1];
+            EntityId new_instance = NULL_ENTITY;
+            std::size_t new_instance_index = 0;
+            const EntityId current_instance = target_ord_instances[target_rev_front_iter - 1];
 
-            // If this is a duplicate
-            if (new_instance == last_new_instance)
+            for (std::size_t i = 0; i < num_arrays; ++i)
             {
-                // Go to the next one
-                --i;
-                continue;
+                // Make sure we haven't reached the end of this iterator
+                if (iters[i] == 0)
+                {
+                    continue;
+                }
+
+                // Get the new instance for this iterator
+                EntityId iter_new_instance = ord_new_instances[i][iters[i] - 1];
+
+                // If this instance shouldn't go in yet
+                if (iter_new_instance < new_instance || iter_new_instance < current_instance)
+                {
+                    continue;
+                }
+
+                // If this is a duplicate
+                if (iter_new_instance == new_instance || iter_new_instance == current_instance)
+                {
+                    --iters[i];
+                    continue;
+                }
+
+                // Otherwise, make this the new instance
+                new_instance = iter_new_instance;
+                new_instance_index = i;
             }
 
-            // If the new instance comes before the target
-            if (*target_front_iter > new_instance)
+            // If we found a candidate to insert
+            if (new_instance == NULL_ENTITY)
             {
+                // Call the user's swap function
+                swap_fn(target_rev_back_iter - 1, target_rev_front_iter - 1);
+
                 // Put the existing one in
-                *target_back_iter = *target_front_iter;
-                *content_back_iter = std::move(*content_front_iter);
-                ++target_front_iter;
-                ++content_front_iter;
-                ++target_back_iter;
-                ++content_back_iter;
+                --target_rev_front_iter;
+                --target_rev_back_iter;
                 continue;
             }
 
-            last_new_instance = new_instance;
-
-            // If the new instance comes after the target
-            if (*target_front_iter < new_instance)
-            {
-                // Put new one in
-                *target_back_iter = new_instance;
-                --i;
-                ++target_back_iter;
-                ++content_back_iter;
-                continue;
-            }
-
-            // We've hit a duplicate between new and target
-            // Put the target in
-            *target_back_iter = new_instance;
-            *content_back_iter = std::move(*content_front_iter);
-            --i;
-            ++target_front_iter;
-            ++content_front_iter;
-            ++target_back_iter;
-            ++content_back_iter;
+            // The new instance comes after the target
+            insert_fn(new_instance, target_rev_back_iter - 1);
+            --iters[new_instance_index];
+            --target_rev_back_iter;
+            --num_to_insert;
         }
 
         // Put in all of the elements that were lower than the target front
-        for (; i > 0; --i, ++target_back_iter, ++content_back_iter)
+        while (target_rev_back_iter != 0 && num_to_insert != 0)
         {
-            *target_back_iter = ord_new_instances[i - 1];
-            *content_back_iter = {};
-        }
+            EntityId new_instance = NULL_ENTITY;
+            std::size_t new_instance_index = 0;
 
-        // If we didn't write up to the end of the array, there were duplicates
-        if (target_back_iter != target_ord_instances.rend())
-        {
-            // Move everything back
-            for (const auto target_rbegin = target_ord_instances.rbegin(); target_back_iter != target_rbegin;)
+            for (std::size_t i = 0; i < num_arrays; ++i)
             {
-                // Back up back and front iterators by one
-                --target_front_iter;
-                --content_front_iter;
-                --target_back_iter;
-                --content_back_iter;
+                // Make sure we haven't reached the end of this iterator
+                if (iters[i] == 0)
+                {
+                    continue;
+                }
 
-                // Assign front to back
-                *target_front_iter = *target_back_iter;
-                *content_front_iter = std::move(*content_back_iter);
+                // Get the new instance for this iterator
+                EntityId iter_new_instance = ord_new_instances[i][iters[i] - 1];
+
+                // If this instance shouldn't go in yet
+                if (iter_new_instance < new_instance)
+                {
+                    continue;
+                }
+
+                // If this is a duplicate
+                if (iter_new_instance == new_instance)
+                {
+                    --iters[i];
+                    continue;
+                }
+
+                // Otherwise, make this the new instance
+                new_instance = iter_new_instance;
+                new_instance_index = i;
             }
 
-            // Erase extra elements
-            target_ord_instances.erase(target_front_iter.base(), target_ord_instances.end());
-            content_container.erase(content_front_iter.base(), content_container.end());
+            // Call the user's insert function
+            insert_fn(new_instance, target_rev_back_iter - 1);
+            --target_rev_back_iter;
+            --num_to_insert;
         }
     }
 

@@ -318,9 +318,8 @@ namespace sge
 				writer.push_object_member("components");
 				for (const auto& component_type : scene_data.components)
 				{
-                    const auto begin = component_type.second->get_start_iterator();
-                    const auto end = component_type.second->get_end_iterator();
-                    const std::size_t len = end - begin;
+                    const auto begin = component_type.second->get_instance_set();
+                    const std::size_t len = component_type.second->get_num_instances();
 
 					// Skip this component if there are no entities
 					if (len == 0)

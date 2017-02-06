@@ -27,7 +27,7 @@ SGE_REFLECT_TYPE(sge::FModifiedComponent);
 namespace sge
 {
 	ComponentInterface::ComponentInterface()
-        : _iter(nullptr),
+        : _entity(NULL_ENTITY),
         _modified_current(false),
         _destroyed_current(false)
 	{
@@ -58,7 +58,7 @@ namespace sge
     {
         if (!_destroyed_current)
         {
-            _ord_destroyed.push_back(*_iter);
+            _ord_destroyed.push_back(_entity);
             _destroyed_current = true;
         }
     }
@@ -67,7 +67,7 @@ namespace sge
     {
         if (!_modified_current)
         {
-            _ord_modified.push_back(*_iter);
+            _ord_modified.push_back(_entity);
             _modified_current = true;
         }
     }
@@ -89,9 +89,9 @@ namespace sge
         }
     }
 
-    void ComponentInterface::reset(ComponentContainer::InstanceIterator iter)
+    void ComponentInterface::reset(EntityId entity)
     {
-        _iter = iter;
+        _entity = entity;
         _modified_current = false;
         _destroyed_current = false;
     }

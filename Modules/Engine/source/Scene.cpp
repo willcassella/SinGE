@@ -5,10 +5,10 @@
 #include <Core/Util/StringUtils.h>
 #include "../include/Engine/Scene.h"
 #include "../include/Engine/SystemFrame.h"
-#include "../include/Engine/ProcessingFrame.h"
 #include "../include/Engine/UpdatePipeline.h"
 #include "../include/Engine/TagCallbackInfo.h"
 #include "../include/Engine/SystemInfo.h"
+#include "../include/Engine/Util/VectorUtils.h"
 
 SGE_REFLECT_TYPE(sge::Scene)
 .implements<IToArchive>()
@@ -217,6 +217,96 @@ namespace sge
         std::size_t num_frames)
     {
         std::vector<SystemFrame> result;
+
+        auto* instance_buff = SGE_STACK_ALLOC(const EntityId*, num_frames + 1);
+        auto* instance_count_buff = SGE_STACK_ALLOC(std::size_t, num_frames + 1);
+        std::size_t buff_index = 0;
+
+        // For each registered component type
+        for (auto& comp_type : _scene_data.components)
+        {
+            instance_buff[0] = comp_type.second->get_instance_set();
+            instance_count_buff[0] = comp_type.second->get_num_instances();
+            buff_index = 1;
+
+            std::size_t total_new = 0;
+
+            // See if any frames have new components for this type
+            for (std::size_t i = 0; i < num_frames; ++i)
+            {
+                const auto iter = frames[i]._ord_new_components.find(comp_type.first);
+                if (iter == frames[i]._ord_new_components.end())
+                {
+                    continue;
+                }
+
+                instance_buff[buff_index] = iter->second.data();
+                instance_count_buff[buff_index] = iter->second.size();
+                ++buff_index;
+                total_new += iter->second.size();
+            }
+
+            // If there are no new entities, just skip the next part
+            if (total_new == 0)
+            {
+                continue;
+            }
+
+            // Count up the number of duplicates among these arrays
+            const auto num_dups = rev_count_dups(instance_buff, instance_count_buff, buff_index);
+
+            // Reserve a vector to hold the new instances
+            std::vector<EntityId> new_instance_set;
+            new_instance_set.assign(total_new - num_dups, NULL_ENTITY);
+
+            // Add the new entities
+            comp_type.second->create_instances(
+                instance_buff + 1,
+                instance_count_buff + 1,
+                buff_index - 1,
+                total_new - num_dups,
+                new_instance_set.data());
+
+            // For each callback for new components
+            auto tag_iter = pipeline._tag_callbacks.find(&FNewComponent::type_info);
+            if (tag_iter == pipeline._tag_callbacks.end())
+            {
+                continue;
+            }
+
+            // For each async token
+            for (const auto& async_token : tag_iter->second)
+            {
+                // For each callback
+                for (const auto& tag_cb : async_token.second)
+                {
+                    // Make sure this callback is compatible with this new component event
+                    if (tag_cb.component_type != nullptr && tag_cb.component_type != comp_type.first)
+                    {
+                        continue;
+                    }
+
+                    // Create a system frame for the callback
+                    SystemFrame tag_frame{ tag_cb.system, *this, _scene_data };
+
+                    // Call the tag callback
+                    tag_cb.callback(
+                        tag_frame,
+                        FNewComponent::type_info,
+                        *comp_type.first,
+                        new_instance_set.data(),
+                        nullptr,
+                        new_instance_set.size(),
+                        nullptr);
+
+                    // If the frame has changes, add it to the list
+                    if (tag_frame._has_tags)
+                    {
+                        result.push_back(std::move(tag_frame));
+                    }
+                }
+            }
+        }
 
         // For each frame
         for (std::size_t i = 0; i < num_frames; ++i)

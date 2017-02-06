@@ -1,10 +1,22 @@
 // VectorUtils.cpp
 
 #include <algorithm>
+#include <Core/Memory/Functions.h>
 #include "../../include/Engine/Util/VectorUtils.h"
 
 namespace sge
 {
+    static std::size_t iter_binary_search(
+        const EntityId* const ord_ents,
+        const std::size_t len,
+        const std::size_t i,
+        const EntityId target)
+    {
+        const auto upper = std::upper_bound(ord_ents + i, ord_ents + len, target);
+        const auto lower = std::lower_bound(ord_ents + i, upper, target);
+        return lower - ord_ents;
+    }
+
     std::size_t insert_ord_entities(
         std::vector<EntityId>& target_ord_instances,
         const EntityId* ord_new_instances,
@@ -253,6 +265,60 @@ namespace sge
             for (std::size_t i = 0; i < required_len; ++i)
             {
                 ++iters[i];
+            }
+        }
+    }
+
+    std::size_t rev_count_dups(
+        const EntityId* const* ord_ent_arrays,
+        const std::size_t* lens,
+        std::size_t num_arrays)
+    {
+        // Create iterators
+        auto* const iters = SGE_STACK_ALLOC(std::size_t, num_arrays);
+        std::memcpy(iters, lens, sizeof(std::size_t) * num_arrays);
+
+        // Search for matches
+        std::size_t num_dups = 0;
+
+        while (true)
+        {
+            EntityId max = NULL_ENTITY;
+            std::size_t max_index = 0;
+            std::size_t remaining_iters = num_arrays;
+
+            // For each iterator
+            for (std::size_t i = 0; i < num_arrays; ++i)
+            {
+                // If this iterator has reached it's end
+                if (iters[i] == 0)
+                {
+                    --remaining_iters;
+                    continue;
+                }
+
+                const EntityId ent = ord_ent_arrays[i][iters[i] - 1];
+
+                // If this iterator is equal to the largest entity
+                if (ent == max)
+                {
+                    num_dups += 1;
+                    --iters[i];
+                }
+                // If this iterator is greater than the largest entity
+                else if (ent > max)
+                {
+                    max = ent;
+                    max_index = i;
+                }
+            }
+
+            // Decrement the larget iterator
+            --iters[max_index];
+
+            if (remaining_iters <= 1)
+            {
+                return num_dups;
             }
         }
     }

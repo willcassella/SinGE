@@ -64,19 +64,39 @@ namespace sge
             }
         }
 
-        InstanceIterator get_start_iterator() const override
+        const EntityId* get_instance_set() const override
         {
             return _instance_set.data();
         }
 
-        InstanceIterator get_end_iterator() const override
+        std::size_t get_num_instances() const override
         {
-            return _instance_set.data() + _instance_set.size();
+            return _instance_set.size();
         }
 
-        void create_instances(const EntityId* ordered_instances, std::size_t num, std::size_t num_dups) override
+        void create_instances(
+            const EntityId* const* ordered_instances,
+            const std::size_t* lens,
+            std::size_t num_arrays,
+            std::size_t num_new_instances,
+            EntityId* out_new_instances) override
         {
-            compact_merge_ord_entities(_instance_set, _instance_data, ordered_instances, num, num_dups);
+            const std::size_t old_len = _instance_set.size();
+            _instance_set.insert(_instance_set.end(), num_new_instances, NULL_ENTITY);
+            _instance_data.insert(_instance_data.end(), num_new_instances, ComponentDataT{});
+
+            rev_multi_insert(_instance_set.data(), old_len, _instance_set.size(), ordered_instances, lens, num_arrays,
+                [&](std::size_t new_index, std::size_t old_index) // Swap function
+            {
+                _instance_set[new_index] = _instance_set[old_index];
+                _instance_data[new_index] = std::move(_instance_data[old_index]);
+            },
+                [&](EntityId new_entity, std::size_t index) // Insert function
+            {
+                _instance_set[index] = new_entity;
+                out_new_instances[num_new_instances - 1] = new_entity;
+                --num_new_instances;
+            });
         }
 
         void remove_instances(const EntityId* ordered_instances, std::size_t num) override
@@ -84,9 +104,9 @@ namespace sge
             erase_ord_entities(_instance_set, _instance_data, ordered_instances, num);
         }
 
-        void reset_interface(InstanceIterator instance, ComponentInterface* interf) override
+        void reset_interface(std::size_t instance_index, ComponentInterface* interf) override
         {
-            auto& data = _instance_data[instance - _instance_set.data()];
+            auto& data = _instance_data[instance_index];
             static_cast<ComponentT*>(interf)->reset(data);
         }
 
