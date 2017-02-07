@@ -318,8 +318,8 @@ namespace sge
 				writer.push_object_member("components");
 				for (const auto& component_type : scene_data.components)
 				{
-                    const auto begin = component_type.second->get_instance_set();
-                    const std::size_t len = component_type.second->get_num_instances();
+                    const auto begin = component_type.second->get_instance_range();
+                    const std::size_t len = component_type.second->get_instance_range_length();
 
 					// Skip this component if there are no entities
 					if (len == 0)
@@ -358,9 +358,9 @@ namespace sge
 						writer.push_object_member(sge::to_string(entity_id).c_str());
 
 						// Access the component
-                        const EntityId* start_range[] = { &entity_id };
-                        const EntityId* end_range[] = { &entity_id + 1 };
-						frame.process_entities(start_range, end_range, 1, &type, 1,
+                        const EntityId* proc_range[] = { &entity_id };
+                        const std::size_t range_len = 1;
+						frame.process_entities(proc_range, &range_len, 1, 0, 1, &type, 1,
                             [type, entity_id, &writer](ProcessingFrame&, auto comp) -> ProcessControl
 						{
 							std::cout << "Reading properties of '" << type->name() << "' component on entity '" << entity_id << "'" << std::endl;
@@ -393,9 +393,9 @@ namespace sge
                         const EntityId entity_id = std::strtoull(entityId, nullptr, 10);
 
 					    // Process the component and deserialize it
-                        const EntityId* start_range[] = { &entity_id };
-                        const EntityId* end_range[] = { &entity_id + 1 };
-						frame.process_entities_mut(start_range, end_range, 1, &type, 1,
+                        const EntityId* proc_range[] = { &entity_id };
+                        const std::size_t range_len = 1;
+						frame.process_entities_mut(proc_range, &range_len, 1, 0, 1, &type, 1,
                             [type, &reader](ProcessingFrame& pframe, auto comp) -> ProcessControl
 						{
 							std::cout << "Writing properties of '" << type->name() << "' component on entity '" << pframe.entity() << "'" << std::endl;
