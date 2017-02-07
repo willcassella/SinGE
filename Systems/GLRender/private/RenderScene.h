@@ -30,7 +30,9 @@ namespace sge
             std::vector<EntityId> ord_lightmask_receivers;
         };
 
-        void init_render_scene(GLRenderSystem::State& state, SystemFrame& frame);
+        void render_scene_init(GLRenderSystem::State& state, SystemFrame& frame);
+
+        void render_scene_update_matrices(GLRenderSystem::State& state, SystemFrame& frame);
 
         void render_scene_render_normal(GLRenderSystem::State& state, Mat4 view, Mat4 proj);
 

@@ -31,7 +31,7 @@ namespace sge
             mat.set_projection_matrix(proj);
         }
 
-        void init_render_scene(GLRenderSystem::State& state, SystemFrame& frame)
+        void render_scene_init(GLRenderSystem::State& state, SystemFrame& frame)
         {
             auto& render_scene = state.render_scene;
             render_scene.ord_render_entities.clear();
@@ -82,6 +82,17 @@ namespace sge
                     const CLightMaskReceiver& /*receiver*/)
             {
                 render_scene.ord_lightmask_receivers.push_back(pframe.entity());
+            });
+        }
+
+        void render_scene_update_matrices(GLRenderSystem::State& state, SystemFrame& frame)
+        {
+            frame.process_entities(zip(ord_ents_range(state.render_scene.ord_render_entities)),
+                [&mats = state.render_scene.ord_render_entities_matrices] (
+                    ProcessingFrame& pframe,
+                    const CTransform3D& transform)
+            {
+                mats[pframe.user_iterator(0)] = transform.get_world_matrix();
             });
         }
 

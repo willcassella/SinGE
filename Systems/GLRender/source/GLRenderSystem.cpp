@@ -15,6 +15,7 @@
 #include "../include/GLRender/Config.h"
 #include "../private/GLRenderSystemState.h"
 #include "../private/DebugLine.h"
+#include "Engine/Util/VectorUtils.h"
 
 SGE_REFLECT_TYPE(sge::gl_render::GLRenderSystem);
 
@@ -338,12 +339,19 @@ namespace sge
                 this,
                 &GLRenderSystem::render_scene);
 
-            pipeline.register_tag_callback<CTransform3D, FModifiedComponent>(
+            pipeline.register_tag_callback<CTransform3D, FNewComponent>(
                 system_token,
                 async_token,
                 TCO_NONE,
                 this,
-                &GLRenderSystem::cb_modified_transform);
+                &GLRenderSystem::cb_new_transform);
+
+            pipeline.register_tag_callback<CStaticMesh, FNewComponent>(
+                system_token,
+                async_token,
+                TCO_NONE,
+                this,
+                &GLRenderSystem::cb_new_static_mesh);
 
             pipeline.register_tag_callback<CStaticMesh, FModifiedComponent>(
                 system_token,
@@ -351,6 +359,7 @@ namespace sge
                 TCO_NONE,
                 this,
                 &GLRenderSystem::cb_modified_static_mesh);
+
 		}
 
 	    void GLRenderSystem::set_viewport(int width, int height)
@@ -418,7 +427,7 @@ namespace sge
             // Initialize the render scene data structure, if we haven't already
             if (!_state->initialized_render_scene)
             {
-                init_render_scene(*_state, frame);
+                render_scene_init(*_state, frame);
                 _state->initialized_render_scene = true;
             }
 
@@ -464,6 +473,7 @@ namespace sge
             }
 
             // Render the scene
+            render_scene_update_matrices(*_state, frame);
             render_scene_render_normal(*_state, view, proj);
             render_scene_render_lightmasks(*_state, view, proj);
 
@@ -540,18 +550,52 @@ namespace sge
             }
 	    }
 
-	    void GLRenderSystem::cb_modified_transform(
+	    void GLRenderSystem::cb_new_transform(
             SystemFrame& frame,
-            const EntityId* ord_entities,
-            std::size_t num_entities)
+            const EntityId* ent_range,
+            std::size_t range_len)
 	    {
-            frame.process_entities(zip(ord_ents_range(ord_entities, num_entities), ord_ents_range(_state->render_scene.ord_render_entities)),
-                [&render_scene = _state->render_scene] (
+            const auto num_dups = insert_ord_entities(_state->render_scene.ord_render_entities, ent_range, range_len);
+            _state->render_scene.ord_render_entities_matrices.insert(_state->render_scene.ord_render_entities_matrices.end(), range_len, Mat4{});
+            assert(num_dups == 0);
+	    }
+
+	    void GLRenderSystem::cb_new_static_mesh(
+            SystemFrame& frame,
+            const EntityId* ent_range,
+            std::size_t range_len)
+	    {
+            // Allocate space
+            auto& render_scene = _state->render_scene;
+            const auto old_len = render_scene.ord_mesh_entities.size();
+            render_scene.ord_mesh_entities.insert(render_scene.ord_mesh_entities.end(), range_len, NULL_ENTITY);
+            render_scene.ord_mesh_entity_meshes.insert(render_scene.ord_mesh_entity_meshes.end(), range_len, 0);
+            render_scene.ord_mesh_entity_materials.insert(render_scene.ord_mesh_entity_materials.end(), range_len, 0);
+
+            // Insert new data
+		    rev_multi_insert(render_scene.ord_mesh_entities.data(), old_len, old_len + range_len, &ent_range, &range_len, 1,
+                [&render_scene](std::size_t new_index, std::size_t old_index) // Swap function
+		    {
+                render_scene.ord_mesh_entities[new_index] = render_scene.ord_mesh_entities[old_index];
+                render_scene.ord_mesh_entity_meshes[new_index] = render_scene.ord_mesh_entity_meshes[old_index];
+                render_scene.ord_mesh_entity_materials[new_index] = render_scene.ord_mesh_entity_materials[old_index];
+		    },
+                [&render_scene] (EntityId new_entity, std::size_t index) // Insert function
+		    {
+                render_scene.ord_mesh_entities[index] = new_entity;
+                render_scene.ord_mesh_entity_meshes[index] = 0;
+                render_scene.ord_mesh_entity_materials[index] = 0;
+            });
+
+            // Get meshes and materials for the new entities
+            frame.process_entities(zip(ord_ents_range(ent_range, range_len), ord_ents_range(render_scene.ord_mesh_entities)),
+                [&state = *_state, &render_scene = _state->render_scene] (
                     ProcessingFrame& pframe,
-                    const CTransform3D& transform)
+                    const CStaticMesh& static_mesh)
             {
-                const auto matrix_index = pframe.user_iterator(1);
-                render_scene.ord_render_entities_matrices[matrix_index] = transform.get_world_matrix();
+                const auto mesh_index = pframe.user_iterator(1);
+                render_scene.ord_mesh_entity_meshes[mesh_index] = state.get_static_mesh_resource(static_mesh.mesh());
+                render_scene.ord_mesh_entity_materials[mesh_index] = state.get_material_resource(static_mesh.material());
             });
 	    }
 
