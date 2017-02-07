@@ -41,12 +41,12 @@ namespace sge
             _instance_set.erase(_instance_set.begin() + size, _instance_set.end());
         }
 
-        const EntityId* get_instance_set() const override
+        const EntityId* get_instance_range() const override
         {
             return _instance_set.data();
         }
 
-        std::size_t get_num_instances() const override
+        std::size_t get_instance_range_length() const override
         {
             return _instance_set.size();
         }

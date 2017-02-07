@@ -161,7 +161,7 @@ namespace sge
             return;
         }
 
-        impl_process_entities(nullptr, nullptr, 0, types, num_types, process_fn);
+        impl_process_entities(nullptr, nullptr, 0, 0, 0, types, num_types, process_fn);
     }
 
     void SystemFrame::process_entities_mut(
@@ -174,39 +174,59 @@ namespace sge
             return;
         }
 
-        impl_process_entities(nullptr, nullptr, 0, types, num_types, process_fn);
+        impl_process_entities(nullptr, nullptr, 0, 0, 0, types, num_types, process_fn);
     }
 
     void SystemFrame::process_entities(
-        const EntityId* const* SGE_RESTRICT user_start_iters,
-        const EntityId* const* SGE_RESTRICT user_end_iters,
-        std::size_t num_user_iters,
+        const EntityId* const* SGE_RESTRICT user_entity_ranges,
+        const std::size_t* SGE_RESTRICT user_range_lens,
+        std::size_t num_required,
+        std::size_t num_inv_required,
+        std::size_t num_user_ranges,
         const TypeInfo* const types[],
         std::size_t num_types,
         FunctionView<ProcessFn> process_fn)
     {
-        if (num_user_iters == 0)
+        if (num_user_ranges == 0)
         {
             return;
         }
 
-        impl_process_entities(user_start_iters, user_end_iters, num_user_iters, types, num_types, process_fn);
+        impl_process_entities(
+            user_entity_ranges,
+            user_range_lens,
+            num_required,
+            num_inv_required,
+            num_user_ranges,
+            types,
+            num_types,
+            process_fn);
     }
 
     void SystemFrame::process_entities_mut(
-        const EntityId* const* SGE_RESTRICT user_start_iters,
-        const EntityId* const* SGE_RESTRICT user_end_iters,
-        std::size_t num_user_iters,
+        const EntityId* const* SGE_RESTRICT user_entity_ranges,
+        const std::size_t* SGE_RESTRICT user_range_lens,
+        std::size_t num_required,
+        std::size_t num_inv_required,
+        std::size_t num_user_ranges,
         const TypeInfo* const* types,
         std::size_t num_types,
         FunctionView<ProcessMutFn> process_fn)
     {
-        if (num_user_iters == 0)
+        if (num_user_ranges == 0)
         {
             return;
         }
 
-        impl_process_entities(user_start_iters, user_end_iters, num_user_iters, types, num_types, process_fn);
+        impl_process_entities(
+            user_entity_ranges,
+            user_range_lens,
+            num_required,
+            num_inv_required,
+            num_user_ranges,
+            types,
+            num_types,
+            process_fn);
     }
 
     void SystemFrame::append_tags(const TypeInfo& tag_type, TagBuffer tag_buffer)
@@ -217,16 +237,22 @@ namespace sge
 
     template <typename ProcessFnT>
     void SystemFrame::impl_process_entities(
-        const EntityId* const* SGE_RESTRICT user_start_iters,
-        const EntityId* const* SGE_RESTRICT user_end_iters,
-        const std::size_t num_user_iters,
+        const EntityId* const* SGE_RESTRICT user_entity_ranges,
+        const std::size_t* SGE_RESTRICT user_range_lens,
+        std::size_t num_required,
+        std::size_t num_inv_required,
+        std::size_t num_user_ranges,
         const TypeInfo* const types[],
         const std::size_t num_types,
         ProcessFnT& process_fn)
     {
-        // Create arrays for entity iterators
-        auto* const instance_iters = SGE_STACK_ALLOC(const EntityId*, num_types + num_user_iters);
-        auto* const end_iters = SGE_STACK_ALLOC(const EntityId*, num_types + num_user_iters);
+        // Create arrays for entity range iterators, and insert user-supplied ranges
+        auto* const instance_iters = SGE_STACK_ALLOC(std::size_t, num_types + num_user_ranges);
+        auto* const instance_ranges = SGE_STACK_ALLOC(const EntityId*, num_types + num_user_ranges);
+        auto* const instance_range_lens = SGE_STACK_ALLOC(std::size_t, num_types + num_user_ranges);
+        std::memset(instance_iters, 0, sizeof(std::size_t) * (num_types + num_user_ranges));
+        std::memcpy(instance_ranges + num_types, user_entity_ranges, sizeof(const EntityId*) * num_user_ranges);
+        std::memcpy(instance_range_lens + num_types, user_range_lens, sizeof(std::size_t) * num_user_ranges);
 
         // Create an array of component containers
         auto* const containers = SGE_STACK_ALLOC(ComponentContainer*, num_types);
@@ -254,33 +280,32 @@ namespace sge
             comp_interfaces[i] = reinterpret_cast<ComponentInterface*>(SGE_STACK_ALLOC(byte, types[i]->size()));
             types[i]->init(comp_interfaces[i]);
 
-            // Create the iterators
-            instance_iters[i] = cont_iter->second->get_instance_set();
-            end_iters[i] = instance_iters[i] + cont_iter->second->get_num_instances();
+            // Get the range information
+            instance_ranges[i] = cont_iter->second->get_instance_range();
+            instance_range_lens[i] = cont_iter->second->get_instance_range_length();
 
             // Create the component container pointer
             containers[i] = cont_iter->second.get();
         }
 
-        // Add the user-supplied iterators
-        for (std::size_t i = 0; i < num_user_iters; ++i)
-        {
-            instance_iters[num_types + i] = user_start_iters[i];
-            end_iters[num_types + i] = user_end_iters[i];
-        }
-
         // Create a processing frame
         ProcessingFrame pframe;
+        pframe._num_user_ranges = num_user_ranges;
+        pframe._user_ranges = instance_ranges + num_types;
+        pframe._user_range_lens = instance_range_lens + num_types;
         pframe._user_iterators = instance_iters + num_types;
-        pframe._user_start_iterators = user_start_iters;
-        pframe._user_end_iterators = user_end_iters;
-        pframe._num_user_iterators = num_user_iters;
 
         // Search for matches
         for (std::size_t frame_index = 0, iteration_index = 0; true; ++frame_index)
         {
             // Find the next match
-            auto entity = ord_entity_union(instance_iters, end_iters, num_types + num_user_iters);
+            auto entity = ord_entities_match(
+                instance_ranges,
+                instance_range_lens,
+                instance_iters,
+                num_types + num_required,
+                num_inv_required,
+                num_types + num_user_ranges);
 
             // If there are no more, quit searching
             if (entity == NULL_ENTITY)
@@ -291,8 +316,8 @@ namespace sge
             // Advance the interfaces
             for (std::size_t i = 0; i < num_types; ++i)
             {
-                comp_interfaces[i]->reset(*instance_iters[i]);
-                containers[i]->reset_interface(instance_iters[i] - containers[i]->get_instance_set(), comp_interfaces[i]);
+                comp_interfaces[i]->reset(entity);
+                containers[i]->reset_interface(instance_iters[i], comp_interfaces[i]);
             }
 
             // Set up the processing frame
@@ -307,7 +332,7 @@ namespace sge
             }
 
             // Increment iterators (so we don't hit the same match again)
-            for (std::size_t i = 0; i < num_types + num_user_iters; ++i)
+            for (std::size_t i = 0; i < num_types + num_required; ++i)
             {
                 ++instance_iters[i];
             }

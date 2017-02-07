@@ -6,17 +6,6 @@
 
 namespace sge
 {
-    static std::size_t iter_binary_search(
-        const EntityId* const ord_ents,
-        const std::size_t len,
-        const std::size_t i,
-        const EntityId target)
-    {
-        const auto upper = std::upper_bound(ord_ents + i, ord_ents + len, target);
-        const auto lower = std::lower_bound(ord_ents + i, upper, target);
-        return lower - ord_ents;
-    }
-
     std::size_t insert_ord_entities(
         std::vector<EntityId>& target_ord_instances,
         const EntityId* ord_new_instances,
@@ -252,10 +241,10 @@ namespace sge
                 if (iter_entity == target)
                 {
                     found = false;
+                    break;
                 }
             }
 
-            // If none of the inverse required iterators landed on the target
             if (found)
             {
                 return target;

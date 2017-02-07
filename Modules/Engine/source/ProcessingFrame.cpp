@@ -12,10 +12,10 @@ namespace sge
 	ProcessingFrame::ProcessingFrame()
         : _entity(NULL_ENTITY),
         _frame_index(0),
-        _user_iterators(nullptr),
-        _user_start_iterators(nullptr),
-        _user_end_iterators(nullptr),
-        _num_user_iterators(0)
+        _num_user_ranges(0),
+        _user_ranges(nullptr),
+        _user_range_lens(nullptr),
+        _user_iterators(nullptr)
 	{
 	}
 
@@ -29,28 +29,29 @@ namespace sge
         return _frame_index;
     }
 
-    const EntityId* const* ProcessingFrame::user_iterators() const
+    std::size_t ProcessingFrame::num_user_ranges() const
+    {
+        return _num_user_ranges;
+    }
+
+    const EntityId* const* ProcessingFrame::user_entity_ranges() const
+    {
+        return _user_ranges;
+    }
+
+    const std::size_t* ProcessingFrame::user_entity_range_lengths() const
+    {
+        return _user_range_lens;
+    }
+
+    const std::size_t* ProcessingFrame::user_iterators() const
     {
         return _user_iterators;
     }
 
-    const EntityId* const* ProcessingFrame::user_start_iterators() const
+    std::size_t ProcessingFrame::user_iterator(std::size_t iter_index) const
     {
-        return _user_start_iterators;
-    }
-
-    const EntityId* const* ProcessingFrame::user_end_iterators() const
-    {
-        return _user_end_iterators;
-    }
-
-    std::size_t ProcessingFrame::num_user_iterators() const
-    {
-        return _num_user_iterators;
-    }
-
-    std::size_t ProcessingFrame::user_iterator_index(std::size_t iter_index) const
-    {
-        return user_iterators()[iter_index] - user_start_iterators()[iter_index];
+        assert(iter_index < _num_user_ranges);
+        return user_iterators()[iter_index];
     }
 }

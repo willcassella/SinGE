@@ -550,7 +550,7 @@ namespace sge
                     ProcessingFrame& pframe,
                     const CTransform3D& transform)
             {
-                const auto matrix_index = pframe.user_iterator_index(1);
+                const auto matrix_index = pframe.user_iterator(1);
                 render_scene.ord_render_entities_matrices[matrix_index] = transform.get_world_matrix();
             });
 	    }
@@ -565,7 +565,7 @@ namespace sge
                     ProcessingFrame& pframe,
                     const CStaticMesh& mesh)
             {
-                const auto mesh_index = pframe.user_iterator_index(1);
+                const auto mesh_index = pframe.user_iterator(1);
                 render_scene.ord_mesh_entity_meshes[mesh_index] = state.get_static_mesh_resource(mesh.mesh());
                 render_scene.ord_mesh_entity_materials[mesh_index] = state.get_material_resource(mesh.material());
             });

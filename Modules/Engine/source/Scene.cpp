@@ -225,8 +225,8 @@ namespace sge
         // For each registered component type
         for (auto& comp_type : _scene_data.components)
         {
-            instance_buff[0] = comp_type.second->get_instance_set();
-            instance_count_buff[0] = comp_type.second->get_num_instances();
+            instance_buff[0] = comp_type.second->get_instance_range();
+            instance_count_buff[0] = comp_type.second->get_instance_range_length();
             buff_index = 1;
 
             std::size_t total_new = 0;

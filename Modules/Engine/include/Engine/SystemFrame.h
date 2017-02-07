@@ -175,7 +175,7 @@ namespace sge
             };
 
             // Run the processing function
-            auto type_array = SystemFrame::component_type_array(ComponentList{});
+            const auto type_array = SystemFrame::component_type_array(ComponentList{});
             auto adapted = SystemFrame::adapt_process_fn(tmp::type<RetT>{}, ComponentList{}, wrapper);
             SystemFrame::process_entities(type_array.data(), type_array.size(), adapted);
         }
@@ -193,7 +193,7 @@ namespace sge
             using RetT = typename FnTraits::return_type;
 
             // Run the process function
-            auto type_array = SystemFrame::component_type_array(ComponentList{});
+            const auto type_array = SystemFrame::component_type_array(ComponentList{});
             auto adapted = SystemFrame::adapt_process_fn(tmp::type<RetT>{}, ComponentList{}, process_fn);
             SystemFrame::process_entities(type_array.data(), type_array.size(), adapted);
         }
@@ -222,7 +222,7 @@ namespace sge
             using RetT = typename FnTraits::return_type;
 
             // Run the process functions
-            auto type_array = SystemFrame::component_type_array(ComponentList{});
+            const auto type_array = SystemFrame::component_type_array(ComponentList{});
             auto adapted = SystemFrame::adapt_process_fn(tmp::type<RetT>{}, ComponentList{}, process_fn);
             SystemFrame::process_entities_mut(type_array.data(), type_array.size(), adapted);
         }
@@ -246,7 +246,7 @@ namespace sge
             };
 
             // Run the processing function
-            auto type_array = SystemFrame::component_type_array(ComponentList{});
+            const auto type_array = SystemFrame::component_type_array(ComponentList{});
             auto adapted = SystemFrame::adapt_process_fn(tmp::type<RetT>{}, ComponentList{}, wrapper);
             SystemFrame::process_entities_mut(type_array.data(), type_array.size(), adapted);
         }
@@ -260,10 +260,12 @@ namespace sge
 		 * \param num_types The number of component types given.
 		 * \param process_fn The processing function to call.
 		 */
-		void process_entities(
-			const EntityId* const* SGE_RESTRICT user_start_iters,
-            const EntityId* const* SGE_RESTRICT user_end_iters,
-            std::size_t num_user_iters,
+        void process_entities(
+            const EntityId* const* SGE_RESTRICT user_entity_ranges,
+            const std::size_t* SGE_RESTRICT range_lens,
+            std::size_t num_required_ranges,
+            std::size_t num_inv_required_ranges,
+            std::size_t num_ranges,
 			const TypeInfo* const types[],
 			std::size_t num_types,
 			FunctionView<ProcessFn> process_fn);
@@ -281,17 +283,19 @@ namespace sge
             using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 1>;
             using RetT = typename FnTraits::return_type;
 
-            // Create the user iterators arrays
-            auto ord_entities_start = user_ranges.get_start_iterators();
-            auto ord_entities_end = user_ranges.get_end_iterators();
+            // Create the user entity ranges
+            const auto user_entity_ranges = user_ranges.get_entity_ranges();
+            const auto user_range_lens = user_ranges.get_range_lengths();
 
             // Run the processing function
-            auto type_array = SystemFrame::component_type_array(ComponentList{});
+            const auto type_array = SystemFrame::component_type_array(ComponentList{});
             auto adapted = SystemFrame::adapt_process_fn(tmp::type<RetT>{}, ComponentList{}, process_fn);
             SystemFrame::process_entities(
-                ord_entities_start.data(),
-                ord_entities_end.data(),
-                user_ranges.NUM_ITERATORS,
+                user_entity_ranges.data(),
+                user_range_lens.data(),
+                user_ranges.NUM_RANGES,
+                0,
+                user_ranges.NUM_RANGES,
                 type_array.data(),
                 type_array.size(),
                 adapted);
@@ -315,17 +319,19 @@ namespace sge
                 return (outer->*process_fn)(pframe, components...);
             };
 
-            // Create user iterator arrays
-            auto user_start_iters = user_ranges.get_start_iterators();
-            auto user_end_iters = user_ranges.get_end_iterators();
+            // Create user entity ranges
+            const auto user_entity_ranges = user_ranges.get_entity_ranges();
+            const auto user_range_lengths = user_ranges.get_range_lengths();
 
             // Run the processing function
-            auto type_array = SystemFrame::component_type_array(ComponentList{});
+            const auto type_array = SystemFrame::component_type_array(ComponentList{});
             auto adapted = SystemFrame::adapt_process_fn(tmp::type<Ret>{}, ComponentList{}, wrapper);
             SystemFrame::process_entities(
-                user_start_iters.data(),
-                user_end_iters.data(),
-                user_ranges.NUM_ITERATORS,
+                user_entity_ranges.data(),
+                user_range_lengths.data(),
+                user_ranges.NUM_RANGES,
+                0,
+                user_ranges.NUM_RANGSE,
                 adapted.first.data(),
                 ComponentList::size(),
                 adapted.second);
@@ -341,9 +347,11 @@ namespace sge
         * \param process_fn The processing function to call.
         */
         void process_entities_mut(
-            const EntityId* const* SGE_RESTRICT user_start_iters,
-            const EntityId* const* SGE_RESTRICT user_end_iters,
-            std::size_t num_user_iters,
+            const EntityId* const* SGE_RESTRICT user_entity_ranges,
+            const std::size_t* SGE_RESTRICT user_range_lengths,
+            std::size_t num_required,
+            std::size_t num_inv_required,
+            std::size_t num_user_ranges,
             const TypeInfo* const types[],
             std::size_t num_types,
             FunctionView<ProcessMutFn> process_fn);
@@ -367,17 +375,19 @@ namespace sge
                 return (outer->*process_fn)(pframe, components...);
             };
 
-            // Create user iterator arrays
-            auto user_start_iters = user_ranges.get_start_iterators();
-            auto user_end_iters = user_ranges.get_end_iterators();
+            // Create user ranges
+            const auto user_entity_ranges = user_ranges.get_entity_ranges();
+            const auto user_range_lengths = user_ranges.get_range_lengths();
 
             // Run the processing function
-            auto type_array = SystemFrame::component_type_array(ComponentList{});
+            const auto type_array = SystemFrame::component_type_array(ComponentList{});
             auto adapted = SystemFrame::adapt_process_fn(tmp::type<RetT>{}, ComponentList{}, wrapper);
             SystemFrame::process_entities_mut(
-                user_start_iters.data(),
-                user_end_iters.data(),
-                user_ranges.NUM_ITERATORS,
+                user_entity_ranges.data(),
+                user_range_lengths.data(),
+                user_ranges.NUM_RANGES,
+                0,
+                user_ranges.NUM_RANGES,
                 type_array.data(),
                 type_array.size(),
                 adapted);
@@ -397,17 +407,19 @@ namespace sge
             using ComponentList = tmp::cdr_n<typename FnTraits::arg_types, 1>;
             using RetT = typename FnTraits::return_type;
 
-            // Create the user iterator arrays
-            auto user_start_iters = user_ranges.get_start_iterators();
-            auto user_end_iters = user_ranges.get_end_iterators();
+            // Create the user entity ranges
+            const auto user_entity_ranges = user_ranges.get_entity_ranges();
+            const auto user_range_lengths = user_ranges.get_range_lengths();
 
             // Run the processing function
-            auto type_array = SystemFrame::component_type_array(ComponentList{});
+            const auto type_array = SystemFrame::component_type_array(ComponentList{});
             auto adapted = SystemFrame::adapt_process_fn(tmp::type<RetT>{}, ComponentList{}, process_fn);
             SystemFrame::process_entities_mut(
-                user_start_iters.data(),
-                user_end_iters.data(),
-                user_ranges.NUM_ITERATORS,
+                user_entity_ranges.data(),
+                user_range_lengths.data(),
+                user_ranges.NUM_RANGES,
+                0,
+                user_ranges.NUM_RANGES,
                 type_array.data(),
                 type_array.size(),
                 adapted);
@@ -483,9 +495,11 @@ namespace sge
 
 		template <typename ProcessFnT>
 		void impl_process_entities(
-			const EntityId* const* SGE_RESTRICT user_start_iters,
-            const EntityId* const* SGE_RESTRICT user_end_iters,
-            std::size_t num_user_iters,
+			const EntityId* const* SGE_RESTRICT user_entity_arrays,
+            const std::size_t* SGE_RESTRICT user_array_lens,
+            std::size_t num_required_arrays,
+            std::size_t num_inv_required_arrays,
+            std::size_t num_user_arrays,
 			const TypeInfo* const types[],
 			std::size_t num_types,
 			ProcessFnT& process_fn);

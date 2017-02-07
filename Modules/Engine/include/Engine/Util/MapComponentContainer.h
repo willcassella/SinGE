@@ -64,12 +64,12 @@ namespace sge
             }
         }
 
-        const EntityId* get_instance_set() const override
+        const EntityId* get_instance_range() const override
         {
             return instance_set.data();
         }
 
-        std::size_t get_num_instances() const override
+        std::size_t get_instance_range_length() const override
         {
             return instance_set.size();
         }

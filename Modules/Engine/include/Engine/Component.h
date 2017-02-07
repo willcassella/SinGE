@@ -181,9 +181,9 @@ namespace sge
 
         virtual void from_archive(ArchiveReader& reader) = 0;
 
-        virtual const EntityId* get_instance_set() const = 0;
+        virtual const EntityId* get_instance_range() const = 0;
 
-        virtual std::size_t get_num_instances() const = 0;
+        virtual std::size_t get_instance_range_length() const = 0;
 
         virtual void create_instances(
             const EntityId* const* ord_ents_arrays,

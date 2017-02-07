@@ -8,53 +8,53 @@ namespace sge
     template <typename ... RangeTs>
     struct EntityRangePack
     {
-        using IteratorArray = std::array<const EntityId*, sizeof...(RangeTs)>;
+        static constexpr std::size_t NUM_RANGES = sizeof...(RangeTs);
+
+        using RangeArray = std::array<const EntityId*, NUM_RANGES>;
+
+        using LengthArray = std::array<std::size_t, NUM_RANGES>;
 
         template <std::size_t I>
         using IteratorIndex = std::integral_constant<std::size_t, I>;
-
-        static constexpr std::size_t NUM_ITERATORS = sizeof...(RangeTs);
 
         ///////////////////
         ///   Methods   ///
     public:
 
-        IteratorArray get_start_iterators() const
+        RangeArray get_entity_ranges() const
         {
-            IteratorArray result;
-            return get_start_iterators(IteratorIndex<0>{}, result);
+            RangeArray result;
+            return this->get_entity_ranges(IteratorIndex<0>{}, result);
         }
 
-        IteratorArray get_end_iterators() const
+        LengthArray get_range_lengths() const
         {
-            IteratorArray result;
-            return get_end_iterators(IteratorIndex<0>{}, result);
+            LengthArray result;
+            return this->get_range_lengths(IteratorIndex<0>{}, result);
         }
 
     private:
 
         template <std::size_t I>
-        IteratorArray get_start_iterators(IteratorIndex<I>, IteratorArray& array) const
+        RangeArray get_entity_ranges(IteratorIndex<I>, RangeArray& array) const
         {
-            using std::begin;
-            array[I] = begin(std::get<I>(ranges));
-            return get_start_iterators(IteratorIndex<I + 1>{}, array);
+            array[I] = std::get<I>(ranges).get_start();
+            return this->get_entity_ranges(IteratorIndex<I + 1>{}, array);
         }
 
-        IteratorArray get_start_iterators(IteratorIndex<NUM_ITERATORS>, IteratorArray& array) const
+        RangeArray get_entity_ranges(IteratorIndex<NUM_RANGES>, RangeArray& array) const
         {
             return array;
         }
 
         template <std::size_t I>
-        IteratorArray get_end_iterators(IteratorIndex<I>, IteratorArray& array) const
+        LengthArray get_range_lengths(IteratorIndex<I>, LengthArray& array) const
         {
-            using std::end;
-            array[I] = end(std::get<I>(ranges));
-            return get_end_iterators(IteratorIndex<I + 1>{}, array);
+            array[I] = std::get<I>(ranges).get_length();
+            return this->get_range_lengths(IteratorIndex<I + 1>{}, array);
         }
 
-        IteratorArray get_end_iterators(IteratorIndex<NUM_ITERATORS>, IteratorArray& array) const
+        LengthArray get_range_lengths(IteratorIndex<NUM_RANGES>, LengthArray& array) const
         {
             return array;
         }
@@ -80,14 +80,14 @@ namespace sge
         ///   Methods   ///
     public:
 
-        const EntityId* begin() const
+        const EntityId* get_start() const
         {
             return ord_entities;
         }
 
-        const EntityId* end() const
+        std::size_t get_length() const
         {
-            return ord_entities + size;
+            return size;
         }
 
         //////////////////

@@ -34,7 +34,7 @@ namespace sge
             CCharacterController& character,
             CTransform3D& transform)
         {
-            const std::size_t input_index = pframe.user_iterator_index(0);
+            const std::size_t input_index = pframe.user_iterator(0);
 
             for (auto end = action_events + tag_counts[input_index]; action_events != end; ++action_events)
             {
