@@ -28,7 +28,7 @@ namespace sge
 
 			// Upload normal buffer
 			glBindBuffer(GL_ARRAY_BUFFER, this->normal_buffer());
-			glBufferData(GL_ARRAY_BUFFER, _num_vertices * sizeof(Vec3), mesh.vertex_positions(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, _num_vertices * sizeof(Vec3), mesh.vertex_normals(), GL_STATIC_DRAW);
 
 			// Define vertex normal specification
 			glEnableVertexAttribArray(GLMaterial::NORMAL_ATTRIB_LOCATION);
