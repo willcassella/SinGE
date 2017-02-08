@@ -1,6 +1,7 @@
 // BinaryArchive.cpp
 
 #include <sys/stat.h>
+#include <Core/Util/StringUtils.h>
 #include <Core/Reflection/ReflectionBuilder.h>
 #include "../../include/Resource/Archives/BinaryArchive.h"
 #include "../../include/Resource/Interfaces/IFromFile.h"
@@ -40,6 +41,12 @@ namespace sge
 
     bool BinaryArchive::from_file(const char* path)
     {
+        // Make sure the file has the correct extension
+        if (!string_ends_with(path, ".sbin"))
+        {
+            return false;
+        }
+
         // Clear the buffer
         _buffer.clear();
 
@@ -49,7 +56,7 @@ namespace sge
         {
             return false;
         }
-        
+
         // Open the file
         auto* file = fopen(path, "rb");
         if (!file)

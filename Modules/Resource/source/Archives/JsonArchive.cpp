@@ -6,6 +6,7 @@
 #include <rapidjson/writer.h>
 #include <Core/Reflection/ReflectionBuilder.h>
 #include <Core/Interfaces/IToString.h>
+#include <Core/Util/StringUtils.h>
 #include "../../include/Resource/Interfaces/IFromFile.h"
 #include "../../include/Resource/Archives/JsonArchive.h"
 #include "../../private/JsonArchiveWriter.h"
@@ -57,12 +58,20 @@ namespace sge
 
 	bool JsonArchive::from_file(const char* path)
 	{
+        // Make sure the file has the correct extension
+        if (!string_ends_with(path, ".json"))
+        {
+            return false;
+        }
+
+        // Open the file
 		std::FILE* file = std::fopen(path, "rb");
 		if (!file)
 		{
 			return false;
 		}
 
+        // Load it
 		char readBuffer[65536];
 		rapidjson::FileReadStream in(file, readBuffer, sizeof(readBuffer));
 
