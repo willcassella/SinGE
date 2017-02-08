@@ -15,8 +15,8 @@ class Entity(object):
     NULL_ENTITY_ID = 0
     WORLD_ENTITY_ID = 1
 
-    def __init__(self):
-        self.id = Entity.NULL_ENTITY_ID
+    def __init__(self, id):
+        self.id = id
         self.name = ""
         self.parent = Entity.WORLD_ENTITY_ID
         self.components = set()
@@ -72,20 +72,18 @@ class SceneManager(object):
         # Get the next entity id (used for constructing new entities client-side)
         self._next_entity_id = response['next_entity_id']
 
-        # Make sure there are entities in the scene, before attempting to load
-        if response['entities'] is None:
-            return
+        # Store all newly entityies created
+        new_entities = set()
 
         # For each entity in the scene
         for entity_id_str, value in response['entities'].items():
             entity_id = int(entity_id_str)
 
             # Insert a new entry into the entities table
-            entity = Entity()
+            entity = Entity(entity_id)
             self._entities[entity_id] = entity
 
             # Initialize the entity
-            entity.id = entity_id
             entity.name = value['name']
             entity.parent = value['parent']
 
@@ -93,14 +91,8 @@ class SceneManager(object):
             if self._new_entity_callback is not None:
                 self._new_entity_callback(self, entity)
 
-        # Run the 'update_entity' callback on all created entities
-        if self._update_entity_callback is not None:
-            for entity in self._entities.values():
-                self._update_entity_callback(self, entity)
-
-        # Make sure there are components in the scene
-        if response['components'] is None:
-            return
+            # Add the entity to the list of newly created entities
+            new_entities.add(entity)
 
         # For each component type
         for component_type, instances in response['components'].items():
@@ -111,11 +103,29 @@ class SceneManager(object):
                 # Add the component value dictionary
                 component.instances[entity_id] = dict()
 
-                # Add the component as a type on the instance
-                self._entities[entity_id].components.add(component_type)
+                # Create the entity, if the entity did not appear in the scene structure (allowed)
+                if entity_id in self._entities:
+                    entity = self._entities[entity_id]
+                else:
+                    # Create the entity
+                    entity = Entity(entity_id)
+                    self._entities[entity_id] = entity
+                    new_entities.add(entity)
+
+                    # Run user callback
+                    if self._new_entity_callback is not None:
+                        self._new_entity_callback(self, entity)
+
+                # Add the component to the entity
+                entity.components.add(component_type)
 
                 # Add a query to retrieve the value
                 self.add_get_component_query(entity_id, component_type)
+
+        # Run the 'update_entity' callback on all created entities
+        if self._update_entity_callback is not None:
+            for entity in new_entities:
+                self._update_entity_callback(self, entity)
 
     def _new_entity_query(self, seq_number, priority):
         if self._num_new_entities == 0:
@@ -240,8 +250,7 @@ class SceneManager(object):
         self._num_new_entities += 1
 
         # Construct the entity object
-        entity = Entity()
-        entity.id = entity_id
+        entity = Entity(entity_id)
         entity.user_data = user_data
 
         # Insert it into the table

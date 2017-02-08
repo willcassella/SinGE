@@ -6,6 +6,7 @@ from bpy.types import Operator, Panel
 from . import editor_session, type_db, scene_manager, resource_manager, types, ui, static_mesh, material, operators
 from functools import partial
 import time
+import math
 
 class Globals(object):
     # Global variable to prevent scene updates during critical sections
@@ -177,37 +178,13 @@ def update_static_mesh_component_callback(sge_scene, entity, value):
     # Re-enable updates
     Globals.enable_update()
 
-def destroy_static_mesh_component_callback(sge_scene, entity, value):
+def update_entity_display_callback(sge_scene, entity, value):
     obj = entity.user_data
 
     # Disable scene updates
     Globals.disable_update()
 
     # Update object type
-    validate_object_type(entity)
-
-    # Re-enable updates
-    Globals.enable_update()
-
-def update_perspective_camera_component_callback(sge_scene, entity, value):
-    obj = entity.user_data
-
-    # Disable scene updates
-    Globals.disable_update()
-
-    # Update object type
-    validate_object_type(entity)
-
-    # Re-enable updates
-    Globals.enable_update()
-
-def destroy_perspective_camera_component_callback(sge_scene, entity, value):
-    obj = entity.user_data
-
-    # Disable scene updates
-    Globals.disable_update()
-
-    # Update objec type
     validate_object_type(entity)
 
     # Re-enable updates
@@ -256,37 +233,42 @@ def validate_entity(sge_scene, obj):
 
             # If it's a cube, monkey, or torus
             if obj.name.startswith('Cube') or obj.name.startswith('Suzanne') or obj.name.startswith('Torus'):
-                mesh_path = "Content/Meshes/Primitives/cube.smesh"
+                mesh_path = "Content/Meshes/Primitives/cube.sbin"
 
             # If it's a plane or a grid
             elif obj.name.startswith('Plane') or obj.name.startswith('Grid'):
-                mesh_path = "Content/Meshes/Primitives/plane.smesh"
+                mesh_path = "Content/Meshes/Primitives/plane.sbin"
 
             # If it's a circle
             elif obj.name.startswith('Circle'):
-                mesh_path = "Content/Meshes/Primitives/circle.smesh"
+                mesh_path = "Content/Meshes/Primitives/circle.sbin"
 
             # If it's a sphere
             elif obj.name.startswith('Sphere'):
-                mesh_path = "Content/Meshes/Primitives/sphere.smesh"
+                mesh_path = "Content/Meshes/Primitives/sphere.sbin"
 
             # If it's an Icosphere
             elif obj.name.startswith('Icosphere'):
-                mesh_path = "Content/Meshes/Primitives/icosphere.smesh"
+                mesh_path = "Content/Meshes/Primitives/icosphere.sbin"
 
             # If it's a cylindar
             elif obj.name.startswith('Cylinder'):
-                mesh_path = "Content/Meshes/Primitives/cylinder.smesh"
+                mesh_path = "Content/Meshes/Primitives/cylinder.sbin"
 
             # If it's a cone
             elif obj.name.startswith('Cone'):
-                mesh_path = "Content/Meshes/Primitives/cone.smesh"
+                mesh_path = "Content/Meshes/Primitives/cone.sbin"
 
             # Set the mesh and material
             sge_scene.set_component_value(entity_id, 'sge::CStaticMesh', {
                 'mesh': mesh_path,
                 'material': "Content/Materials/Misc/checkerboard.json",
             })
+
+        # If it's a camera
+        if obj.type == 'CAMERA':
+            sge_scene.request_new_component(entity_id, 'sge::CPerspectiveCamera')
+
         return
 
     # The object is a duplicate, so create a new entity and copy everything from the old one
@@ -385,13 +367,13 @@ def blender_update(scene):
         # Update rotation properties as necessary (swizzle components)
         rot_mode = obj.rotation_mode
         obj.rotation_mode = 'QUATERNION'
-        if obj.rotation_quaternion[0] != local_rotation['w']:
+        if not math.isclose(obj.rotation_quaternion[0], local_rotation['w'], rel_tol=1e-3):
             transform_setter(['local_rotation'], 'w', obj.rotation_quaternion[0])
-        if obj.rotation_quaternion[1] != -local_rotation['x']:
+        if not math.isclose(obj.rotation_quaternion[1], -local_rotation['x'], rel_tol=1e-3):
             transform_setter(['local_rotation'], 'x', -obj.rotation_quaternion[1])
-        if obj.rotation_quaternion[3] != local_rotation['y']:
+        if not math.isclose(obj.rotation_quaternion[3], local_rotation['y'], rel_tol=1e-3):
             transform_setter(['local_rotation'], 'y', obj.rotation_quaternion[3])
-        if obj.rotation_quaternion[2] != local_rotation['z']:
+        if not math.isclose(obj.rotation_quaternion[2], local_rotation['z'], rel_tol=1e-3):
             transform_setter(['local_rotation'], 'z', obj.rotation_quaternion[2])
         obj.rotation_mode = rot_mode
 
@@ -448,9 +430,9 @@ def open_active_session(host, port):
     self.sge_scene.destroy_entity_callback(destroy_entity_callback)
     self.sge_scene.update_component_callback('sge::CTransform3D', update_transform_component_callback)
     self.sge_scene.update_component_callback('sge::CStaticMesh', update_static_mesh_component_callback)
-    self.sge_scene.destroy_component_callback('sge::CStaticMesh', destroy_static_mesh_component_callback)
-    self.sge_scene.update_component_callback('sge::CPerspectiveCamera', update_perspective_camera_component_callback)
-    self.sge_scene.destroy_component_callback('sge::CPerspectiveCamera', destroy_perspective_camera_component_callback)
+    self.sge_scene.destroy_component_callback('sge::CStaticMesh', update_entity_display_callback)
+    self.sge_scene.update_component_callback('sge::CPerspectiveCamera', update_entity_display_callback)
+    self.sge_scene.destroy_component_callback('sge::CPerspectiveCamera', update_entity_display_callback)
     self.sge_scene.register_handlers(self.sge_session)
 
     # Create the resource manager object
