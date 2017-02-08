@@ -23,6 +23,9 @@ namespace sge
             std::vector<GLStaticMesh::VAO> ord_mesh_entity_meshes;
             std::vector<GLMaterial::Id> ord_mesh_entity_materials;
 
+            /* All lightmask volume objects. */
+            std::vector<EntityId> ord_lightmask_volumes;
+
             /* All lightmask obstructor objects. */
             std::vector<EntityId> ord_lightmask_obstructors;
 

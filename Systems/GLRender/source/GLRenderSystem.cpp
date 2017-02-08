@@ -8,7 +8,7 @@
 #include <Engine/Components/Display/CCamera.h>
 #include <Engine/Components/Display/CLightMaskReceiver.h>
 #include <Engine/Components/Display/CLightMaskObstructor.h>
-#include <Engine/Tags/FDebugDraw.h>
+#include <Engine/Tags/DebugDraw.h>
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
 #include <Engine/UpdatePipeline.h>
@@ -339,6 +339,13 @@ namespace sge
                 this,
                 &GLRenderSystem::render_scene);
 
+            pipeline.register_tag_callback<CTransform3D, FDebugLine>(
+                system_token,
+                async_token,
+                TCO_NONE,
+                this,
+                &GLRenderSystem::cb_debug_draw_line);
+
             pipeline.register_tag_callback<CTransform3D, FNewComponent>(
                 system_token,
                 async_token,
@@ -360,6 +367,12 @@ namespace sge
                 this,
                 &GLRenderSystem::cb_modified_static_mesh);
 
+            pipeline.register_tag_callback<CLightMaskObstructor, FNewComponent>(
+                system_token,
+                async_token,
+                TCO_NONE,
+                this,
+                &GLRenderSystem::cb_new_lightmask_obstructor);
 		}
 
 	    void GLRenderSystem::set_viewport(int width, int height)
@@ -376,15 +389,6 @@ namespace sge
                 GBUFFER_DEPTH_STENCIL_UPLOAD_FORMAT,
                 GBUFFER_DEPTH_STENCIL_UPLOAD_TYPE);
 
-	        // Resize normal layer
-            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::NORMAL]);
-            upload_render_target_data(
-                width,
-                height,
-                GBUFFER_NORMAL_INTERNAL_FORMAT,
-                GBUFFER_NORMAL_UPLOAD_FORMAT,
-                GBUFFER_NORMAL_UPLOAD_TYPE);
-
             // Resize position layer
             glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::POSITION]);
             upload_render_target_data(
@@ -393,6 +397,15 @@ namespace sge
                 GBUFFER_POSITION_INTERNAL_FORMAT,
                 GBUFFER_POSITION_UPLOAD_FORMAT,
                 GBUFFER_POSITION_UPLOAD_TYPE);
+
+            // Resize normal layer
+            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::NORMAL]);
+            upload_render_target_data(
+                width,
+                height,
+                GBUFFER_NORMAL_INTERNAL_FORMAT,
+                GBUFFER_NORMAL_UPLOAD_FORMAT,
+                GBUFFER_NORMAL_UPLOAD_TYPE);
 
             // Resize diffuse layer
             glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::DIFFUSE]);
@@ -520,28 +533,38 @@ namespace sge
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
 
-	    void GLRenderSystem::cb_debug_draw(
+	    void GLRenderSystem::cb_debug_draw_line(
             SystemFrame& /*frame*/,
-            const FDebugDraw& tag,
-            ComponentId /*component*/)
+            const EntityId* ent_range,
+            const TagCount_t* counts,
+            std::size_t ent_range_len,
+            const FDebugLine* lines)
 	    {
+            std::size_t num_lines = 0;
+
+            // Count up the total number of lines
+            for (std::size_t i = 0; i < ent_range_len; ++i)
+            {
+                num_lines += counts[i];
+            }
+
             // Reserve space for line verts
-            _state->frame_debug_lines.reserve(_state->frame_debug_lines.size() + tag.lines.size() * 2);
+            _state->frame_debug_lines.reserve(_state->frame_debug_lines.size() + num_lines * 2);
 
             // For each line
-            for (auto line : tag.lines)
+            for (std::size_t i = 0; i < num_lines; ++i)
             {
                 // Create start vert
                 DebugLineVert start_vert;
-                start_vert.world_position = line.world_start;
+                start_vert.world_position = lines[i].world_start;
                 start_vert.color_rgb = Vec3{
-                    static_cast<Scalar>(line.color.red()) / 255,
-                    static_cast<Scalar>(line.color.green()) / 255,
-                    static_cast<Scalar>(line.color.blue()) / 255 };
+                    static_cast<Scalar>(lines[i].color.red()) / 255,
+                    static_cast<Scalar>(lines[i].color.green()) / 255,
+                    static_cast<Scalar>(lines[i].color.blue()) / 255 };
 
                 // Create end vert
                 DebugLineVert end_vert;
-                end_vert.world_position = line.world_end;
+                end_vert.world_position = lines[i].world_end;
                 end_vert.color_rgb = start_vert.color_rgb;
 
                 // Add to the buffer
@@ -551,7 +574,7 @@ namespace sge
 	    }
 
 	    void GLRenderSystem::cb_new_transform(
-            SystemFrame& frame,
+            SystemFrame& /*frame*/,
             const EntityId* ent_range,
             std::size_t range_len)
 	    {
@@ -601,10 +624,10 @@ namespace sge
 
 	    void GLRenderSystem::cb_modified_static_mesh(
             SystemFrame& frame,
-            const EntityId* ord_entities,
-            std::size_t num_entities)
+            const EntityId* ent_range,
+            std::size_t range_len)
 	    {
-            frame.process_entities(zip(ord_ents_range(ord_entities, num_entities), ord_ents_range(_state->render_scene.ord_mesh_entities)),
+            frame.process_entities(zip(ord_ents_range(ent_range, range_len), ord_ents_range(_state->render_scene.ord_mesh_entities)),
                 [&state = *_state, &render_scene = _state->render_scene] (
                     ProcessingFrame& pframe,
                     const CStaticMesh& mesh)
@@ -614,5 +637,13 @@ namespace sge
                 render_scene.ord_mesh_entity_materials[mesh_index] = state.get_material_resource(mesh.material());
             });
 	    }
+
+        void GLRenderSystem::cb_new_lightmask_obstructor(
+            SystemFrame& frame,
+            const EntityId* ent_range,
+            std::size_t range_len)
+        {
+            insert_ord_entities(_state->render_scene.ord_lightmask_obstructors, ent_range, range_len);
+        }
 	}
 }

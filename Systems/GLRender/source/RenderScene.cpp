@@ -6,6 +6,7 @@
 #include <Engine/Components/Display/CStaticMesh.h>
 #include <Engine/Components/Display/CLightMaskObstructor.h>
 #include <Engine/Components/Display/CLightMaskReceiver.h>
+#include <Engine/Components/Display/CLightMaskVolume.h>
 #include "../private/RenderScene.h"
 #include "../private/GLRenderSystemState.h"
 
@@ -83,6 +84,15 @@ namespace sge
             {
                 render_scene.ord_lightmask_receivers.push_back(pframe.entity());
             });
+
+            // Get all entities with the 'CLighMaskVolume' component
+            frame.process_entities(
+                [&render_scene, &state](
+                    ProcessingFrame& pframe,
+                    const CLightMaskVolume& /*volume*/)
+            {
+                render_scene.ord_lightmask_volumes.push_back(pframe.entity());
+            });
         }
 
         void render_scene_update_matrices(GLRenderSystem::State& state, SystemFrame& frame)
@@ -100,14 +110,15 @@ namespace sge
         {
             const auto& render_scene = state.render_scene;
 
-            std::size_t iters[] = { 0, 0, 0, 0 };
-            auto& obj_iter = iters[0], &mesh_iter = iters[1], &recv_iter = iters[2], &obst_iter = iters[3];
+            std::size_t iters[] = { 0, 0, 0, 0, 0 };
+            auto& obj_iter = iters[0], &mesh_iter = iters[1];
 
             const EntityId* const ord_arrays[] = {
                 render_scene.ord_render_entities.data(),
                 render_scene.ord_mesh_entities.data(),
                 render_scene.ord_lightmask_receivers.data(),
                 render_scene.ord_lightmask_obstructors.data(),
+                render_scene.ord_lightmask_volumes.data(),
             };
 
             const std::size_t ord_array_lens[] = {
@@ -115,6 +126,7 @@ namespace sge
                 render_scene.ord_mesh_entities.size(),
                 render_scene.ord_lightmask_receivers.size(),
                 render_scene.ord_lightmask_obstructors.size(),
+                render_scene.ord_lightmask_volumes.size(),
             };
 
             // Disable stencil testing
@@ -129,7 +141,7 @@ namespace sge
             glDepthFunc(GL_LEQUAL);
 
             // Draw all normal objects
-            while (const auto entity = ord_entities_match(ord_arrays, ord_array_lens, iters, 2, 2, 4))
+            while (const auto entity = ord_entities_match(ord_arrays, ord_array_lens, iters, 2, 3, 5))
             {
                 // Get the object properties
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
@@ -190,7 +202,7 @@ namespace sge
             glStencilFunc(GL_ALWAYS, 1, 0xFF);
             glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
-            while (const auto entity = ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
+            while (ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
                 const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
@@ -216,7 +228,7 @@ namespace sge
 
             // Reset iterators
             std::memset(iters, 0, sizeof(iters));
-            while (const auto entity = ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
+            while (ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
                 const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
@@ -243,7 +255,7 @@ namespace sge
 
             // Reset iterators
             std::memset(iters, 0, sizeof(iters));
-            while (const auto entity = ord_entities_match(obst_pass_ord_arrays, obst_pass_ord_array_lens, iters, 3, 0, 3))
+            while (ord_entities_match(obst_pass_ord_arrays, obst_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
                 const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
@@ -273,7 +285,7 @@ namespace sge
 
             // Reset iterators
             std::memset(iters, 0, sizeof(iters));
-            while (const auto entity = ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
+            while (ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
                 const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
@@ -281,7 +293,6 @@ namespace sge
 
                 // Prepare for rendering
                 render_prepare(mesh, material, model, view, proj);
-
 
                 // Draw the mesh
                 glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
@@ -298,7 +309,7 @@ namespace sge
 
             // Reset iterators
             std::memset(iters, 0, sizeof(iters));
-            while (const auto entity = ord_entities_match(obst_pass_ord_arrays, obst_pass_ord_array_lens, iters, 3, 0, 3))
+            while (ord_entities_match(obst_pass_ord_arrays, obst_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
                 const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
@@ -328,7 +339,7 @@ namespace sge
 
             // Reset iterators
             std::memset(iters, 0, sizeof(iters));
-            while (const auto entity = ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
+            while (ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
                 const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;

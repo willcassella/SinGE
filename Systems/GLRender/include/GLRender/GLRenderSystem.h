@@ -4,12 +4,13 @@
 #include <memory>
 #include <Core/Reflection/Reflection.h>
 #include <Engine/Scene.h>
+#include <Engine/TagBuffer.h>
 #include "build.h"
 
 namespace sge
 {
 	struct SystemFrame;
-    struct FDebugDraw;
+    struct FDebugLine;
 
 	namespace gl_render
 	{
@@ -39,7 +40,12 @@ namespace sge
 
 			void render_scene(SystemFrame& frame, float current_time, float dt);
 
-            void cb_debug_draw(SystemFrame& frame, const FDebugDraw& tag, ComponentId component);
+            void cb_debug_draw_line(
+                SystemFrame& frame,
+                const EntityId* ent_range,
+                const TagCount_t* counts,
+                std::size_t ent_range_len,
+                const FDebugLine* lines);
 
             void cb_new_transform(
                 SystemFrame& frame,
@@ -53,8 +59,13 @@ namespace sge
 
             void cb_modified_static_mesh(
                 SystemFrame& frame,
-                const EntityId* ord_entities,
-                std::size_t num_entities);
+                const EntityId* ent_range,
+                std::size_t range_len);
+
+            void cb_new_lightmask_obstructor(
+                SystemFrame& frame,
+                const EntityId* ent_range,
+                std::size_t range_len);
 
 			////////////////
 			///   Data   ///
