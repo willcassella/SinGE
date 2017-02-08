@@ -2,6 +2,8 @@
 import socket
 import struct
 import json
+import threading
+import queue
 
 class EditorSession(object):
     CONNECTION_TIMEOUT = 2
@@ -24,6 +26,22 @@ class EditorSession(object):
         self._query_handlers = {}
         self._response_handlers = {}
         self._next_seq_number = 1
+        self._thread = None
+        self._continue = True
+        self._in_messages = queue.Queue()
+        self._out_messages = queue.Queue()
+
+    def _thread_loop(self):
+        while self._continue:
+            # Cycle in messages
+            in_message = self.receive_message()
+            if in_message is not None:
+                self._in_messages.put(in_message)
+
+            # Cycle out messages
+            if not self._out_messages.empty():
+                out_message = self._out_messages.get()
+                self.send_message(*out_message)
 
     def _get_socket_data(self):
         self._socket_data += self._sock.recv(self.BUFFER_SIZE)
@@ -41,13 +59,21 @@ class EditorSession(object):
         return len(self._socket_data)
 
     def connect(self, host="localhost", port=1995):
+        # Try connecting to the server
         try:
             self._sock.connect((host, port))
         except Exception as e:
             return False
+
+        # Spin up a thread for receiving messages
+        self._continue = True
+        self._thread = threading.Thread(target=self._thread_loop)
+        self._thread.start()
         return True
 
     def close(self):
+        self._continue = False
+        self._thread.join()
         self._sock.close()
 
     def receive_message(self):
@@ -124,10 +150,10 @@ class EditorSession(object):
         seq_number = self._next_seq_number
         query = self.create_query(seq_number, priority)
         if len(query) != 0:
-            self.send_message(seq_number, query)
+            self._out_messages.put((seq_number, query))
             self._next_seq_number += 1
 
         # Handle the response
-        response = self.receive_message()
-        if response is not None:
+        if not self._in_messages.empty():
+            response = self._in_messages.get()
             self.handle_response(*response)
