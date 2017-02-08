@@ -64,6 +64,11 @@ namespace sge
 			return _values;
 		}
 
+        Scalar* vec()
+		{
+            return _values;
+		}
+
 		/** Formats this Vec3 as a String */
 		std::string to_string() const
 		{
