@@ -22,7 +22,9 @@ namespace sge
 
 		void to_archive(ArchiveWriter& writer) const;
 
-		bool from_file(const char* path);
+        void from_archive(ArchiveReader& reader);
+
+        bool from_file(const char* path);
 
 		std::size_t num_vertices() const
 		{
@@ -41,7 +43,7 @@ namespace sge
 				return nullptr;
 			}
 
-			return &_vertex_positions.front();
+			return _vertex_positions.data();
 		}
 
 		const Vec3* vertex_normals() const
@@ -51,7 +53,17 @@ namespace sge
 				return nullptr;
 			}
 
-			return &_vertex_normals.front();
+			return _vertex_positions.data();
+		}
+
+        const Vec3* vertex_tangents() const
+		{
+		    if (_vertex_tangents.empty())
+		    {
+                return nullptr;
+		    }
+
+            return _vertex_tangents.data();
 		}
 
 		const Vec2* uv_map_0() const
@@ -65,6 +77,7 @@ namespace sge
 
 		std::vector<Vec3> _vertex_positions;
 		std::vector<Vec3> _vertex_normals;
+        std::vector<Vec3> _vertex_tangents;
 		std::vector<Vec2> _uv_map_0;
 	};
 

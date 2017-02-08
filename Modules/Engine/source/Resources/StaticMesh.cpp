@@ -4,11 +4,13 @@
 #include <Core/Reflection/ReflectionBuilder.h>
 #include <Resource/Interfaces/IFromFile.h>
 #include "../../include/Engine/Resources/StaticMesh.h"
+#include "Resource/Archives/BinaryArchive.h"
 
 SGE_REFLECT_TYPE(sge::StaticMesh)
 .flags(TF_SCRIPT_NOCONSTRUCT)
-.implements<IFromFile>()
-.implements<IToArchive>();
+.implements<IToArchive>()
+.implements<IFromArchive>()
+.implements<IFromFile>();
 
 namespace sge
 {
@@ -18,15 +20,20 @@ namespace sge
 
 	void StaticMesh::to_archive(ArchiveWriter& writer) const
 	{
-		// Write all vertex positions
-		writer.push_object_member("vertex_positions");
+		// Write vertex positions
+		writer.push_object_member("vpos");
 		writer.typed_array(_vertex_positions.data()->vec(), _vertex_positions.size() * 3);
 		writer.pop();
 
-		// Write all vertex normals
-		writer.push_object_member("vertex_normals");
+		// Write vertex normals
+		writer.push_object_member("vnor");
 		writer.typed_array(_vertex_normals.data()->vec(), _vertex_normals.size() * 3);
 		writer.pop();
+
+        // Write vertex tangents
+        writer.push_object_member("vtan");
+        writer.typed_array(_vertex_tangents.data()->vec(), _vertex_tangents.size() * 3);
+        writer.pop();
 
 		// Write the first UV layer
 		writer.push_object_member("uv0");
@@ -34,37 +41,63 @@ namespace sge
 		writer.pop();
 	}
 
-	bool StaticMesh::from_file(const char* path)
-	{
-		auto file = fopen(path, "rb");
-		if (!file)
-		{
-			return false;
-		}
+    void StaticMesh::from_archive(ArchiveReader& reader)
+    {
+        // Reset data
+        _vertex_positions.clear();
+        _vertex_normals.clear();
+        _vertex_tangents.clear();
+        _uv_map_0.clear();
 
-		// Get the number of vertex positions
-		uint32 num = 0;
-		fread(&num, sizeof(num), 1, file);
+        // Enumerate members (better than re-searching)
+        reader.enumerate_object_members([this, &reader](const char* name)
+        {
+            if (std::strcmp(name, "vpos") == 0)
+            {
+                // Get vertex positions
+                std::size_t size = 0;
+                reader.array_size(size);
+                this->_vertex_positions.assign(size / 3, Vec3::zero());
+                reader.typed_array(this->_vertex_positions.data()->vec(), size);
+            }
+            else if (std::strcmp(name, "vnor") == 0)
+            {
+                // Get vertex normals
+                std::size_t size = 0;
+                reader.array_size(size);
+                this->_vertex_normals.assign(size / 3, Vec3::zero());
+                reader.typed_array(this->_vertex_normals.data()->vec(), size);
+            }
+            else if (std::strcmp(name, "vtan") == 0)
+            {
+                // Get vertex tangents
+                std::size_t size = 0;
+                reader.array_size(size);
+                this->_vertex_tangents.assign(size / 3, Vec3::zero());
+                reader.typed_array(this->_vertex_tangents.data()->vec(), size);
+            }
+            else if (std::strcmp(name, "uv0") == 0)
+            {
+                // Get first uv layer
+                std::size_t size = 0;
+                reader.array_size(size);
+                this->_uv_map_0.assign(size / 2, Vec2::zero());
+                reader.typed_array(this->_uv_map_0.data()->vec(), size);
+            }
+        });
+    }
 
-		// Read in vertex positions
-		_vertex_positions.assign(num, Vec3::zero());
-		fread(_vertex_positions.data(), sizeof(Vec3), num, file);
+    bool StaticMesh::from_file(const char* path)
+    {
+        BinaryArchive bin;
+        if (!bin.from_file(path))
+        {
+            return false;
+        }
 
-		// Get the number of vertex normals
-		fread(&num, sizeof(num), 1, file);
-
-		// Read in vertex normals
-		_vertex_normals.assign(num, Vec3::zero());
-		fread(_vertex_normals.data(), sizeof(Vec3), num, file);
-
-		// Get the number of uv coordinates
-		fread(&num, sizeof(num), 1, file);
-		_uv_map_0.assign(num, Vec2::zero());
-
-		// Read in first UV map
-		fread(_uv_map_0.data(), sizeof(Vec2), num, file);
-
-		fclose(file);
-		return true;
-	}
+        auto* reader = bin.read_root();
+        from_archive(*reader);
+        reader->pop();
+        return true;
+    }
 }
