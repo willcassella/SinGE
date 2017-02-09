@@ -53,7 +53,7 @@ namespace sge
 				return nullptr;
 			}
 
-			return _vertex_positions.data();
+			return _vertex_normals.data();
 		}
 
         const Vec3* vertex_tangents() const
