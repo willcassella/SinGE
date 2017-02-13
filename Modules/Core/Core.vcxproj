@@ -175,7 +175,10 @@
     <ClInclude Include="include\Core\IO\ArchiveReader.h" />
     <ClInclude Include="include\Core\IO\ArchiveWriter.h" />
     <ClInclude Include="include\Core\Math\Angle.h" />
+    <ClInclude Include="include\Core\Math\HalfVec2.h" />
+    <ClInclude Include="include\Core\Math\HalfVec3.h" />
     <ClInclude Include="include\Core\Math\Mat4.h" />
+    <ClInclude Include="include\Core\Math\Conversions.h" />
     <ClInclude Include="include\Core\Math\Quat.h" />
     <ClInclude Include="include\Core\Math\Vec2.h" />
     <ClInclude Include="include\Core\Math\Vec3.h" />

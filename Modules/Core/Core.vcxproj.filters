@@ -158,6 +158,15 @@
     <ClInclude Include="include\Core\Containers\FixedString.h">
       <Filter>include\Containers</Filter>
     </ClInclude>
+    <ClInclude Include="include\Core\Math\HalfVec2.h">
+      <Filter>include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Math\HalfVec3.h">
+      <Filter>include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Math\Conversions.h">
+      <Filter>include\Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Math\Vec2.cpp">
