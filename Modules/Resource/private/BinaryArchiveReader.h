@@ -619,7 +619,7 @@ namespace sge
             // If this node is a generic array or object
             if (cursor.node_type == BAN_ARRAY_GENERIC || cursor.node_type == BAN_OBJECT)
             {
-                // Get the span (includes indicator byte)
+                // Get the span (includes indicator byte, which we've passed)
                 return static_cast<std::size_t>(buffer_read<BinaryArchiveSize_t>(cursor.node_value + sizeof(BinaryArchiveSize_t))) - 1;
             }
             // If the node contains an array

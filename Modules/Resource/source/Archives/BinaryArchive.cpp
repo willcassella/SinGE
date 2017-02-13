@@ -20,6 +20,7 @@ namespace sge
 
     ArchiveWriter* BinaryArchive::write_root()
     {
+        _buffer.clear();
         return new BinaryArchiveWriter(_buffer);
     }
 
