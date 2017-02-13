@@ -25,6 +25,7 @@ namespace sge
 			///   Fields   ///
 		public:
 
+            std::unordered_map<std::string, bool> bool_params;
 			std::unordered_map<std::string, float> float_params;
 			std::unordered_map<std::string, Vec2> vec2_params;
 			std::unordered_map<std::string, Vec3> vec3_params;
@@ -55,6 +56,11 @@ namespace sge
 		const ParamTable& param_table() const
 		{
 			return _param_table;
+		}
+
+        void set_param(std::string name, bool value)
+		{
+            _param_table.bool_params[std::move(name)] = value;
 		}
 
 		void set_param(std::string name, float value)

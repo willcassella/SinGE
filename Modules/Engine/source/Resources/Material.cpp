@@ -15,6 +15,11 @@ namespace sge
 {
 	void Material::ParamTable::to_archive(ArchiveWriter& writer) const
 	{
+        for (const auto& param : bool_params)
+        {
+            writer.object_member(param.first.c_str(), param.second);
+        }
+
 		for (const auto& param : float_params)
 		{
 			writer.object_member(param.first.c_str(), param.second);
@@ -51,8 +56,15 @@ namespace sge
 
 		reader.enumerate_object_members([this, &reader](const char* name)
 		{
+            // If this reader holds a boolean
+            if (reader.is_boolean())
+            {
+                bool value = false;
+                reader.boolean(value);
+                this->bool_params.insert(std::make_pair(name, value));
+            }
 			// If this reader holds a numeric value
-			if (reader.is_number())
+			else if (reader.is_number())
 			{
 				float value;
 				reader.number(value);
