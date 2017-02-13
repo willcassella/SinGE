@@ -53,8 +53,9 @@ namespace sge
         using TagCallbackFn = void(
             SystemFrame& frame,
             const TypeInfo& tag_type,
-            const TypeInfo& component_type,
-            const EntityId* entities,
+            const TypeInfo* component_type,
+            const EntityId* ent_range,
+            const TagIndex_t* tag_indices,
             const TagCount_t* tag_counts,
             std::size_t num_ents,
             const void* tag_buffer);
@@ -140,14 +141,7 @@ namespace sge
             AsyncToken async_token,
             TagCallbackOptions_t options,
             const TypeInfo& tag_type,
-            UFunction<TagCallbackFn> callback);
-
-        void register_tag_callback(
-            SystemToken system_token,
-            AsyncToken async_token,
-            TagCallbackOptions_t options,
-            const TypeInfo& tag_type,
-            const TypeInfo& component_type,
+            const TypeInfo* component_type,
             UFunction<TagCallbackFn> callback);
 
         template <typename ComponentT, typename TagT>
@@ -167,12 +161,13 @@ namespace sge
                 async_token,
                 options,
                 sge::get_type<TagT>(),
-                sge::get_type<ComponentT>(),
+                &sge::get_type<ComponentT>(),
                 [callback](
                     SystemFrame& frame,
                     const TypeInfo& /*tag_type*/,
-                    const TypeInfo& /*component_type*/,
+                    const TypeInfo* /*component_type*/,
                     const EntityId* entities,
+                    const TagIndex_t* tag_indices,
                     const TagCount_t* tag_counts,
                     std::size_t num_ents,
                     const void* tag_buffer) -> void
@@ -205,12 +200,13 @@ namespace sge
                 async_token,
                 options,
                 sge::get_type<TagT>(),
-                sge::get_type<ComponentT>(),
+                &sge::get_type<ComponentT>(),
                 [outer, callback](
                     SystemFrame& frame,
                     const TypeInfo& /*tag_type*/,
-                    const TypeInfo& /*component_type*/,
+                    const TypeInfo* /*component_type*/,
                     const EntityId* entities,
+                    const TagIndex_t* tag_indices,
                     const TagCount_t* tag_counts,
                     std::size_t num_ents,
                     const void* tags) -> void
@@ -235,17 +231,58 @@ namespace sge
                 async_token,
                 options,
                 sge::get_type<TagT>(),
-                sge::get_type<ComponentT>(),
+                &sge::get_type<ComponentT>(),
                 [outer, callback](
                     SystemFrame& frame,
                     const TypeInfo& /*tag_type*/,
-                    const TypeInfo& /*component_type*/,
+                    const TypeInfo* /*component_type*/,
                     const EntityId* entities,
+                    const TagIndex_t* /*tag_indices*/,
                     const TagCount_t* /*tag_counts*/,
                     std::size_t num_ents,
                     const void* /*tags*/) -> void
             {
                 (outer->*callback)(frame, entities, num_ents);
+            });
+        }
+
+        template <typename TagT, class ObjT>
+        void register_tag_callback_any_comp(
+            SystemToken system_token,
+            AsyncToken async_token,
+            TagCallbackOptions_t options,
+            ObjT* obj,
+            void(ObjT::*callback)(
+                SystemFrame& frame,
+                const EntityId* ent_range,
+                const TagIndex_t* tag_indices,
+                const TagCount_t* tag_counts,
+                std::size_t ent_range_len,
+                const TagT* tags))
+        {
+            this->register_tag_callback(
+                system_token,
+                async_token,
+                options,
+                sge::get_type<TagT>(),
+                nullptr,
+                [obj, callback](
+                    SystemFrame& frame,
+                    const TypeInfo& /*tag_type*/,
+                    const TypeInfo* /*component_type*/,
+                    const EntityId* ent_range,
+                    const TagIndex_t* tag_indices,
+                    const TagCount_t* tag_counts,
+                    std::size_t ent_range_len,
+                    const void* tags)
+            {
+                (obj->*callback)(
+                    frame,
+                    ent_range,
+                    tag_indices,
+                    tag_counts,
+                    ent_range_len,
+                    static_cast<const TagT*>(tags));
             });
         }
 

@@ -183,12 +183,14 @@ namespace sge
 		_current_time += dt;
 
 		// For each step in the pipeline
-		for (const auto& pipeline_step : pipeline.get_pipeline())
+        const auto& pipeline_steps = pipeline.get_pipeline();
+		for (std::size_t i = 0; i < pipeline_steps.size();)
 		{
             std::vector<SystemFrame> tag_frames;
+            bool repeat = false;
 
             // For each system in the step TODO: Make this asynchronous
-            for (const auto& system : pipeline_step)
+            for (const auto& system : pipeline_steps[i])
             {
                 // Create a frame for the system
                 SystemFrame frame{ system->system_token, *this, _scene_data };
@@ -201,12 +203,24 @@ namespace sge
                 {
                     tag_frames.push_back(std::move(frame));
                 }
+
+                // If the frame wants to repeat this step
+                if (frame._repeat)
+                {
+                    repeat = true;
+                }
             }
 
             // Keep running the tag frames until there are no tags left
             while (!tag_frames.empty())
             {
                 tag_frames = apply_changes(pipeline, tag_frames.data(), tag_frames.size());
+            }
+
+            // If they want to repeat
+            if (!repeat)
+            {
+                ++i;
             }
 		}
 	}
@@ -293,8 +307,9 @@ namespace sge
                     tag_cb.callback(
                         tag_frame,
                         FNewComponent::type_info,
-                        *comp_type.first,
+                        comp_type.first,
                         new_instance_set.data(),
+                        nullptr,
                         nullptr,
                         new_instance_set.size(),
                         nullptr);
@@ -338,7 +353,7 @@ namespace sge
                         for (const auto& tag_set : tag_type.second)
                         {
                             // Make sure this callback is compatible with the set
-                            if (tag_cb.component_type != nullptr && tag_cb.component_type != &tag_set.component_type())
+                            if (tag_cb.component_type != nullptr && tag_cb.component_type != tag_set.component_type())
                             {
                                 continue;
                             }
@@ -351,10 +366,11 @@ namespace sge
                                 tag_frame,
                                 *tag_type.first,
                                 tag_set.component_type(),
-                                tag_set.get_ord_entities(),
-                                tag_set.get_tag_counts(),
-                                tag_set.get_num_entities(),
-                                tag_set.get_buffer());
+                                tag_set.ent_range(),
+                                tag_set.tag_indices(),
+                                tag_set.tag_counts(),
+                                tag_set.ent_range_len(),
+                                tag_set.tag_buffer());
 
                             // If the frame has changes, add it to the list
                             if (tag_frame._has_tags)

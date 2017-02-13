@@ -165,7 +165,7 @@ namespace sge
         ComponentInterface::generate_tags(tags);
 
         // Create tags
-        _kinematic_changed_tags.create_buffer(type_info, tags);
+        _kinematic_changed_tags.create_buffer(&type_info, tags);
     }
 
     void CRigidBody::prop_set_kinematic(bool value)

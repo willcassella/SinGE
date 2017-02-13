@@ -39,7 +39,7 @@ namespace sge
         ComponentInterface::generate_tags(tags);
 
         // Create tags
-        _action_tags.create_buffer(type_info, tags);
-        _axis_tags.create_buffer(type_info, tags);
+        _action_tags.create_buffer(&type_info, tags);
+        _axis_tags.create_buffer(&type_info, tags);
     }
 }

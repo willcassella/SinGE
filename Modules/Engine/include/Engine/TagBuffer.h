@@ -6,7 +6,9 @@
 namespace sge
 {
     struct TypeInfo;
-    using TagCount_t = uint8;
+
+    using TagCount_t = uint16;
+    using TagIndex_t = uint32;
 
     struct SGE_ENGINE_API TagBuffer
     {
@@ -17,60 +19,62 @@ namespace sge
         /**
         * \brief Creates a tag buffer where each component may have one or more instances of non-empty tags.
         * \param component_type The component type these tags are being created for.
-        * \param ord_entities An ordered array of the entities the tags are being created for.
-        * \param tag_counts A count of the number of tags given for each entity.
-        * \param num_ents The number of entities in the array, and the number of tag counts.
+        * \param ent_range The entities these tags are being created for.
+        * \param tag_indices An array that specifies the offset into the tag buffer for the tags belonging to each entity.
+        * \param tag_counts An array that specfies the length into the tag buffer for the tags belonging to each entity.
+        * \param ent_range_len The number of entities in the array.
         * \param tag_buffer A buffer containing the tag values. Tags may be POD types only.
         * \param tag_buffer_size The size of the tag buffer.
-        * \return An immutable tag buffer for the specified component type.
+        * \return An immutable tag buffer.
         */
         static TagBuffer create(
-            const TypeInfo& component_type,
-            const EntityId* ord_entities,
+            const TypeInfo* component_type,
+            const EntityId* ent_range,
+            const TagIndex_t* tag_indices,
             const TagCount_t* tag_counts,
-            std::size_t num_ents,
+            std::size_t ent_range_len,
             const void* tag_buffer,
             std::size_t tag_buffer_size);
 
         /**
          * \brief Creates a tag buffer where each component has exactly one instance of a non-empty tag.
          * \param component_type The type of component this tag buffer is associated with.
-         * \param ord_entities The entities for the components the tags are being applied to. This must be ordered and contain no duplicates.
-         * \param num_ents The number of entities in the array (this is also the number of tags being added).
-         * \param tag_buffer A pointer to the buffer containing the tags.
+         * \param ent_range The entities for the components the tags are being created for.
+         * \param ent_range_len The number of entities in the array.
+         * \param tag_buffer A buffer containing the tag values.
          * \param tag_buffer_size The size of the buffer containing the tags.
-         * \return An immutble tag buffer for the specified component type.
+         * \return An immutable tag buffer.
          */
         static TagBuffer create_single(
-            const TypeInfo& component_type,
-            const EntityId* ord_entities,
-            std::size_t num_ents,
+            const TypeInfo* component_type,
+            const EntityId* ent_range,
+            std::size_t ent_range_len,
             const void* tag_buffer,
             std::size_t tag_buffer_size);
 
         /**
          * \brief Creates a tag buffer where each component may have one or more empty tags associated with it.
          * \param component_type The component type these tags are being created for.
-         * \param ord_entities The entities for the components the tags are being applied to. This must be ordered and contain no duplicates.
+         * \param ent_range The entities for the components the tags are being created for.
          * \param tag_counts A count of the number of tags given for each entity.
-         * \param num_ents The number of entities, and the number of tag counts.
-         * \return An immutable tag buffer for the specified component type.
+         * \param ent_range_len The number of entities.
+         * \return An immutable tag buffer.
          */
         static TagBuffer create_empty(
-            const TypeInfo& component_type,
-            const EntityId* ord_entities,
+            const TypeInfo* component_type,
+            const EntityId* ent_range,
             const TagCount_t* tag_counts,
-            std::size_t num_ents);
+            std::size_t ent_range_len);
 
         /**
          * \brief Creates a tag buffer where each component has exactly one empty tag associated with it.
          * \param component_type The component type these tags are being created for.
          * \param ord_entities The entities for the components the tags are being applied to. This must be ordered and contain no duplicates.
          * \param num_ents A count of the number of tags given for each entity.
-         * \return An immutable tag buffer for the specified componentt type.
+         * \return An immutable tag buffer.
          */
         static TagBuffer create_single_empty(
-            const TypeInfo& component_type,
+            const TypeInfo* component_type,
             const EntityId* ord_entities,
             std::size_t num_ents);
 
@@ -88,26 +92,28 @@ namespace sge
         ///   Methods   ///
     public:
 
-        const TypeInfo& component_type() const;
+        const TypeInfo* component_type() const;
 
         /**
          * \brief Returns the ordered array of entities this tag is applied to.
          */
-        const EntityId* get_ord_entities() const;
+        const EntityId* ent_range() const;
 
-        std::size_t get_num_entities() const;
+        std::size_t ent_range_len() const;
 
-        const TagCount_t* get_tag_counts() const;
+        const TagIndex_t* tag_indices() const;
+
+        const TagCount_t* tag_counts() const;
 
         /**
          * \brief Returns a pointer to the tag buffer.
          */
-        const void* get_buffer() const;
+        const void* tag_buffer() const;
 
         /**
          * \brief Returns the size of the tag buffer.
          */
-        std::size_t buffer_size() const;
+        std::size_t tag_buffer_size() const;
 
         bool tags_single() const;
 
@@ -118,7 +124,8 @@ namespace sge
     private:
 
         const TypeInfo* _component_type;
-        std::vector<EntityId> _ord_entities;
+        std::vector<EntityId> _ent_range;
+        std::vector<TagIndex_t> _tag_indices;
         std::vector<TagCount_t> _tag_counts;
         void* _tag_buffer;
         std::size_t _tag_buffer_size;

@@ -209,7 +209,7 @@ namespace sge
         ComponentInterface::generate_tags(tags);
 
         // Create tags
-        _parent_changed_tags.create_buffer(type_info, tags);
+        _parent_changed_tags.create_buffer(&type_info, tags);
     }
 
     Mat4 CTransform3D::get_parent_matrix() const

@@ -107,30 +107,13 @@ namespace sge
         AsyncToken async_token,
         TagCallbackOptions_t options,
         const TypeInfo& tag_type,
-        UFunction<TagCallbackFn> callback)
-    {
-        // Create the tag calback info
-        TagCallbackInfo info;
-        info.system = system_token;
-        info.options = options;
-        info.callback = std::move(callback);
-
-        // Register it
-        _tag_callbacks[&tag_type][async_token].push_back(std::move(info));
-    }
-
-    void UpdatePipeline::register_tag_callback(
-        SystemToken system_token,
-        AsyncToken async_token,
-        TagCallbackOptions_t options,
-        const TypeInfo& tag_type,
-        const TypeInfo& component_type,
+        const TypeInfo* component_type,
         UFunction<TagCallbackFn> callback)
     {
         // Create the tag callback info
         TagCallbackInfo info;
         info.system = system_token,
-        info.component_type = &component_type;
+        info.component_type = component_type;
         info.options = options;
         info.callback = std::move(callback);
 

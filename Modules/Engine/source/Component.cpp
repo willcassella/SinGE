@@ -84,7 +84,7 @@ namespace sge
         if (!_ord_modified.empty())
         {
             tags[&FModifiedComponent::type_info].push_back(TagBuffer::create_single_empty(
-                get_type(),
+                &get_type(),
                 _ord_modified.data(),
                 _ord_modified.size()));
         }

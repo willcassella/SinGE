@@ -88,7 +88,7 @@ namespace sge
         ComponentInterface::generate_tags(tags);
 
         // Add tags
-        _mesh_changed.create_buffer(type_info, tags);
-        _material_changed.create_buffer(type_info, tags);
+        _mesh_changed.create_buffer(&type_info, tags);
+        _material_changed.create_buffer(&type_info, tags);
     }
 }

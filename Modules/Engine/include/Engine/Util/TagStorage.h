@@ -22,14 +22,15 @@ namespace sge
 
         void add_tag(EntityId entity, TagT value)
         {
-            if (!_ord_entities.empty() && _ord_entities.back() == entity)
+            if (!_ent_range.empty() && _ent_range.back() == entity)
             {
                 _tag_counts.back() += 1;
             }
             else
             {
-                _ord_entities.push_back(entity);
+                _tag_indices.push_back(static_cast<TagIndex_t>(_ent_range.size()));
                 _tag_counts.push_back(1);
+                _ent_range.push_back(entity);
             }
 
             if (std::is_empty<TagT>::value)
@@ -42,12 +43,12 @@ namespace sge
 
         void add_single_tag(EntityId entity, TagT value)
         {
-            if (!_ord_entities.empty() && _ord_entities.back() == entity)
+            if (!_ent_range.empty() && _ent_range.back() == entity)
             {
                 return;
             }
 
-            _ord_entities.push_back(entity);
+            _ent_range.push_back(entity);
 
             if (std::is_empty<TagT>::value)
             {
@@ -57,10 +58,10 @@ namespace sge
             _tags.push_back(std::move(value));
         }
 
-        void create_buffer(const TypeInfo& component_type, std::map<const TypeInfo*, std::vector<TagBuffer>>& tag_map) const
+        void create_buffer(const TypeInfo* component_type, std::map<const TypeInfo*, std::vector<TagBuffer>>& tag_map) const
         {
             // Don't add anything to the map if there's nothing to add
-            if (_ord_entities.size() == 0)
+            if (_ent_range.size() == 0)
             {
                 return;
             }
@@ -73,16 +74,16 @@ namespace sge
                 {
                     tag_map[&sge::get_type<TagT>()].push_back(TagBuffer::create_single_empty(
                         component_type,
-                        _ord_entities.data(),
-                        _ord_entities.size()));
+                        _ent_range.data(),
+                        _ent_range.size()));
                     return;
                 }
 
                 tag_map[&sge::get_type<TagT>()].push_back(TagBuffer::create_empty(
                     component_type,
-                    _ord_entities.data(),
+                    _ent_range.data(),
                     _tag_counts.data(),
-                    _ord_entities.size()));
+                    _ent_range.size()));
                 return;
             }
 
@@ -91,8 +92,8 @@ namespace sge
             {
                 tag_map[&sge::get_type<TagT>()].push_back(TagBuffer::create_single(
                     component_type,
-                    _ord_entities.data(),
-                    _ord_entities.size(),
+                    _ent_range.data(),
+                    _ent_range.size(),
                     _tags.data(),
                     _tags.size() * sizeof(TagT)));
                 return;
@@ -100,9 +101,10 @@ namespace sge
 
             tag_map[&sge::get_type<TagT>()].push_back(TagBuffer::create(
                 component_type,
-                _ord_entities.data(),
+                _ent_range.data(),
+                _tag_indices.data(),
                 _tag_counts.data(),
-                _ord_entities.size(),
+                _ent_range.size(),
                 _tags.data(),
                 _tags.size() * sizeof(TagT)));
         }
@@ -111,7 +113,8 @@ namespace sge
         ///   Fields   ///
     private:
 
-        std::vector<EntityId> _ord_entities;
+        std::vector<EntityId> _ent_range;
+        std::vector<TagIndex_t> _tag_indices;
         std::vector<TagCount_t> _tag_counts;
         std::vector<TagT> _tags;
     };

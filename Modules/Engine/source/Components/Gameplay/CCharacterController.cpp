@@ -145,8 +145,8 @@ namespace sge
         ComponentInterface::generate_tags(tags);
 
         // Create tags
-        _jump_tags.create_buffer(type_info, tags);
-        _walk_tags.create_buffer(type_info, tags);
-        _turn_tags.create_buffer(type_info, tags);
+        _jump_tags.create_buffer(&type_info, tags);
+        _walk_tags.create_buffer(&type_info, tags);
+        _turn_tags.create_buffer(&type_info, tags);
     }
 }
