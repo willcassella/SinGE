@@ -2,79 +2,175 @@
 
 import bpy
 import bmesh
-import struct
-import array
+import mathutils
+import math
 from bpy_extras.io_utils import ExportHelper
 from bpy.props import StringProperty, BoolProperty
 from bpy.types import Operator
 from . import archive
 
+SHORT_MAX = 32767
+
+def export_submesh(obj, writer):
+    # Make sure this submesh has a UV layout
+    if len(obj.data.uv_layers) == 0:
+        return (False, "Object '{}' does not have a UV layout".format(obj.name))
+
+    # Get a copy of the object's mesh
+    mesh = obj.data.copy()
+
+    # Triangulate mesh data with bmesh
+    temp_mesh = bmesh.new()
+    temp_mesh.from_mesh(mesh)
+    bmesh.ops.triangulate(temp_mesh, faces=temp_mesh.faces)
+    temp_mesh.to_mesh(mesh)
+    temp_mesh.free()
+
+    # Create arrays for the vertex positions, normals, and uv layouts
+    vert_values = dict()
+    out_vpos = list()
+    out_vnor = list()
+    out_vtan = list()
+    out_vbts = list()
+    out_uv = list()
+    out_elems = list()
+    elem_index = 0
+
+    # Get object-to-world matrix
+    model_mat = mathutils.Matrix(obj.matrix_world)
+
+    # Get the transpose-inverse model-to-world matrix
+    model_mat_inv_transp = model_mat.inverted()
+    model_mat_inv_transp.transpose()
+
+    # Calculate tangent vectors
+    mesh.calc_tangents()
+
+    for mesh_loop, uv_loop in zip(mesh.loops, mesh.uv_layers.active.data):
+        # Create the vertex value for this loop
+        loop_key = (tuple(mesh_loop.normal), tuple(uv_loop.uv))
+        vert_dict = vert_values.setdefault(mesh_loop.vertex_index, dict())
+
+        # If there already exists an identical loop
+        if loop_key in vert_dict:
+            out_elems.append(vert_dict[loop_key])
+            continue
+        else:
+            vert_dict[loop_key] = elem_index
+            out_elems.append(elem_index)
+            elem_index += 1
+
+        # Get the vertex
+        vert = mesh.vertices[mesh_loop.vertex_index]
+
+        # Get vertex position (swizzled)
+        pos = model_mat * mathutils.Vector(vert.co)
+        out_vpos.append( -pos[0] )
+        out_vpos.append( pos[2] )
+        out_vpos.append( pos[1] )
+
+        # Get vertex normal (swizzled)
+        norm = model_mat_inv_transp * mathutils.Vector(mesh_loop.normal)
+        out_vnor.append( int(-norm[0] * SHORT_MAX - 1) )
+        out_vnor.append( int(norm[2] * SHORT_MAX - 1) )
+        out_vnor.append( int(norm[1] * SHORT_MAX - 1) )
+
+        # Get vertex tangents (swizzled)
+        tang = model_mat_inv_transp * mathutils.Vector(mesh_loop.tangent)
+        out_vtan.append( int(-tang[0] * SHORT_MAX - 1) )
+        out_vtan.append( int(tang[2] * SHORT_MAX - 1) )
+        out_vtan.append( int(tang[1] * SHORT_MAX - 1) )
+
+        # Get bitangent signs
+        out_vbts.append( int(mesh_loop.bitangent_sign) )
+
+        # Get UV coordinates
+        # TODO: If uv coordintes exceeed [0, 1], this isn't going to work
+        # Need to figure out how to wrap properly, fmod(1) doesn't work
+        out_uv.append( int(uv_loop.uv[0] * SHORT_MAX - 1) )
+        out_uv.append( int(uv_loop.uv[1] * SHORT_MAX - 1) )
+
+    # Free tangent vectors
+    mesh.free_tangents()
+
+    # Serialize as an object
+    writer.as_object()
+
+    # Save default material
+    writer.push_object_member("mat")
+    writer.string(obj.data.sge_default_material)
+    writer.pop()
+
+    # Save positions
+    writer.push_object_member("vpos")
+    writer.typed_array_f32(out_vpos)
+    writer.pop()
+
+    # Save normals
+    writer.push_object_member("vnor")
+    writer.typed_array_i16(out_vnor)
+    writer.pop()
+
+    # Save tangents
+    writer.push_object_member("vtan")
+    writer.typed_array_i16(out_vtan)
+    writer.pop()
+
+    # Save bitangent signs
+    writer.push_object_member("vbts")
+    writer.typed_array_i8(out_vbts)
+    writer.pop()
+
+    # Save uv coordinates
+    writer.push_object_member("uv")
+    writer.typed_array_i16(out_uv)
+    writer.pop()
+
+    # Save element indices
+    writer.push_object_member("ind")
+    writer.typed_array_u32(out_elems)
+    writer.pop()
+
+    # Get rid of the datablock
+    bpy.data.meshes.remove(mesh)
+    return (True, None)
+
 def export_sge_mesh(context, path, selected_only):
-    data = context.active_object.data
 
-    # Copy and triangulify its mesh data
-    mesh = bmesh.new()
-    mesh.from_mesh(data)
-    bmesh.ops.triangulate(mesh, faces=mesh.faces)
-    uvLayer = mesh.loops.layers.uv.active
-
-    # Create float arrays for the vertex positions, normals, and uv layouts
-    positions = list()
-    normals = list()
-    tangents = list()
-    uv0 = list()
-
-    for face in mesh.faces:
-        for loop in face.loops:
-            # Serialize position (swizzled)
-            positions.append(-loop.vert.co[0])
-            positions.append(loop.vert.co[2])
-            positions.append(loop.vert.co[1])
-
-            # Serialize normal (swizzled)
-            norm = loop.vert.normal
-            normals.append(-norm[0])
-            normals.append(norm[2])
-            normals.append(norm[1])
-
-            # Serialize tangent (swizzled)
-            tang = loop.calc_tangent()
-            tangents.append(-tang[0])
-            tangents.append(tang[2])
-            tangents.append(tang[1])
-
-            # Serialize UV
-            if uvLayer is not None:
-                uv0.append(loop[uvLayer].uv[0])
-                uv0.append(loop[uvLayer].uv[1])
+    if selected_only:
+        obj_list = context.selected_objects
+    else:
+        obj_list = context.scene.objects
 
     # Create an output archive
-    out = archive.Archive()
+    writer = archive.Archive()
+    writer.as_object()
 
-    # Write vertex positions
-    out.push_object_member("vpos")
-    out.typed_array_f32(positions)
-    out.pop()
+    # Serialize subobjects
+    writer.push_object_member("objs")
+    writer.as_object()
+    for obj in obj_list:
+        if obj.type != 'MESH':
+            continue
 
-    # Write vertex normals
-    out.push_object_member("vnor")
-    out.typed_array_f32(normals)
-    out.pop()
+        # Serialize this object as a subobject
+        writer.push_object_member(obj.name)
+        success, message = export_submesh(obj, writer)
 
-    # Write vertex tangents
-    out.push_object_member("vtan")
-    out.typed_array_f32(tangents)
-    out.pop()
+        # Make sure serialization completed succesfully
+        if not success:
+            return (False, message)
 
-    # Write vertex uv 0
-    out.push_object_member("uv0")
-    out.typed_array_f32(uv0)
-    out.pop()
+        writer.pop() # obj.name
+
+    writer.pop() # "objs"
 
     # Open a file to write to
     with open(path, 'wb') as file:
-        buff = out.to_binary()
+        buff = writer.to_binary()
         file.write(buff)
+
+    return (True, None)
 
 class SGEStaticMeshExporter(Operator, ExportHelper):
     """Exports a mesh to the sge::StaticMesh file format"""
@@ -95,11 +191,17 @@ class SGEStaticMeshExporter(Operator, ExportHelper):
     selected_only = BoolProperty(
             name="Selected Only",
             description="Only export selected objects",
-            default=False,
+            default=True,
             )
 
     def execute(self, context):
-        export_sge_mesh(context, self.filepath, self.selected_only)
+        success, message = export_sge_mesh(context, self.filepath, self.selected_only)
+
+        # Make sure export succeeded
+        if not success:
+            self.report(type={'ERROR'}, message=message)
+            return {'CANCELLED'}
+
         return {'FINISHED'}
 
 def export_menu_func(self, context):

@@ -43,24 +43,61 @@ class Archive(object):
     def pop(self):
         self.root = self.stack.pop()
 
-    def push_object_member(self, name):
-        # Make sure this node is an object
-        if self.root.type != Archive.NODE_OBJECT:
-            assert(self.root.type == Archive.NODE_NULL)
-            self.root.type = Archive.NODE_OBJECT
-            self.root.data = list()
+    def null(self):
+        # Make sure this node is null
+        assert(self.root.type == Archive.NODE_NULL)
 
-        # Add this node as a member of the root
-        new_root = Archive.Node()
-        self.root.data.append((name, new_root))
-        self.stack.append(self.root)
-        self.root = new_root
+    def u8(self, value):
+        # Make sure this node type is null
+        assert(self.root.type == Archive.NODE_NULL)
+        self.root.type = Archive.NODE_UINT8
+        self.root.data = value
+
+    def string(self, string):
+        # Make sure this node is null
+        assert(self.root.type == Archive.NODE_NULL)
+        self.root.type = Archive.NODE_STRING
+        self.root.data = string
+
+    def typed_array_i8(self, array):
+        # Make sure this node is null
+        assert(self.root.type == Archive.NODE_NULL)
+        self.root.type = Archive.NODE_ARRAY_INT8
+        self.root.data = array
+
+    def typed_array_i16(self, array):
+        # Make sure this node is null
+        assert(self.root.type == Archive.NODE_NULL)
+        self.root.type = Archive.NODE_ARRAY_INT16
+        self.root.data = array
+
+    def typed_array_u32(self, array):
+        # Make sure this node is null
+        assert(self.root.type == Archive.NODE_NULL)
+        self.root.type = Archive.NODE_ARRAY_UINT32
+        self.root.data = array
 
     def typed_array_f32(self, array):
         # Make sure this node is null
         assert(self.root.type == Archive.NODE_NULL)
         self.root.type = Archive.NODE_ARRAY_FLOAT
         self.root.data = array
+
+    def as_object(self):
+        # Make sure this node is null
+        assert(self.root.type == Archive.NODE_NULL)
+        self.root.type = Archive.NODE_OBJECT
+        self.root.data = list()
+
+    def push_object_member(self, name):
+        # Make sure this node is an object
+        assert(self.root.type == Archive.NODE_OBJECT)
+
+        # Add this node as a member of the root
+        new_root = Archive.Node()
+        self.root.data.append((name, new_root))
+        self.stack.append(self.root)
+        self.root = new_root
 
     def to_binary(self):
         buffer = bytearray()
@@ -72,10 +109,21 @@ class Archive(object):
         buffer += struct.pack('B', type)
 
     @staticmethod
+    def binary_number(buffer, node, fmt):
+        Archive.binary_node_type(buffer, node.type)
+        buffer += struct.pack(fmt, node.data)
+
+    @staticmethod
+    def binary_string(buffer, node):
+        Archive.binary_node_type(buffer, Archive.NODE_STRING)
+        buffer += struct.pack('I', len(node.data))
+        buffer += struct.pack('{}s'.format(len(node.data)), node.data.encode())
+
+    @staticmethod
     def binary_typed_array(buffer, node, fmt):
         Archive.binary_node_type(buffer, node.type)
         buffer += struct.pack('I', len(node.data))
-        buffer += struct.pack('{}f'.format(len(node.data)), *node.data)
+        buffer += struct.pack('{}{}'.format(len(node.data), fmt), *node.data)
 
     @staticmethod
     def binary_object(buffer, node):
@@ -93,8 +141,8 @@ class Archive(object):
             # Serialize node
             Archive.binary_node(object_buff, member)
 
-        # Append the span to the original buffer
-        buffer += struct.pack('I', len(object_buff))
+        # Append the span to the original buffer (accounts for indicator byte, size, span, and contents)
+        buffer += struct.pack('I', 1 + 4 + 4 + len(object_buff))
 
         # Append the object buffer
         buffer += object_buff
@@ -103,7 +151,24 @@ class Archive(object):
     def binary_node(buffer, node):
         if node.type == Archive.NODE_NULL:
             Archive.binary_node_type(Archive.NODE_NULL)
+
+        elif node.type == Archive.NODE_UINT8:
+            Archive.binary_number(buffer, node, 'B')
+
+        elif node.type == Archive.NODE_STRING:
+            Archive.binary_string(buffer, node)
+
+        elif node.type == Archive.NODE_ARRAY_INT8:
+            Archive.binary_typed_array(buffer, node, 'b')
+
+        elif node.type == Archive.NODE_ARRAY_INT16:
+            Archive.binary_typed_array(buffer, node, 'h')
+
+        elif node.type == Archive.NODE_ARRAY_UINT32:
+            Archive.binary_typed_array(buffer, node, 'I')
+
         elif node.type == Archive.NODE_ARRAY_FLOAT:
             Archive.binary_typed_array(buffer, node, 'f')
+
         elif node.type == Archive.NODE_OBJECT:
             Archive.binary_object(buffer, node)
