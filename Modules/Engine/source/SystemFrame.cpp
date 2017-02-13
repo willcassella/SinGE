@@ -20,6 +20,11 @@ namespace sge
     {
     }
 
+    void SystemFrame::set_repeat()
+    {
+        _repeat = true;
+    }
+
     UpdatePipeline::SystemToken SystemFrame::system_token() const
     {
         return _system_token;

@@ -241,6 +241,9 @@ namespace sge
                 self->async_receive_message();
             });
 
+            // Ask the system to do a repeat
+            get_frame().set_repeat();
+
             // Stop the io service
             socket.get_io_service().stop();
         }

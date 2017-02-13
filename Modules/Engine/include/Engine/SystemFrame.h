@@ -72,6 +72,8 @@ namespace sge
 		///   Methods   ///
 	public:
 
+        void set_repeat();
+
         /**
          * \brief Returns the token for the system
          */
@@ -508,6 +510,7 @@ namespace sge
 		///   Fields   ///
 	private:
 
+        bool _repeat = false;
         UpdatePipeline::SystemToken _system_token;
         bool _has_tags;
         const Scene* const _scene;
