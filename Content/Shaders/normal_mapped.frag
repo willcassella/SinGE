@@ -1,13 +1,14 @@
-// basic.frag
+// normal_mapped.frag
 #version 430 core
 
 uniform sampler2D albedo;
+uniform sampler2D normal_map;
 uniform sampler2D roughness_map;
 uniform sampler2D metallic_map;
 uniform float roughness_constant = 0.5;
 uniform float metallic_constant = 0;
-bool use_roughness_map = false;
-bool use_metallic_map = false;
+uniform bool use_roughness_map = false;
+uniform bool use_metallic_map = false;
 uniform vec2 uv_scale = vec2(1, 1);
 
 in VS_OUT {
@@ -25,8 +26,22 @@ layout (location = 3) out vec2 out_roughness_metallic;
 
 void main()
 {
+    // Compute TBN matrix (converts tangent space to camera space)
+    mat3 TBN = mat3(
+        normalize(fs_in.cam_tangent),
+        normalize(fs_in.cam_bitangent),
+        normalize(fs_in.cam_normal));
+
+    // Transform normal sample to range [-1, 1]
+    vec3 normal = texture(normal_map, fs_in.tex_coords * uv_scale).xyz;
+    normal = normalize(normal * 2.0f - 1.0f);
+
+    // Correct y component
+    //normal.y *= -1;
+
+    // Output position, normal, and albedo
     out_position = fs_in.cam_position;
-    out_normal = normalize(fs_in.cam_normal);
+    out_normal = normalize(TBN * normal);
     out_albedo = texture(albedo, fs_in.tex_coords * uv_scale);
 
     // Output roughness

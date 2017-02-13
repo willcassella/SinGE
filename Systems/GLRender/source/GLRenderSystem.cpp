@@ -12,10 +12,11 @@
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
 #include <Engine/UpdatePipeline.h>
+#include <Engine/Util/VectorUtils.h>
 #include "../include/GLRender/Config.h"
 #include "../private/GLRenderSystemState.h"
 #include "../private/DebugLine.h"
-#include "Engine/Util/VectorUtils.h"
+#include "../private/Util.h"
 
 SGE_REFLECT_TYPE(sge::gl_render::GLRenderSystem);
 
@@ -60,15 +61,15 @@ namespace sge
 		static constexpr GLenum GBUFFER_DEPTH_STENCIL_ATTACHMENT = GL_DEPTH_STENCIL_ATTACHMENT;
 		static constexpr GLenum GBUFFER_POSITION_ATTACHMENT = GL_COLOR_ATTACHMENT0;
 		static constexpr GLenum GBUFFER_NORMAL_ATTACHMENT = GL_COLOR_ATTACHMENT1;
-		static constexpr GLenum GBUFFER_DIFFUSE_ATTACHMENT = GL_COLOR_ATTACHMENT2;
-		static constexpr GLenum GBUFFER_SPECULAR_ATTACHMENT = GL_COLOR_ATTACHMENT3;
+		static constexpr GLenum GBUFFER_ALBEDO_ATTACHMENT = GL_COLOR_ATTACHMENT2;
+		static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_ATTACHMENT = GL_COLOR_ATTACHMENT3;
 
         /* These constants define the internal format for the gbuffer layers. */
         static constexpr GLenum GBUFFER_DEPTH_STENCIL_INTERNAL_FORMAT = GL_DEPTH24_STENCIL8;
         static constexpr GLenum GBUFFER_POSITION_INTERNAL_FORMAT = GL_RGB32F;
         static constexpr GLenum GBUFFER_NORMAL_INTERNAL_FORMAT = GL_RGB32F;
-        static constexpr GLenum GBUFFER_DIFFUSE_INTERNAL_FORMAT = GL_RGB8;
-        static constexpr GLenum GBUFFER_SPECULAR_INTERNAL_FORMAT = GL_R8;
+        static constexpr GLenum GBUFFER_ALBEDO_INTERNAL_FORMAT = GL_RGB8;
+        static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_INTERNAL_FORMAT = GL_RG16F;
         static constexpr GLenum POST_BUFFER_INTERNAL_FORMAT = GL_RGB32F;
 
         /* These constants are used when initializing or resizing gbuffer layers.
@@ -79,10 +80,10 @@ namespace sge
         static constexpr GLenum GBUFFER_POSITION_UPLOAD_TYPE = GL_FLOAT;
         static constexpr GLenum GBUFFER_NORMAL_UPLOAD_FORMAT = GL_RGB;
         static constexpr GLenum GBUFFER_NORMAL_UPLOAD_TYPE = GL_FLOAT;
-        static constexpr GLenum GBUFFER_DIFFUSE_UPLOAD_FORMAT = GL_RGB;
-        static constexpr GLenum GBUFFER_DIFFUSE_UPLOAD_TYPE = GL_UNSIGNED_BYTE;
-        static constexpr GLenum GBUFFER_SPECULAR_UPLOAD_FORMAT = GL_RED;
-        static constexpr GLenum GBUFFER_SPECULAR_UPLOAD_TYPE = GL_UNSIGNED_BYTE;
+        static constexpr GLenum GBUFFER_ALBEDO_UPLOAD_FORMAT = GL_RGB;
+        static constexpr GLenum GBUFFER_ALBEDO_UPLOAD_TYPE = GL_UNSIGNED_BYTE;
+        static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_UPLOAD_FORMAT = GL_RG;
+        static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_UPLOAD_TYPE = GL_UNSIGNED_BYTE;
         static constexpr GLenum POST_BUFFER_UPLOAD_FORMAT = GL_RGB;
         static constexpr GLenum POST_BUFFER_UPLOAD_TYPE = GL_FLOAT;
 
@@ -183,25 +184,25 @@ namespace sge
 				GBUFFER_NORMAL_UPLOAD_FORMAT,
 				GBUFFER_NORMAL_UPLOAD_TYPE);
 
-			// Create gbuffer diffuse layer
+			// Create gbuffer albedo layer
 			create_gbuffer_layer(
-				_state->gbuffer_layers[GBufferLayer::DIFFUSE],
-				GBUFFER_DIFFUSE_ATTACHMENT,
+				_state->gbuffer_layers[GBufferLayer::ALBEDO],
+				GBUFFER_ALBEDO_ATTACHMENT,
 				_state->width,
 				_state->height,
-				GBUFFER_DIFFUSE_INTERNAL_FORMAT,
-				GBUFFER_DIFFUSE_UPLOAD_FORMAT,
-				GBUFFER_DIFFUSE_UPLOAD_TYPE);
+				GBUFFER_ALBEDO_INTERNAL_FORMAT,
+				GBUFFER_ALBEDO_UPLOAD_FORMAT,
+				GBUFFER_ALBEDO_UPLOAD_TYPE);
 
-			// Create gbuffer specular layer
+			// Create gbuffer roughness/metallic layer
 			create_gbuffer_layer(
-				_state->gbuffer_layers[GBufferLayer::SPECULAR],
-				GBUFFER_SPECULAR_ATTACHMENT,
+				_state->gbuffer_layers[GBufferLayer::ROUGHNESS_METALLIC],
+				GBUFFER_ROUGHNESS_METALLIC_ATTACHMENT,
 				_state->width,
 				_state->height,
-				GBUFFER_SPECULAR_INTERNAL_FORMAT,
-				GBUFFER_SPECULAR_UPLOAD_FORMAT,
-				GBUFFER_SPECULAR_UPLOAD_TYPE);
+				GBUFFER_ROUGHNESS_METALLIC_INTERNAL_FORMAT,
+				GBUFFER_ROUGHNESS_METALLIC_UPLOAD_FORMAT,
+				GBUFFER_ROUGHNESS_METALLIC_UPLOAD_TYPE);
 
 			// Make sure the GBuffer was constructed successfully
 			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
@@ -261,13 +262,17 @@ namespace sge
 			glDetachShader(_state->screen_quad_program, screenVShader.id());
 			glDetachShader(_state->screen_quad_program, screenFShader.id());
 
+            // Make sure the program compiled linked
+            debug_program_status(_state->screen_quad_program, GLDebugOutputMode::ONLY_ERROR);
+
             // Set uniforms
 			glUseProgram(_state->screen_quad_program);
-			glUniform1i(glGetUniformLocation(_state->screen_quad_program, "depth_buffer"), 0);
+		    glUniform1i(glGetUniformLocation(_state->screen_quad_program, "depth_buffer"), 0);
 			glUniform1i(glGetUniformLocation(_state->screen_quad_program, "position_buffer"), 1);
 			glUniform1i(glGetUniformLocation(_state->screen_quad_program, "normal_buffer"), 2);
-			glUniform1i(glGetUniformLocation(_state->screen_quad_program, "diffuse_buffer"), 3);
-			glUniform1i(glGetUniformLocation(_state->screen_quad_program, "specular_buffer"), 4);
+			glUniform1i(glGetUniformLocation(_state->screen_quad_program, "albedo_buffer"), 3);
+			glUniform1i(glGetUniformLocation(_state->screen_quad_program, "roughness_metallic_buffer"), 4);
+            _state->screen_quad_view_uniform = glGetUniformLocation(_state->screen_quad_program, "view");
 
             // Create a VAO for debug lines
             glGenVertexArrays(1, &_state->debug_line_vao);
@@ -311,6 +316,9 @@ namespace sge
             glDetachShader(_state->debug_line_program, debug_line_v_shader.id());
             glDetachShader(_state->debug_line_program, debug_line_f_shader.id());
 
+            // Make sure the program linked sucessfully
+            debug_program_status(_state->debug_line_program, GLDebugOutputMode::ONLY_ERROR);
+
             // Get uniforms
             _state->debug_line_view_uniform = glGetUniformLocation(_state->debug_line_program, "view");
             _state->debug_line_proj_uniform = glGetUniformLocation(_state->debug_line_program, "projection");
@@ -339,7 +347,7 @@ namespace sge
                 this,
                 &GLRenderSystem::render_scene);
 
-            pipeline.register_tag_callback<CTransform3D, FDebugLine>(
+            pipeline.register_tag_callback_any_comp<FDebugLine>(
                 system_token,
                 async_token,
                 TCO_NONE,
@@ -407,23 +415,23 @@ namespace sge
                 GBUFFER_NORMAL_UPLOAD_FORMAT,
                 GBUFFER_NORMAL_UPLOAD_TYPE);
 
-            // Resize diffuse layer
-            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::DIFFUSE]);
+            // Resize albedo layer
+            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::ALBEDO]);
             upload_render_target_data(
                 width,
                 height,
-                GBUFFER_DIFFUSE_INTERNAL_FORMAT,
-                GBUFFER_DIFFUSE_UPLOAD_FORMAT,
-                GBUFFER_DIFFUSE_UPLOAD_TYPE);
+                GBUFFER_ALBEDO_INTERNAL_FORMAT,
+                GBUFFER_ALBEDO_UPLOAD_FORMAT,
+                GBUFFER_ALBEDO_UPLOAD_TYPE);
 
-            // Resize specular layer
-            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::SPECULAR]);
+            // Resize rougness/metallic layer
+            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::ROUGHNESS_METALLIC]);
             upload_render_target_data(
                 width,
                 height,
-                GBUFFER_SPECULAR_INTERNAL_FORMAT,
-                GBUFFER_SPECULAR_INTERNAL_FORMAT,
-                GBUFFER_SPECULAR_UPLOAD_TYPE);
+                GBUFFER_ROUGHNESS_METALLIC_INTERNAL_FORMAT,
+                GBUFFER_ROUGHNESS_METALLIC_INTERNAL_FORMAT,
+                GBUFFER_ROUGHNESS_METALLIC_UPLOAD_TYPE);
 
             // Resize post buffer
             glBindTexture(GL_TEXTURE_2D, _state->post_buffer);
@@ -447,8 +455,8 @@ namespace sge
 			constexpr GLenum DRAW_BUFFERS[] = {
 				GBUFFER_POSITION_ATTACHMENT,
 				GBUFFER_NORMAL_ATTACHMENT,
-				GBUFFER_DIFFUSE_ATTACHMENT,
-				GBUFFER_SPECULAR_ATTACHMENT };
+				GBUFFER_ALBEDO_ATTACHMENT,
+				GBUFFER_ROUGHNESS_METALLIC_ATTACHMENT };
 			constexpr GLsizei NUM_DRAW_BUFFERS = sizeof(DRAW_BUFFERS) / sizeof(GLenum);
 
 			// Bind the GBuffer and its sub-buffers for drawing
@@ -525,9 +533,12 @@ namespace sge
 			glActiveTexture(GL_TEXTURE2);
 			glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::NORMAL]);
 			glActiveTexture(GL_TEXTURE3);
-			glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::DIFFUSE]);
+			glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::ALBEDO]);
 			glActiveTexture(GL_TEXTURE4);
-			glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::SPECULAR]);
+			glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::ROUGHNESS_METALLIC]);
+
+            // Upload view matrix
+            glUniformMatrix4fv(_state->screen_quad_view_uniform, 1, GL_FALSE, view.vec());
 
 			// Draw the screen quad
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -536,6 +547,7 @@ namespace sge
 	    void GLRenderSystem::cb_debug_draw_line(
             SystemFrame& /*frame*/,
             const EntityId* ent_range,
+            const TagIndex_t* tag_indices,
             const TagCount_t* counts,
             std::size_t ent_range_len,
             const FDebugLine* lines)
@@ -603,7 +615,7 @@ namespace sge
                 render_scene.ord_mesh_entity_meshes[new_index] = render_scene.ord_mesh_entity_meshes[old_index];
                 render_scene.ord_mesh_entity_materials[new_index] = render_scene.ord_mesh_entity_materials[old_index];
 		    },
-                [&render_scene] (EntityId new_entity, std::size_t index) // Insert function
+                [&render_scene](EntityId new_entity, std::size_t index) // Insert function
 		    {
                 render_scene.ord_mesh_entities[index] = new_entity;
                 render_scene.ord_mesh_entity_meshes[index] = 0;

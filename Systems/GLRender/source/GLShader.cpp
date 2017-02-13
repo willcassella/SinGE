@@ -2,8 +2,8 @@
 
 #include <fstream>
 #include <iostream>
-#include <Core/Memory/Functions.h>
 #include "../private/GLShader.h"
+#include "../private/Util.h"
 
 namespace sge
 {
@@ -14,18 +14,8 @@ namespace sge
 			glShaderSource(id, 1, &source, nullptr);
 			glCompileShader(id);
 
-			// Make sure the shader compiled successfully
-			GLint compiled;
-			glGetShaderiv(id, GL_COMPILE_STATUS, &compiled);
-			if (compiled != GL_TRUE)
-			{
-				GLsizei length;
-				glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-
-				auto* log = SGE_STACK_ALLOC(GLchar, length);
-				glGetShaderInfoLog(id, length, &length, log);
-				std::cerr << "GLRenderSystem: Shader compilation failed - '" << log << "'" << std::endl;
-			}
+			// Make sure the shader compiled succesfully
+            debug_shader_status(id, GLDebugOutputMode::ONLY_ERROR);
 		}
 
 		GLShader::GLShader(GLenum type, const std::string& path)

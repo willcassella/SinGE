@@ -1,7 +1,6 @@
 // GLMaterial.cpp
 
 #include <iostream>
-#include <Core/Memory/Functions.h>
 #include "../private/GLMaterial.h"
 #include "../private/GLRenderSystemState.h"
 
@@ -20,21 +19,13 @@ namespace sge
 			glAttachShader(_id, f_shader);
 			glBindAttribLocation(_id, POSITION_ATTRIB_LOCATION, POSITION_ATTRIB_NAME);
 			glBindAttribLocation(_id, NORMAL_ATTRIB_LOCATION, NORMAL_ATTRIB_NAME);
+            glBindAttribLocation(_id, TANGENT_ATTRIB_LOCATION, TANGENT_ATTRIB_NAME);
+            glBindAttribLocation(_id, BITANGENT_SIGN_ATTRIB_LOCATION, BITANGENT_SIGN_ATTRIB_NAME);
 			glBindAttribLocation(_id, TEXCOORD_ATTRIB_LOCATION, TEXCOORD_ATTRIB_NAME);
 			glLinkProgram(_id);
 
-			// Make sure program successfully linked
-			GLint linked;
-			glGetProgramiv(_id, GL_LINK_STATUS, &linked);
-			if (linked != GL_TRUE)
-			{
-				GLsizei length;
-				glGetProgramiv(_id, GL_INFO_LOG_LENGTH, &length);
-
-				auto* log = SGE_STACK_ALLOC(GLchar, length);
-				glGetProgramInfoLog(_id, length, &length, log);
-				std::cerr << "GLRenderSystem: Material compilation failed - '" << log << "'" << std::endl;
-			}
+            // Make sure the program linked succesfully
+            debug_program_status(_id, GLDebugOutputMode::ONLY_ERROR);
 
 			_model = glGetUniformLocation(_id, "model");
 			_view = glGetUniformLocation(_id, "view");
@@ -43,12 +34,65 @@ namespace sge
 			glDetachShader(_id, v_shader);
 			glDetachShader(_id, f_shader);
 
-			// Set default parameters
+            // Set default bool parameters
+            for (const auto& param : mat.param_table().bool_params)
+            {
+                const auto location = get_uniform_location(param.first.c_str());
+                if (location != -1)
+                {
+                    _bool_params[location] = param.second;
+                }
+            }
+
+            // Set default float parameters
+            for (const auto& param : mat.param_table().float_params)
+            {
+                const auto location = get_uniform_location(param.first.c_str());
+                if (location != -1)
+                {
+                    _float_params[location] = param.second;
+                }
+            }
+
+            // Set default vec2 parameters
+            for (const auto& param : mat.param_table().vec2_params)
+            {
+                const auto location = get_uniform_location(param.first.c_str());
+                if (location != -1)
+                {
+                    _vec2_params[location] = param.second;
+                }
+            }
+
+            // Set default vec3 parameters
+            for (const auto& param : mat.param_table().vec3_params)
+            {
+                const auto location = get_uniform_location(param.first.c_str());
+                if (location != -1)
+                {
+                    _vec3_params[location] = param.second;
+                }
+            }
+
+            // Set default vec4 parameters
+            for (const auto& param : mat.param_table().vec4_params)
+            {
+                const auto location = get_uniform_location(param.first.c_str());
+                if (location != -1)
+                {
+                    _vec4_params[location] = param.second;
+                }
+            }
+
+			// Set default texture parameters
 			for (const auto& param : mat.param_table().texture_params)
 			{
-				const GLint location = glGetUniformLocation(_id, param.first.c_str());
-				const GLTexture2D::Id tex = renderState.get_texture_2d_resource(param.second);
-				_texture_params[location] = tex;
+                const auto location = get_uniform_location(param.first.c_str());
+                if (location != -1)
+                {
+				    const auto tex = renderState.get_texture_2d_resource(param.second);
+				    _texture_params[location] = tex;
+                }
 			}
 		}
 
@@ -57,6 +101,7 @@ namespace sge
 			_model(move._model),
 			_view(move._view),
 			_projection(move._projection),
+            _bool_params(std::move(move)._bool_params),
 			_float_params(std::move(move)._float_params),
 			_vec2_params(std::move(move)._vec2_params),
 			_vec3_params(std::move(move)._vec3_params),
@@ -77,6 +122,11 @@ namespace sge
 			glUseProgram(_id);
 
 			// Upload all parameters
+            for (const auto& param : _bool_params)
+            {
+                glUniform1i(param.first, param.second ? 1 : 0);
+            }
+
 			for (const auto& param : _float_params)
 			{
 				glUniform1f(param.first, param.second);
@@ -84,17 +134,17 @@ namespace sge
 
 			for (const auto& param : _vec2_params)
 			{
-				glUniform1fv(param.first, 2, param.second.vec());
+				glUniform2fv(param.first, 1, param.second.vec());
 			}
 
 			for (const auto& param : _vec3_params)
 			{
-				glUniform1fv(param.first, 3, param.second.vec());
+				glUniform3fv(param.first, 1, param.second.vec());
 			}
 
 			for (const auto& param : _vec4_params)
 			{
-				glUniform1fv(param.first, 4, param.second.vec());
+				glUniform4fv(param.first, 1, param.second.vec());
 			}
 
 			for (const auto& param : _texture_params)
@@ -122,47 +172,84 @@ namespace sge
 		}
 
 		void GLMaterial::override_params(GLRenderSystem::State& renderState, const Material::ParamTable& params, GLuint& texIndex) const
-		{
-			auto get_uniform_location = [id = this->_id](const std::string& name) {
-				// TODO: Error handling
-				return glGetUniformLocation(id, name.c_str());
-			};
-
+        {
 			// Upload all params
+            for (const auto& param : params.bool_params)
+            {
+                const auto location = get_uniform_location(param.first.c_str());
+                if (location != -1)
+                {
+                    glUniform1i(location, param.second ? 1 : 0);
+                }
+            }
+
 			for (const auto& param : params.float_params)
 			{
-				auto location = get_uniform_location(param.first);
-				glUniform1f(location, param.second);
+				const auto location = get_uniform_location(param.first.c_str());
+                if (location != -1)
+                {
+				    glUniform1f(location, param.second);
+                }
 			}
 
 			for (const auto& param : params.vec2_params)
 			{
-				auto location = get_uniform_location(param.first);
-				glUniform1fv(location, 2, param.second.vec());
+				const auto location = get_uniform_location(param.first.c_str());
+                if (location != -1)
+                {
+				    glUniform2fv(location, 1, param.second.vec());
+                }
 			}
 
 			for (const auto& param : params.vec3_params)
 			{
-				auto location = get_uniform_location(param.first);
-				glUniform1fv(location, 3, param.second.vec());
+				const auto location = get_uniform_location(param.first.c_str());
+                if (location != -1)
+                {
+				    glUniform3fv(location, 1, param.second.vec());
+                }
 			}
 
 			for (const auto& param : params.vec4_params)
 			{
-				auto location = get_uniform_location(param.first);
-				glUniform1fv(location, 4, param.second.vec());
+				const auto location = get_uniform_location(param.first.c_str());
+                if (location != -1)
+                {
+				    glUniform4fv(location, 1, param.second.vec());
+                }
 			}
 
 			for (const auto& param : params.texture_params)
 			{
-				const GLTexture2D::Id tex = renderState.get_texture_2d_resource(param.first);
-				glActiveTexture(texIndex);
-				glBindTexture(GL_TEXTURE_2D, tex);
+				auto location = get_uniform_location(param.first.c_str());
+                if (location != -1)
+                {
+				    const auto tex = renderState.get_texture_2d_resource(param.first);
+				    glActiveTexture(texIndex);
+				    glBindTexture(GL_TEXTURE_2D, tex);
 
-				auto location = get_uniform_location(param.first);
-				glUniform1i(location, texIndex);
-				texIndex += 1;
+                    glUniform1i(location, texIndex);
+				    texIndex += 1;
+                }
 			}
 		}
+
+	    GLint GLMaterial::get_uniform_location(const char* name, GLDebugOutputMode out_mode) const
+	    {
+            const auto location = glGetUniformLocation(_id, name);
+
+            if (location == -1 && out_mode != GLDebugOutputMode::NONE)
+            {
+                std::cout << "GLRenderSystem: could not locate shader uniform - '" << name << "'" << std::endl;
+                return -1;
+            }
+
+            if (out_mode == GLDebugOutputMode::ANYTHING)
+            {
+                std::cout << "GLRenderSystem: uniform '" << name << "'" << std::endl;
+            }
+
+            return location;
+	    }
 	}
 }

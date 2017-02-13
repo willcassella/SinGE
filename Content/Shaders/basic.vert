@@ -1,4 +1,4 @@
-// default.vert
+// basic.vert
 #version 430 core
 
 uniform mat4 model;
@@ -7,16 +7,37 @@ uniform mat4 projection;
 
 in vec3 v_position;
 in vec3 v_normal;
+in vec3 v_tangent;
+in int v_bitangent_sign;
 in vec2 v_texcoord;
 
-out vec3 f_position;
-out vec3 f_normal;
-out vec2 f_texcoord;
+out VS_OUT {
+	vec2 tex_coords;
+	vec3 cam_position;
+	vec3 cam_tangent;
+	vec3 cam_bitangent;
+	vec3 cam_normal;
+} vs_out;
 
 void main()
 {
+	// Output texture coordinates
+	vs_out.tex_coords = v_texcoord;
+
+	// Compute screen-space position, and view-space position
 	gl_Position = projection * view * model * vec4(v_position, 1);
-	f_position = (view * model * vec4(v_position, 1)).xyz;
-	f_normal = (transpose(inverse(model)) * vec4(v_normal, 0)).xyz;
-	f_texcoord = v_texcoord;
+	vs_out.cam_position = (view * model * vec4(v_position, 1)).xyz;
+
+	// Compute tangent and normal in camera space
+	mat4 model_view = transpose(inverse(view * model));
+	vec3 tangent = normalize(vec3(model_view *	vec4(v_tangent,   0)));
+	vec3 normal = normalize(vec3(model_view *	vec4(v_normal,    0)));
+
+	// Re-orthogonalize tangent with respect to normal
+	tangent = normalize(tangent - dot(tangent, normal) * normal);
+
+	// Output TBN
+	vs_out.cam_tangent = tangent;
+	vs_out.cam_bitangent = v_bitangent_sign * cross(normal, tangent);
+	vs_out.cam_normal = normal;
 }

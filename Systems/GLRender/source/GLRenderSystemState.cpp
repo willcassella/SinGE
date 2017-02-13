@@ -117,8 +117,6 @@ namespace sge
                 Texture texture;
                 const auto loaded = texture.from_file(path.c_str());
 
-                // TODO: Have default texture in case texture could not be loaded
-
                 // Create an opengl texture from the texture object
                 GLTexture2D gl_texture{ texture };
 

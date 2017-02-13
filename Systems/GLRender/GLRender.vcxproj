@@ -194,6 +194,7 @@
     <ClInclude Include="private\GLStaticMesh.h" />
     <ClInclude Include="private\GLTexture2D.h" />
     <ClInclude Include="private\RenderScene.h" />
+    <ClInclude Include="private\Util.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Modules\Core\Core.vcxproj">
@@ -215,6 +216,7 @@
     <ClCompile Include="source\GLStaticMesh.cpp" />
     <ClCompile Include="source\GLTexture2D.cpp" />
     <ClCompile Include="source\RenderScene.cpp" />
+    <ClCompile Include="source\Util.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -152,7 +152,7 @@ namespace sge
                 render_prepare(mesh, material, model, view, proj);
 
                 // Draw the mesh
-                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
+                glDrawElements(GL_TRIANGLES, mesh.num_element(), GL_UNSIGNED_INT, nullptr);
 
                 // Increment iter
                 ++obj_iter;
@@ -212,7 +212,7 @@ namespace sge
                 render_prepare(mesh, material, model, view, proj);
 
                 // Draw the mesh
-                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
+                glDrawElements(GL_TRIANGLES, mesh.num_element(), GL_UNSIGNED_INT, nullptr);
 
                 // Increment iter
                 ++obj_iter;
@@ -238,7 +238,7 @@ namespace sge
                 render_prepare(mesh, material, model, view, proj);
 
                 // Draw the mesh
-                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
+                glDrawElements(GL_TRIANGLES, mesh.num_element(), GL_UNSIGNED_INT, nullptr);
 
                 // Increment iter
                 ++obj_iter;
@@ -265,7 +265,7 @@ namespace sge
                 render_prepare(mesh, material, model, view, proj);
 
                 // Draw the mesh
-                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
+                glDrawElements(GL_TRIANGLES, mesh.num_element(), GL_UNSIGNED_INT, nullptr);
 
                 // Increment iter
                 ++obj_iter;
@@ -295,7 +295,7 @@ namespace sge
                 render_prepare(mesh, material, model, view, proj);
 
                 // Draw the mesh
-                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
+                glDrawElements(GL_TRIANGLES, mesh.num_element(), GL_UNSIGNED_INT, nullptr);
 
                 // Increment iter
                 ++obj_iter;
@@ -319,7 +319,7 @@ namespace sge
                 render_prepare(mesh, material, model, view, proj);
 
                 // Draw the mesh
-                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
+                glDrawElements(GL_TRIANGLES, mesh.num_element(), GL_UNSIGNED_INT, nullptr);
 
                 // Increment iter
                 ++obj_iter;
@@ -349,7 +349,7 @@ namespace sge
                 render_prepare(mesh, material, model, view, proj);
 
                 // Draw the mesh
-                glDrawArrays(GL_TRIANGLES, 0, mesh.num_vertices());
+                glDrawElements(GL_TRIANGLES, mesh.num_element(), GL_UNSIGNED_INT, nullptr);
 
                 // Increment iter
                 ++obj_iter;

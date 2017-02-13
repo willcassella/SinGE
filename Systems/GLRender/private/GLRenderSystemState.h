@@ -20,8 +20,8 @@ namespace sge
 				DEPTH_STENCIL,
 				POSITION,
 				NORMAL,
-				DIFFUSE,
-				SPECULAR,
+				ALBEDO,
+				ROUGHNESS_METALLIC,
 				NUM_LAYERS
 			};
 		}
@@ -75,6 +75,7 @@ namespace sge
 
 			// Screen quad
 			GLuint screen_quad_program;
+            GLint screen_quad_view_uniform;
 
             // Debug draw line buffer
             GLuint debug_line_vao;

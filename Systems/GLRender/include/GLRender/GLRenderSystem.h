@@ -43,6 +43,7 @@ namespace sge
             void cb_debug_draw_line(
                 SystemFrame& frame,
                 const EntityId* ent_range,
+                const TagIndex_t* indices,
                 const TagCount_t* counts,
                 std::size_t ent_range_len,
                 const FDebugLine* lines);

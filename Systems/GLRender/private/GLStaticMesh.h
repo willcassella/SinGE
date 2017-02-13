@@ -11,7 +11,7 @@ namespace sge
 	{
 		struct GLStaticMesh
 		{
-			static constexpr GLsizei NUM_BUFFERS = 3;
+			static constexpr GLsizei NUM_BUFFERS = 6;
 			using VAO = GLuint;
 
 			////////////////////////
@@ -35,24 +35,39 @@ namespace sge
 				return _vao;
 			}
 
-			GLuint position_buffer() const
+            GLuint element_buffer() const
 			{
-				return _buffers[0];
+                return _buffers[0];
 			}
 
-			GLuint normal_buffer() const
+			GLuint position_buffer() const
 			{
 				return _buffers[1];
 			}
 
-			GLuint uv_buffer() const
+			GLuint normal_buffer() const
 			{
 				return _buffers[2];
 			}
 
-			GLint num_vertices() const
+            GLuint tangent_buffer() const
 			{
-				return _num_vertices;
+                return _buffers[3];
+			}
+
+            GLuint bitangent_sign_buffer() const
+			{
+                return _buffers[4];
+			}
+
+			GLuint uv_buffer() const
+			{
+				return _buffers[5];
+			}
+
+			GLint num_element() const
+			{
+				return _num_elements;
 			}
 
 			//////////////////
@@ -60,7 +75,7 @@ namespace sge
 		private:
 
 			VAO _vao;
-			GLint _num_vertices;
+			GLint _num_elements;
 			std::array<GLuint, NUM_BUFFERS> _buffers;
 		};
 	}

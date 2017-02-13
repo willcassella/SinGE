@@ -47,6 +47,9 @@
     <ClInclude Include="private\RenderScene.h">
       <Filter>private</Filter>
     </ClInclude>
+    <ClInclude Include="private\Util.h">
+      <Filter>private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\GLMaterial.cpp">
@@ -71,6 +74,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\RenderScene.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Util.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

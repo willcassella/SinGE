@@ -5,6 +5,7 @@
 #include <Engine/Resources/Material.h>
 #include "../include/GLRender/GLRenderSystem.h"
 #include "GLTexture2D.h"
+#include "Util.h"
 
 namespace sge
 {
@@ -14,9 +15,13 @@ namespace sge
 		{
 			static constexpr GLint POSITION_ATTRIB_LOCATION = 0;
 			static constexpr GLint NORMAL_ATTRIB_LOCATION = 1;
-			static constexpr GLint TEXCOORD_ATTRIB_LOCATION = 2;
+            static constexpr GLint TANGENT_ATTRIB_LOCATION = 2;
+            static constexpr GLint BITANGENT_SIGN_ATTRIB_LOCATION = 3;
+			static constexpr GLint TEXCOORD_ATTRIB_LOCATION = 4;
 			static constexpr const char* POSITION_ATTRIB_NAME = "v_position";
 			static constexpr const char* NORMAL_ATTRIB_NAME = "v_normal";
+            static constexpr const char* TANGENT_ATTRIB_NAME = "v_tangent";
+            static constexpr const char* BITANGENT_SIGN_ATTRIB_NAME = "v_bitangent_sign";
 			static constexpr const char* TEXCOORD_ATTRIB_NAME = "v_texcoord";
 			static constexpr GLint MODEL_UNIFORM_LOCATION = 0;
 			static constexpr GLint VIEW_UNIFORM_LOCATION = 1;
@@ -55,6 +60,10 @@ namespace sge
 
 			void override_params(GLRenderSystem::State& renderState, const Material::ParamTable& params, GLuint& texIndex) const;
 
+		private:
+
+            GLint get_uniform_location(const char* name, GLDebugOutputMode out_mode = GLDebugOutputMode::ONLY_ERROR) const;
+
 			//////////////////
 			///   Fields   ///
 		private:
@@ -63,6 +72,7 @@ namespace sge
 			GLuint _model;
 			GLuint _view;
 			GLuint _projection;
+            std::unordered_map<GLint, bool> _bool_params;
 			std::unordered_map<GLint, float> _float_params;
 			std::unordered_map<GLint, Vec2> _vec2_params;
 			std::unordered_map<GLint, Vec3> _vec3_params;
