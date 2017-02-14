@@ -11,6 +11,9 @@ from . import archive
 
 SHORT_MAX = 32767
 
+def to_norm_f32(value):
+    return float(value + 1) / SHORT_MAX
+
 def export_submesh(obj, writer):
     # Make sure this submesh has a UV layout
     if len(obj.data.uv_layers) == 0:
@@ -209,26 +212,38 @@ def export_menu_func(self, context):
 
 def from_json(path, value):
     mesh = bmesh.new()
-    verts = value['vpos']
-    uv0 = value['uv0']
-    face_verts = [None, None, None]
+    for name, obj in value['objs'].items():
+        verts = obj['vpos']
+        uv = obj['uv']
+        elems = obj['ind']
+        face_verts = [None, None, None]
 
-    # Create the uv layer
-    uv_layer0 = mesh.loops.layers.uv.new('uv0')
+        # Create the uv layer
+        uv_layer0 = mesh.loops.layers.uv.new('material_uv')
 
-    # For each face in the mesh
-    for i in range(0, len(verts) // 9):
-        # For each vertex in the face
-        for v in range(0, 3):
-            face_verts[v] = mesh.verts.new((-verts[i*9 + v*3 + 0], verts[i*9 + v*3 + 2], verts[i*9 + v*3 + 1]))
+        # For each face in the mesh
+        for i in range(0, len(elems) // 3):
+            # For each vertex in the face
+            for v in range(0, 3):
+                vert_index = elems[i*3 + v] * 3
 
-        # Create the face
-        face = mesh.faces.new(face_verts)
+                # Create the vertex
+                vert = mesh.verts.new((
+                    -verts[vert_index + 0],
+                    verts[vert_index + 2],
+                    verts[vert_index + 1]))
 
-        # Set the uv coordinates
-        for v in range(0, 3):
-            face.loops[v][uv_layer0].uv[0] = uv0[i*6 + v*2 + 0]
-            face.loops[v][uv_layer0].uv[1] = uv0[i*6 + v*2 + 1]
+                # Assign the vertex to the face
+                face_verts[v] = vert
+
+            # Create the face
+            face = mesh.faces.new(face_verts)
+
+            # Set the uv coordinates
+            for v in range(0, 3):
+                uv_index = elems[i*3 + v]
+                face.loops[v][uv_layer0].uv[0] = to_norm_f32(uv[uv_index * 2 + 0])
+                face.loops[v][uv_layer0].uv[1] = to_norm_f32(uv[uv_index * 2 + 1])
 
     # Convert the bmesh to a blender mesh data object
     result = bpy.data.meshes.new(path)
