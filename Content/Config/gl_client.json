@@ -4,16 +4,16 @@
     "scene": "Content/Scenes/basic.json",
     "gl_render": {
         "viewport_vert_shader": "Content/Shaders/viewport.vert",
-        "viewport_frag_shader": "Content/Shaders/viewport.frag",
+        "scene_shader": "Content/Shaders/pbr_shading.frag",
+        "post_shader": "Content/Shaders/hdr_post.frag",
         "debug_line_vert_shader": "Content/Shaders/debug_line.vert",
         "debug_line_frag_shader": "Content/Shaders/debug_line.frag",
         "missing_material": "Content/Materials/Misc/checkerboard.json",
-        "missing_mesh": "Content/Meshes/Misc/question_mark.smesh"
+        "missing_mesh": "Content/Meshes/Misc/question_mark.sbin"
     },
     "update_pipeline": [
         ["gl_window_input"],
         ["bullet_physics"],
-        ["bullet_physics_debug_draw"],
         ["gl_render"]
     ],
     "input_bindings" : {
@@ -22,7 +22,7 @@
         "strafe_right": "D",
         "backward": "S",
         "jump": "MOUSE_L",
-        "look": "MOUSE_Y",
-        "turn": "MOUSE_X"
+        "look": "MOUSE_DY",
+        "turn": "MOUSE_DX"
     }
 }

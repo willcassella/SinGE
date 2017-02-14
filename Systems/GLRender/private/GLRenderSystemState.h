@@ -64,18 +64,22 @@ namespace sge
 			// The default framebuffer
 			GLint default_framebuffer;
 
-			// GBuffer stuff
+			// Gbuffer
 			GLuint gbuffer_framebuffer;
-            GLuint post_buffer;
 			std::array<GLuint, GBufferLayer::NUM_LAYERS> gbuffer_layers;
+
+            // Post-processing framebuffer
+            GLuint post_framebuffer;
+		    GLuint post_buffer_hdr;
 
 			// Sprite quad
 			GLuint sprite_vao;
 			GLuint sprite_vbo;
 
 			// Screen quad
-			GLuint screen_quad_program;
-            GLint screen_quad_view_uniform;
+			GLuint scene_shader_program;
+            GLuint post_shader_program;
+            GLint scene_program_view_uniform;
 
             // Debug draw line buffer
             GLuint debug_line_vao;

@@ -2,6 +2,7 @@
     "vertex_shader": "Content/Shaders/basic.vert",
     "pixel_shader": "Content/Shaders/basic.frag",
     "params": {
-        "diffuse": "Content/Textures/Misc/checkerboard.png"
+        "albedo": "Content/Textures/Misc/checkerboard.png",
+        "roughness_constant": 0.3
     }
 }

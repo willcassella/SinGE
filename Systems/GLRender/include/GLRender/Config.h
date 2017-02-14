@@ -38,7 +38,9 @@ namespace sge
 
 			std::string viewport_vert_shader;
 
-			std::string viewport_frag_shader;
+			std::string scene_shader;
+
+            std::string post_shader;
 
             std::string debug_line_vert_shader;
 
