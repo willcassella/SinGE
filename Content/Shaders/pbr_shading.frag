@@ -1,4 +1,4 @@
-// viewport.frag
+// pbr_shading.frag
 #version 430 core
 
 const float PI = 3.141592654f;
@@ -118,8 +118,6 @@ void main()
     vec3 ambient = vec3(0.046, 0.054, 0.064) * albedo.xyz / 2;
     vec3 color = ambient + Lo;
 
-    // Do tone mapping
-    color = color / (color + vec3(1.0f));
-
+    // Output final scene color
     out_color = vec4(color, 1.0f);
 }
