@@ -1,4 +1,4 @@
-// HalfVec3.h
+// IVec3.h
 #pragma once
 
 #include "../env.h"
@@ -6,37 +6,38 @@
 
 namespace sge
 {
-    struct HalfVec3
+    template <typename T>
+    struct IVec3
     {
         /////////////////////////
         ///   Constructors    ///
     public:
 
-        HalfVec3()
+        IVec3()
             : _values{ 0, 0, 0 }
         {
         }
 
-        HalfVec3(int16 x, int16 y, int16 z)
+        IVec3(T x, T y, T z)
             : _values{ x, y, z }
         {
         }
 
-        static HalfVec3 zero()
+        static IVec3 zero()
         {
-            return HalfVec3{ 0, 0, 0 };
+            return IVec3{ 0, 0, 0 };
         }
 
         ///////////////////
         ///   Methods   ///
     public:
 
-        const int16* vec() const
+        const T* vec() const
         {
             return _values;
         }
 
-        int16* vec()
+        T* vec()
         {
             return _values;
         }
@@ -48,7 +49,7 @@ namespace sge
 
         void norm_f32_x(float value)
         {
-            _values[0] = from_norm_f32<int16>(value);
+            _values[0] = from_norm_f32<T>(value);
         }
 
         float norm_f32_y() const
@@ -58,7 +59,7 @@ namespace sge
 
         void norm_f32_y(float value)
         {
-            _values[1] = from_norm_f32<int16>(value);
+            _values[1] = from_norm_f32<T>(value);
         }
 
         float norm_f32_z() const
@@ -68,13 +69,16 @@ namespace sge
 
         void norm_f32_z(float value)
         {
-            _values[2] = from_norm_f32<int16>(value);
+            _values[2] = from_norm_f32<T>(value);
         }
 
         //////////////////
         ///   Fields   ///
     private:
 
-        int16 _values[3];
+        T _values[3];
     };
+
+    using HalfVec3 = IVec3<int16>;
+    using UHalfVec3 = IVec3<uint16>;
 }

@@ -37,6 +37,11 @@ namespace sge
 			return &_values[0][0];
 		}
 
+        Scalar* vec()
+		{
+            return &_values[0][0];
+		}
+
 		/** Formats this Mat4 as a String */
 		std::string to_string() const
 		{
