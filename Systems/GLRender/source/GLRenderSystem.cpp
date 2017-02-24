@@ -80,37 +80,6 @@ namespace sge
             return program;
         }
 
-        /* These constants specify the attachment index for buffer layers. */
-		static constexpr GLenum GBUFFER_DEPTH_STENCIL_ATTACHMENT = GL_DEPTH_STENCIL_ATTACHMENT;
-		static constexpr GLenum GBUFFER_POSITION_ATTACHMENT = GL_COLOR_ATTACHMENT0;
-		static constexpr GLenum GBUFFER_NORMAL_ATTACHMENT = GL_COLOR_ATTACHMENT1;
-		static constexpr GLenum GBUFFER_ALBEDO_ATTACHMENT = GL_COLOR_ATTACHMENT2;
-		static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_ATTACHMENT = GL_COLOR_ATTACHMENT3;
-        static constexpr GLenum POST_BUFFER_HDR_ATTACHMENT = GL_COLOR_ATTACHMENT0;
-
-        /* These constants define the internal format for the gbuffer layers. */
-        static constexpr GLenum GBUFFER_DEPTH_STENCIL_INTERNAL_FORMAT = GL_DEPTH24_STENCIL8;
-        static constexpr GLenum GBUFFER_POSITION_INTERNAL_FORMAT = GL_RGB32F;
-        static constexpr GLenum GBUFFER_NORMAL_INTERNAL_FORMAT = GL_RGB32F;
-        static constexpr GLenum GBUFFER_ALBEDO_INTERNAL_FORMAT = GL_RGB8;
-        static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_INTERNAL_FORMAT = GL_RG16F;
-        static constexpr GLenum POST_BUFFER_HDR_INTERNAL_FORMAT = GL_RGB32F;
-
-        /* These constants are used when initializing or resizing gbuffer layers.
-         * They're pretty much meaningless, but are used to ensure consistency. */
-	    static constexpr GLenum GBUFFER_DEPTH_STENCIL_UPLOAD_FORMAT = GL_DEPTH_STENCIL;
-        static constexpr GLenum GBUFFER_DEPTH_STENCIL_UPLOAD_TYPE = GL_UNSIGNED_INT_24_8;
-        static constexpr GLenum GBUFFER_POSITION_UPLOAD_FORMAT = GL_RGB;
-        static constexpr GLenum GBUFFER_POSITION_UPLOAD_TYPE = GL_FLOAT;
-        static constexpr GLenum GBUFFER_NORMAL_UPLOAD_FORMAT = GL_RGB;
-        static constexpr GLenum GBUFFER_NORMAL_UPLOAD_TYPE = GL_FLOAT;
-        static constexpr GLenum GBUFFER_ALBEDO_UPLOAD_FORMAT = GL_RGB;
-        static constexpr GLenum GBUFFER_ALBEDO_UPLOAD_TYPE = GL_UNSIGNED_BYTE;
-        static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_UPLOAD_FORMAT = GL_RG;
-        static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_UPLOAD_TYPE = GL_UNSIGNED_BYTE;
-        static constexpr GLenum POST_BUFFER_HDR_UPLOAD_FORMAT = GL_RGB;
-        static constexpr GLenum POST_BUFFER_HDR_UPLOAD_TYPE = GL_FLOAT;
-
 		////////////////////////
 		///   Constructors   ///
 
@@ -486,27 +455,6 @@ namespace sge
                 _state->initialized_render_scene = true;
             }
 
-            /*---------------------------*/
-            /*---   GBUFFER FILLING   ---*/
-
-			constexpr GLenum GBUFFER_DRAW_BUFFERS[] = {
-				GBUFFER_POSITION_ATTACHMENT,
-				GBUFFER_NORMAL_ATTACHMENT,
-				GBUFFER_ALBEDO_ATTACHMENT,
-				GBUFFER_ROUGHNESS_METALLIC_ATTACHMENT };
-			constexpr GLsizei NUM_GBUFFER_DRAW_BUFFERS = sizeof(GBUFFER_DRAW_BUFFERS) / sizeof(GLenum);
-
-			// Bind the GBuffer and its sub-buffers for drawing
-			glBindFramebuffer(GL_FRAMEBUFFER, _state->gbuffer_framebuffer);
-			glDrawBuffers(NUM_GBUFFER_DRAW_BUFFERS, GBUFFER_DRAW_BUFFERS);
-
-			// Clear the GBuffer
-            glEnable(GL_STENCIL_TEST);
-			glEnable(GL_DEPTH_TEST);
-            glEnable(GL_CULL_FACE);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-            glDepthFunc(GL_LEQUAL);
-
 			// Create matrices
 			bool hasCamera = false;
 			Mat4 view;
@@ -532,62 +480,27 @@ namespace sge
 
             // Render the scene
             render_scene_update_matrices(*_state, frame);
-            render_scene_render_normal(*_state, view, proj);
+            render_scene_prepare(*_state);
+            render_scene_fill_gbuffer(*_state, view, proj);
             render_scene_render_lightmasks(*_state, view, proj);
+            render_scene_shade_hdr(_state->post_framebuffer, *_state, view);
 
             // Draw debug lines
-            glBindVertexArray(_state->debug_line_vao);
-            glUseProgram(_state->debug_line_program);
-            glBindBuffer(GL_ARRAY_BUFFER, _state->debug_line_vbo);
-            glBufferData(
-                GL_ARRAY_BUFFER,
-                _state->frame_debug_lines.size() * sizeof(DebugLineVert),
-                _state->frame_debug_lines.data(),
-                GL_DYNAMIC_DRAW);
-		    glUniformMatrix4fv(_state->debug_line_view_uniform, 1, GL_FALSE, view.vec());
-		    glUniformMatrix4fv(_state->debug_line_proj_uniform, 1, GL_FALSE, proj.vec());
-		    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(_state->frame_debug_lines.size()));
-		    _state->frame_debug_lines.clear();
-
-            constexpr GLenum POST_BUFFER_DRAW_BUFFERS[] = {
-                POST_BUFFER_HDR_ATTACHMENT,
-            };
-            constexpr GLsizei NUM_POST_BUFFER_DRAW_BUFFERS = sizeof(POST_BUFFER_DRAW_BUFFERS) / sizeof(GLenum);
-
-            /*-----------------------*/
-            /*---   PBR SHADING   ---*/
-
-            glDisable(GL_CULL_FACE);
-            glDisable(GL_DEPTH_TEST);
-            glDisable(GL_STENCIL_TEST);
-
-            // Bind the screen quad for rasterization (in use for remainder of rendering)
-            glBindVertexArray(_state->sprite_vao);
-
-            // Bind the GBuffer's sub-buffers as textures for reading (in use for remainder of rendering)
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::DEPTH_STENCIL]);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::POSITION]);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::NORMAL]);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::ALBEDO]);
-            glActiveTexture(GL_TEXTURE4);
-            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::ROUGHNESS_METALLIC]);
-
-            // Bind the post-processing framebuffer for drawing
-            glBindFramebuffer(GL_FRAMEBUFFER, _state->post_framebuffer);
-            glDrawBuffers(NUM_POST_BUFFER_DRAW_BUFFERS, POST_BUFFER_DRAW_BUFFERS);
-
-            // Bind the scene shading program
-            glUseProgram(_state->scene_shader_program);
-
-            // Upload view matrix
-            glUniformMatrix4fv(_state->scene_program_view_uniform, 1, GL_FALSE, view.vec());
-
-            // Draw the screen quad
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            if (!_state->frame_debug_lines.empty())
+            {
+                glBindVertexArray(_state->debug_line_vao);
+                glUseProgram(_state->debug_line_program);
+                glBindBuffer(GL_ARRAY_BUFFER, _state->debug_line_vbo);
+                glBufferData(
+                    GL_ARRAY_BUFFER,
+                    _state->frame_debug_lines.size() * sizeof(DebugLineVert),
+                    _state->frame_debug_lines.data(),
+                    GL_DYNAMIC_DRAW);
+                glUniformMatrix4fv(_state->debug_line_view_uniform, 1, GL_FALSE, view.vec());
+                glUniformMatrix4fv(_state->debug_line_proj_uniform, 1, GL_FALSE, proj.vec());
+                glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(_state->frame_debug_lines.size()));
+                _state->frame_debug_lines.clear();
+            }
 
             /*---------------------------*/
             /*---   POST-PROCESSING   ---*/

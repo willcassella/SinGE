@@ -2,7 +2,7 @@
 #pragma once
 
 #include <Core/Math/Mat4.h>
-#include <Engine/Resources/Material.h>
+#include <Resource/Resources/Material.h>
 #include "../include/GLRender/GLRenderSystem.h"
 #include "GLTexture2D.h"
 #include "Util.h"

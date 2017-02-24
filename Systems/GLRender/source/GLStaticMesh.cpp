@@ -137,7 +137,7 @@ namespace sge
 
 			// Define vertex uv specification
 			glEnableVertexAttribArray(GLMaterial::TEXCOORD_ATTRIB_LOCATION);
-			glVertexAttribPointer(GLMaterial::TEXCOORD_ATTRIB_LOCATION, 2, GL_SHORT, GL_TRUE, sizeof(HalfVec2), nullptr);
+			glVertexAttribPointer(GLMaterial::TEXCOORD_ATTRIB_LOCATION, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(HalfVec2), nullptr);
 
             // Unbind
 			glBindVertexArray(0);

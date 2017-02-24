@@ -26,6 +26,37 @@ namespace sge
 			};
 		}
 
+        /* These constants specify the attachment index for buffer layers. */
+        static constexpr GLenum GBUFFER_DEPTH_STENCIL_ATTACHMENT = GL_DEPTH_STENCIL_ATTACHMENT;
+        static constexpr GLenum GBUFFER_POSITION_ATTACHMENT = GL_COLOR_ATTACHMENT0;
+        static constexpr GLenum GBUFFER_NORMAL_ATTACHMENT = GL_COLOR_ATTACHMENT1;
+        static constexpr GLenum GBUFFER_ALBEDO_ATTACHMENT = GL_COLOR_ATTACHMENT2;
+        static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_ATTACHMENT = GL_COLOR_ATTACHMENT3;
+        static constexpr GLenum POST_BUFFER_HDR_ATTACHMENT = GL_COLOR_ATTACHMENT0;
+
+        /* These constants define the internal format for the gbuffer layers. */
+        static constexpr GLenum GBUFFER_DEPTH_STENCIL_INTERNAL_FORMAT = GL_DEPTH24_STENCIL8;
+        static constexpr GLenum GBUFFER_POSITION_INTERNAL_FORMAT = GL_RGB32F;
+        static constexpr GLenum GBUFFER_NORMAL_INTERNAL_FORMAT = GL_RGB32F;
+        static constexpr GLenum GBUFFER_ALBEDO_INTERNAL_FORMAT = GL_RGB8;
+        static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_INTERNAL_FORMAT = GL_RG16F;
+        static constexpr GLenum POST_BUFFER_HDR_INTERNAL_FORMAT = GL_RGB32F;
+
+        /* These constants are used when initializing or resizing gbuffer layers.
+        * They're pretty much meaningless, but are used to ensure consistency. */
+        static constexpr GLenum GBUFFER_DEPTH_STENCIL_UPLOAD_FORMAT = GL_DEPTH_STENCIL;
+        static constexpr GLenum GBUFFER_DEPTH_STENCIL_UPLOAD_TYPE = GL_UNSIGNED_INT_24_8;
+        static constexpr GLenum GBUFFER_POSITION_UPLOAD_FORMAT = GL_RGB;
+        static constexpr GLenum GBUFFER_POSITION_UPLOAD_TYPE = GL_FLOAT;
+        static constexpr GLenum GBUFFER_NORMAL_UPLOAD_FORMAT = GL_RGB;
+        static constexpr GLenum GBUFFER_NORMAL_UPLOAD_TYPE = GL_FLOAT;
+        static constexpr GLenum GBUFFER_ALBEDO_UPLOAD_FORMAT = GL_RGB;
+        static constexpr GLenum GBUFFER_ALBEDO_UPLOAD_TYPE = GL_UNSIGNED_BYTE;
+        static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_UPLOAD_FORMAT = GL_RG;
+        static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_UPLOAD_TYPE = GL_UNSIGNED_BYTE;
+        static constexpr GLenum POST_BUFFER_HDR_UPLOAD_FORMAT = GL_RGB;
+        static constexpr GLenum POST_BUFFER_HDR_UPLOAD_TYPE = GL_FLOAT;
+
 		struct GLRenderSystem::State
 		{
 			///////////////////

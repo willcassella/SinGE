@@ -1,7 +1,7 @@
 // GLTexture2D.h
 #pragma once
 
-#include <Engine/Resources/Texture.h>
+#include <Resource/Resources/Texture.h>
 #include "glew.h"
 
 namespace sge
@@ -27,7 +27,7 @@ namespace sge
 
 			Id id() const
 			{
-				return this->_id;
+				return _id;
 			}
 
 			//////////////////

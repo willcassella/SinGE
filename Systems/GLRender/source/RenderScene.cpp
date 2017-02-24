@@ -8,6 +8,7 @@
 #include <Engine/Components/Display/CLightMaskReceiver.h>
 #include <Engine/Components/Display/CLightMaskVolume.h>
 #include "../private/RenderScene.h"
+#include "../private/GLStaticMesh.h"
 #include "../private/GLRenderSystemState.h"
 
 namespace sge
@@ -106,7 +107,28 @@ namespace sge
             });
         }
 
-        void render_scene_render_normal(GLRenderSystem::State& state, Mat4 view, Mat4 proj)
+        void render_scene_prepare(GLRenderSystem::State& render_state)
+        {
+            constexpr GLenum GBUFFER_DRAW_BUFFERS[] = {
+                GBUFFER_POSITION_ATTACHMENT,
+                GBUFFER_NORMAL_ATTACHMENT,
+                GBUFFER_ALBEDO_ATTACHMENT,
+                GBUFFER_ROUGHNESS_METALLIC_ATTACHMENT };
+            constexpr GLsizei NUM_GBUFFER_DRAW_BUFFERS = sizeof(GBUFFER_DRAW_BUFFERS) / sizeof(GLenum);
+
+            // Bind the GBuffer and its sub-buffers for drawing
+            glBindFramebuffer(GL_FRAMEBUFFER, render_state.gbuffer_framebuffer);
+            glDrawBuffers(NUM_GBUFFER_DRAW_BUFFERS, GBUFFER_DRAW_BUFFERS);
+
+            // Clear the GBuffer
+            glEnable(GL_STENCIL_TEST);
+            glEnable(GL_DEPTH_TEST);
+            glEnable(GL_CULL_FACE);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+            glDepthFunc(GL_LEQUAL);
+        }
+
+        void render_scene_fill_gbuffer(GLRenderSystem::State& state, Mat4 view, Mat4 proj)
         {
             const auto& render_scene = state.render_scene;
 
@@ -159,9 +181,9 @@ namespace sge
             }
         }
 
-        void render_scene_render_lightmasks(GLRenderSystem::State& state, Mat4 view, Mat4 proj)
+        void render_scene_render_lightmasks(GLRenderSystem::State& render_state, Mat4 view, Mat4 proj)
         {
-            auto& render_scene = state.render_scene;
+            auto& render_scene = render_state.render_scene;
 
             std::size_t iters[] = { 0, 0, 0 };
             auto& obj_iter = iters[0], &mesh_iter = iters[1];
@@ -205,8 +227,8 @@ namespace sge
             while (ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
-                const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
-                const auto& material = state.materials.find(render_scene.ord_mesh_entity_materials[mesh_iter])->second;
+                const auto& mesh = render_state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
+                const auto& material = render_state.materials.find(render_scene.ord_mesh_entity_materials[mesh_iter])->second;
 
                 // Prepare for rendering
                 render_prepare(mesh, material, model, view, proj);
@@ -231,8 +253,8 @@ namespace sge
             while (ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
-                const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
-                const auto& material = state.materials.find(render_scene.ord_mesh_entity_materials[mesh_iter])->second;
+                const auto& mesh = render_state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
+                const auto& material = render_state.materials.find(render_scene.ord_mesh_entity_materials[mesh_iter])->second;
 
                 // Prepare for rendering
                 render_prepare(mesh, material, model, view, proj);
@@ -258,8 +280,8 @@ namespace sge
             while (ord_entities_match(obst_pass_ord_arrays, obst_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
-                const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
-                const auto& material = state.materials.find(render_scene.ord_mesh_entity_materials[mesh_iter])->second;
+                const auto& mesh = render_state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
+                const auto& material = render_state.materials.find(render_scene.ord_mesh_entity_materials[mesh_iter])->second;
 
                 // Prepare for rendering
                 render_prepare(mesh, material, model, view, proj);
@@ -288,8 +310,8 @@ namespace sge
             while (ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
-                const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
-                const auto& material = state.materials.find(render_scene.ord_mesh_entity_materials[mesh_iter])->second;
+                const auto& mesh = render_state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
+                const auto& material = render_state.materials.find(render_scene.ord_mesh_entity_materials[mesh_iter])->second;
 
                 // Prepare for rendering
                 render_prepare(mesh, material, model, view, proj);
@@ -312,8 +334,8 @@ namespace sge
             while (ord_entities_match(obst_pass_ord_arrays, obst_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
-                const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
-                const auto& material = state.materials.find(render_scene.ord_mesh_entity_materials[mesh_iter])->second;
+                const auto& mesh = render_state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
+                const auto& material = render_state.materials.find(render_scene.ord_mesh_entity_materials[mesh_iter])->second;
 
                 // Prepare for rendering
                 render_prepare(mesh, material, model, view, proj);
@@ -342,8 +364,8 @@ namespace sge
             while (ord_entities_match(recv_pass_ord_arrays, recv_pass_ord_array_lens, iters, 3, 0, 3))
             {
                 const auto& model = render_scene.ord_render_entities_matrices[obj_iter];
-                const auto& mesh = state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
-                const auto& material = state.materials.find(render_scene.ord_mesh_entity_materials[mesh_iter])->second;
+                const auto& mesh = render_state.static_meshes.find(render_scene.ord_mesh_entity_meshes[mesh_iter])->second;
+                const auto& material = render_state.materials.find(render_scene.ord_mesh_entity_materials[mesh_iter])->second;
 
                 // Prepare for rendering
                 render_prepare(mesh, material, model, view, proj);
@@ -354,6 +376,48 @@ namespace sge
                 // Increment iter
                 ++obj_iter;
             }
+        }
+
+        void render_scene_shade_hdr(
+            GLuint framebuffer,
+            GLRenderSystem::State& render_state,
+            Mat4 view)
+        {
+            /*-----------------------*/
+            /*---   PBR SHADING   ---*/
+
+            glDisable(GL_CULL_FACE);
+            glDisable(GL_DEPTH_TEST);
+            glDisable(GL_STENCIL_TEST);
+
+            // Bind the screen quad for rasterization (in use for remainder of rendering)
+            glBindVertexArray(render_state.sprite_vao);
+
+            // Bind the GBuffer's sub-buffers as textures for reading (in use for remainder of rendering)
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, render_state.gbuffer_layers[GBufferLayer::DEPTH_STENCIL]);
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, render_state.gbuffer_layers[GBufferLayer::POSITION]);
+            glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, render_state.gbuffer_layers[GBufferLayer::NORMAL]);
+            glActiveTexture(GL_TEXTURE3);
+            glBindTexture(GL_TEXTURE_2D, render_state.gbuffer_layers[GBufferLayer::ALBEDO]);
+            glActiveTexture(GL_TEXTURE4);
+            glBindTexture(GL_TEXTURE_2D, render_state.gbuffer_layers[GBufferLayer::ROUGHNESS_METALLIC]);
+
+            // Bind the given framebuffer for drawing
+            const GLenum draw_buffer = GL_COLOR_ATTACHMENT0;
+            glBindFramebuffer(GL_FRAMEBUFFER, render_state.post_framebuffer);
+            glDrawBuffers(1, &draw_buffer);
+
+            // Bind the scene shading program
+            glUseProgram(render_state.scene_shader_program);
+
+            // Upload view matrix
+            glUniformMatrix4fv(render_state.scene_program_view_uniform, 1, GL_FALSE, view.vec());
+
+            // Draw the screen quad
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         }
     }
 }

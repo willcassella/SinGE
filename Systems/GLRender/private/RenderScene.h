@@ -33,12 +33,22 @@ namespace sge
             std::vector<EntityId> ord_lightmask_receivers;
         };
 
-        void render_scene_init(GLRenderSystem::State& state, SystemFrame& frame);
+        void render_scene_init(GLRenderSystem::State& render_state, SystemFrame& frame);
 
-        void render_scene_update_matrices(GLRenderSystem::State& state, SystemFrame& frame);
+        void render_scene_update_matrices(GLRenderSystem::State& rendrer_state, SystemFrame& frame);
 
-        void render_scene_render_normal(GLRenderSystem::State& state, Mat4 view, Mat4 proj);
+        /**
+         * \brief Sets up and clears the GBuffer for rendering.
+         */
+        void render_scene_prepare(GLRenderSystem::State& render_state);
 
-        void render_scene_render_lightmasks(GLRenderSystem::State& state, Mat4 view, Mat4 proj);
+        void render_scene_fill_gbuffer(GLRenderSystem::State& render_state, Mat4 view, Mat4 proj);
+
+        void render_scene_render_lightmasks(GLRenderSystem::State& render_state, Mat4 view, Mat4 proj);
+
+        void render_scene_shade_hdr(
+            GLuint framebuffer,
+            GLRenderSystem::State& render_state,
+            Mat4 view);
     }
 }

@@ -2,7 +2,7 @@
 #pragma once
 
 #include <array>
-#include <Engine/Resources/StaticMesh.h>
+#include <Resource/Resources/StaticMesh.h>
 #include "glew.h"
 
 namespace sge

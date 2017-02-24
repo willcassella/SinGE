@@ -1,7 +1,7 @@
 // GLShader.h
 #pragma once
 
-#include <Engine/Resources/Shader.h>
+#include <Resource/Resources/Shader.h>
 #include "glew.h"
 
 namespace sge
