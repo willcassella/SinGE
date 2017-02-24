@@ -71,6 +71,12 @@ class Archive(object):
         self.root.type = Archive.NODE_ARRAY_INT16
         self.root.data = array
 
+    def typed_array_u16(self, array):
+        # Make sure this node is null
+        assert(self.root.type == Archive.NODE_NULL)
+        self.root.type = Archive.NODE_ARRAY_UINT16
+        self.root.data = array
+
     def typed_array_u32(self, array):
         # Make sure this node is null
         assert(self.root.type == Archive.NODE_NULL)
@@ -163,6 +169,9 @@ class Archive(object):
 
         elif node.type == Archive.NODE_ARRAY_INT16:
             Archive.binary_typed_array(buffer, node, 'h')
+
+        elif node.type == Archive.NODE_ARRAY_UINT16:
+            Archive.binary_typed_array(buffer, node, 'H')
 
         elif node.type == Archive.NODE_ARRAY_UINT32:
             Archive.binary_typed_array(buffer, node, 'I')

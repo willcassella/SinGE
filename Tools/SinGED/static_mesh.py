@@ -10,9 +10,7 @@ from bpy.types import Operator
 from . import archive
 
 SHORT_MAX = 32767
-
-def to_norm_f32(value):
-    return float(value + 1) / SHORT_MAX
+USHORT_MAX = 0xFFFF
 
 def export_submesh(obj, writer):
     # Make sure this submesh has a UV layout
@@ -74,24 +72,25 @@ def export_submesh(obj, writer):
 
         # Get vertex normal (swizzled)
         norm = model_mat_inv_transp * mathutils.Vector(mesh_loop.normal)
-        out_vnor.append( int(-norm[0] * SHORT_MAX - 1) )
-        out_vnor.append( int(norm[2] * SHORT_MAX - 1) )
-        out_vnor.append( int(norm[1] * SHORT_MAX - 1) )
+        out_vnor.append( int(-norm[0] * SHORT_MAX) )
+        out_vnor.append( int(norm[2] * SHORT_MAX) )
+        out_vnor.append( int(norm[1] * SHORT_MAX) )
 
         # Get vertex tangents (swizzled)
         tang = model_mat_inv_transp * mathutils.Vector(mesh_loop.tangent)
-        out_vtan.append( int(-tang[0] * SHORT_MAX - 1) )
-        out_vtan.append( int(tang[2] * SHORT_MAX - 1) )
-        out_vtan.append( int(tang[1] * SHORT_MAX - 1) )
+        out_vtan.append( int(-tang[0] * SHORT_MAX) )
+        out_vtan.append( int(tang[2] * SHORT_MAX) )
+        out_vtan.append( int(tang[1] * SHORT_MAX) )
 
         # Get bitangent signs
         out_vbts.append( int(mesh_loop.bitangent_sign) )
 
         # Get UV coordinates
-        # TODO: If uv coordintes exceeed [0, 1], this isn't going to work
-        # Need to figure out how to wrap properly, fmod(1) doesn't work
-        out_uv.append( int(uv_loop.uv[0] * SHORT_MAX - 1) )
-        out_uv.append( int(uv_loop.uv[1] * SHORT_MAX - 1) )
+        if uv_loop.uv[0] < -0.0001 or uv_loop.uv[0] > 1.0001 or uv_loop.uv[1] < -0.001 or uv_loop.uv[1] > 1.0001:
+            return (False, "UV coordinates must be in the range [0, 1]")
+
+        out_uv.append( int(uv_loop.uv[0] * USHORT_MAX) )
+        out_uv.append( int(uv_loop.uv[1] * USHORT_MAX) )
 
     # Free tangent vectors
     mesh.free_tangents()
@@ -126,7 +125,7 @@ def export_submesh(obj, writer):
 
     # Save uv coordinates
     writer.push_object_member("uv")
-    writer.typed_array_i16(out_uv)
+    writer.typed_array_u16(out_uv)
     writer.pop()
 
     # Save element indices
@@ -238,12 +237,6 @@ def from_json(path, value):
 
             # Create the face
             face = mesh.faces.new(face_verts)
-
-            # Set the uv coordinates
-            for v in range(0, 3):
-                uv_index = elems[i*3 + v]
-                face.loops[v][uv_layer0].uv[0] = to_norm_f32(uv[uv_index * 2 + 0])
-                face.loops[v][uv_layer0].uv[1] = to_norm_f32(uv[uv_index * 2 + 1])
 
     # Convert the bmesh to a blender mesh data object
     result = bpy.data.meshes.new(path)
