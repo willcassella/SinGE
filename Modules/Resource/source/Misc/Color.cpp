@@ -20,6 +20,14 @@ SGE_REFLECT_TYPE(sge::color::RGBA8)
 .property("blue", &RGBA8::blue, &RGBA8::blue)
 .property("alpha", &RGBA8::alpha, &RGBA8::alpha);
 
+SGE_REFLECT_TYPE(sge::color::RGBF32)
+.flags(TF_RECURSE_TERMINAL)
+.implements<IToArchive>()
+.implements<IFromArchive>()
+.property("red", &RGBF32::red, &RGBF32::red)
+.property("green", &RGBF32::green, &RGBF32::green)
+.property("blue", &RGBF32::blue, &RGBF32::blue);
+
 namespace sge
 {
 	namespace color
@@ -59,6 +67,16 @@ namespace sge
 
 			// Set the value from the string
 			color = std::strtoul(buff, nullptr, 16);
+		}
+
+        void RGBF32::to_archive(ArchiveWriter& writer) const
+		{
+            writer.typed_array(_rgb, 3);
+		}
+
+        void RGBF32::from_archive(ArchiveReader& reader)
+		{
+            reader.typed_array(_rgb, 3);
 		}
 	}
 }

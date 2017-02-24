@@ -2,26 +2,24 @@
 #pragma once
 
 #include <Core/Reflection/ReflectionBuilder.h>
+#include <Core/Containers/FixedString.h>
 #include "build.h"
 
 namespace sge
 {
-	template <typename T>
-	struct ResourceId
+    template <typename T>
+	struct SGE_RESOURCE_API ResourceId
 	{
         SGE_REFLECTED_TYPE;
+
+        using PackageName = FixedString<8>;
+        using ResourceName = FixedString<32>;
 
 		////////////////////////
 		///   Constructors   ///
 	public:
 
 		ResourceId()
-			: _uri()
-		{
-		}
-
-		ResourceId(std::string uri)
-			: _uri(std::move(uri))
 		{
 		}
 
@@ -29,7 +27,7 @@ namespace sge
 		///   Methods   ///
 	public:
 
-		void uri(std::string uri)
+		/*void uri(std::string uri)
 		{
 			_uri = std::move(uri);
 		}
@@ -43,14 +41,12 @@ namespace sge
 		{
 			return _uri.empty();
 		}
-
+*/
 		//////////////////
 		///   Fields   ///
 	private:
 
-		std::string _uri;
+        PackageName _package;
+        ResourceName _identifier;
 	};
 }
-
-template <typename T>
-SGE_REFLECT_TYPE_TEMPLATE(sge::ResourceId, T);

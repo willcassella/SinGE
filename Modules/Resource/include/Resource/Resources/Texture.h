@@ -1,12 +1,11 @@
 // Texture.h
 #pragma once
 
-#include <Resource/Resources/Image.h>
-#include "../config.h"
+#include "Image.h"
 
 namespace sge
 {
-	struct SGE_ENGINE_API Texture
+	struct SGE_RESOURCE_API Texture
 	{
 		SGE_REFLECTED_TYPE;
 

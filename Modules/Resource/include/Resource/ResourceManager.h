@@ -95,7 +95,7 @@ namespace sge
 
 		template <typename T, typename WriteFnT>
 		NewResourceResult async_new_resource(
-			const ResourceId<T>& id,
+			//const ResourceId<T>& id,
 			AsyncToken token,
 			WriteFnT writeFn)
 		{

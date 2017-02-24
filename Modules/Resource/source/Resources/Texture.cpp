@@ -3,8 +3,8 @@
 #include <Core/Reflection/ReflectionBuilder.h>
 #include <Core/Interfaces/IToArchive.h>
 #include <Core/Util/StringUtils.h>
-#include <Resource/Interfaces/IFromFile.h>
-#include "../../include/Engine/Resources/Texture.h"
+#include "../../include/Resource/Interfaces/IFromFile.h"
+#include "../../include/Resource/Resources/Texture.h"
 
 SGE_REFLECT_TYPE(sge::Texture)
 .flags(TF_SCRIPT_NOCONSTRUCT)

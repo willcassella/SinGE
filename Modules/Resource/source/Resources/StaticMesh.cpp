@@ -2,9 +2,9 @@
 
 #include <fstream>
 #include <Core/Reflection/ReflectionBuilder.h>
-#include <Resource/Interfaces/IFromFile.h>
-#include "../../include/Engine/Resources/StaticMesh.h"
-#include "Resource/Archives/BinaryArchive.h"
+#include "../../include/Resource/Resources/StaticMesh.h"
+#include "../../include/Resource/Interfaces/IFromFile.h"
+#include "../../include/Resource/Archives/BinaryArchive.h"
 
 SGE_REFLECT_TYPE(sge::StaticMesh)
 .flags(TF_SCRIPT_NOCONSTRUCT)
@@ -131,7 +131,7 @@ namespace sge
                 num_verts = size / 2;
 
                 // Get uvs
-                this->_material_uv.assign(size / 2, HalfVec2::zero());
+                this->_material_uv.assign(size / 2, UHalfVec2::zero());
                 const auto read_size = reader.typed_array(this->_material_uv.data()->vec(), size);
                 assert(read_size == size);
             }
@@ -205,7 +205,7 @@ namespace sge
         return _bitangent_signs.data();
     }
 
-    const HalfVec2* StaticMesh::SubMesh::material_uv() const
+    const UHalfVec2* StaticMesh::SubMesh::material_uv() const
     {
         if (_material_uv.empty())
         {

@@ -3,15 +3,15 @@
 
 #include <unordered_map>
 #include <Core/Math/Vec4.h>
-#include "../config.h"
+#include "../build.h"
 
 namespace sge
 {
-	struct SGE_ENGINE_API Material
+	struct SGE_RESOURCE_API Material
 	{
 		SGE_REFLECTED_TYPE;
 
-		struct ParamTable
+		struct SGE_RESOURCE_API ParamTable
 		{
 			///////////////////
 			///   Methods   ///
@@ -51,6 +51,11 @@ namespace sge
 		const std::string& pixel_shader() const
 		{
 			return _pixel_shader;
+		}
+
+        const std::string& albedo() const
+		{
+            return _albedo;
 		}
 
 		const ParamTable& param_table() const
@@ -94,6 +99,7 @@ namespace sge
 
 		std::string _vertex_shader;
 		std::string _pixel_shader;
+        std::string _albedo;
 		ParamTable _param_table;
 	};
 }

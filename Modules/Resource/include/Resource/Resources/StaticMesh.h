@@ -2,17 +2,17 @@
 #pragma once
 
 #include <vector>
-#include <Core/Math/HalfVec2.h>
-#include <Core/Math/HalfVec3.h>
+#include <Core/Math/IVec2.h>
+#include <Core/Math/IVec3.h>
 #include "Material.h"
 
 namespace sge
 {
-	struct SGE_ENGINE_API StaticMesh
+	struct SGE_RESOURCE_API StaticMesh
 	{
 		SGE_REFLECTED_TYPE;
 
-        struct SGE_ENGINE_API SubMesh
+        struct SGE_RESOURCE_API SubMesh
         {
             ///////////////////
             ///   Methods   ///
@@ -40,7 +40,7 @@ namespace sge
 
             const int8* bitangent_signs() const;
 
-            const HalfVec2* material_uv() const;
+            const UHalfVec2* material_uv() const;
 
             std::size_t num_triangles() const;
 
@@ -58,7 +58,7 @@ namespace sge
             std::vector<HalfVec3> _vertex_normals;
             std::vector<HalfVec3> _vertex_tangents;
             std::vector<int8> _bitangent_signs;
-            std::vector<HalfVec2> _material_uv;
+            std::vector<UHalfVec2> _material_uv;
             std::vector<uint32> _triangle_elements;
         };
 

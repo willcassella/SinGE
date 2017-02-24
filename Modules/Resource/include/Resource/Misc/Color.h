@@ -27,7 +27,12 @@ namespace sge
 			///   Constructors   ///
 		public:
 
-			RGBA8(Color_t color = 0xFFFFFFFF)
+            RGBA8()
+                : color(0)
+		    {
+            }
+
+			RGBA8(Color_t color)
 				: color(color)
 			{
 			}
@@ -107,5 +112,136 @@ namespace sge
 
 			Color_t color;
 		};
+
+        struct SGE_RESOURCE_API RGBF32
+        {
+            using Red_t = float;
+            using Green_t = float;
+            using Blue_t = float;
+            SGE_REFLECTED_TYPE;
+
+            ////////////////////////
+            ///   Constructors   ///
+        public:
+
+            RGBF32()
+                : _rgb{ 0, 0, 0 }
+            {
+            }
+
+            RGBF32(float uniform)
+                : _rgb{ uniform, uniform, uniform }
+            {
+            }
+
+            RGBF32(float red, float green, float blue)
+                : _rgb{ red, green, blue }
+            {
+            }
+
+            static RGBF32 black()
+            {
+                return RGBF32{ 0.f, 0.f, 0.f };
+            }
+
+            ///////////////////
+            ///   Methods   ///
+        public:
+
+            void to_archive(ArchiveWriter& writer) const;
+
+            void from_archive(ArchiveReader& reader);
+
+            float* vec()
+            {
+                return _rgb;
+            }
+
+            const float* vec() const
+            {
+                return _rgb;
+            }
+
+            Red_t red() const
+            {
+                return _rgb[0];
+            }
+
+            void red(Red_t value)
+            {
+                _rgb[0] = value;
+            }
+
+            Green_t green() const
+            {
+                return _rgb[1];
+            }
+
+            void green(Green_t value)
+            {
+                _rgb[1] = value;
+            }
+
+            Blue_t blue() const
+            {
+                return _rgb[2];
+            }
+
+            void blue(Blue_t value)
+            {
+                _rgb[2] = value;
+            }
+
+            /////////////////////
+            ///   Operators   ///
+        public:
+
+            friend RGBF32 operator*(const RGBF32& lhs, float rhs)
+            {
+                return RGBF32{ lhs.red() * rhs, lhs.green() * rhs, lhs.blue() * rhs };
+            }
+            friend RGBF32 operator*(float lhs, const RGBF32& rhs)
+            {
+                return rhs * lhs;
+            }
+            friend RGBF32 operator/(const RGBF32& lhs, float rhs)
+            {
+                return RGBF32{ lhs.red() / rhs, lhs.green() / rhs, lhs.blue() / rhs };
+            }
+            friend RGBF32 operator+(const RGBF32& lhs, const RGBF32& rhs)
+            {
+                return RGBF32{ lhs.red() + rhs.red(), lhs.green() + rhs.green(), lhs.blue() + rhs.blue() };
+            }
+            friend RGBF32 operator-(const RGBF32& lhs, const RGBF32& rhs)
+            {
+                return RGBF32{ lhs.red() - rhs.red(), lhs.green() - rhs.green(), lhs.blue() - rhs.blue() };
+            }
+            friend RGBF32& operator*=(RGBF32& lhs, float rhs)
+            {
+                lhs = lhs * rhs;
+                return lhs;
+            }
+            friend RGBF32& operator/=(RGBF32& lhs, float rhs)
+            {
+                lhs = lhs / rhs;
+                return lhs;
+            }
+            friend RGBF32& operator+=(RGBF32& lhs, const RGBF32& rhs)
+            {
+                lhs = lhs + rhs;
+                return lhs;
+            }
+            friend RGBF32& operator-=(RGBF32& lhs, const RGBF32& rhs)
+            {
+                lhs = lhs - rhs;
+                return lhs;
+            }
+
+            //////////////////
+            ///   Fields   ///
+        private:
+
+            float _rgb[3];
+        };
 	}
 }

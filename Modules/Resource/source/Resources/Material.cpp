@@ -1,9 +1,9 @@
 // Material.cpp
 
 #include <Core/Reflection/ReflectionBuilder.h>
-#include <Resource/Archives/JsonArchive.h>
-#include <Resource/Interfaces/IFromFile.h>
-#include "../../include/Engine/Resources/Material.h"
+#include "../../include/Resource/Archives/JsonArchive.h"
+#include "../../include/Resource/Interfaces/IFromFile.h"
+#include "../../include/Resource/Resources/Material.h"
 
 SGE_REFLECT_TYPE(sge::Material)
 .flags(TF_SCRIPT_NOCONSTRUCT)

@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <Core/Reflection/ReflectionBuilder.h>
-#include "../../include/Engine/Resources/Shader.h"
+#include "../../include/Resource/Resources/Shader.h"
 
 SGE_REFLECT_TYPE(sge::VertexShader)
 .flags(TF_SCRIPT_NOCONSTRUCT);

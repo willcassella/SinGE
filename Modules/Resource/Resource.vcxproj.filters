@@ -80,6 +80,24 @@
     <ClInclude Include="private\BinaryArchiveNode.h">
       <Filter>private</Filter>
     </ClInclude>
+    <ClInclude Include="include\Resource\Resources\Material.h">
+      <Filter>include\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Resource\Resources\Shader.h">
+      <Filter>include\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Resource\Resources\StaticMesh.h">
+      <Filter>include\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Resource\Resources\Texture.h">
+      <Filter>include\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Resource\ResourcePackage.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Resource\ResourceInfo.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Archives\JsonArchive.cpp">
@@ -99,6 +117,18 @@
     </ClCompile>
     <ClCompile Include="source\Archives\BinaryArchive.cpp">
       <Filter>source\Archives</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Resources\Material.cpp">
+      <Filter>source\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Resources\Shader.cpp">
+      <Filter>source\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Resources\StaticMesh.cpp">
+      <Filter>source\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Resources\Texture.cpp">
+      <Filter>source\Resources</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

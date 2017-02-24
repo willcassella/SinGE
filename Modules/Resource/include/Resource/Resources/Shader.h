@@ -2,11 +2,11 @@
 #pragma once
 
 #include <Core/Reflection/Reflection.h>
-#include "../config.h"
+#include "../build.h"
 
 namespace sge
 {
-	struct SGE_ENGINE_API Shader
+	struct SGE_RESOURCE_API Shader
 	{
 		///////////////////
 		///   Methods   ///
