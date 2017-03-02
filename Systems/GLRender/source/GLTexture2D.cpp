@@ -6,11 +6,18 @@ namespace sge
 {
 	namespace gl_render
 	{
-		GLTexture2D::GLTexture2D(const Texture& texture)
+        GLuint create_texture(
+            int32 width,
+            int32 height,
+            const void* data,
+            GLenum internal_format,
+            GLenum upload_format,
+            GLenum upload_type)
 		{
 			// Create and bind the buffer
-			glGenTextures(1, &_id);
-			glBindTexture(GL_TEXTURE_2D, _id);
+            GLuint id = 0;
+			glGenTextures(1, &id);
+			glBindTexture(GL_TEXTURE_2D, id);
 
 			// Set wrapping parameters to repeat
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -23,45 +30,22 @@ namespace sge
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
 			glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 8.f);
 
-            // Figure out colorspace
-            GLenum color_space;
-            switch (texture.color_space())
-            {
-            case Texture::ColorSpace::RGB:
-                color_space = GL_RGBA8;
-                break;
-
-            case Texture::ColorSpace::S_RGB:
-            default:
-                color_space = GL_SRGB8_ALPHA8;
-                break;
-            };
-
 			// Load the image
 			glTexImage2D(
 				GL_TEXTURE_2D,
 				0,
-                color_space,
-				texture.image.get_width(),
-				texture.image.get_height(),
+                internal_format,
+				width,
+				height,
 				0,
-				GL_RGBA,
-				GL_UNSIGNED_BYTE,
-				texture.image.get_bitmap());
+				upload_format,
+				upload_type,
+				data);
 
             // Generate mipmaps
 			glGenerateMipmap(GL_TEXTURE_2D);
-		}
 
-		GLTexture2D::GLTexture2D(GLTexture2D&& move)
-			: _id(move._id)
-		{
-			move._id = 0;
-		}
-
-		GLTexture2D::~GLTexture2D()
-		{
-			glDeleteTextures(1, &_id);
+            return id;
 		}
 	}
 }

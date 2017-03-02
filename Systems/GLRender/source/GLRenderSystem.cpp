@@ -6,13 +6,10 @@
 #include <Engine/Components/CTransform3D.h>
 #include <Engine/Components/Display/CStaticMesh.h>
 #include <Engine/Components/Display/CCamera.h>
-#include <Engine/Components/Display/CLightMaskReceiver.h>
-#include <Engine/Components/Display/CLightMaskObstructor.h>
 #include <Engine/Tags/DebugDraw.h>
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
 #include <Engine/UpdatePipeline.h>
-#include <Engine/Util/VectorUtils.h>
 #include "../include/GLRender/Config.h"
 #include "../private/GLRenderSystemState.h"
 #include "../private/DebugLine.h"
@@ -24,6 +21,80 @@ namespace sge
 {
 	namespace gl_render
 	{
+        void build_render_scene(GLRenderSystem::State& state, SystemFrame& frame)
+        {
+            std::map<GLuint, std::size_t> material_indices;
+
+            // Get all static mesh entities
+            frame.process_entities(
+                [&state](
+                    ProcessingFrame& pframe,
+                    const CTransform3D& transform,
+                    const CStaticMesh& mesh)
+            {
+                // Get the mesh resource for this mesh
+                const auto& gl_mesh = state.get_static_mesh_resource(mesh.mesh());
+
+                // Get the material for this mesh
+                const auto& gl_mat = state.get_material_resource(mesh.material());
+
+                // Create a mesh instance object
+                MeshInstance instance;
+                instance.mat_uv_scale = { 1.f, 1.f };
+                instance.world_transform = transform.get_world_matrix();
+
+                // Decide whether to use a lightmap
+                if (mesh.uses_lightmap() && !mesh.lightmap().empty())
+                {
+                    // Get the lightmap
+                    instance.lightmap = state.get_texture_2d_resource(mesh.lightmap(), true);
+                }
+                else
+                {
+                    instance.lightmap = 0;
+                }
+
+                // Search for where to put this mesh
+                for (auto& mat_instance : state.render_scene.standard_material_instances)
+                {
+                    if (mat_instance.material.program_id == gl_mat.program_id)
+                    {
+                        for (auto& mesh_instance : mat_instance.mesh_instances)
+                        {
+                            if (mesh_instance.vao == gl_mesh.vao)
+                            {
+                                mesh_instance.instances.push_back(instance);
+                                return ProcessControl::CONTINUE;
+                            }
+                        }
+
+                        // Create a new mesh instance set
+                        MeshInstanceSet mesh_set;
+                        mesh_set.vao = gl_mesh.vao;
+                        mesh_set.start_element_index = 0;
+                        mesh_set.num_element_indices = gl_mesh.num_total_elements;
+                        mesh_set.instances.push_back(instance);
+                        mat_instance.mesh_instances.push_back(std::move(mesh_set));
+                        return ProcessControl::CONTINUE;
+                    }
+                }
+
+                // Create a material instance
+                MaterialInstance mat_instance;
+                mat_instance.material = gl_mat;
+
+                // Create a mesh set
+                MeshInstanceSet mesh_set;
+                mesh_set.vao = gl_mesh.vao;
+                mesh_set.start_element_index = 0;
+                mesh_set.num_element_indices = gl_mesh.num_total_elements;
+                mesh_set.instances.push_back(instance);
+                mat_instance.mesh_instances.push_back(std::move(mesh_set));
+                state.render_scene.standard_material_instances.push_back(std::move(mat_instance));
+                return ProcessControl::CONTINUE;
+            });
+        }
+
         static void set_render_target_params()
         {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -57,8 +128,8 @@ namespace sge
             glAttachShader(program, f_shader.id());
 
             // Bind vertex attributes
-            glBindAttribLocation(program, GLMaterial::POSITION_ATTRIB_LOCATION, GLMaterial::POSITION_ATTRIB_NAME);
-            glBindAttribLocation(program, GLMaterial::TEXCOORD_ATTRIB_LOCATION, GLMaterial::TEXCOORD_ATTRIB_NAME);
+            glBindAttribLocation(program, gl_material::POSITION_ATTRIB_LOCATION, gl_material::POSITION_ATTRIB_NAME);
+            glBindAttribLocation(program, gl_material::MATERIAL_TEXCOORD_ATTRIB_LOCATION, gl_material::MATERIAL_TEXCOORD_ATTRIB_NAME);
 
             // Link the program and detach shaders
             glLinkProgram(program);
@@ -75,6 +146,7 @@ namespace sge
             glUniform1i(glGetUniformLocation(program, "normal_buffer"), 2);
             glUniform1i(glGetUniformLocation(program, "albedo_buffer"), 3);
             glUniform1i(glGetUniformLocation(program, "roughness_metallic_buffer"), 4);
+            glUniform1i(glGetUniformLocation(program, "irradiance_buffer"), 5);
 
             // Return it
             return program;
@@ -97,35 +169,11 @@ namespace sge
             glewInit();
             glGetError(); // Sometimes GLEW initialization generates an error, pop it off the stack.
 
-            // Create the default mesh object
-            {
-                // Load the mesh
-                StaticMesh missing_mesh;
-                missing_mesh.from_file(config.missing_mesh.c_str());
-                GLStaticMesh gl_missing_mesh{ missing_mesh };
-
-                // Insert it into the resource table
-                const auto vao = gl_missing_mesh.vao();
-                _state->missing_mesh = vao;
-                _state->static_mesh_resources[config.missing_mesh] = vao;
-                _state->static_meshes.insert(std::make_pair(vao, std::move(gl_missing_mesh)));
-            }
+            // Create default mesh resource
+            _state->missing_mesh = _state->get_static_mesh_resource(config.missing_mesh);
 
             // Create the default material resource
-            {
-                // Load the material
-                Material missing_material;
-                JsonArchive missing_material_archive;
-                missing_material_archive.from_file(config.missing_material.c_str());
-                missing_material_archive.deserialize_root(missing_material);
-                GLMaterial gl_missing_material{ *_state, missing_material };
-
-                // Insert it into the resource table
-                const auto id = gl_missing_material.id();
-                _state->missing_material = id;
-                _state->material_resources[config.missing_material] = id;
-                _state->materials.insert(std::make_pair(id, std::move(gl_missing_material)));
-            }
+            _state->missing_material = _state->get_material_resource(config.missing_material);
 
             // Initialize OpenGL
             glLineWidth(1);
@@ -212,6 +260,19 @@ namespace sge
                 _state->gbuffer_layers[GBufferLayer::ROUGHNESS_METALLIC],
                 GBUFFER_ROUGHNESS_METALLIC_ATTACHMENT);
 
+            // Create gbuffer irradiance layer
+            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::IRRADIANCE]);
+            upload_render_target_data(
+                _state->width,
+                _state->height,
+                GBUFFER_IRRADIANCE_INTERNAL_FORMAT,
+                GBUFFER_IRRADIANCE_UPLOAD_FORMAT,
+                GBUFFER_IRRADIANCE_UPLOAD_TYPE);
+            set_render_target_params();
+            attach_framebuffer_layer(
+                _state->gbuffer_layers[GBufferLayer::IRRADIANCE],
+                GBUFFER_IRRADIANCE_ATTACHMENT);
+
 			// Make sure the GBuffer was constructed successfully
 			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			{
@@ -259,10 +320,10 @@ namespace sge
 			glBufferData(GL_ARRAY_BUFFER, sizeof(QUAD_VERTEX_DATA), QUAD_VERTEX_DATA, GL_STATIC_DRAW);
 
 			// Sprite vertex specification
-			glEnableVertexAttribArray(GLMaterial::POSITION_ATTRIB_LOCATION);
-			glEnableVertexAttribArray(GLMaterial::TEXCOORD_ATTRIB_LOCATION);
-			glVertexAttribPointer(GLMaterial::POSITION_ATTRIB_LOCATION, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, nullptr);
-			glVertexAttribPointer(GLMaterial::TEXCOORD_ATTRIB_LOCATION, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(sizeof(float) * 2));
+			glEnableVertexAttribArray(gl_material::POSITION_ATTRIB_LOCATION);
+			glEnableVertexAttribArray(gl_material::MATERIAL_TEXCOORD_ATTRIB_LOCATION);
+			glVertexAttribPointer(gl_material::POSITION_ATTRIB_LOCATION, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, nullptr);
+			glVertexAttribPointer(gl_material::MATERIAL_TEXCOORD_ATTRIB_LOCATION, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(sizeof(float) * 2));
 
 			// Create screen shaders
 			GLShader viewport_v_shader{ GL_VERTEX_SHADER, config.viewport_vert_shader };
@@ -356,34 +417,6 @@ namespace sge
                 TCO_NONE,
                 this,
                 &GLRenderSystem::cb_debug_draw_line);
-
-            pipeline.register_tag_callback<CTransform3D, FNewComponent>(
-                system_token,
-                async_token,
-                TCO_NONE,
-                this,
-                &GLRenderSystem::cb_new_transform);
-
-            pipeline.register_tag_callback<CStaticMesh, FNewComponent>(
-                system_token,
-                async_token,
-                TCO_NONE,
-                this,
-                &GLRenderSystem::cb_new_static_mesh);
-
-            pipeline.register_tag_callback<CStaticMesh, FModifiedComponent>(
-                system_token,
-                async_token,
-                TCO_NONE,
-                this,
-                &GLRenderSystem::cb_modified_static_mesh);
-
-            pipeline.register_tag_callback<CLightMaskObstructor, FNewComponent>(
-                system_token,
-                async_token,
-                TCO_NONE,
-                this,
-                &GLRenderSystem::cb_new_lightmask_obstructor);
 		}
 
 	    void GLRenderSystem::set_viewport(int width, int height)
@@ -436,6 +469,15 @@ namespace sge
                 GBUFFER_ROUGHNESS_METALLIC_UPLOAD_FORMAT,
                 GBUFFER_ROUGHNESS_METALLIC_UPLOAD_TYPE);
 
+            // Resize irradiance layer
+            glBindTexture(GL_TEXTURE_2D, _state->gbuffer_layers[GBufferLayer::IRRADIANCE]);
+            upload_render_target_data(
+                width,
+                height,
+                GBUFFER_IRRADIANCE_INTERNAL_FORMAT,
+                GBUFFER_IRRADIANCE_UPLOAD_FORMAT,
+                GBUFFER_IRRADIANCE_UPLOAD_TYPE);
+
             // Resize post buffer
             glBindTexture(GL_TEXTURE_2D, _state->post_buffer_hdr);
             upload_render_target_data(
@@ -451,7 +493,7 @@ namespace sge
             // Initialize the render scene data structure, if we haven't already
             if (!_state->initialized_render_scene)
             {
-                render_scene_init(*_state, frame);
+                build_render_scene(*_state, frame);
                 _state->initialized_render_scene = true;
             }
 
@@ -479,10 +521,9 @@ namespace sge
             }
 
             // Render the scene
-            render_scene_update_matrices(*_state, frame);
-            render_scene_prepare(*_state);
-            render_scene_fill_gbuffer(*_state, view, proj);
-            render_scene_render_lightmasks(*_state, view, proj);
+            render_scene_prepare_gbuffer(_state->gbuffer_framebuffer);
+            render_scene_fill_bound_gbuffer(_state->render_scene, view, proj);
+            //render_scene_render_lightmasks(_state->render_scene, view, proj);
             render_scene_shade_hdr(_state->post_framebuffer, *_state, view);
 
             // Draw debug lines
@@ -544,7 +585,7 @@ namespace sge
                 // Create start vert
                 DebugLineVert start_vert;
                 start_vert.world_position = lines[i].world_start;
-                start_vert.color_rgb = Vec3{
+                start_vert.color_rgb = color::RGBF32{
                     static_cast<Scalar>(lines[i].color.red()) / 255,
                     static_cast<Scalar>(lines[i].color.green()) / 255,
                     static_cast<Scalar>(lines[i].color.blue()) / 255 };
@@ -559,78 +600,5 @@ namespace sge
                 _state->frame_debug_lines.push_back(end_vert);
             }
 	    }
-
-	    void GLRenderSystem::cb_new_transform(
-            SystemFrame& /*frame*/,
-            const EntityId* ent_range,
-            std::size_t range_len)
-	    {
-            const auto num_dups = insert_ord_entities(_state->render_scene.ord_render_entities, ent_range, range_len);
-            _state->render_scene.ord_render_entities_matrices.insert(_state->render_scene.ord_render_entities_matrices.end(), range_len, Mat4{});
-            assert(num_dups == 0);
-	    }
-
-	    void GLRenderSystem::cb_new_static_mesh(
-            SystemFrame& frame,
-            const EntityId* ent_range,
-            std::size_t range_len)
-	    {
-            // Allocate space
-            auto& render_scene = _state->render_scene;
-            const auto old_len = render_scene.ord_mesh_entities.size();
-            render_scene.ord_mesh_entities.insert(render_scene.ord_mesh_entities.end(), range_len, NULL_ENTITY);
-            render_scene.ord_mesh_entity_meshes.insert(render_scene.ord_mesh_entity_meshes.end(), range_len, 0);
-            render_scene.ord_mesh_entity_materials.insert(render_scene.ord_mesh_entity_materials.end(), range_len, 0);
-
-            // Insert new data
-		    rev_multi_insert(render_scene.ord_mesh_entities.data(), old_len, old_len + range_len, &ent_range, &range_len, 1,
-                [&render_scene](std::size_t new_index, std::size_t old_index) // Swap function
-		    {
-                render_scene.ord_mesh_entities[new_index] = render_scene.ord_mesh_entities[old_index];
-                render_scene.ord_mesh_entity_meshes[new_index] = render_scene.ord_mesh_entity_meshes[old_index];
-                render_scene.ord_mesh_entity_materials[new_index] = render_scene.ord_mesh_entity_materials[old_index];
-		    },
-                [&render_scene](EntityId new_entity, std::size_t index) // Insert function
-		    {
-                render_scene.ord_mesh_entities[index] = new_entity;
-                render_scene.ord_mesh_entity_meshes[index] = 0;
-                render_scene.ord_mesh_entity_materials[index] = 0;
-            });
-
-            // Get meshes and materials for the new entities
-            frame.process_entities(zip(ord_ents_range(ent_range, range_len), ord_ents_range(render_scene.ord_mesh_entities)),
-                [&state = *_state, &render_scene = _state->render_scene] (
-                    ProcessingFrame& pframe,
-                    const CStaticMesh& static_mesh)
-            {
-                const auto mesh_index = pframe.user_iterator(1);
-                render_scene.ord_mesh_entity_meshes[mesh_index] = state.get_static_mesh_resource(static_mesh.mesh());
-                render_scene.ord_mesh_entity_materials[mesh_index] = state.get_material_resource(static_mesh.material());
-            });
-	    }
-
-	    void GLRenderSystem::cb_modified_static_mesh(
-            SystemFrame& frame,
-            const EntityId* ent_range,
-            std::size_t range_len)
-	    {
-            frame.process_entities(zip(ord_ents_range(ent_range, range_len), ord_ents_range(_state->render_scene.ord_mesh_entities)),
-                [&state = *_state, &render_scene = _state->render_scene] (
-                    ProcessingFrame& pframe,
-                    const CStaticMesh& mesh)
-            {
-                const auto mesh_index = pframe.user_iterator(1);
-                render_scene.ord_mesh_entity_meshes[mesh_index] = state.get_static_mesh_resource(mesh.mesh());
-                render_scene.ord_mesh_entity_materials[mesh_index] = state.get_material_resource(mesh.material());
-            });
-	    }
-
-        void GLRenderSystem::cb_new_lightmask_obstructor(
-            SystemFrame& frame,
-            const EntityId* ent_range,
-            std::size_t range_len)
-        {
-            insert_ord_entities(_state->render_scene.ord_lightmask_obstructors, ent_range, range_len);
-        }
 	}
 }

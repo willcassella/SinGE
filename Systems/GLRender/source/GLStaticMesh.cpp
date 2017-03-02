@@ -7,161 +7,94 @@ namespace sge
 {
 	namespace gl_render
 	{
-        template <typename CountGetterT, typename DataGetterT>
-        void buffer_static_data(
-            GLenum target,
-            GLuint buffer,
-            std::size_t num_total_elems,
-            std::size_t elem_size,
-            const StaticMesh::SubMesh* sub_meshes,
-            std::size_t num_sub_meshes,
-            CountGetterT count_getter,
-            DataGetterT data_getter)
+        namespace gl_static_mesh
         {
-            // Create buffer
-            glBindBuffer(target, buffer);
-            glBufferData(target, num_total_elems * elem_size, nullptr, GL_STATIC_DRAW);
-
-            // Upload data for each mesh
-            GLintptr offset = 0;
-            for (std::size_t i = 0; i < num_sub_meshes; ++i)
+            void upload_static_mesh_vertex_data(
+                GLuint vao,
+                const GLuint vertex_buffers[],
+                std::size_t num_vertices,
+                const Vec3* vertex_positions,
+                const HalfVec3* vertex_normals,
+                const HalfVec3* vertex_tangents,
+                const int8* vertex_bitangent_signs,
+                const UHalfVec2* material_uv_coords,
+                const UHalfVec2* lightmap_uv_coords)
             {
-                const GLsizeiptr size = (sub_meshes[i].*count_getter)() * elem_size;
-                glBufferSubData(target, offset, size, (sub_meshes[i].*data_getter)());
-                offset += size;
+                // Bind VAO
+                glBindVertexArray(vao);
+
+                // Upload vertex position data
+                glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[POSITION_BUFFER_INDEX]);
+                glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(Vec3), vertex_positions, GL_STATIC_DRAW);
+
+                // Define vertex position specification
+                glEnableVertexAttribArray(gl_material::POSITION_ATTRIB_LOCATION);
+                glVertexAttribPointer(gl_material::POSITION_ATTRIB_LOCATION, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3), nullptr);
+
+                // Upload normal buffer
+                glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[NORMAL_BUFFER_INDEX]);
+                glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(HalfVec3), vertex_normals, GL_STATIC_DRAW);
+
+                // Define vertex normal specification
+                glEnableVertexAttribArray(gl_material::NORMAL_ATTRIB_LOCATION);
+                glVertexAttribPointer(gl_material::NORMAL_ATTRIB_LOCATION, 3, GL_SHORT, GL_TRUE, sizeof(HalfVec3), nullptr);
+
+                // Upload tangent buffer
+                glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[TANGENT_BUFFER_INDEX]);
+                glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(HalfVec3), vertex_tangents, GL_STATIC_DRAW);
+
+                // Define vertex tangent specification
+                glEnableVertexAttribArray(gl_material::TANGENT_ATTRIB_LOCATION);
+                glVertexAttribPointer(gl_material::TANGENT_ATTRIB_LOCATION, 3, GL_SHORT, GL_TRUE, sizeof(HalfVec3), nullptr);
+
+                // Upload bitangent sign buffer
+                glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[BITANGENT_SIGN_BUFFER_INDEX]);
+                glBufferData(GL_ARRAY_BUFFER, num_vertices, vertex_bitangent_signs, GL_STATIC_DRAW);
+
+                // Define bitangent specification
+                glEnableVertexAttribArray(gl_material::BITANGENT_SIGN_ATTRIB_LOCATION);
+                glVertexAttribPointer(gl_material::BITANGENT_SIGN_ATTRIB_LOCATION, 1, GL_BYTE, GL_FALSE, 1, nullptr);
+
+                // Upload material uv data
+                glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[MATERIAL_UV_BUFFER_INDEX]);
+                glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(UHalfVec2), material_uv_coords, GL_STATIC_DRAW);
+
+                // Define vertex material uv specification
+                glEnableVertexAttribArray(gl_material::MATERIAL_TEXCOORD_ATTRIB_LOCATION);
+                glVertexAttribPointer(gl_material::MATERIAL_TEXCOORD_ATTRIB_LOCATION, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(UHalfVec2), nullptr);
+
+                // Upload lightmap uv data
+                glBindBuffer(GL_ARRAY_BUFFER, vertex_buffers[LIGHTMAP_UV_BUFFER_INDEX]);
+                glBufferData(GL_ARRAY_BUFFER, num_vertices * sizeof(UHalfVec2), lightmap_uv_coords, GL_STATIC_DRAW);
+
+                // Define vertex lightmap uv specification
+                glEnableVertexAttribArray(gl_material::LIGHTMAP_TEXCOORD_ATTRIB_LOCATION);
+                glVertexAttribPointer(gl_material::LIGHTMAP_TEXCOORD_ATTRIB_LOCATION, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(UHalfVec2), nullptr);
+
+                // Unbind
+                glBindVertexArray(0);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+            }
+
+            void upload_static_mesh_elements(
+                GLuint vao,
+                GLuint ebo,
+                std::size_t num_elements,
+                const uint32* elements)
+            {
+                // Bind the vertex array object
+                glBindVertexArray(vao);
+
+                // Bind the element buffer object
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+
+                // Upload the data
+                glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_elements * sizeof(uint32), elements, GL_STATIC_DRAW);
+
+                // Unbind
+                glBindVertexArray(0);
+                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
             }
         }
-
-		GLStaticMesh::GLStaticMesh(const StaticMesh& mesh)
-            : _num_elements(0)
-	    {
-            const auto num_sub_meshes = mesh.num_sub_meshes();
-            const auto* sub_meshes = mesh.sub_meshes();
-
-		    // Count up all vertices and elements
-            std::size_t num_verts = 0;
-            for (std::size_t i = 0; i < num_sub_meshes; ++i)
-            {
-                num_verts += sub_meshes[i].num_verts();
-                _num_elements += static_cast<GLint>(sub_meshes[i].num_triangles() * 3);
-            }
-
-			// Set up VAO
-			glGenVertexArrays(1, &_vao);
-			glBindVertexArray(_vao);
-
-			// Create buffers
-			glGenBuffers(NUM_BUFFERS, _buffers.data());
-
-            // Upload element data
-            buffer_static_data(
-                GL_ELEMENT_ARRAY_BUFFER,
-                element_buffer(),
-                _num_elements,
-                sizeof(uint32),
-                sub_meshes,
-                num_sub_meshes,
-                &StaticMesh::SubMesh::num_triangle_elements,
-                &StaticMesh::SubMesh::triangle_elements);
-
-            // Upload vertex position data
-            buffer_static_data(
-                GL_ARRAY_BUFFER,
-                position_buffer(),
-                num_verts,
-                sizeof(Vec3),
-                sub_meshes,
-                num_sub_meshes,
-                &StaticMesh::SubMesh::num_verts,
-                &StaticMesh::SubMesh::vertex_positions);
-
-			// Define vertex position specification
-			glEnableVertexAttribArray(GLMaterial::POSITION_ATTRIB_LOCATION);
-			glVertexAttribPointer(GLMaterial::POSITION_ATTRIB_LOCATION, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3), nullptr);
-
-			// Upload normal buffer
-            buffer_static_data(
-                GL_ARRAY_BUFFER,
-                normal_buffer(),
-                num_verts,
-                sizeof(HalfVec3),
-                sub_meshes,
-                num_sub_meshes,
-                &StaticMesh::SubMesh::num_verts,
-                &StaticMesh::SubMesh::vertex_normals);
-
-			// Define vertex normal specification
-			glEnableVertexAttribArray(GLMaterial::NORMAL_ATTRIB_LOCATION);
-			glVertexAttribPointer(GLMaterial::NORMAL_ATTRIB_LOCATION, 3, GL_SHORT, GL_TRUE, sizeof(HalfVec3), nullptr);
-
-            // Upload tangent buffer
-            buffer_static_data(
-                GL_ARRAY_BUFFER,
-                tangent_buffer(),
-                num_verts,
-                sizeof(HalfVec3),
-                sub_meshes,
-                num_sub_meshes,
-                &StaticMesh::SubMesh::num_verts,
-                &StaticMesh::SubMesh::vertex_tangents);
-
-            // Define vertex tangent specification
-            glEnableVertexAttribArray(GLMaterial::TANGENT_ATTRIB_LOCATION);
-            glVertexAttribPointer(GLMaterial::TANGENT_ATTRIB_LOCATION, 3, GL_SHORT, GL_TRUE, sizeof(HalfVec3), nullptr);
-
-            // Upload bitangent sign buffer
-            buffer_static_data(
-                GL_ARRAY_BUFFER,
-                bitangent_sign_buffer(),
-                num_verts,
-                1,
-                sub_meshes,
-                num_sub_meshes,
-                &StaticMesh::SubMesh::num_verts,
-                &StaticMesh::SubMesh::bitangent_signs);
-
-            // Define bitangent specification
-            glEnableVertexAttribArray(GLMaterial::BITANGENT_SIGN_ATTRIB_LOCATION);
-            glVertexAttribPointer(GLMaterial::BITANGENT_SIGN_ATTRIB_LOCATION, 1, GL_BYTE, GL_FALSE, 1, nullptr);
-
-			// Upload uv data
-            buffer_static_data(
-                GL_ARRAY_BUFFER,
-                uv_buffer(),
-                num_verts,
-                sizeof(HalfVec2),
-                sub_meshes,
-                num_sub_meshes,
-                &StaticMesh::SubMesh::num_verts,
-                &StaticMesh::SubMesh::material_uv);
-
-			// Define vertex uv specification
-			glEnableVertexAttribArray(GLMaterial::TEXCOORD_ATTRIB_LOCATION);
-			glVertexAttribPointer(GLMaterial::TEXCOORD_ATTRIB_LOCATION, 2, GL_UNSIGNED_SHORT, GL_TRUE, sizeof(HalfVec2), nullptr);
-
-            // Unbind
-			glBindVertexArray(0);
-		}
-
-		GLStaticMesh::GLStaticMesh(GLStaticMesh&& move)
-			: _vao(move._vao),
-			_num_elements(move._num_elements),
-			_buffers(move._buffers)
-		{
-			move._vao = 0;
-			move._buffers.fill(0);
-			move._num_elements = 0;
-		}
-
-		GLStaticMesh::~GLStaticMesh()
-		{
-			glDeleteBuffers(NUM_BUFFERS, _buffers.data());
-			glDeleteVertexArrays(1, &_vao);
-		}
-
-		void GLStaticMesh::bind() const
-		{
-			glBindVertexArray(_vao);
-		}
 	}
 }

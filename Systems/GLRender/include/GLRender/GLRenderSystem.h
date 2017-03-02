@@ -48,26 +48,6 @@ namespace sge
                 std::size_t ent_range_len,
                 const FDebugLine* lines);
 
-            void cb_new_transform(
-                SystemFrame& frame,
-                const EntityId* ent_range,
-                std::size_t range_len);
-
-            void cb_new_static_mesh(
-                SystemFrame& frame,
-                const EntityId* ent_range,
-                std::size_t range_len);
-
-            void cb_modified_static_mesh(
-                SystemFrame& frame,
-                const EntityId* ent_range,
-                std::size_t range_len);
-
-            void cb_new_lightmask_obstructor(
-                SystemFrame& frame,
-                const EntityId* ent_range,
-                std::size_t range_len);
-
 			////////////////
 			///   Data   ///
 		private:

@@ -2,53 +2,111 @@
 #pragma once
 
 #include "GLMaterial.h"
-#include "GLStaticMesh.h"
+#include "../include/GLRender/GLRenderSystem.h"
 
 namespace sge
 {
     namespace gl_render
     {
-        struct RenderScene
+        /**
+         * \brief Contains per-instance data for meshes that do not override material properties.
+         */
+        struct MeshInstance
         {
-            //////////////////
-            ///   Fields   ///
-        public:
-
-            /* All entities that may be considered by the renderer. */
-            std::vector<EntityId> ord_render_entities;
-            std::vector<Mat4> ord_render_entities_matrices;
-
-            /* All objects that have a static mesh component. */
-            std::vector<EntityId> ord_mesh_entities;
-            std::vector<GLStaticMesh::VAO> ord_mesh_entity_meshes;
-            std::vector<GLMaterial::Id> ord_mesh_entity_materials;
-
-            /* All lightmask volume objects. */
-            std::vector<EntityId> ord_lightmask_volumes;
-
-            /* All lightmask obstructor objects. */
-            std::vector<EntityId> ord_lightmask_obstructors;
-
-            /* All lightmask receiver objects. */
-            std::vector<EntityId> ord_lightmask_receivers;
+            Mat4 world_transform;
+            Vec2 mat_uv_scale;
+            GLuint lightmap;
         };
 
-        void render_scene_init(GLRenderSystem::State& render_state, SystemFrame& frame);
-
-        void render_scene_update_matrices(GLRenderSystem::State& rendrer_state, SystemFrame& frame);
+        /**
+         * \brief Contains per-mesh data for meshes that do not override material properties.
+         */
+        struct MeshInstanceSet
+        {
+            GLuint vao;
+            GLuint start_element_index;
+            GLuint num_element_indices;
+            std::vector<MeshInstance> instances;
+        };
 
         /**
-         * \brief Sets up and clears the GBuffer for rendering.
+         * \brief Per-instance data for meshes that override their material parameters.
          */
-        void render_scene_prepare(GLRenderSystem::State& render_state);
+        struct MaterialOverrideMeshInstance
+        {
+            Mat4 world_transform;
+            Vec2 mat_uv_scale;
+            GLuint lightmap;
+            gl_material::MaterialParams override_params;
+        };
 
-        void render_scene_fill_gbuffer(GLRenderSystem::State& render_state, Mat4 view, Mat4 proj);
+        /**
+         * \brief Contains per-mesh data for meshes that override their material parameters.
+         */
+        struct MeshInstanceMaterialOverrideSet
+        {
+            GLuint vao;
+            GLuint start_element_index;
+            GLuint num_element_indices;
+            std::vector<MaterialOverrideMeshInstance> instances;
+        };
 
-        void render_scene_render_lightmasks(GLRenderSystem::State& render_state, Mat4 view, Mat4 proj);
+        struct MaterialInstance
+        {
+            gl_material::Material material;
+            std::vector<MeshInstanceSet> mesh_instances;
+            std::vector<MeshInstanceMaterialOverrideSet> param_override_instances;
+        };
+
+        /**
+         * \brief Per-instance data for lightmask objects (receivers and obstructors).
+         */
+        struct LightmaskObjectInstance
+        {
+            gl_material::Material material;
+            GLuint vao;
+            GLuint num_element_indices;
+            Mat4 world_transform;
+            Vec2 mat_uv_scale;
+        };
+
+        struct RenderScene
+        {
+            /**
+             * \brief Instances of standard materials active in this scene.
+             */
+            std::vector<MaterialInstance> standard_material_instances;
+
+            /**
+             * \brief All lightmask receiver objects in the scene.
+             */
+            std::vector<LightmaskObjectInstance> lightmask_receivers;
+
+            /**
+             * \brief All lightmask obstructor objects in the scene.
+             */
+            std::vector<LightmaskObjectInstance> lightmask_obstructors;
+        };
+
+        /**
+         * \brief Sets up and clears the given GBuffer for rendering.
+         */
+        void render_scene_prepare_gbuffer(
+            GLuint gbuffer);
+
+        void render_scene_fill_bound_gbuffer(
+            const RenderScene& scene,
+            Mat4 view,
+            Mat4 proj);
+
+        void render_scene_render_lightmasks(
+            const RenderScene& scene,
+            Mat4 view,
+            Mat4 proj);
 
         void render_scene_shade_hdr(
             GLuint framebuffer,
-            GLRenderSystem::State& render_state,
+            const GLRenderSystem::State& render_scene,
             Mat4 view);
     }
 }

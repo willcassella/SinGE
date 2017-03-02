@@ -3,7 +3,6 @@
 
 #include "../include/GLRender/GLRenderSystem.h"
 #include "GLShader.h"
-#include "GLMaterial.h"
 #include "GLStaticMesh.h"
 #include "GLTexture2D.h"
 #include "DebugLine.h"
@@ -22,6 +21,7 @@ namespace sge
 				NORMAL,
 				ALBEDO,
 				ROUGHNESS_METALLIC,
+                IRRADIANCE,
 				NUM_LAYERS
 			};
 		}
@@ -32,6 +32,7 @@ namespace sge
         static constexpr GLenum GBUFFER_NORMAL_ATTACHMENT = GL_COLOR_ATTACHMENT1;
         static constexpr GLenum GBUFFER_ALBEDO_ATTACHMENT = GL_COLOR_ATTACHMENT2;
         static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_ATTACHMENT = GL_COLOR_ATTACHMENT3;
+        static constexpr GLenum GBUFFER_IRRADIANCE_ATTACHMENT = GL_COLOR_ATTACHMENT4;
         static constexpr GLenum POST_BUFFER_HDR_ATTACHMENT = GL_COLOR_ATTACHMENT0;
 
         /* These constants define the internal format for the gbuffer layers. */
@@ -40,6 +41,7 @@ namespace sge
         static constexpr GLenum GBUFFER_NORMAL_INTERNAL_FORMAT = GL_RGB32F;
         static constexpr GLenum GBUFFER_ALBEDO_INTERNAL_FORMAT = GL_RGB8;
         static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_INTERNAL_FORMAT = GL_RG16F;
+        static constexpr GLenum GBUFFER_IRRADIANCE_INTERNAL_FORMAT = GL_RGBA32F;
         static constexpr GLenum POST_BUFFER_HDR_INTERNAL_FORMAT = GL_RGB32F;
 
         /* These constants are used when initializing or resizing gbuffer layers.
@@ -54,6 +56,8 @@ namespace sge
         static constexpr GLenum GBUFFER_ALBEDO_UPLOAD_TYPE = GL_UNSIGNED_BYTE;
         static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_UPLOAD_FORMAT = GL_RG;
         static constexpr GLenum GBUFFER_ROUGHNESS_METALLIC_UPLOAD_TYPE = GL_UNSIGNED_BYTE;
+        static constexpr GLenum GBUFFER_IRRADIANCE_UPLOAD_FORMAT = GL_RGBA;
+        static constexpr GLenum GBUFFER_IRRADIANCE_UPLOAD_TYPE = GL_FLOAT;
         static constexpr GLenum POST_BUFFER_HDR_UPLOAD_FORMAT = GL_RGB;
         static constexpr GLenum POST_BUFFER_HDR_UPLOAD_TYPE = GL_FLOAT;
 
@@ -63,13 +67,13 @@ namespace sge
 			///   Methods   ///
 		public:
 
+			const gl_material::Material& get_material_resource(const std::string& path);
+
+			const gl_static_mesh::StaticMesh& get_static_mesh_resource(const std::string& path);
+
 			GLShader::Id get_shader_resource(const std::string& path);
 
-			GLMaterial::Id get_material_resource(const std::string& path);
-
-			GLStaticMesh::VAO get_static_mesh_resource(const std::string& path);
-
-			GLTexture2D::Id get_texture_2d_resource(const std::string& path);
+			GLuint get_texture_2d_resource(const std::string& path, bool hdr);
 
 			//////////////////
 			///   Fields   ///
@@ -78,19 +82,14 @@ namespace sge
 			// Config
 			GLint width;
 			GLint height;
-			GLStaticMesh::VAO missing_mesh;
-			GLMaterial::Id missing_material;
+			gl_static_mesh::StaticMesh missing_mesh;
+            gl_material::Material missing_material;
 
 			// Resources
-			std::unordered_map<std::string, GLShader::Id> shader_resources;
-			std::unordered_map<std::string, GLMaterial::Id> material_resources;
-			std::unordered_map<std::string, GLStaticMesh::VAO> static_mesh_resources;
-			std::unordered_map<std::string, GLTexture2D::Id> texture_2d_resources;
-
-            std::map<GLShader::Id, GLShader> shaders;
-            std::map<GLMaterial::Id, GLMaterial> materials;
-            std::map<GLStaticMesh::VAO, GLStaticMesh> static_meshes;
-            std::map<GLTexture2D::Id, GLTexture2D> texture_2ds;
+			std::unordered_map<std::string, GLShader> shader_resources;
+			std::unordered_map<std::string, gl_material::Material> material_resources;
+			std::unordered_map<std::string, gl_static_mesh::StaticMesh> static_mesh_resources;
+			std::unordered_map<std::string, GLuint> texture_2d_resources;
 
 			// The default framebuffer
 			GLint default_framebuffer;
