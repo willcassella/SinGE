@@ -5,7 +5,9 @@
 #include <algorithm>
 #include <embree2/rtcore.h>
 #include <embree2/rtcore_ray.h>
+#include <glm/glm.hpp>
 #include <Core/Math/Mat4.h>
+#include <Resource/Resources/Image.h>
 #include "../include/Lightmapper/Lightmapper.h"
 
 namespace sge
@@ -44,82 +46,75 @@ namespace sge
         return min + static_cast<float>(rand()) / (static_cast<float>(RAND_MAX / (max - min)));
     }
 
-    struct EmbreeGeometry
+    struct LightmapScene
     {
-        //////////////////
-        ///   Fields   ///
-    public:
-
-        const StaticMesh::SubMesh* sub_mesh;
-        const Image* albedo;
-        const color::RGBF32* lightmap;
+        RTCDevice rtc_device;
+        RTCScene rtc_scene;
+        const LightmapOccluder* occluders;
+        std::size_t num_occluders;
     };
 
-    static std::vector<EmbreeGeometry> fill_scene(
-        RTCScene scene,
+    LightmapScene* new_lightmap_scene(
         const LightmapOccluder* occluders,
         std::size_t num_occluders)
     {
-        std::vector<EmbreeGeometry> result;
+        // Create the scene
+        auto* scene = new LightmapScene{};
+        scene->rtc_device = rtcNewDevice();
+        scene->rtc_scene = rtcDeviceNewScene(scene->rtc_device, RTC_SCENE_STATIC, RTC_INTERSECT1 | RTC_INTERSECT8);
+        scene->occluders = occluders;
+        scene->num_occluders = num_occluders;
 
-        // For each occluder object given
+        // Fill it
+        auto* const rtc_scene = scene->rtc_scene;
         for (std::size_t occluder_i = 0; occluder_i < num_occluders; ++occluder_i)
         {
-            const auto* const sub_meshes = occluders[occluder_i].mesh->sub_meshes();
-            const auto num_sub_meshes = occluders[occluder_i].mesh->num_sub_meshes();
-            const auto* const occluder_albedo = occluders[occluder_i].albedo;
-            const auto* const occluder_lightmap = occluders[occluder_i].lightmap;
-            const auto occluder_transform = occluders[occluder_i].transform;
+            const auto* const occluder_mesh = occluders[occluder_i].mesh;
+            const auto occluder_transform = occluders[occluder_i].world_transform;
 
-            // For each submesh in the occluder
-            for (std::size_t mesh_i = 0; mesh_i < num_sub_meshes; ++mesh_i)
+            // Create the mesh
+            auto rtc_mesh = rtcNewTriangleMesh(
+                rtc_scene,
+                RTC_GEOMETRY_STATIC,
+                occluder_mesh->num_triangles(),
+                occluder_mesh->num_verts());
+
+            // Load in vertex positions
+            const auto num_verts = occluder_mesh->num_verts();
+            const auto* const vert_positions = occluder_mesh->vertex_positions();
+            auto* const pos_buffer = (Vec4*)rtcMapBuffer(rtc_scene, rtc_mesh, RTC_VERTEX_BUFFER);
+            for (std::size_t vert_i = 0; vert_i < num_verts; ++vert_i)
             {
-                // Create the mesh
-                auto rtc_mesh = rtcNewTriangleMesh(
-                    scene,
-                    RTC_GEOMETRY_STATIC,
-                    sub_meshes[mesh_i].num_triangles(),
-                    sub_meshes[mesh_i].num_verts());
-
-                // Add it to the vector
-                result.push_back({ sub_meshes + mesh_i, occluder_albedo, occluder_lightmap });
-
-                // Load in vertex positions
-                const auto num_verts = sub_meshes[mesh_i].num_verts();
-                const auto* const sub_mesh_positions = sub_meshes[mesh_i].vertex_positions();
-                auto* const pos_buffer = (Vec4*)rtcMapBuffer(scene, rtc_mesh, RTC_VERTEX_BUFFER);
-                for (std::size_t vert_i = 0; vert_i < num_verts; ++vert_i)
-                {
-                    const auto pos = occluder_transform * sub_mesh_positions[vert_i];
-                    pos_buffer[vert_i] = Vec4{ pos, 0.f };
-                }
-                rtcUnmapBuffer(scene, rtc_mesh, RTC_VERTEX_BUFFER);
-
-                // Load in triangle indices
-                const auto num_triangle_elements = sub_meshes[mesh_i].num_triangle_elements();
-                const auto* const sub_mesh_triangle_elements = sub_meshes[mesh_i].triangle_elements();
-                auto* index_buffer = (int*)rtcMapBuffer(scene, rtc_mesh, RTC_INDEX_BUFFER);
-                for (std::size_t index_i = 0; index_i < num_triangle_elements; ++index_i)
-                {
-                    index_buffer[index_i] = static_cast<int>(sub_mesh_triangle_elements[index_i]);
-                }
-                rtcUnmapBuffer(scene, rtc_mesh, RTC_INDEX_BUFFER);
+                const auto pos = occluder_transform * vert_positions[vert_i];
+                pos_buffer[vert_i] = Vec4{ pos, 0.f };
             }
+            rtcUnmapBuffer(rtc_scene, rtc_mesh, RTC_VERTEX_BUFFER);
+
+            // Load in triangle indices
+            const auto num_triangle_elements = occluder_mesh->num_triangle_elements();
+            const auto* const triangle_elements = occluder_mesh->triangle_elements();
+            auto* index_buffer = (int*)rtcMapBuffer(rtc_scene, rtc_mesh, RTC_INDEX_BUFFER);
+            for (std::size_t index_i = 0; index_i < num_triangle_elements; ++index_i)
+            {
+                index_buffer[index_i] = static_cast<int>(triangle_elements[index_i]);
+            }
+            rtcUnmapBuffer(rtc_scene, rtc_mesh, RTC_INDEX_BUFFER);
         }
 
-        rtcCommit(scene);
+        rtcCommit(rtc_scene);
 
-        // Return the created geometries
-        return result;
+        return scene;
     }
 
-    void generate_lightmap_pack(
-        LightmapObject* objects,
-        std::size_t num_objects)
+    void free_lightmap_scene(
+        LightmapScene* scene)
     {
-        // Only support one object right now
-        objects[0].lightmap_pos = Vec2::zero();
-        objects[0].lightmap_exts = 1.0f;
+        // Destroy rtc resources
+        rtcDeleteScene(scene->rtc_scene);
+        rtcDeleteDevice(scene->rtc_device);
+
+        // Destroy the scene
+        delete scene;
     }
 
     void generate_lightmap_texels(
@@ -133,21 +128,30 @@ namespace sge
         // Initialize the mask to 0
         std::memset(out_texel_mask, 0, width * height);
 
-        // Get the submeshes in the mesh
-        const auto* const sub_meshes = objects[0].mesh->sub_meshes();
-        const auto num_sub_meshes = objects[0].mesh->num_sub_meshes();
-
-        // For each submesh
-        for (std::size_t mesh_i = 0; mesh_i < num_sub_meshes; ++mesh_i)
+        // For each object
+        for (std::size_t mesh_i = 0; mesh_i < num_objects; ++mesh_i)
         {
             // Get the properties of the submesh
-            const auto num_triangles = sub_meshes[mesh_i].num_triangles();
-            const auto* const triangle_elements = sub_meshes[mesh_i].triangle_elements();
-            const auto* const material_uv = sub_meshes[mesh_i].material_uv();
-            const auto* const triangle_pos = sub_meshes[mesh_i].vertex_positions();
-            const auto* const triangle_norms = sub_meshes[mesh_i].vertex_normals();
-            const auto* const triangle_tangents = sub_meshes[mesh_i].vertex_tangents();
-            const auto* const triangle_bitangent_signs = sub_meshes[mesh_i].bitangent_signs();
+            const auto mesh_transform = objects[mesh_i].world_transform;
+            Mat4 mesh_inverse_transpose;
+
+            // Construct inverse transpose matrix
+            {
+                glm::mat4 inverse_trans;
+                std::memcpy(&inverse_trans, &mesh_transform, sizeof(Mat4));
+
+                inverse_trans = glm::transpose(glm::inverse(inverse_trans));
+
+                std::memcpy(&mesh_inverse_transpose, &inverse_trans, sizeof(Mat4));
+            }
+
+            const auto num_triangles = objects[mesh_i].mesh->num_triangles();
+            const auto* const triangle_elements = objects[mesh_i].mesh->triangle_elements();
+            const auto* const lightmap_uv = objects[mesh_i].mesh->lightmap_uv();
+            const auto* const triangle_pos = objects[mesh_i].mesh->vertex_positions();
+            const auto* const triangle_norms = objects[mesh_i].mesh->vertex_normals();
+            const auto* const triangle_tangents = objects[mesh_i].mesh->vertex_tangents();
+            const auto* const triangle_bitangent_signs = objects[mesh_i].mesh->bitangent_signs();
 
             // For each triangle
             for (std::size_t tri_i = 0; tri_i < num_triangles; ++tri_i)
@@ -170,7 +174,7 @@ namespace sge
                 for (int vert_i = 0; vert_i < 3; ++vert_i)
                 {
                     // Convert the normalized UV coordinates to image coordinates
-                    UHalfVec2 coord = material_uv[vert_indices[vert_i]];
+                    UHalfVec2 coord = lightmap_uv[vert_indices[vert_i]];
                     const int32 x = static_cast<int32>(coord.norm_f32_x() * width);
                     const int32 y = static_cast<int32>(coord.norm_f32_y() * height);
 
@@ -185,21 +189,21 @@ namespace sge
                     max_y = std::max(max_y, y);
 
                     // Set the position
-                    vert_pos[vert_i] = triangle_pos[vert_indices[vert_i]];
+                    vert_pos[vert_i] = mesh_transform * triangle_pos[vert_indices[vert_i]];
 
                     // Set the normal
-                    vert_norms[vert_i] = Vec3{
+                    vert_norms[vert_i] = (mesh_inverse_transpose * Vec3{
                         triangle_norms[vert_indices[vert_i]].norm_f32_x(),
                         triangle_norms[vert_indices[vert_i]].norm_f32_y(),
                         triangle_norms[vert_indices[vert_i]].norm_f32_z()
-                    };
+                    }).normalized();
 
                     // Set the tangent
-                    vert_tans[vert_i] = Vec3{
+                    vert_tans[vert_i] = (mesh_inverse_transpose * Vec3{
                         triangle_tangents[vert_indices[vert_i]].norm_f32_x(),
                         triangle_tangents[vert_indices[vert_i]].norm_f32_y(),
                         triangle_tangents[vert_indices[vert_i]].norm_f32_z()
-                    };
+                    }).normalized();
 
                     // Re-orthogonalize tangent with respect to normal
                     vert_tans[vert_i] = (vert_tans[vert_i] - Vec3::dot(vert_tans[vert_i], vert_norms[vert_i]) * vert_norms[vert_i]).normalized();
@@ -250,19 +254,16 @@ namespace sge
     }
 
     void compute_direct_irradiance(
+        const LightmapScene* scene,
         LightmapLight light,
-        const LightmapOccluder* occluders,
-        std::size_t num_occluders,
         int32 width,
         int32 height,
         const LightmapTexel* texels,
         const byte* texel_mask,
-        color::RGBF32* out_irradiance)
+        color::RGBAF32* out_irradiance)
     {
-        // Create and fill the scene
-        RTCDevice rtc_device = rtcNewDevice();
-        RTCScene rtc_scene = rtcDeviceNewScene(rtc_device, RTC_SCENE_STATIC, RTC_INTERSECT1);
-        fill_scene(rtc_scene, occluders, num_occluders);
+        // Get the scene
+        auto* const rtc_scene = scene->rtc_scene;
 
         // Determine what direction each ray should point
         const Vec3 ray_dir = (light.direction * -1).normalized();
@@ -285,7 +286,7 @@ namespace sge
 
                 // Get the texel position and normal
                 const auto texel_pos = texels[index].world_pos;
-                const Vec3 texel_norm = { texels[index].TBN[2][0], texels[index].TBN[2][1], texels[index].TBN[2][2] };
+                const auto texel_norm = Vec3{ texels[index].TBN[2][0], texels[index].TBN[2][1], texels[index].TBN[2][2] };
 
                 // Create the ray
                 RTCRay light_ray;
@@ -305,29 +306,26 @@ namespace sge
                 if (light_ray.geomID)
                 {
                     const auto dot = std::max(Vec3::dot(texel_norm, ray_dir), 0.f);
-                    out_irradiance[index] = light.color * dot;
+                    const auto color_intensity = light.intensity * dot;
+                    out_irradiance[index] = color::RGBAF32{ color_intensity.red(), color_intensity.green(), color_intensity.blue(), dot };
                 }
             }
         }
-
-        // Clean up
-        rtcDeleteScene(rtc_scene);
-        rtcDeleteDevice(rtc_device);
     }
 
     void compute_indirect_irradiance(
-        const LightmapOccluder* occluders,
-        std::size_t num_occluders,
+        const LightmapScene* scene,
+        int32 num_sample_sets,
         int32 width,
         int32 height,
         const LightmapTexel* texels,
         const byte* texel_mask,
-        color::RGBF32* out_irradiance)
+        color::RGBAF32* out_irradiance)
     {
-        // Create and fill the RTC scene
-        RTCDevice rtc_device = rtcNewDevice();
-        RTCScene rtc_scene = rtcDeviceNewScene(rtc_device, RTC_SCENE_STATIC, RTC_INTERSECT8);
-        const auto geometries = fill_scene(rtc_scene, occluders, num_occluders);
+        // Get the scene
+        auto* const rtc_scene = scene->rtc_scene;
+        const auto* const occluders = scene->occluders;
+        const float normalization_factor = 1.f / (static_cast<float>(num_sample_sets) * 8) * 2 * 3.1415926539f;
 
         // Iterate from min to max
         for (int32 y = 0; y < height; ++y)
@@ -353,7 +351,7 @@ namespace sge
                 valid_mask.fill(0xFFFFFFFF);
 
                 // For each raycasting iteration
-                for (int iter_i = 0; iter_i < 64; ++iter_i)
+                for (int iter_i = 0; iter_i < num_sample_sets; ++iter_i)
                 {
                     RTCRay8 indirect_rays;
                     for (int i = 0; i < 8; ++i)
@@ -385,7 +383,7 @@ namespace sge
                     rtcIntersect8(valid_mask.data(), rtc_scene, indirect_rays);
 
                     // Test rays
-                    color::RGBF32 result;
+                    auto result = color::RGBAF32::black();
                     for (int i = 0; i < 8; ++i)
                     {
                         // If the ray didn't hit anything
@@ -395,66 +393,69 @@ namespace sge
                         }
 
                         // Get the hit triangle
-                        const auto hit_mesh = geometries[indirect_rays.geomID[i]];
-                        const auto* const hit_elems = hit_mesh.sub_mesh->triangle_elements() + indirect_rays.primID[i] * 3;
+                        const auto hit_mesh = occluders[indirect_rays.geomID[i]];
+                        const auto* const hit_elems = hit_mesh.mesh->triangle_elements() + indirect_rays.primID[i] * 3;
 
                         // Calculate the uv coordinates for the hit triangle
-                        IVec2<int32> hit_tri_uvs[3];
+                        IVec2<int32> hit_tri_lm_uvs[3];
                         for (int vert_i = 0; vert_i < 3; ++vert_i)
                         {
-                            const auto uv = hit_mesh.sub_mesh->material_uv()[hit_elems[vert_i]];
-                            hit_tri_uvs[vert_i].x(static_cast<int32>(uv.norm_f32_x() * INT32_MAX));
-                            hit_tri_uvs[vert_i].y(static_cast<int32>(uv.norm_f32_y() * INT32_MAX));
+                            const auto lm_uv = hit_mesh.mesh->lightmap_uv()[hit_elems[vert_i]];
+                            hit_tri_lm_uvs[vert_i].x(static_cast<int32>(lm_uv.norm_f32_x() * INT32_MAX));
+                            hit_tri_lm_uvs[vert_i].y(static_cast<int32>(lm_uv.norm_f32_y() * INT32_MAX));
                         }
 
                         // Calculate the hit uv coordinate
                         const auto hit_u = indirect_rays.u[i];
                         const auto hit_v = indirect_rays.v[i];
-                        const Vec3 hit_bary = { 1.f - hit_u - hit_v, hit_u, hit_v };
-                        const auto hit_uv = bary_interpolate(hit_bary, hit_tri_uvs);
+                        const auto hit_bary = Vec3{ 1.f - hit_u - hit_v, hit_u, hit_v };
+                        const auto hit_lm_uv = bary_interpolate(hit_bary, hit_tri_lm_uvs);
 
-                        // Calculate the hit albedo UV coordinates
-                        const auto hit_albedo_uv = IVec2<int32>{
-                            static_cast<int32>(hit_uv.norm_f32_x() * hit_mesh.albedo->get_width()),
-                            static_cast<int32>(hit_uv.norm_f32_y() * hit_mesh.albedo->get_height())
-                        };
-
-                        // Sample the albedo value at the hit point
-                        const Vec3 hit_albedo{
-                            (float)hit_mesh.albedo->get_bitmap()[(hit_albedo_uv.x() + hit_albedo_uv.y() * width) * 4 + 0] / UINT8_MAX,
-                            (float)hit_mesh.albedo->get_bitmap()[(hit_albedo_uv.x() + hit_albedo_uv.y() * width) * 4 + 1] / UINT8_MAX,
-                            (float)hit_mesh.albedo->get_bitmap()[(hit_albedo_uv.x() + hit_albedo_uv.y() * width) * 4 + 2] / UINT8_MAX
-                        };
+                        // Get the hit color
+                        const auto hit_color = hit_mesh.base_color;
 
                         // Calculate the hit irradiance uv coordinates
-                        const auto hit_irradiance_uv = IVec2<int32>{
-                            static_cast<int32>(hit_uv.norm_f32_x() * width),
-                            static_cast<int32>(hit_uv.norm_f32_y() * height) };
+                        auto hit_irradiance_uv = IVec2<int32>{
+                            static_cast<int32>(hit_lm_uv.norm_f32_x() * hit_mesh.irradiance_width),
+                            static_cast<int32>(hit_lm_uv.norm_f32_y() * hit_mesh.irradiance_height) };
+
+                        // Clamp irradiance UV
+                        hit_irradiance_uv.x(std::max(std::min(hit_mesh.irradiance_width, hit_irradiance_uv.x()), 0));
+                        hit_irradiance_uv.y(std::max(std::min(hit_mesh.irradiance_height, hit_irradiance_uv.y()), 0));
 
                         // Sample the irradiance at the hit location
-                        const color::RGBF32 hit_irradiance = hit_mesh.lightmap[hit_irradiance_uv.x() + hit_irradiance_uv.y() * width];
+                        const color::RGBAF32 hit_irradiance = hit_mesh.irradiance[hit_irradiance_uv.x() + hit_irradiance_uv.y() * hit_mesh.irradiance_width];
 
                         // Calculate the influence from this point
                         const auto dir = Vec3{ indirect_rays.dirx[i], indirect_rays.diry[i], indirect_rays.dirz[i] };
                         const auto dot = Vec3::dot(texel_norm, dir);
 
                         // Write out the irradiance
-                        result.red(result.red() + dot * hit_irradiance.red() * hit_albedo.x());
-                        result.green(result.green() + dot * hit_irradiance.green() * hit_albedo.y());
-                        result.blue(result.blue() + dot * hit_irradiance.blue() * hit_albedo.z());
+                        result.red(result.red() + dot * hit_irradiance.red() * hit_color.red());
+                        result.green(result.green() + dot * hit_irradiance.green() * hit_color.green());
+                        result.blue(result.blue() + dot * hit_irradiance.blue() * hit_color.blue());
                     }
 
                     // Divide by number of samples and probability (Monte carlo integration)
-                    result = result / (64 * 8) * 2 * 3.1415926539f;
+                    result = result * normalization_factor;
 
-                    // Write out irradiance
+                    // Write out irradiance (ignore alpha component)
                     out_irradiance[texel_index] += result;
                 }
             }
         }
+    }
 
-        // Clean up
-        rtcDeleteScene(rtc_scene);
-        rtcDeleteDevice(rtc_device);
+    void postprocess_irradiance(int32 width, int32 height, int32 num_steps, color::RGBAF32* irradiance)
+    {
+        // Create a copy of the image
+        std::vector<color::RGBAF32> temp;
+        temp.assign(width * height, color::RGBAF32::black());
+
+        for (int32 i = 0; i < num_steps; ++i)
+        {
+            Image::dilate_rgbf(irradiance->vec(), width, height, 4, temp.data()->vec());
+            Image::smooth_rgbf(temp.data()->vec(), width, height, 4, irradiance->vec());
+        }
     }
 }
