@@ -14,11 +14,57 @@ SGE_REFLECT_TYPE(sge::StaticMesh)
 
 namespace sge
 {
-    void StaticMesh::SubMesh::serialize(ArchiveWriter& writer) const
+    void StaticMesh::Material::to_archive(ArchiveWriter& writer) const
     {
-        // Write default material
-        writer.object_member("mat", _default_material);
+        writer.object_member("path", _path);
+        writer.object_member("estrt", _start_elem_index);
+        writer.object_member("ecnt", _num_elem_indices);
+    }
 
+    void StaticMesh::Material::from_archive(ArchiveReader& reader)
+    {
+        _path = "";
+        _start_elem_index = 0;
+        _num_elem_indices = 0;
+
+        reader.enumerate_object_members([this, &reader](const char* mem_name)
+        {
+            if (std::strcmp(mem_name, "path") == 0)
+            {
+                sge::from_archive(this->_path, reader);
+            }
+            else if (std::strcmp(mem_name, "estrt") == 0)
+            {
+                reader.number(this->_start_elem_index);
+            }
+            else if (std::strcmp(mem_name, "ecnt") == 0)
+            {
+                reader.number(this->_num_elem_indices);
+            }
+        });
+    }
+
+    const std::string& StaticMesh::Material::path() const
+    {
+        return _path;
+    }
+
+    uint32 StaticMesh::Material::start_elem_index() const
+    {
+        return _start_elem_index;
+    }
+
+    uint32 StaticMesh::Material::num_elem_indices() const
+    {
+        return _num_elem_indices;
+    }
+
+    StaticMesh::StaticMesh()
+    {
+    }
+
+    void StaticMesh::to_archive(ArchiveWriter& writer) const
+    {
         // Write vertex positions
         writer.push_object_member("vpos");
         writer.typed_array(_vertex_positions.data()->vec(), _vertex_positions.size() * 3);
@@ -40,37 +86,49 @@ namespace sge
         writer.pop();
 
         // Write the material UV layer
-        writer.push_object_member("uv");
+        writer.push_object_member("mtuv");
         writer.typed_array(_material_uv.data()->vec(), _material_uv.size() * 2);
         writer.pop();
 
-        // Write vertex indices
-        writer.push_object_member("ind");
+        // Write lightmap UV layer
+        if (!_lightmap_uv.empty())
+        {
+            writer.push_object_member("lmuv");
+            writer.typed_array(_lightmap_uv.data()->vec(), _lightmap_uv.size() * 2);
+            writer.pop();
+        }
+
+        // Write triangle elements
+        writer.push_object_member("elem");
         writer.typed_array(_triangle_elements.data(), _triangle_elements.size());
+        writer.pop();
+
+        // Write materials
+        writer.push_object_member("mats");
+        for (const auto& mat : _materials)
+        {
+            writer.push_array_element();
+            mat.to_archive(writer);
+            writer.pop();
+        }
         writer.pop();
     }
 
-    void StaticMesh::SubMesh::deserialize(ArchiveReader& reader, std::string name)
+    void StaticMesh::from_archive(ArchiveReader& reader)
     {
-        _name = std::move(name);
-        _default_material.clear();
         _vertex_positions.clear();
         _vertex_normals.clear();
         _vertex_tangents.clear();
         _bitangent_signs.clear();
         _material_uv.clear();
+        _lightmap_uv.clear();
         _triangle_elements.clear();
+        _materials.clear();
 
         std::size_t num_verts = 0;
         reader.enumerate_object_members([this, &reader, &num_verts](const char* mem_name)
         {
-            if (std::strcmp(mem_name, "mat") == 0)
-            {
-                // Get the default material name
-                assert(reader.is_string());
-                sge::from_archive(this->_default_material, reader);
-            }
-            else if (std::strcmp(mem_name, "vpos") == 0)
+            if (std::strcmp(mem_name, "vpos") == 0)
             {
                 // Get vertex positions array size
                 std::size_t size = 0;
@@ -122,7 +180,7 @@ namespace sge
                 const auto read_size = reader.typed_array(this->_bitangent_signs.data(), size);
                 assert(read_size == size);
             }
-            else if (std::strcmp(mem_name, "uv") == 0)
+            else if (std::strcmp(mem_name, "mtuv") == 0)
             {
                 // Get uv array size
                 std::size_t size = 0;
@@ -135,7 +193,20 @@ namespace sge
                 const auto read_size = reader.typed_array(this->_material_uv.data()->vec(), size);
                 assert(read_size == size);
             }
-            else if (std::strcmp(mem_name, "ind") == 0)
+            else if (std::strcmp(mem_name, "lmuv") == 0)
+            {
+                // Get uv array size
+                std::size_t size = 0;
+                const auto got_size = reader.array_size(size);
+                assert(got_size && num_verts == 0 || size == num_verts * 2);
+                num_verts = size / 2;
+
+                // Get uvs
+                this->_lightmap_uv.assign(size / 2, UHalfVec2::zero());
+                const auto read_size = reader.typed_array(this->_lightmap_uv.data()->vec(), size);
+                assert(read_size == size);
+            }
+            else if (std::strcmp(mem_name, "elem") == 0)
             {
                 // Get element array size
                 std::size_t size = 0;
@@ -147,130 +218,25 @@ namespace sge
                 const auto read_size = reader.typed_array(this->_triangle_elements.data(), size);
                 assert(read_size == size);
             }
-        });
-    }
-
-    const std::string& StaticMesh::SubMesh::name() const
-    {
-        return _name;
-    }
-
-    const std::string& StaticMesh::SubMesh::default_material() const
-    {
-        return _default_material;
-    }
-
-    std::size_t StaticMesh::SubMesh::num_verts() const
-    {
-        return _vertex_positions.size();
-    }
-
-    const Vec3* StaticMesh::SubMesh::vertex_positions() const
-    {
-        if (_vertex_positions.empty())
-        {
-            return nullptr;
-        }
-
-        return _vertex_positions.data();
-    }
-
-    const HalfVec3* StaticMesh::SubMesh::vertex_normals() const
-    {
-        if (_vertex_normals.empty())
-        {
-            return nullptr;
-        }
-
-        return _vertex_normals.data();
-    }
-
-    const HalfVec3* StaticMesh::SubMesh::vertex_tangents() const
-    {
-        if (_vertex_tangents.empty())
-        {
-            return nullptr;
-        }
-
-        return _vertex_tangents.data();
-    }
-
-    const int8* StaticMesh::SubMesh::bitangent_signs() const
-    {
-        if (_bitangent_signs.empty())
-        {
-            return nullptr;
-        }
-
-        return _bitangent_signs.data();
-    }
-
-    const UHalfVec2* StaticMesh::SubMesh::material_uv() const
-    {
-        if (_material_uv.empty())
-        {
-            return nullptr;
-        }
-
-        return _material_uv.data();
-    }
-
-    std::size_t StaticMesh::SubMesh::num_triangles() const
-    {
-        return _triangle_elements.size() / 3;
-    }
-
-    std::size_t StaticMesh::SubMesh::num_triangle_elements() const
-    {
-        return _triangle_elements.size();
-    }
-
-    const uint32* StaticMesh::SubMesh::triangle_elements() const
-    {
-        if (_triangle_elements.empty())
-        {
-            return nullptr;
-        }
-
-        return _triangle_elements.data();
-    }
-
-    StaticMesh::StaticMesh()
-	{
-	}
-
-	void StaticMesh::to_archive(ArchiveWriter& writer) const
-	{
-        writer.push_object_member("objs");
-
-        // Serialize subobjects
-        for (const auto& sub_obj : _sub_meshes)
-        {
-            writer.push_object_member(sub_obj.name().c_str());
-            sub_obj.serialize(writer);
-            writer.pop();
-        }
-
-        writer.pop();
-	}
-
-    void StaticMesh::from_archive(ArchiveReader& reader)
-    {
-        _sub_meshes.clear();
-
-        if (reader.pull_object_member("objs"))
-        {
-            reader.enumerate_object_members([this, &reader](const char* mem_name)
+            else if (std::strcmp(mem_name, "mats") == 0)
             {
-                // Serialize a submesh
-                SubMesh sub_mesh;
-                sub_mesh.deserialize(reader, mem_name);
+                // Get array size
+                std::size_t size = 0;
+                const auto got_size = reader.array_size(size);
+                assert(got_size);
 
-                _sub_meshes.push_back(std::move(sub_mesh));
-            });
+                // Reserve space
+                this->_materials.reserve(size);
 
-            reader.pop();
-        }
+                // Deserialize materials
+                reader.enumerate_array_elements([this, &reader](std::size_t /*i*/)
+                {
+                    Material mat;
+                    mat.from_archive(reader);
+                    this->_materials.push_back(std::move(mat));
+                });
+            }
+        });
     }
 
     bool StaticMesh::from_file(const char* path)
@@ -287,18 +253,98 @@ namespace sge
         return true;
     }
 
-    std::size_t StaticMesh::num_sub_meshes() const
+    std::size_t StaticMesh::num_verts() const
     {
-        return _sub_meshes.size();
+        return _vertex_positions.size();
     }
 
-    const StaticMesh::SubMesh* StaticMesh::sub_meshes() const
+    const Vec3* StaticMesh::vertex_positions() const
     {
-        if (_sub_meshes.empty())
+        if (_vertex_positions.empty())
         {
             return nullptr;
         }
 
-        return _sub_meshes.data();
+        return _vertex_positions.data();
+    }
+
+    const HalfVec3* StaticMesh::vertex_normals() const
+    {
+        if (_vertex_normals.empty())
+        {
+            return nullptr;
+        }
+
+        return _vertex_normals.data();
+    }
+
+    const HalfVec3* StaticMesh::vertex_tangents() const
+    {
+        if (_vertex_tangents.empty())
+        {
+            return nullptr;
+        }
+
+        return _vertex_tangents.data();
+    }
+
+    const int8* StaticMesh::bitangent_signs() const
+    {
+        if (_bitangent_signs.empty())
+        {
+            return nullptr;
+        }
+
+        return _bitangent_signs.data();
+    }
+
+    const UHalfVec2* StaticMesh::material_uv() const
+    {
+        if (_material_uv.empty())
+        {
+            return nullptr;
+        }
+
+        return _material_uv.data();
+    }
+
+    const UHalfVec2* StaticMesh::lightmap_uv() const
+    {
+        if (_lightmap_uv.empty())
+        {
+            return material_uv();
+        }
+
+        return _lightmap_uv.data();
+    }
+
+    std::size_t StaticMesh::num_triangles() const
+    {
+        return _triangle_elements.size() / 3;
+    }
+
+    std::size_t StaticMesh::num_triangle_elements() const
+    {
+        return _triangle_elements.size();
+    }
+
+    const uint32* StaticMesh::triangle_elements() const
+    {
+        if (_triangle_elements.empty())
+        {
+            return nullptr;
+        }
+
+        return _triangle_elements.data();
+    }
+
+    std::size_t StaticMesh::num_materials() const
+    {
+        return _materials.size();
+    }
+
+    const StaticMesh::Material* StaticMesh::materials() const
+    {
+        return _materials.data();
     }
 }

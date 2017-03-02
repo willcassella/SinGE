@@ -72,29 +72,29 @@
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)packages\FreeImage\include;$(SolutionDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)packages\FreeImage-3.17.0\include;$(SolutionDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)packages\FreeImage-3.17.0\bin\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)packages\FreeImage\include;$(SolutionDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)packages\FreeImage-3.17.0\include;$(SolutionDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)packages\FreeImage-3.17.0\bin\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)packages\FreeImage\include;$(SolutionDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)packages\FreeImage-3.17.0\include;$(SolutionDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)packages\FreeImage-3.17.0\bin\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
-    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)packages\FreeImage\include;$(SolutionDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)packages\FreeImage\lib\$(Platform);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)Modules\Core\include;$(SolutionDir)packages\FreeImage-3.17.0\include;$(SolutionDir)packages\rapidjson\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)packages\FreeImage-3.17.0\bin\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -107,7 +107,7 @@
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d
-xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
+xcopy "$(SolutionDir)packages\FreeImage-3.17.0\bin\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>FreeImage.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -127,7 +127,7 @@ xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Soluti
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d
-xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
+xcopy "$(SolutionDir)packages\FreeImage-3.17.0\bin\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <Link>
       <AdditionalDependencies>FreeImage.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -155,7 +155,7 @@ xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Soluti
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d
-xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
+xcopy "$(SolutionDir)packages\FreeImage-3.17.0\bin\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.2 FreeImage rapidjson</Command>
@@ -180,7 +180,7 @@ xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Soluti
     </Link>
     <PostBuildEvent>
       <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d
-xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
+xcopy "$(SolutionDir)packages\FreeImage-3.17.0\bin\$(Platform)\FreeImage.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.2 FreeImage rapidjson</Command>
@@ -202,6 +202,7 @@ xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Soluti
     <ClInclude Include="include\Resource\ResourceCallbackQueue.h" />
     <ClInclude Include="include\Resource\ResourceId.h" />
     <ClInclude Include="include\Resource\ResourceManager.h" />
+    <ClInclude Include="include\Resource\Resources\HDRImage.h" />
     <ClInclude Include="include\Resource\Resources\Image.h" />
     <ClInclude Include="include\Resource\Resources\Material.h" />
     <ClInclude Include="include\Resource\Resources\Shader.h" />
@@ -219,6 +220,7 @@ xcopy "$(SolutionDir)packages\FreeImage\lib\$(Platform)\FreeImage.dll" "$(Soluti
     <ClCompile Include="source\Interfaces\IFromFile.cpp" />
     <ClCompile Include="source\Misc\Color.cpp" />
     <ClCompile Include="source\ResourceManager.cpp" />
+    <ClCompile Include="source\Resources\HDRImage.cpp" />
     <ClCompile Include="source\Resources\Image.cpp" />
     <ClCompile Include="source\Resources\Material.cpp" />
     <ClCompile Include="source\Resources\Shader.cpp" />
