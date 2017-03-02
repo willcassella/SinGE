@@ -53,6 +53,18 @@ class Archive(object):
         self.root.type = Archive.NODE_UINT8
         self.root.data = value
 
+    def u32(self, value):
+        # Make sure this node type is null
+        assert(self.root.type == Archive.NODE_NULL)
+        self.root.type = Archive.NODE_UINT32
+        self.root.data = value
+
+    def f32(self, value):
+        # Make sure this node type is null
+        assert(self.root.type == Archive.NODE_NULL)
+        self.root.type = Archive.NODE_FLOAT
+        self.root.data = value
+
     def string(self, string):
         # Make sure this node is null
         assert(self.root.type == Archive.NODE_NULL)
@@ -89,6 +101,22 @@ class Archive(object):
         self.root.type = Archive.NODE_ARRAY_FLOAT
         self.root.data = array
 
+    def as_generic_array(self):
+        # Make sure this node is null
+        assert(self.root.type == Archive.NODE_NULL)
+        self.root.type = Archive.NODE_ARRAY_GENERIC
+        self.root.data = list()
+
+    def push_generic_array_element(self):
+        # Make sure this node is a generic array
+        assert(self.root.type == Archive.NODE_ARRAY_GENERIC)
+
+        # Add a new node as an element of the root
+        new_root = Archive.Node()
+        self.root.data.append(new_root)
+        self.stack.append(self.root)
+        self.root = new_root
+
     def as_object(self):
         # Make sure this node is null
         assert(self.root.type == Archive.NODE_NULL)
@@ -99,7 +127,7 @@ class Archive(object):
         # Make sure this node is an object
         assert(self.root.type == Archive.NODE_OBJECT)
 
-        # Add this node as a member of the root
+        # Add a new node as a member of the root
         new_root = Archive.Node()
         self.root.data.append((name, new_root))
         self.stack.append(self.root)
@@ -132,9 +160,27 @@ class Archive(object):
         buffer += struct.pack('{}{}'.format(len(node.data), fmt), *node.data)
 
     @staticmethod
+    def binary_generic_array(buffer, node):
+        # Put the node type and array size into this buffer
+        Archive.binary_node_type(buffer, Archive.NODE_ARRAY_GENERIC)
+        buffer += struct.pack('I', len(node.data))
+
+        # Serialize the array into a new buffer
+        array_buff = bytearray()
+        for element in node.data:
+            # Serialize element
+            Archive.binary_node(array_buff, element)
+
+        # Append the span to the original buffer (accounts for indicator byte, size, span, and contents)
+        buffer += struct.pack('I', 1 + 4 + 4 + len(array_buff))
+
+        # Append the array buffer
+        buffer += array_buff
+
+    @staticmethod
     def binary_object(buffer, node):
         # Put the node type and object size into this buffer
-        Archive.binary_node_type(buffer, node.type)
+        Archive.binary_node_type(buffer, Archive.NODE_OBJECT)
         buffer += struct.pack('I', len(node.data))
 
         # Serialize the object into a new buffer
@@ -161,6 +207,12 @@ class Archive(object):
         elif node.type == Archive.NODE_UINT8:
             Archive.binary_number(buffer, node, 'B')
 
+        elif node.type == Archive.NODE_UINT32:
+            Archive.binary_number(buffer, node, 'I')
+
+        elif node.type == Archive.NODE_FLOAT:
+            Archive.binary_number(buffer, node, 'f')
+
         elif node.type == Archive.NODE_STRING:
             Archive.binary_string(buffer, node)
 
@@ -178,6 +230,9 @@ class Archive(object):
 
         elif node.type == Archive.NODE_ARRAY_FLOAT:
             Archive.binary_typed_array(buffer, node, 'f')
+
+        elif node.type == Archive.NODE_ARRAY_GENERIC:
+            Archive.binary_generic_array(buffer, node)
 
         elif node.type == Archive.NODE_OBJECT:
             Archive.binary_object(buffer, node)

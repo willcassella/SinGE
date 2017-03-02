@@ -42,19 +42,23 @@ class SinGEDEntityPanel(Panel):
 
         return
 
-class SinGEDMeshPanel(Panel):
-    bl_label = 'SinGED Mesh'
+class SinGEDMaterialPanel(Panel):
+    bl_label = 'SinGED Material Properties'
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
-    bl_context = 'data'
+    bl_context = 'material'
 
     @classmethod
     def poll(cls, context):
-        # If the active object is not an mesh
         if context.active_object is None:
             return False
 
+        # If the active object is not an mesh
         if context.active_object.type != 'MESH':
+            return False
+
+        # If the active object has not material
+        if context.active_object.active_material is None:
             return False
 
         return True
@@ -62,11 +66,8 @@ class SinGEDMeshPanel(Panel):
     def draw(self, context):
         layout = self.layout
 
-        # Draw the 'default material' property
-        layout.prop(context.active_object.data, 'sge_default_material', text="Default Material")
-
-        # Draw the 'lightmap uv' property
-        layout.prop(context.active_object.data, 'sge_lightmap_uv', text="Lightmap UV")
+        # Draw the 'path' property
+        layout.prop(context.active_object.active_material, 'sge_path', text="Material Path")
 
 class SinGEDComponentPanelBase(Panel):
     bl_space_type = 'PROPERTIES'

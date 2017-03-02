@@ -36,3 +36,11 @@ class SinGEDSaveScene(Operator):
     def execute(self, context):
         types.SinGEDProps.sge_scene.save_scene(self.path)
         return {'FINISHED'}
+
+class SinGEDGenerateLightmaps(Operator):
+    bl_idname = 'singed.generate_lightmaps'
+    bl_label = 'SinGED Generate Lightmaps'
+
+    def execute(self, context):
+        types.SinGEDProps.sge_scene.generate_lightmaps()
+        return {'FINISHED'}

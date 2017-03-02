@@ -38,14 +38,14 @@ def register():
     bpy.utils.register_class(operators.SinGEDNewComponent)
     bpy.utils.register_class(operators.SinGEDDestroyComponent)
     bpy.utils.register_class(operators.SinGEDSaveScene)
+    bpy.utils.register_class(operators.SinGEDGenerateLightmaps)
     bpy.utils.register_class(ui.SinGEDEntityPanel)
-    bpy.utils.register_class(ui.SinGEDMeshPanel)
+    bpy.utils.register_class(ui.SinGEDMaterialPanel)
     bpy.utils.register_class(static_mesh.SGEStaticMeshExporter)
     bpy.types.INFO_MT_file_export.append(static_mesh.export_menu_func)
     bpy.types.Scene.singed = PointerProperty(type=types.SinGEDProps)
     bpy.types.Object.sge_entity_id = IntProperty(default=0)
-    bpy.types.Mesh.sge_default_material = StringProperty(default="Content/Materials/Misc/checkerboard.json")
-    bpy.types.Mesh.sge_lightmap_uv = StringProperty()
+    bpy.types.Material.sge_path = StringProperty()
 
 # Unregister classes
 def unregister():
@@ -54,14 +54,14 @@ def unregister():
     # Close the active session
     integration.close_active_session()
 
-    del bpy.types.Mesh.sge_lightmap_uv
-    del bpy.types.Mesh.sge_default_material
+    del bpy.types.Material.sge_path
     del bpy.types.Object.sge_entity_id
     del bpy.types.Scene.singed
     bpy.types.INFO_MT_file_export.remove(static_mesh.export_menu_func)
     bpy.utils.unregister_class(static_mesh.SGEStaticMeshExporter)
-    bpy.utils.unregister_class(ui.SinGEDMeshPanel)
+    bpy.utils.unregister_class(ui.SinGEDMaterialPanel)
     bpy.utils.unregister_class(ui.SinGEDEntityPanel)
+    bpy.utils.unregister_class(operators.SinGEDGenerateLightmaps)
     bpy.utils.unregister_class(operators.SinGEDSaveScene)
     bpy.utils.unregister_class(operators.SinGEDDestroyComponent)
     bpy.utils.unregister_class(operators.SinGEDNewComponent)

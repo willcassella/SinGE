@@ -3,7 +3,7 @@
 import bpy
 from bpy.props import BoolProperty
 from bpy.types import Operator, Panel
-from . import editor_session, type_db, scene_manager, resource_manager, types, ui, static_mesh, material, operators
+from . import editor_session, type_db, scene_manager, resource_manager, types, ui, static_mesh, operators
 from functools import partial
 import time
 import math
@@ -36,10 +36,6 @@ class Globals(object):
 def create_blender_resource(res_manager, path, type, value):
     if type == 'sge::StaticMesh':
         return static_mesh.from_json(path, value)
-    elif type == 'sge::Material':
-        return material.material_from_json(res_manager, path, value)
-    elif type == 'sge::Texture':
-        return material.texture_from_json(path, value)
 
 def new_entity_callback(sge_scene, entity):
     # Disable scene updates
@@ -169,7 +165,7 @@ def update_static_mesh_component_callback(sge_scene, entity, value):
     def set_mesh(res, path, mesh):
         nonlocal obj, mat_path
         obj.data = mesh
-        res.get_resource_async(mat_path, 'sge::Material', partial(set_material, obj.data))
+        #res.get_resource_async(mat_path, 'sge::Material', partial(set_material, obj.data))
 
     # Request the resources
     res = types.SinGEDProps.sge_resource_manager
@@ -525,9 +521,12 @@ class SinGEDConnectPanel(Panel):
         layout.split()
         layout.prop(context.scene.singed, 'sge_realtime_update_delay', text='Realtime Update Interval')
 
-        # Draw save/load scene button
         if types.SinGEDProps.sge_session is not None:
+            # Draw save/load scene button
             layout.split()
             layout.prop(context.scene.singed, 'sge_scene_path')
             save_button = layout.operator(operators.SinGEDSaveScene.bl_idname, text='Save Scene')
             save_button.path = context.scene.singed.sge_scene_path
+
+            # Draw generate lightmaps button
+            gen_lightmaps_button = layout.operator(operators.SinGEDGenerateLightmaps.bl_idname, text='Generate Lightmaps')

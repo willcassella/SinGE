@@ -46,6 +46,7 @@ class SceneManager(object):
         self._num_new_entities = 0
         self._sent_scene_query = False
         self._save_scene_path = ''
+        self._generate_lightmaps_query = False
 
     def register_handlers(self, session):
         session.add_query_handler('get_scene', self._get_scene_query)
@@ -59,6 +60,7 @@ class SceneManager(object):
         session.add_response_handler('get_component', self._get_component_response)
         session.add_query_handler('set_component', self._set_component_query)
         session.add_query_handler('save_scene', self._save_scene_query)
+        session.add_query_handler('gen_lightmaps', self._gen_lightmaps_query)
 
     def _get_scene_query(self, seq_number, priority):
         if not self._sent_scene_query:
@@ -240,8 +242,19 @@ class SceneManager(object):
         self._save_scene_path = ''
         return message
 
+    def _gen_lightmaps_query(self, seq_number, priority):
+        if not self._generate_lightmaps_query:
+            return None
+
+        # Actual value doesn't matter
+        self._generate_lightmaps_query = False
+        return True
+
     def save_scene(self, path):
         self._save_scene_path = path
+
+    def generate_lightmaps(self):
+        self._generate_lightmaps_query = True
 
     def request_new_entity(self, user_data):
         # Reserve the entity id
