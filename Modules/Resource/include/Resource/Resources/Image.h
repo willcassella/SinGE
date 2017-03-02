@@ -14,18 +14,12 @@ namespace sge
 	{
 		SGE_REFLECTED_TYPE;
 
-        enum class ColorFormat
-        {
-            RGBA8,
-            RGB32F
-        };
 
 		////////////////////////
 		///   Constructors   ///
 	public:
 
 		Image();
-        Image(int32 width, int32 height, ColorFormat format);
 		Image(const std::string& path);
 		Image(const Image& copy);
 		Image(Image&& move);
@@ -35,7 +29,7 @@ namespace sge
 		///   Methods   ///
 	public:
 
-        static void save_rgbf(const float* image, int32 width, int32 height, const char* path);
+        static void save_rgbf(const float* image, int32 width, int32 height, byte num_channels, const char* path);
 
         static void dilate_rgbf(const float* image, int32 width, int32 height, byte num_channels, float* out);
 
