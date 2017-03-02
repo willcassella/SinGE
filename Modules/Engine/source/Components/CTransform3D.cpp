@@ -22,6 +22,7 @@ namespace sge
 			writer.object_member("local_scale", local_scale);
 			writer.object_member("local_rotation", local_rotation);
 			writer.object_member("parent", parent);
+            writer.object_member("st", is_static);
 		}
 
 		void from_archive(ArchiveReader& reader)
@@ -30,6 +31,7 @@ namespace sge
 			reader.object_member("local_scale", local_scale);
 			reader.object_member("local_rotation", local_rotation);
 			reader.object_member("parent", parent);
+            reader.object_member("st", is_static);
 		}
 
 		//////////////////
@@ -40,6 +42,7 @@ namespace sge
 		Vec3 local_scale = Vec3{ 1.f, 1.f, 1.f };
 		Quat local_rotation = Quat{};
 		EntityId parent = WORLD_ENTITY;
+        bool is_static = false;
 	};
 
     static Mat4 generate_matrix(const Vec3& pos, const Vec3& scale, const Quat& rot)
@@ -76,6 +79,8 @@ namespace sge
 	.property("world_rotation", &CTransform3D::get_world_rotation, nullptr);
 
 	SGE_REFLECT_TYPE(sge::CTransform3D::FParentChanged);
+
+    SGE_REFLECT_TYPE(sge::CTransform3D::FStaticChanged);
 
 	void CTransform3D::register_type(Scene& scene)
 	{
@@ -125,6 +130,20 @@ namespace sge
         }
 
         return result;
+    }
+
+    bool CTransform3D::is_static() const
+    {
+        return _data->is_static;
+    }
+
+    void CTransform3D::set_static(bool value)
+    {
+        if (_data->is_static != value)
+        {
+            _data->is_static = value;
+            _static_changed_tags.add_single_tag(entity(), FStaticChanged{});
+        }
     }
 
     Vec3 CTransform3D::get_local_position() const

@@ -1,7 +1,7 @@
 // CStaticMesh.h
 #pragma once
 
-#include "../../Resources/Material.h"
+#include <Resource/Resources/StaticMesh.h>
 #include "../../Component.h"
 #include "../../Util/TagStorage.h"
 
@@ -31,6 +31,22 @@ namespace sge
 
 		void material(std::string material);
 
+        bool uses_lightmap() const;
+
+        void set_uses_lightmap(bool value);
+
+        const std::string& lightmap() const;
+
+        void lightmap(std::string lightmap);
+
+        int32 lightmap_width() const;
+
+        void lightmap_width(int32 width);
+
+        int32 lightmap_height() const;
+
+        void lightmap_height(int32 height);
+
 	private:
 
         void generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags) override;
@@ -49,6 +65,11 @@ namespace sge
 			SGE_REFLECTED_TYPE;
 		};
 
+        struct SGE_ENGINE_API FLightmapChanged
+        {
+            SGE_REFLECTED_TYPE;
+        };
+
 		//////////////////
 		///   Fields   ///
 	private:
@@ -56,37 +77,6 @@ namespace sge
 		Data* _data = nullptr;
         TagStorage<FMeshChanged> _mesh_changed;
         TagStorage<FMaterialChanged> _material_changed;
-	};
-
-	/* Component applied to entities with a 'CStaticMesh' component, to override the default material parameters for that mesh. */
-	struct SGE_ENGINE_API CStaticMeshMaterialOverrideParameters : TComponentInterface<CStaticMeshMaterialOverrideParameters>
-	{
-		struct Data;
-		SGE_REFLECTED_TYPE;
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		/* Sets a float param value. */
-		void set_param(std::string name, float value);
-
-		/* Sets a Vec2 param value. */
-		void set_param(std::string name, Vec2 value);
-
-		/* Sets a Vec3 param value. */
-		void set_param(std::string name, Vec3 value);
-
-		/* Sets a Vec4 param value. */
-		void set_param(std::string name, Vec4 value);
-
-		/* Sets a texture param value. */
-		void set_param(std::string name, std::string value);
-
-		//////////////////
-		///   Fields   ///
-	private:
-
-		Data* _data;
+        TagStorage<FLightmapChanged> _lightmap_changed;
 	};
 }

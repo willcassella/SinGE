@@ -18,6 +18,11 @@ namespace sge
             SGE_REFLECTED_TYPE;
         };
 
+        struct SGE_ENGINE_API FStaticChanged
+        {
+            SGE_REFLECTED_TYPE;
+        };
+
 		///////////////////
 		///   Methods   ///
 	public:
@@ -33,6 +38,10 @@ namespace sge
 		void set_parent(TComponentId<CTransform3D> parent);
 
         std::vector<EntityId> get_children() const;
+
+        bool is_static() const;
+
+        void set_static(bool value);
 
 		Vec3 get_local_position() const;
 
@@ -69,5 +78,6 @@ namespace sge
 		Data* _data = nullptr;
         const std::map<EntityId, Data>* _data_map = nullptr;
         TagStorage<FParentChanged> _parent_changed_tags;
+        TagStorage<FStaticChanged> _static_changed_tags;
 	};
 }
