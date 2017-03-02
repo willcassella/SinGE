@@ -3,7 +3,7 @@
 
 #include <unordered_map>
 #include <Core/Math/Vec4.h>
-#include "../build.h"
+#include "../Misc/Color.h"
 
 namespace sge
 {
@@ -53,9 +53,9 @@ namespace sge
 			return _pixel_shader;
 		}
 
-        const std::string& albedo() const
+        color::RGBF32 base_color() const
 		{
-            return _albedo;
+            return _base_color;
 		}
 
 		const ParamTable& param_table() const
@@ -99,7 +99,7 @@ namespace sge
 
 		std::string _vertex_shader;
 		std::string _pixel_shader;
-        std::string _albedo;
+        color::RGBF32 _base_color = { 1.f, 1.f, 1.f };
 		ParamTable _param_table;
 	};
 }

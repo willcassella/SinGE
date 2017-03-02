@@ -128,6 +128,7 @@ namespace sge
 	{
 		writer.object_member("vertex_shader", _vertex_shader);
 		writer.object_member("pixel_shader", _pixel_shader);
+        writer.object_member("base_color", _base_color);
 		writer.object_member("params", _param_table);
 	}
 
@@ -135,6 +136,7 @@ namespace sge
 	{
 		reader.object_member("vertex_shader", _vertex_shader);
 		reader.object_member("pixel_shader", _pixel_shader);
+        reader.object_member("base_color", _base_color);
 		reader.object_member("params", _param_table);
 	}
 }
