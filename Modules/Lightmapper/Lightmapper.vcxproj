@@ -113,7 +113,7 @@ xcopy "$(SolutionDir)packages\embree-2.14.0\lib\$(Platform)\*.dll" "$(SolutionDi
       <AdditionalDependencies>embree.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.4 embree-2.14.0</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.4 embree-2.14.0 glm-0.9.8.4</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -133,7 +133,7 @@ xcopy "$(SolutionDir)packages\embree-2.14.0\lib\$(Platform)\*.dll" "$(SolutionDi
       <AdditionalDependencies>embree.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.4 embree-2.14.0</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.4 embree-2.14.0 glm-0.9.8.4</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -158,7 +158,7 @@ xcopy "$(SolutionDir)packages\embree-2.14.0\lib\$(Platform)\*.dll" "$(SolutionDi
 xcopy "$(SolutionDir)packages\embree-2.14.0\lib\$(Platform)\*.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.4 embree-2.14.0</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.4 embree-2.14.0 glm-0.9.8.4</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -183,7 +183,7 @@ xcopy "$(SolutionDir)packages\embree-2.14.0\lib\$(Platform)\*.dll" "$(SolutionDi
 xcopy "$(SolutionDir)packages\embree-2.14.0\lib\$(Platform)\*.dll" "$(SolutionDir)bin\$(Platform)\$(Configuration)\" /y /d</Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.4 embree-2.14.0</Command>
+      <Command>PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packages.ps1" "$(SolutionDir)packages/" dependencies-v0.4 embree-2.14.0 glm-0.9.8.4</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
