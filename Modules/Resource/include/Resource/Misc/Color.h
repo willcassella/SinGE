@@ -243,5 +243,147 @@ namespace sge
 
             float _rgb[3];
         };
+
+        struct SGE_RESOURCE_API RGBAF32
+        {
+            using Red_t = float;
+            using Green_t = float;
+            using Blue_t = float;
+            using Alpha_t = float;
+            SGE_REFLECTED_TYPE;
+
+            ////////////////////////
+            ///   Constructors   ///
+        public:
+
+            RGBAF32()
+                : _rgba{ 0.f, 0.f, 0.f, 0.f }
+            {
+            }
+
+            RGBAF32(float uniform)
+                : _rgba{ uniform, uniform, uniform, uniform }
+            {
+            }
+
+            RGBAF32(float red, float green, float blue, float alpha)
+                : _rgba{ red, green, blue, alpha }
+            {
+            }
+
+            static RGBAF32 black()
+            {
+                return RGBAF32{ 0.f, 0.f, 0.f, 0.f };
+            }
+
+            ///////////////////
+            ///   Methods   ///
+        public:
+
+            void to_archive(ArchiveWriter& writer) const;
+
+            void from_archive(ArchiveReader& reader);
+
+            float* vec()
+            {
+                return _rgba;
+            }
+
+            const float* vec() const
+            {
+                return _rgba;
+            }
+
+            Red_t red() const
+            {
+                return _rgba[0];
+            }
+
+            void red(Red_t value)
+            {
+                _rgba[0] = value;
+            }
+
+            Green_t green() const
+            {
+                return _rgba[1];
+            }
+
+            void green(Green_t value)
+            {
+                _rgba[1] = value;
+            }
+
+            Blue_t blue() const
+            {
+                return _rgba[2];
+            }
+
+            void blue(Blue_t value)
+            {
+                _rgba[2] = value;
+            }
+
+            Alpha_t alpha() const
+            {
+                return _rgba[3];
+            }
+
+            void alpha(Alpha_t value)
+            {
+                _rgba[3] = value;
+            }
+
+            /////////////////////
+            ///   Operators   ///
+        public:
+
+            friend RGBAF32 operator*(const RGBAF32& lhs, float rhs)
+            {
+                return RGBAF32{ lhs.red() * rhs, lhs.green() * rhs, lhs.blue() * rhs, lhs.alpha() * rhs };
+            }
+            friend RGBAF32 operator*(float lhs, const RGBAF32& rhs)
+            {
+                return rhs * lhs;
+            }
+            friend RGBAF32 operator/(const RGBAF32& lhs, float rhs)
+            {
+                return RGBAF32{ lhs.red() / rhs, lhs.green() / rhs, lhs.blue() / rhs, lhs.alpha() / rhs };
+            }
+            friend RGBAF32 operator+(const RGBAF32& lhs, const RGBAF32& rhs)
+            {
+                return RGBAF32{ lhs.red() + rhs.red(), lhs.green() + rhs.green(), lhs.blue() + rhs.blue(), lhs.alpha() + rhs.alpha() };
+            }
+            friend RGBAF32 operator-(const RGBAF32& lhs, const RGBAF32& rhs)
+            {
+                return RGBAF32{ lhs.red() - rhs.red(), lhs.green() - rhs.green(), lhs.blue() - rhs.blue(), lhs.alpha() - rhs.alpha() };
+            }
+            friend RGBAF32& operator*=(RGBAF32& lhs, float rhs)
+            {
+                lhs = lhs * rhs;
+                return lhs;
+            }
+            friend RGBAF32& operator/=(RGBAF32& lhs, float rhs)
+            {
+                lhs = lhs / rhs;
+                return lhs;
+            }
+            friend RGBAF32& operator+=(RGBAF32& lhs, const RGBAF32& rhs)
+            {
+                lhs = lhs + rhs;
+                return lhs;
+            }
+            friend RGBAF32& operator-=(RGBAF32& lhs, const RGBAF32& rhs)
+            {
+                lhs = lhs - rhs;
+                return lhs;
+            }
+
+            //////////////////
+            ///   Fields   ///
+        private:
+
+            float _rgba[4];
+        };
 	}
 }
