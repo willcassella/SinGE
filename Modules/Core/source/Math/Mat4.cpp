@@ -173,4 +173,24 @@ namespace sge
 
 		return result;
 	}
+
+    void Mat4::transpose()
+    {
+        for (int x = 0; x < 4; ++x)
+        {
+            for (int y = 0; y < 4; ++y)
+            {
+                const Scalar temp = _values[x][y];
+                _values[x][y] = _values[y][x];
+                _values[y][x] = temp;
+            }
+        }
+    }
+
+    Mat4 Mat4::transposed() const
+    {
+        Mat4 copy = *this;
+        copy.transpose();
+        return copy;
+    }
 }

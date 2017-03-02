@@ -71,6 +71,16 @@ namespace sge
 		/** Returns the inverse of this matrix */
 		Mat4 inverse() const;
 
+	    /**
+         * \brief Transposes this matrix;
+         */
+        void transpose();
+
+	    /**
+         * \brief Returns the transpose of this matrix.
+         */
+        Mat4 transposed() const;
+
 		/** Generates a perspective projection matrix with the given properties */
 		static Mat4 perspective_projection(Angle hFOV, Angle vFOV, Scalar zMin, Scalar zMax)
 		{

@@ -1,7 +1,9 @@
 // IVec2.h
 #pragma once
 
-#include "../env.h"
+#include "../Reflection/ReflectionBuilder.h"
+#include "../Interfaces/IToArchive.h"
+#include "../Interfaces/IFromArchive.h"
 #include "Conversions.h"
 
 namespace sge
@@ -9,6 +11,8 @@ namespace sge
     template <typename T>
     struct IVec2
     {
+        SGE_REFLECTED_TYPE;
+
         ////////////////////////
         ///   Constructors   ///
     public:
@@ -31,6 +35,16 @@ namespace sge
         ///////////////////
         ///   Methods   ///
     public:
+
+        void to_archive(ArchiveWriter& writer) const
+        {
+            writer.typed_array(_values, 2);
+        }
+
+        void from_archive(ArchiveReader& reader)
+        {
+            reader.typed_array(_values, 2);
+        }
 
         const T* vec() const
         {
@@ -108,6 +122,14 @@ namespace sge
         {
             return rhs * lhs;
         }
+        friend bool operator==(const IVec2& lhs, const IVec2& rhs)
+        {
+            return lhs.x() == rhs.x() && lhs.y() == rhs.y();
+        }
+        friend bool operator!=(const IVec2& lhs, const IVec2& rhs)
+        {
+            return !(lhs == rhs);
+        }
 
         //////////////////
         ///   Fields   ///
@@ -115,6 +137,11 @@ namespace sge
 
         T _values[2];
     };
+
+    template <typename T>
+    SGE_REFLECT_TYPE_TEMPLATE(IVec2, T)
+    .template implements<IToArchive>()
+    .template implements<IFromArchive>();
 
     using HalfVec2 = IVec2<int16>;
     using UHalfVec2 = IVec2<uint16>;
