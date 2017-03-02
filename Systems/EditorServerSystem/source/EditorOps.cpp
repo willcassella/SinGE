@@ -12,8 +12,13 @@
 #include <Core/Interfaces/IFromString.h>
 #include <Resource/Interfaces/IFromFile.h>
 #include <Resource/Archives/JsonArchive.h>
+#include <Resource/Resources/StaticMesh.h>
+#include <Resource/Resources/Image.h>
+#include <Lightmapper/Lightmapper.h>
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
+#include <Engine/Components/CTransform3D.h>
+#include <Engine/Components/Display/CStaticMesh.h>
 
 namespace sge
 {
@@ -493,6 +498,185 @@ namespace sge
 				// Save the archive to a file
 				output.to_file(path.c_str());
 				std::cout << "Saved scene to '" << path << "'" << std::endl;
+			}
+
+            struct Lightmap
+			{
+                std::string path;
+                int32 width = 0;
+                int32 height = 0;
+                LightmapTexel* lightmap_texels = nullptr;
+                byte* lightmap_texel_mask = nullptr;
+                color::RGBAF32* lightmap_pixels = nullptr;
+                color::RGBAF32* previous_pass_pixels = nullptr;
+            };
+
+            void generate_lightmaps(SystemFrame& frame)
+			{
+                std::map<std::string, std::unique_ptr<StaticMesh>> meshes;
+                std::map<std::string, std::unique_ptr<Material>> materials;
+                std::vector<LightmapOccluder> occluders;
+                std::vector<LightmapObject> lightmap_objects;
+                std::vector<Lightmap> lightmap_object_lightmaps;
+
+                // Gather occluders and targets
+			    frame.process_entities_mut([&](
+                    ProcessingFrame& pframe,
+                    CTransform3D& transform,
+                    CStaticMesh& mesh)
+			    {
+                    if (!mesh.uses_lightmap())
+                    {
+                        return ProcessControl::CONTINUE;
+                    }
+
+                    StaticMesh* static_mesh = nullptr;
+
+                    // Try to load the mesh
+                    {
+                        const auto mesh_iter = meshes.find(mesh.mesh());
+                        if (mesh_iter == meshes.end())
+                        {
+                            auto new_static_mesh = std::make_unique<StaticMesh>();
+                            new_static_mesh->from_file(mesh.mesh().c_str());
+                            static_mesh = new_static_mesh.get();
+                            meshes.insert(std::make_pair(mesh.mesh(), std::move(new_static_mesh)));
+                        }
+                        else
+                        {
+                            static_mesh = mesh_iter->second.get();
+                        }
+                    }
+
+                    Material* material = nullptr;
+
+                    // Try to load the material
+                    {
+                        const auto mat_iter = materials.find(mesh.material());
+                        if (mat_iter == materials.end())
+                        {
+                            auto new_material = std::make_unique<Material>();
+                            new_material->from_file(mesh.material().c_str());
+                            material = new_material.get();
+                            materials.insert(std::make_pair(mesh.material(), std::move(new_material)));
+                        }
+                        else
+                        {
+                            material = mat_iter->second.get();
+                        }
+                    }
+
+                    // Add the object to the list of occluders
+                    LightmapOccluder occluder;
+                    occluder.mesh = static_mesh;
+                    occluder.base_color = material->base_color();
+                    occluder.world_transform = transform.get_world_matrix();
+                    occluders.push_back(occluder);
+
+                    // Add the object to the list of lightmap objects
+                    LightmapObject object;
+                    object.mesh = static_mesh;
+                    object.world_transform = occluder.world_transform;
+                    lightmap_objects.push_back(object);
+
+                    // Get the path for the lightmap
+                    auto lightmap_path = mesh.lightmap();
+                    if (lightmap_path.empty())
+                    {
+                        lightmap_path = "Content/Lightmaps/" + frame.get_entity_name(pframe.entity()) + ".exr";
+                        mesh.lightmap(lightmap_path);
+                    }
+
+                    // Create a lightmap object for this object
+                    Lightmap lightmap;
+                    lightmap.path = std::move(lightmap_path);
+                    lightmap.width = mesh.lightmap_width();
+                    lightmap.height = mesh.lightmap_height();
+                    lightmap.lightmap_texels = (LightmapTexel*)std::calloc(lightmap.width * lightmap.height, sizeof(LightmapTexel));
+                    lightmap.lightmap_texel_mask = (byte*)std::calloc(lightmap.width * lightmap.height, 1);
+                    lightmap.previous_pass_pixels = (color::RGBAF32*)std::calloc(lightmap.width * lightmap.height, sizeof(color::RGBAF32));
+                    lightmap.lightmap_pixels = (color::RGBAF32*)std::calloc(lightmap.width * lightmap.height, sizeof(color::RGBAF32));
+
+                    // Add the lightmap to the list of lightmaps
+			        lightmap_object_lightmaps.push_back(std::move(lightmap));
+                    return ProcessControl::CONTINUE;
+                });
+
+                // Create the lightmap scene
+                auto* lm_scene = new_lightmap_scene(occluders.data(), occluders.size());
+
+                // Generate lightmap texels for all objects
+                for (std::size_t i = 0; i < lightmap_objects.size(); ++i)
+                {
+                    auto& object = lightmap_objects[i];
+                    auto& lightmap = lightmap_object_lightmaps[i];
+                    sge::generate_lightmap_texels(
+                        &object,
+                        1,
+                        lightmap.width,
+                        lightmap.height,
+                        lightmap.lightmap_texels,
+                        lightmap.lightmap_texel_mask);
+                }
+
+                // Create a light
+                sge::LightmapLight light;
+                light.direction = sge::Vec3{ 0, -0.5f, -0.5f }.normalized();
+                light.intensity = sge::color::RGBF32{ 0.5f, 0.5f, 0.5f };
+
+                // Compute direct lighting for all objects
+                for (std::size_t i = 0; i < lightmap_objects.size(); ++i)
+                {
+                    auto& occluder = occluders[i];
+                    auto& lightmap = lightmap_object_lightmaps[i];
+                    sge::compute_direct_irradiance(
+                        lm_scene,
+                        light,
+                        lightmap.width,
+                        lightmap.height,
+                        lightmap.lightmap_texels,
+                        lightmap.lightmap_texel_mask,
+                        lightmap.lightmap_pixels);
+
+                    // Copy pixel data
+                    std::memcpy(lightmap.previous_pass_pixels, lightmap.lightmap_pixels, lightmap.width * lightmap.height * sizeof(color::RGBAF32));
+
+                    // Set pixel data to the occluder
+                    occluder.irradiance_width = lightmap.width;
+                    occluder.irradiance_height = lightmap.height;
+                    occluder.irradiance = lightmap.previous_pass_pixels;
+                }
+
+                // Compute indirect lighting for all objects
+                for (std::size_t i = 0; i < lightmap_objects.size(); ++i)
+                {
+                    auto& occluder = occluders[i];
+                    auto& lightmap = lightmap_object_lightmaps[i];
+                    sge::compute_indirect_irradiance(
+                        lm_scene,
+                        32,
+                        lightmap.width,
+                        lightmap.height,
+                        lightmap.lightmap_texels,
+                        lightmap.lightmap_texel_mask,
+                        lightmap.lightmap_pixels);
+                }
+
+                // Post-process and save all lightmaps
+                for (auto& lightmap : lightmap_object_lightmaps)
+                {
+                    sge::postprocess_irradiance(lightmap.width, lightmap.height, 4, lightmap.lightmap_pixels);
+                    Image::save_rgbf(lightmap.lightmap_pixels->vec(), lightmap.width, lightmap.height, 4, lightmap.path.c_str());
+
+                    // Free data
+                    std::free(lightmap.lightmap_pixels);
+                    std::free(lightmap.previous_pass_pixels);
+                    std::free(lightmap.lightmap_texels);
+                    std::free(lightmap.lightmap_texel_mask);
+                }
+
+                // Clean up scene
+                free_lightmap_scene(lm_scene);
 			}
 		}
 	}

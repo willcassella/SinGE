@@ -39,6 +39,8 @@ namespace sge
 			void get_resource_query(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 
 			void save_scene_query(const Scene& scene, ArchiveReader& reader);
+
+            void generate_lightmaps(SystemFrame& frame);
 		}
 	}
 }

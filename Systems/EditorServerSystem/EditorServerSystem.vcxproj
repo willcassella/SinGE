@@ -69,25 +69,25 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)packages\asio\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Lightmapper\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)packages\asio\include\;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)packages\asio\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Lightmapper\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)packages\asio\include\;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)packages\asio\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Lightmapper\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)packages\asio\include\;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)packages\asio\include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Lightmapper\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)packages\asio\include\;$(IncludePath)</IncludePath>
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
     <TargetExt>.dll</TargetExt>
@@ -187,6 +187,9 @@
     </ProjectReference>
     <ProjectReference Include="..\..\Modules\Engine\Engine.vcxproj">
       <Project>{ec7300dc-b09b-4626-80f6-432b5982638f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Modules\Lightmapper\Lightmapper.vcxproj">
+      <Project>{87f2bebb-5415-4201-b666-99b6920d3b84}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\Modules\Resource\Resource.vcxproj">
       <Project>{2254997d-f816-4644-9b73-bbab5f035212}</Project>

@@ -208,6 +208,15 @@ namespace sge
                     wrote_output = true;
                 }
 
+                // Handle a lightmap query
+                if (in_reader->pull_object_member("gen_lightmaps"))
+                {
+                    std::cout << "Generating lightmaps...";
+                    ops::generate_lightmaps(self->get_frame());
+                    std::cout << "Done" << std::endl;
+                    in_reader->pop();
+                }
+
                 // Handle a save query
                 if (in_reader->pull_object_member("save_scene"))
                 {
