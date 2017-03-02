@@ -63,7 +63,7 @@ namespace sge
 		{
 			writer.push_object_member(to_string(entity.first).c_str());
 
-			// Write the entity id and parent id
+			// Write the entity parent id
 			writer.object_member("parent", entity.second);
 
 			// See if the entity has a name
@@ -73,9 +73,28 @@ namespace sge
 				writer.object_member("name", nameIter->second);
 			}
 
-			writer.pop();
+			writer.pop(); // entity id
 		}
-		writer.pop();
+        for (const auto& ent_name : _scene_data.entity_names)
+        {
+            // If we already serialized this entity
+            if (_scene_data.entity_parents.find(ent_name.first) != _scene_data.entity_parents.end())
+            {
+                continue;
+            }
+
+            writer.push_object_member(to_string(ent_name.first).c_str());
+
+            // Write the entity parent id
+            writer.object_member("parent", WORLD_ENTITY);
+
+            // Write the name
+            writer.object_member("name", ent_name.second);
+
+            writer.pop(); // entity id
+
+        }
+		writer.pop(); // "entities"
 
 		// Serialize all components
 		writer.push_object_member("components");
