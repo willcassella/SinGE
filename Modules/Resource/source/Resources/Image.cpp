@@ -28,20 +28,6 @@ namespace sge
 	{
 	}
 
-    Image::Image(int32 width, int32 height, ColorFormat format)
-    {
-        switch (format)
-        {
-        case ColorFormat::RGBA8:
-            _bitmap = FreeImage_AllocateT(FIT_BITMAP, width, height, 32);
-            break;
-
-        case ColorFormat::RGB32F:
-            _bitmap = FreeImage_AllocateT(FIT_RGBF, width, height, 32 * 3);
-            break;
-        }
-    }
-
     Image::Image(const std::string& path)
 		: Image()
 	{
@@ -69,10 +55,25 @@ namespace sge
 		FreeImage_Unload(_bitmap);
 	}
 
-    void Image::save_rgbf(const float* image, int32 width, int32 height, const char* path)
+    void Image::save_rgbf(const float* image, int32 width, int32 height, byte num_channels, const char* path)
     {
-        auto* bitmap = FreeImage_AllocateT(FIT_RGBF, width, height, 32 * 3);
-        std::memcpy(FreeImage_GetBits(bitmap), image, width * height * 3 * sizeof(float));
+        FREE_IMAGE_TYPE type = FIT_UNKNOWN;
+        switch (num_channels)
+        {
+        case 3:
+            type = FIT_RGBF;
+            break;
+
+        case 4:
+            type = FIT_RGBAF;
+            break;
+
+        default:
+            assert(false);
+        }
+
+        auto* bitmap = FreeImage_AllocateT(type, width, height, 32 * num_channels);
+        std::memcpy(FreeImage_GetBits(bitmap), image, width * height * num_channels * sizeof(float));
         FreeImage_Save(FIF_EXR, bitmap, path);
         FreeImage_Unload(bitmap);
     }
@@ -88,7 +89,7 @@ namespace sge
 
                 for (byte channel = 0; channel < num_channels; ++channel)
                 {
-                    color[channel] = image[(x + y * width) * num_channels + channel];
+                    color[channel] = image[(y * width + x) * num_channels + channel];
                     valid |= color[channel] > 0.0f;
                 }
 
@@ -116,7 +117,7 @@ namespace sge
 
                             if (dvalid)
                             {
-                                for (byte channel = 0; channel < num_channels; ++num_channels)
+                                for (byte channel = 0; channel < num_channels; ++channel)
                                 {
                                     color[channel] += dcolor[channel];
                                 }
@@ -130,7 +131,7 @@ namespace sge
                     {
                         const float in = 1.0f / num_valid;
 
-                        for (byte channel = 0; channel < num_channels; ++num_channels)
+                        for (byte channel = 0; channel < num_channels; ++channel)
                         {
                             color[channel] *= in;
                         }
@@ -151,7 +152,7 @@ namespace sge
         {
             for (int32 x = 0; x < width; ++x)
             {
-                float color[4];
+                float color[4] = {};
 
                 int32 num_valid = 0;
                 for (int32 dy = -1; dy <= 1; ++dy)

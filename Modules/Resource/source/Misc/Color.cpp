@@ -28,6 +28,15 @@ SGE_REFLECT_TYPE(sge::color::RGBF32)
 .property("green", &RGBF32::green, &RGBF32::green)
 .property("blue", &RGBF32::blue, &RGBF32::blue);
 
+SGE_REFLECT_TYPE(sge::color::RGBAF32)
+.flags(TF_RECURSE_TERMINAL)
+.implements<IToArchive>()
+.implements<IFromArchive>()
+.property("red", &RGBAF32::red, &RGBAF32::red)
+.property("green", &RGBAF32::green, &RGBAF32::green)
+.property("blue", &RGBAF32::blue, &RGBAF32::blue)
+.property("alpha", &RGBAF32::alpha, &RGBAF32::alpha);
+
 namespace sge
 {
 	namespace color
@@ -78,5 +87,15 @@ namespace sge
 		{
             reader.typed_array(_rgb, 3);
 		}
+
+        void RGBAF32::to_archive(ArchiveWriter& writer) const
+        {
+            writer.typed_array(_rgba, 4);
+        }
+
+        void RGBAF32::from_archive(ArchiveReader& reader)
+        {
+            reader.typed_array(_rgba, 4);
+        }
 	}
 }
