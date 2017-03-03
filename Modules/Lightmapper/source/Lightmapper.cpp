@@ -1,7 +1,6 @@
 // Lightmapper.cpp
 
 #include <array>
-#include <future>
 #include <algorithm>
 #include <embree2/rtcore.h>
 #include <embree2/rtcore_ray.h>
@@ -292,7 +291,7 @@ namespace sge
                 RTCRay light_ray;
                 std::memcpy(light_ray.org, texel_pos.vec(), sizeof(float) * 3);
                 std::memcpy(light_ray.dir, ray_dir.vec(), sizeof(float) * 3);
-                light_ray.tnear = 0.001f;
+                light_ray.tnear = 0.0001f;
                 light_ray.tfar = ray_len;
                 light_ray.geomID = 1;
                 light_ray.primID = 0;
@@ -330,7 +329,7 @@ namespace sge
         // Iterate from min to max
         for (int32 y = 0; y < height; ++y)
         {
-            for (int32 x = 0; x < height; ++x)
+            for (int32 x = 0; x < width; ++x)
             {
                 // Get the index of this texel
                 const int32 texel_index = x + y * width;
@@ -371,7 +370,7 @@ namespace sge
                         indirect_rays.dirz[i] = dir.z();
 
                         // Set near and far distances
-                        indirect_rays.tnear[i] = 0.001f;
+                        indirect_rays.tnear[i] = 0.0001f;
                         indirect_rays.tfar[i] = std::numeric_limits<float>::max();
                         indirect_rays.time[i] = 0;
                         indirect_rays.mask[i] = RTC_INVALID_GEOMETRY_ID;
@@ -383,7 +382,7 @@ namespace sge
                     rtcIntersect8(valid_mask.data(), rtc_scene, indirect_rays);
 
                     // Test rays
-                    auto result = color::RGBAF32::black();
+                    auto result = color::RGBAF32::zero();
                     for (int i = 0; i < 8; ++i)
                     {
                         // If the ray didn't hit anything
