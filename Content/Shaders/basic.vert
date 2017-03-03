@@ -9,10 +9,12 @@ in vec3 v_position;
 in vec3 v_normal;
 in vec3 v_tangent;
 in int v_bitangent_sign;
-in vec2 v_texcoord;
+in vec2 v_mat_texcoord;
+in vec2 v_lm_texcoord;
 
 out VS_OUT {
-	vec2 tex_coords;
+	vec2 mat_tex_coords;
+	vec2 lm_tex_coords;
 	vec3 cam_position;
 	vec3 cam_tangent;
 	vec3 cam_bitangent;
@@ -22,7 +24,8 @@ out VS_OUT {
 void main()
 {
 	// Output texture coordinates
-	vs_out.tex_coords = v_texcoord;
+	vs_out.mat_tex_coords = v_mat_texcoord;
+	vs_out.lm_tex_coords = v_lm_texcoord;
 
 	// Compute screen-space position, and view-space position
 	gl_Position = projection * view * model * vec4(v_position, 1);

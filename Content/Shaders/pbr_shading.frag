@@ -10,6 +10,7 @@ uniform sampler2D depth_buffer;
 uniform sampler2D position_buffer;
 uniform sampler2D normal_buffer;
 uniform sampler2D albedo_buffer;
+uniform sampler2D irradiance_buffer;
 uniform sampler2D roughness_metallic_buffer;
 
 in vec2 f_texcoord;
@@ -63,9 +64,8 @@ void main()
 {
     // Get a light vector in camera-space normal
     mat4 normal_to_view = transpose(inverse(view));
-    vec3 light = normalize((normal_to_view * vec4(0.0f, 0.5f, 0.5f, 0.0f)).xyz);
 
-    vec4 albedo = texture(albedo_buffer, f_texcoord);
+    vec3 albedo = texture(albedo_buffer, f_texcoord).rgb;
     vec3 cam_pos = texture(position_buffer, f_texcoord).xyz;
     vec3 cam_norm = texture(normal_buffer, f_texcoord).xyz;
     float roughness = texture(roughness_metallic_buffer, f_texcoord).r;
@@ -73,25 +73,17 @@ void main()
 
     vec3 view = normalize(-cam_pos);
 
-    // Calculate the halfway vector
-    vec3 half_vec = normalize(view + light);
-
     // Calculate (n dot v) and (n dot l)
     float n_dot_v = max(dot(cam_norm, view), 0.0f);
-    float n_dot_l = max(dot(cam_norm, light), 0.0f);
 
-    // Calculate NDF
+    // Calculate NDF alpha component
     float ndf_alpha = roughness * roughness;
-    float ndf = ggx_tr_NDF(cam_norm, half_vec, ndf_alpha);
 
     // Calculate the geometric masking constant for direct lighting
     float geom_k = geom_k_direct(roughness);
 
-    // Calculate GMF
-    float gmf = smith_GMF(cam_norm, view, light, geom_k);
-
     // Calculate base reflectivity
-    vec3 base_ref = base_reflectivity(albedo.xyz, metallic);
+    vec3 base_ref = base_reflectivity(albedo, metallic);
 
     // Calculate fresnel
     vec3 fresnel = fresnel_schlick_roughness(n_dot_v, base_ref, roughness);
@@ -103,19 +95,35 @@ void main()
     // Do shading
     vec3 Lo = vec3(0.0f);
 
+    // Sample irradiance (includes directional occlusion in alpha component)
+    vec4 irradiance = texture(irradiance_buffer, f_texcoord);
+
     // For each light
         vec3 light_color = vec3(23.47f, 21.31f, 20.79f);
         float attenutation = 1.0f;
-        vec3 radiance = light_color * attenutation;
+        vec3 radiance = light_color * attenutation * irradiance.a;
+
+        // Calculate light vector
+        vec3 light = normalize((normal_to_view * vec4(0, 0.5f, 0.5f, 0.0f)).xyz);
+
+        // Calculate the halfway vector
+        vec3 half_vec = normalize(view + light);
+        float n_dot_l = max(dot(cam_norm, light), 0.0f);
+
+        // Calculate normal distribution function
+        float ndf = ggx_tr_NDF(cam_norm, half_vec, ndf_alpha);
+
+        // Calculate geometric masking function
+        float gmf = smith_GMF(cam_norm, view, light, geom_k);
 
         // Calculate BRDF
         vec3 brdf_nom = ndf * gmf * fresnel;
         float brdf_denom = 4 * n_dot_v * n_dot_l + 0.001f;
         vec3 brdf = brdf_nom / brdf_denom;
-        Lo += (kD * albedo.xyz / PI + brdf) * radiance * n_dot_l;
+        Lo += (kD * albedo / PI + brdf) * radiance * n_dot_l;
     // end for
 
-    vec3 ambient = vec3(0.046, 0.054, 0.064) * albedo.xyz / 2;
+    vec3 ambient = irradiance.rgb * albedo / 2;
     vec3 color = ambient + Lo;
 
     // Output final scene color
