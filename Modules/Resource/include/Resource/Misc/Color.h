@@ -144,6 +144,11 @@ namespace sge
                 return RGBF32{ 0.f, 0.f, 0.f };
             }
 
+            static RGBF32 white()
+            {
+                return RGBF32{ 1.f, 1.f, 1.f };
+            }
+
             ///////////////////
             ///   Methods   ///
         public:
@@ -271,9 +276,19 @@ namespace sge
             {
             }
 
-            static RGBAF32 black()
+            static RGBAF32 zero()
             {
                 return RGBAF32{ 0.f, 0.f, 0.f, 0.f };
+            }
+
+            static RGBAF32 black()
+            {
+                return RGBAF32{ 0.f, 0.f, 0.f, 1.f };
+            }
+
+            static RGBAF32 white()
+            {
+                return RGBAF32{ 1.f, 1.f, 1.f, 1.f };
             }
 
             ///////////////////
