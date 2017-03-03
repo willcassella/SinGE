@@ -211,9 +211,9 @@ namespace sge
                 // Handle a lightmap query
                 if (in_reader->pull_object_member("gen_lightmaps"))
                 {
-                    std::cout << "Generating lightmaps...";
+                    std::cout << "Generating lightmaps..." << std::endl;
                     ops::generate_lightmaps(self->get_frame());
-                    std::cout << "Done" << std::endl;
+                    std::cout << "Lightmaps generated." << std::endl;
                     in_reader->pop();
                 }
 
