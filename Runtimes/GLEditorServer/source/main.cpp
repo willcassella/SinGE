@@ -7,9 +7,9 @@
 #include <Core/Math/Vec3.h>
 #include <Core/Interfaces/IFromArchive.h>
 #include <Resource/Archives/JsonArchive.h>
-#include <Engine/Resources/StaticMesh.h>
-#include <Engine/Resources/Material.h>
-#include <Engine/Resources/Texture.h>
+#include <Resource/Resources/StaticMesh.h>
+#include <Resource/Resources/Material.h>
+#include <Resource/Resources/Texture.h>
 #include <Engine/Scene.h>
 #include <Engine/UpdatePipeline.h>
 #include <GLRender/GLRenderSystem.h>

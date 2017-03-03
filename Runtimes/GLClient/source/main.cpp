@@ -6,6 +6,7 @@
 #include <Core/Math/Quat.h>
 #include <Core/Reflection/TypeDB.h>
 #include <Resource/Archives/JsonArchive.h>
+#include <Resource/Resources/StaticMesh.h>
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
 #include <Engine/UpdatePipeline.h>
@@ -209,9 +210,7 @@ int main(int argc, char* argv[])
 
 	// Create a render system
 	sge::gl_render::Config render_config;
-	render_config.viewport_width = window_width;
-	render_config.viewport_height = window_height;
-
+    glfwGetFramebufferSize(window, &render_config.viewport_width, &render_config.viewport_height);
 	if (!config_reader->object_member("gl_render", render_config))
 	{
 		assert(false /*Could not load render config from the config file.*/);
