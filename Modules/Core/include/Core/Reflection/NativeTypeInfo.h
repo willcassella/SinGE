@@ -1,6 +1,7 @@
 // NativeTypeInfo.h
 #pragma once
 
+#include <map>
 #include <unordered_map>
 #include "TypeInfo.h"
 #include "NativeConstructorInfo.h"
@@ -55,8 +56,8 @@ namespace sge
 			std::unordered_map<const InterfaceInfo*, const void*> interfaces;
 			std::unordered_map<std::size_t, NativeConstructorInfo> constructors;
 			std::unordered_map<std::string, NativeConstructorInfo> named_constructors;
-			std::unordered_map<std::string, NativePropertyInfo> properties;
-			std::unordered_map<std::string, FieldInfo> fields;
+			std::map<std::string, NativePropertyInfo> properties;
+			std::map<std::string, FieldInfo> fields;
 		};
 
 		////////////////////////

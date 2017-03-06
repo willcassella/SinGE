@@ -179,11 +179,15 @@
     <ClInclude Include="include\Core\Math\IVec3.h" />
     <ClInclude Include="include\Core\Math\Mat4.h" />
     <ClInclude Include="include\Core\Math\Conversions.h" />
+    <ClInclude Include="include\Core\Math\Matrix3.h" />
     <ClInclude Include="include\Core\Math\Quat.h" />
+    <ClInclude Include="include\Core\Math\TVector3.h" />
     <ClInclude Include="include\Core\Math\Vec2.h" />
     <ClInclude Include="include\Core\Math\Vec3.h" />
     <ClInclude Include="include\Core\Math\Vec4.h" />
+    <ClInclude Include="include\Core\Memory\Buffers\MultiStackBuffer.h" />
     <ClInclude Include="include\Core\Memory\Functions.h" />
+    <ClInclude Include="include\Core\Parallelism\TaskPool.h" />
     <ClInclude Include="include\Core\Reflection\Any.h" />
     <ClInclude Include="include\Core\Reflection\ArgAny.h" />
     <ClInclude Include="include\Core\Reflection\ConstructorInfo.h" />
@@ -216,6 +220,7 @@
     </ClCompile>
     <ClCompile Include="source\Math\Vec3.cpp" />
     <ClCompile Include="source\Math\Vec4.cpp" />
+    <ClCompile Include="source\Memory\Buffers\MultiStackBuffer.cpp" />
     <ClCompile Include="source\Memory\Functions.cpp" />
     <ClCompile Include="source\Reflection\Reflection.cpp" />
     <ClCompile Include="source\Reflection\TypeDB.cpp" />

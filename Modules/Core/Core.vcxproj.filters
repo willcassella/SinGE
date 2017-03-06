@@ -48,6 +48,15 @@
     <Filter Include="include\Containers">
       <UniqueIdentifier>{280e3135-e108-414d-802b-03b75f021583}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Parallelism">
+      <UniqueIdentifier>{ae890c41-d76a-4f1a-975a-132b4ccddab1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Memory\Buffers">
+      <UniqueIdentifier>{9bcb5e52-ecf5-4350-b620-ca8aa1f041f6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include\Memory\Buffers">
+      <UniqueIdentifier>{86263654-4031-4a8a-b8b4-e7eda47a4c91}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Core\include\Core\env.h">
@@ -167,6 +176,18 @@
     <ClInclude Include="include\Core\Math\IVec3.h">
       <Filter>include\Math</Filter>
     </ClInclude>
+    <ClInclude Include="include\Core\Parallelism\TaskPool.h">
+      <Filter>include\Parallelism</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Math\Matrix3.h">
+      <Filter>include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Math\TVector3.h">
+      <Filter>include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Memory\Buffers\MultiStackBuffer.h">
+      <Filter>include\Memory\Buffers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Math\Vec2.cpp">
@@ -207,6 +228,9 @@
     </ClCompile>
     <ClCompile Include="source\Math\Angle.cpp">
       <Filter>source\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Memory\Buffers\MultiStackBuffer.cpp">
+      <Filter>source\Memory\Buffers</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
