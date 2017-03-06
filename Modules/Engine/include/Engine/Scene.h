@@ -30,6 +30,28 @@ namespace sge
 		///   Methods   ///
 	public:
 
+        Node* create_node();
+
+        /**
+        * \brief Searches for a node with the given Id, and returns it.
+        * \param id The Id of the node to search for.
+        * \return A pointer to the node. This pointer will no longer be valid at the end of the scene update.
+        */
+        Node* get_node(Node::Id id);
+
+	    /**
+         * \brief Searches for a node with the given Id, and returns it.
+         * \param id The Id of the node to search for.
+         * \return A pointer to the node. This pointer will no longer be valid at the end of the scene update.
+         */
+        const Node* get_node(Node::Id id) const;
+
+	    /**
+         * \brief Constructs an array of all root nodes in the scene.
+         * \param out_roots The array to fill with the root nodes.
+         */
+        void get_root_nodes(std::vector<Node::Id>* out_roots) const;
+
 		/**
 		 * \brief Resets entity/component data. Essentially creates a new scene without unregistering component types.
 		 */

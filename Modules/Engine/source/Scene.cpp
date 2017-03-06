@@ -30,10 +30,44 @@ namespace sge
 	{
 	}
 
-	///////////////////
+    ///////////////////
 	///   Methods   ///
 
-	void Scene::reset_scene()
+    Node* Scene::create_node()
+    {
+        // Reserve an Id for the new node
+        const auto id = _scene_data.next_node_id;
+        _scene_data.next_node_id += 1;
+
+        // Allocate space for it
+        auto* buff = _scene_data.node_buffer.alloc(sizeof(Node));
+        auto* node = new (buff) Node();
+
+        // Initialize it
+        node->_id = id;
+        node->_scene = this;
+
+        return node;
+    }
+
+    Node* Scene::get_node(Node::Id id)
+    {
+        const auto iter = _scene_data.nodes.find(id);
+        return iter != _scene_data.nodes.end() ? iter->second : nullptr;
+    }
+
+    const Node* Scene::get_node(Node::Id id) const
+	{
+        const auto iter = _scene_data.nodes.find(id);
+        return iter != _scene_data.nodes.end() ? iter->second : nullptr;
+	}
+
+    void Scene::get_root_nodes(std::vector<Node::Id>* out_roots) const
+    {
+        *out_roots = _scene_data.root_nodes;
+    }
+
+    void Scene::reset_scene()
 	{
 		_current_time = 0;
 		_scene_data.next_entity_id = 2;

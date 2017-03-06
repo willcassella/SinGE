@@ -3,7 +3,9 @@
 
 #include <memory>
 #include <unordered_map>
+#include <Core/Memory/Buffers/MultiStackBuffer.h>
 #include "Component.h"
+#include "Node.h"
 
 namespace sge
 {
@@ -33,5 +35,11 @@ namespace sge
 
 		/* Component Data */
 		std::unordered_map<const TypeInfo*, std::unique_ptr<ComponentContainer>> components;
+
+        /* Node data */
+        Node::Id next_node_id = 1;
+        MultiStackBuffer node_buffer;
+        std::map<Node::Id, Node*> nodes;
+        std::vector<Node::Id> root_nodes;
 	};
 }

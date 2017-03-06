@@ -167,6 +167,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Engine\EventChannel.h" />
     <ClInclude Include="include\Engine\Component.h" />
     <ClInclude Include="include\Engine\Components\Display\CCamera.h" />
     <ClInclude Include="include\Engine\Components\Display\CLightColor.h" />
@@ -220,6 +221,8 @@
     <ClCompile Include="source\Components\Physics\CSensor.cpp" />
     <ClCompile Include="source\Components\Physics\CVelocity.cpp" />
     <ClCompile Include="source\Engine\UpdatePipeline.cpp" />
+    <ClCompile Include="source\EventChannel.cpp" />
+    <ClCompile Include="source\Node.cpp" />
     <ClCompile Include="source\ProcessingFrame.cpp" />
     <ClCompile Include="source\Scene.cpp" />
     <ClCompile Include="source\SystemFrame.cpp" />

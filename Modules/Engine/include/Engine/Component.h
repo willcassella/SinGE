@@ -6,7 +6,7 @@
 #include <Core/Interfaces/IToArchive.h>
 #include <Core/Interfaces/IFromArchive.h>
 #include <Core/Reflection/ReflectionBuilder.h>
-#include "config.h"
+#include "Node.h"
 
 namespace sge
 {
@@ -184,6 +184,52 @@ namespace sge
         virtual const EntityId* get_instance_range() const = 0;
 
         virtual std::size_t get_instance_range_length() const = 0;
+
+        virtual const TypeInfo& get_component_type() const { return sge::get_type<int>(); }
+
+        /**
+         * \brief Creates a new instance of this type of component, for the given node.
+         * \param node The Id of the node to create this instance for.
+         */
+        virtual void create_node_instance(Node::Id node) {}
+
+        /**
+         * \brief "Destroys" an instance of this type of component, for the given node.
+         * The Actual component data will not be removed until the end of the frame.
+         * \param node The Id of the node to remove the data from.
+         */
+        virtual void remove_node_instance(Node::Id node) {}
+
+        /**
+         * \brief Called at the end of the frame, allows this container to reorganize it's internal data.
+         */
+        virtual void on_end_frame() {}
+
+        /**
+         * \brief Gets the instance of this component associated with the given node.
+         * \param node The node to get the instance for.
+         * \return A pointer to the data for this instance.
+         */
+        virtual void* get_instance(Node::Id node) { return nullptr; }
+
+        /**
+         * \brief Returns the event channel for this container, if one exists.
+         * \param event_type The type of event to get the channel for.
+         * \return A pointer to the channel for this event type, if it exists.
+         */
+        virtual EventChannel* get_event_channel(const TypeInfo& event_type) { return nullptr; }
+
+        /**
+         * \brief Called when the transform is updated for the given node.
+         * \param node The node that was transformed.
+         */
+        virtual void on_node_transform_update(const Node* node) {}
+
+        /**
+         * \brief Called when the root node is updated for the given node.
+         * \param node The node who's root was udpated.
+         */
+        virtual void on_node_root_update(const Node* node) {}
 
         virtual void create_instances(
             const EntityId* const* ord_ents_arrays,
