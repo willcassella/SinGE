@@ -692,34 +692,47 @@ namespace sge
                 std::cout << "Computing indirect lighting..." << std::endl;
                 const auto gen_indirect_start = std::chrono::high_resolution_clock::now();
                 const int num_threads = std::thread::hardware_concurrency();
-                for (std::size_t i = 0; i < lightmap_objects.size(); ++i)
+                for (std::size_t pass_i = 0; pass_i < 5; ++pass_i)
                 {
-                    auto& lightmap = lightmap_object_lightmaps[i];
-
-                    // Create jobs
-                    const auto job_split = lightmap.height / num_threads;
-                    std::vector<std::future<void>> jobs;
-                    for (int job_i = 0; job_i < num_threads - 1; ++job_i)
+                    for (std::size_t i = 0; i < lightmap_objects.size(); ++i)
                     {
-                        jobs.push_back(std::async(std::launch::async, sge::compute_indirect_irradiance,
-                            lm_scene,
-                            32,
-                            lightmap.width,
-                            job_split,
-                            lightmap.lightmap_texels + job_i * job_split * lightmap.width,
-                            lightmap.lightmap_texel_mask + job_i * job_split * lightmap.width,
-                            lightmap.lightmap_pixels + job_i * job_split * lightmap.width));
-                    }
+                        auto& lightmap = lightmap_object_lightmaps[i];
 
-                    // Compute final slice
-                    sge::compute_indirect_irradiance(
-                        lm_scene,
-                        32,
-                        lightmap.width,
-                        lightmap.height - (num_threads - 1) * job_split,
-                        lightmap.lightmap_texels + (num_threads - 1) * job_split * lightmap.width,
-                        lightmap.lightmap_texel_mask + (num_threads - 1) * job_split * lightmap.width,
-                        lightmap.lightmap_pixels + (num_threads - 1) * job_split * lightmap.width);
+                        // Create jobs
+                        const auto job_split = lightmap.height / num_threads;
+                        std::vector<std::future<void>> jobs;
+                        for (int job_i = 0; job_i < num_threads - 1; ++job_i)
+                        {
+                            jobs.push_back(std::async(std::launch::async, sge::compute_indirect_irradiance,
+                                lm_scene,
+                                16,
+                                lightmap.width,
+                                job_split,
+                                lightmap.lightmap_texels + job_i * job_split * lightmap.width,
+                                lightmap.lightmap_texel_mask + job_i * job_split * lightmap.width,
+                                lightmap.lightmap_pixels + job_i * job_split * lightmap.width));
+                        }
+
+                        // Compute final slice
+                        sge::compute_indirect_irradiance(
+                            lm_scene,
+                            16,
+                            lightmap.width,
+                            lightmap.height - (num_threads - 1) * job_split,
+                            lightmap.lightmap_texels + (num_threads - 1) * job_split * lightmap.width,
+                            lightmap.lightmap_texel_mask + (num_threads - 1) * job_split * lightmap.width,
+                            lightmap.lightmap_pixels + (num_threads - 1) * job_split * lightmap.width);
+                        }
+
+                    // Copy to irradiance
+                    for (std::size_t i = 0; i < lightmap_objects.size(); ++i)
+                    {
+                        auto& lightmap = lightmap_object_lightmaps[i];
+                        std::memcpy(
+                            lightmap.irradiance_pixels,
+                            lightmap.lightmap_pixels,
+                            lightmap.width * lightmap.height * sizeof(color::RGBAF32));
+                    }
                 }
                 const auto gen_indirect_end = std::chrono::high_resolution_clock::now();
 
