@@ -25,6 +25,8 @@ namespace sge
         ///   Methods   ///
     public:
 
+        void clear();
+
         std::size_t num_elems();
 
         void set_num_elems(std::size_t num_elems);

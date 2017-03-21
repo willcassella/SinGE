@@ -45,9 +45,9 @@ namespace sge
     void* MultiStackBuffer::alloc(std::size_t obj_size)
     {
         // Determine where to place object
-        const auto stack_index = _num_elems / STACK_SIZE;
-        const auto stack_offset = _num_elems % STACK_SIZE;
-        ++_num_elems;
+        const auto num_elems = _num_elems;
+        const auto stack_index = num_elems / STACK_SIZE;
+        const auto stack_offset = num_elems % STACK_SIZE;
 
         // Make sure there's a spot for the new object
         if (stack_index >= _stacks.size())
@@ -57,6 +57,13 @@ namespace sge
             return buffer;
         }
 
+        _num_elems += 1;
         return _stacks[stack_index] + (stack_offset * obj_size);
     }
+
+	void MultiStackBuffer::clear()
+	{
+		_num_elems = 0;
+		_stacks.clear();
+	}
 }
