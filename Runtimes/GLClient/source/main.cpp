@@ -78,16 +78,36 @@ static void axis_input_response(
 	{
 		for (sge::int32 i = 0; i < num_events; ++i)
 		{
+			// Access the node instance for this event
+			sge::Node* node;
+			scene.get_nodes(&events[i].input_node, 1, &node);
+
 			if (events[i].name == "turn")
 			{
-				// Access the node instance for this event
-				sge::Node* node;
-				scene.get_nodes(&events[i].input_node, 1, &node);
-
 				// Make it turn
 				auto rot = node->get_local_rotation();
 				rot.rotate_by_axis_angle(sge::Vec3::up(), sge::degrees(events[i].value) / 5, true);
 				node->set_local_rotation(rot);
+			}
+			if (events[i].name == "look")
+			{
+				// Get first child of this object
+				sge::NodeId child_id = sge::NodeId::null_id();
+				std::size_t num_children;
+				node->get_children(0, 1, &num_children, &child_id);
+
+				if (num_children == 0)
+				{
+					continue;
+				}
+
+				sge::Node* child;
+				scene.get_nodes(&child_id, 1, &child);
+
+				// Rotate the child
+				auto rot = child->get_local_rotation();
+				rot.rotate_by_axis_angle(sge::Vec3::right(), sge::degrees(events[i].value) / 5, true);
+				child->set_local_rotation(rot);
 			}
 		}
 	}
