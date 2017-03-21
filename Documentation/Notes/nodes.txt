@@ -1,0 +1,59 @@
+So scene changes are not applied until later
+- However, they HAVE to be applied at the end of the current stack level (otherwise frame-behind errors WILL occur)
+
+So what's the benefit?
+	- Able to more efficently identify when child transforms need to be updated (don't check EVERY SINGLE TIME)
+	- Can allocate new objects seperately, prevent iterator invalidation
+		- Could also be done otherwise
+	- Answers difficult questions regarding iteration and filtering (how should they react to scene changes? A: They don't)
+	- Could also store global positions, fast retreival
+
+What are the downsides?
+	- Doesn't fix the sorting issue
+	- Pointers still need to remain valid, doesn't do anything to help that
+	- Potentially confusing, but I'm not sure of many cases where you wouldn't be able to account for it
+		- Child nodes maybe?
+	- Still need to figure out tree when marking nodes (ie, ignore nodes for static children, etc)
+		- I guess you could update the tree first, and then mark children
+			- Downsides of that?
+	- Still doesn't prevent weird issues like adding a child to a deleted node
+
+Should there be some sort of 'apply' function?
+- Ie, you modify a node (transform it, change root, etc)
+- Changes don't affect children (or node?) until 'apply' is called
+- Apply is called automatically when switching stack frames (popping and yielding)
+	- Allows for decent workflow, with respect to performance
+
+Ideal sorting mechanism:
+	- Children are stored contiguously
+	- Not always possible, in case of tree modifications
+Solution:
+	- Try to maintain the ideal, but don't rely on it
+	- Each node holds an array of pointers to its children, iterate based on that
+	- At the end of each frame, reorganize to maintain the ideal
+	- Update child arrays between stack frames (allows for more efficient bulk modifications)
+
+Bonus: This system will neatly support immutable objects
+	- Allow temporary modifications, check mutability later
+	- This way immutability enforcement can be a scene-level flag, instead of an object-level one
+	- Less continuous condition checking, faster for the common case (mutable?)
+
+API design:
+- Need easy way to get children
+	- node.get_children(), duh
+- Need an easy way to get parent
+	- node.get_root()
+- Need an easy way to get components
+	- component.get_instance(node)?
+- Need an easy way to filter components
+	- component.get_child_instances(node)
+	- Should the component container have its own representation of the node tree?
+		- Would work well with lazy modification
+
+- Effiency of iteration depends entirely on how much you've modified the tree since last update, but IT STILL WORKS
+
+
+Node::set_position(Vec3 pos)
+{
+	const auto mod_index = acquire_mod_index();
+}
