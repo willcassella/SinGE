@@ -3,14 +3,14 @@
 #include "../private/PhysicsEntity.h"
 #include "../private/CharacterController.h"
 #include "../private/BulletPhysicsSystemData.h"
+#include "../private/Util.h"
 
 namespace sge
 {
     namespace bullet_physics
     {
-        PhysicsEntity::PhysicsEntity(EntityId entity, BulletPhysicsSystem::Data& data)
-            : features(FT_NONE),
-            entity(entity),
+        PhysicsEntity::PhysicsEntity(NodeId node, BulletPhysicsSystem::Data& data)
+            : node(node),
             collider(false),
             _data(&data)
         {
@@ -33,7 +33,12 @@ namespace sge
 
         void PhysicsEntity::add_to_modified()
         {
-            _data->frame_transformed_entities.insert(this);
+			PhysTransformedNode trans;
+			trans.world_transform = from_bullet(transform.getOrigin());
+			trans.world_rotation = from_bullet(transform.getRotation());
+
+			_data->frame_transformed_nodes.push_back(node);
+			_data->frame_transformed_node_transforms.push_back(trans);
         }
 
         void PhysicsEntity::extern_set_transform(const btTransform& trans)

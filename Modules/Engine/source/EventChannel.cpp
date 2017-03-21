@@ -13,11 +13,7 @@ namespace sge
         _buffer = (byte*)std::malloc(capacity * event_object_size);
         _capacity = capacity;
 
-        for (auto& index : _subscriber_indices)
-        {
-            index = std::numeric_limits<int32>::max();
-        }
-
+        std::memset(_subscriber_indices, 0xFF, sizeof(_subscriber_indices));
         std::memset(_subscribers_active, 0, sizeof(_subscribers_active));
     }
 
@@ -29,15 +25,13 @@ namespace sge
     EventChannel::SubscriberId EventChannel::subscribe()
     {
         const auto end_index = _end_index;
-        auto* const subscribers_active = _subscribers_active;
-        auto* const subscriber_indices = _subscriber_indices;
 
         for (SubscriberId id = 0; id < MAX_SUBSCRIBERS; ++id)
         {
-            if (!subscribers_active[id])
+            if (!_subscribers_active[id])
             {
-                subscribers_active[id] = 0xFF;
-                subscriber_indices[id] = _end_index;
+                _subscribers_active[id] = 0xFF;
+                _subscriber_indices[id] = _end_index;
                 return id;
             }
         }
@@ -49,7 +43,7 @@ namespace sge
     void EventChannel::unsubscribe(SubscriberId subscriber)
     {
         _subscribers_active[subscriber] = 0;
-        _subscriber_indices[subscriber] = std::numeric_limits<int32>::max();
+        _subscriber_indices[subscriber] = 0xFFFFFFFF;
     }
 
     void EventChannel::append(const void* events, std::size_t event_object_size, int32 num_events)
@@ -66,10 +60,11 @@ namespace sge
             start_index = std::min(start_index, index);
         }
 
-        // Make sure start index is valid
+        // Check start index
         if (start_index == std::numeric_limits<int32>::max())
         {
-            start_index = 0;
+			// In the case of no subscribers, we don't have to do anything (new subscribers don't see old events)
+			return;
         }
 
         // Compute size
@@ -144,12 +139,12 @@ namespace sge
         return num_copied;
     }
 
-    void EventChannel::acknowledge(SubscriberId subscriber, int32 num_events)
-    {
-        _subscriber_indices[subscriber] += num_events;
-    }
+	void EventChannel::acknowledge_unconsumed(SubscriberId subscriber)
+	{
+		_subscriber_indices[subscriber] = _end_index;
+	}
 
-    void EventChannel::clear()
+	void EventChannel::clear()
     {
         _end_index = 0;
 

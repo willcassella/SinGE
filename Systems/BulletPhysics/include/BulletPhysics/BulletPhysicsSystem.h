@@ -10,9 +10,6 @@ namespace sge
 {
     struct SystemFrame;
     struct UpdatePipeline;
-    class CBoxCollider;
-    class CCapsuleCollider;
-    class CRigidBody;
 
     namespace bullet_physics
     {
@@ -38,80 +35,11 @@ namespace sge
 
         private:
 
-            void phys_tick(SystemFrame& frame, float current_time, float dt);
+            void phys_tick(Scene& scene, SystemFrame& frame);
 
-            void debug_draw(SystemFrame& frame, float current_time, float dt);
+            void debug_draw(Scene& scene, SystemFrame& frame);
 
-            void initialize_world(SystemFrame& frame);
-
-            void cb_new_transform(
-                SystemFrame& frame,
-                const EntityId* entities,
-                std::size_t num);
-
-            void cb_modified_transform(
-                SystemFrame& frame,
-                const EntityId* entities,
-                std::size_t num_tags);
-
-            void cb_new_box_collider(
-                SystemFrame& frame,
-                const EntityId* entities,
-                std::size_t num);
-
-            void cb_deleted_box_collider(
-                SystemFrame& frame,
-                const EntityId* entities,
-                std::size_t num);
-
-            void cb_new_capsule_collider(
-                SystemFrame& frame,
-                const EntityId* entities,
-                std::size_t num);
-
-            void cb_deleted_capsule_collider(
-                SystemFrame& frame,
-                const EntityId* entities,
-                std::size_t num);
-
-            void cb_new_rigid_body(
-                SystemFrame& frame,
-                const EntityId* entities,
-                std::size_t num_ents);
-
-            void cb_deleted_rigid_body(
-                SystemFrame& frame,
-                const EntityId* entities,
-                std::size_t num_ents);
-
-            void cb_new_character_controller(
-                SystemFrame& frame,
-                const EntityId* entities,
-                std::size_t num_ents);
-
-            void cb_deleted_character_controller(
-                SystemFrame& frame,
-                const EntityId* entities,
-                std::size_t num_ents);
-
-            void cb_character_controller_jump(
-                SystemFrame& frame,
-                const EntityId* entities,
-                std::size_t num_ents);
-
-            void cb_character_controller_walk(
-                SystemFrame& frame,
-                const EntityId* entities,
-                const TagCount_t* tag_counts,
-                std::size_t num_ents,
-                const CCharacterController::FWalkEvent* tags);
-
-            void cb_character_controller_turn(
-                SystemFrame& frame,
-                const EntityId* entities,
-                const TagCount_t* tag_counts,
-                std::size_t num_ents,
-                const CCharacterController::FTurnEvent* tags);
+            void initialize_world(Scene& scene);
 
             //////////////////
             ///   Fields   ///
@@ -119,6 +47,14 @@ namespace sge
 
             bool _initialized_world;
             std::unique_ptr<Data> _data;
+			EventChannel* _node_transform_event_channel;
+			EventChannel* _character_controller_jump_event_channel;
+			EventChannel* _character_controller_turn_event_channel;
+			EventChannel* _character_controller_walk_event_channel;
+			EventChannel::SubscriberId _node_transform_changed_sid;
+			EventChannel::SubscriberId _character_controller_jump_sid;
+			EventChannel::SubscriberId _character_controller_turn_sid;
+			EventChannel::SubscriberId _character_controller_walk_sid;
         };
     }
 }

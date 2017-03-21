@@ -35,6 +35,18 @@ namespace sge
          */
         void append(const void* events, std::size_t event_object_size, int32 num_events);
 
+	    /**
+		 * \brief Puts new events into this channel.
+		 * \tparam EventT The type of event to put into the channel.
+		 * \param events The events to put into the channel.
+		 * \param num_events The number of events to put into the channel.
+		 */
+		template <typename EventT>
+		void append(const EventT* events, int32 num_events)
+		{
+			this->append(events, sizeof(EventT), num_events);
+		}
+
         /**
          * \brief Consumes events for the given subscriber.
          * \param subscriber The ID of the subscriber consuming the events.
@@ -46,12 +58,41 @@ namespace sge
          */
         int32 consume(SubscriberId subscriber, std::size_t event_object_size, int32 max_events, void* out_events, int32* out_num_events);
 
-        /**
-         * \brief Acknlowedges the given number of events without actually retreiving them.
-         * \param subscriber The subscriber acknowledging the events.
-         * \param num_events The number of events to acknowledge.
-         */
-        void acknowledge(SubscriberId subscriber, int32 num_events);
+	    /**
+		 * \brief Consumes events for the given subscriber.
+		 * \tparam EventT The type of event to consume.
+		 * \param subscriber The ID of the subscriber consuming the events.
+		 * \param max_events The maximum number of events that may be consumed.
+		 * \param out_events The buffer to store the events.
+		 * \param out_num_events The number of events copied into the given buffer.
+		 * \return The number of events copied into the buffer.
+		 */
+		template <typename EventT>
+		int32 consume(SubscriberId subscriber, int32 max_events, EventT* out_events, int32* out_num_events)
+		{
+			return this->consume(subscriber, sizeof(EventT), max_events, out_events, out_num_events);
+		}
+
+	    /**
+		 * \brief Consumes events for the given subscriber.
+		 * \tparam EventT The type of event to consume.
+		 * \tparam MaxEvents The maximum number of events that may be consumed.
+		 * \param subscriber The ID of the subscriber consuming the events.
+		 * \param out_events The buffer to store the events.
+		 * \param out_num_events The number of events copied into the given buffer.
+		 * \return The number of events copied into the buffer.
+		 */
+		template <typename EventT, int32 MaxEvents>
+		int32 consume(SubscriberId subscriber, EventT(&out_events)[MaxEvents], int32* out_num_events)
+		{
+			return this->consume(subscriber, sizeof(EventT), MaxEvents, out_events, out_num_events);
+		}
+
+	    /**
+		 * \brief Acknowledges all unconsumed events for the given subscriber.
+		 * \param subscriber The subscriber acknowledging the events.
+		 */
+		void acknowledge_unconsumed(SubscriberId subscriber);
 
         /**
          * \brief Clears all events from this channel, and resets subscriber indices.

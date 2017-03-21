@@ -1,5 +1,6 @@
 // Node.cpp
 
+#include <algorithm>
 #include <Core/Reflection/ReflectionBuilder.h>
 #include "../include/Engine/Node.h"
 #include "../include/Engine/Scene.h"
@@ -9,14 +10,16 @@ SGE_REFLECT_TYPE(sge::Node);
 namespace sge
 {
     Node::Node()
-        : _id(NULL_ID),
-        _root(NULL_ID),
-        _scene(nullptr),
-        _world_matrix_dirty(false)
+        : _scene(nullptr),
+		_hierarchy_depth(0),
+        _mod_state(NONE),
+		_transform_mod_index(-1),
+		_root_mod_index(-1),
+        _local_scale(1.f, 1.f, 1.f)
     {
     }
 
-    Node::Id Node::get_id() const
+    NodeId Node::get_id() const
     {
         return _id;
     }
@@ -26,52 +29,55 @@ namespace sge
         return _name;
     }
 
-    Node::Id Node::get_root() const
+    Node::ModState_t Node::get_mod_state() const
+    {
+        return _mod_state;
+    }
+
+    NodeId Node::get_root() const
     {
         return _root;
     }
 
     void Node::set_root(Node* root)
     {
-        // If this node has a root
-        if (_root != NULL_ID)
-        {
-            // Remove this from the root
-            auto* old_root = _scene->get_node(_root);
-            old_root->_child_nodes.erase(get_id());
-        }
-
-        // Add this as a child of the given root
-        if (root)
-        {
-            root->_child_nodes.insert(get_id());
-            _root = root->get_id();
-        }
-        else
-        {
-            _root = NULL_ID;
-        }
-
-        _world_matrix_dirty = true;
-
-        // Notify components
-        for (auto component : _components)
-        {
-            component->on_node_root_update(this);
-        }
+		auto& root_mod = get_root_mod();
+		set_mod_state(_mod_state | ROOT_PENDING);
+		root_mod.root = root;
     }
 
-    void Node::get_children(std::vector<Id>* out_children) const
+	NodeId Node::get_pending_root() const
     {
-        out_children->assign(_child_nodes.size(), NULL_ID);
-        auto* out = out_children->data();
+		if (_root_mod_index == -1)
+		{
+			return _root;
+		}
 
-        std::size_t i = 0;
-        for (auto child : _child_nodes)
-        {
-            out[i] = child;
-            ++i;
-        }
+		const auto* const root = _scene->get_raw_scene_data().node_root_changes[_root_mod_index].root;
+		return root ? root->get_id() : NodeId::null_id();
+    }
+
+	std::size_t Node::get_num_children() const
+    {
+		return _child_nodes.size();
+    }
+
+    std::size_t Node::get_children(
+		std::size_t start_index,
+		std::size_t num_children,
+		std::size_t* out_num_children,
+		NodeId* out_children) const
+    {
+		if (_child_nodes.size() <= start_index)
+		{
+			*out_num_children = 0;
+			return 0;
+		}
+
+		const auto num_copy = std::min(num_children, _child_nodes.size() - start_index);
+		std::memcpy(out_children, _child_nodes.data() + start_index, num_copy * sizeof(NodeId));
+		*out_num_children = num_copy;
+		return num_copy;
     }
 
     void Node::add_child(Node& child)
@@ -82,21 +88,13 @@ namespace sge
     void Node::remove_child(Node& child)
     {
         // Only remove if the child exists in this node's children
-        const auto iter = _child_nodes.find(child.get_id());
+		const auto iter = std::find(_child_nodes.begin(), _child_nodes.end(), child.get_id());
         if (iter == _child_nodes.end())
         {
             return;
         }
 
-        _child_nodes.erase(iter);
-        child._root = NULL_ID;
-        child._world_matrix_dirty = true;
-
-        // Notify child's components
-        for (auto component : child._components)
-        {
-            component->on_node_root_update(&child);
-        }
+		child.set_root(nullptr);
     }
 
     Vec3 Node::get_local_position() const
@@ -106,21 +104,43 @@ namespace sge
 
     void Node::set_local_position(Vec3 pos)
     {
-        _local_position = pos;
-        _world_matrix_dirty = true;
-        transform_notify_components();
+		auto& trans_mod = get_transform_mod();
+		set_mod_state(_mod_state | TRANSFORM_PENDING);
+		trans_mod.local_pos = pos;
     }
 
-    Vec3 Node::get_local_scale() const
+	Vec3 Node::get_pending_local_position() const
+	{
+		if (_transform_mod_index == -1)
+		{
+			return _local_position;
+		}
+
+		const auto& trans_mod = _scene->get_raw_scene_data().node_transform_changes[_transform_mod_index];
+		return trans_mod.local_pos;
+	}
+
+	Vec3 Node::get_local_scale() const
     {
         return _local_scale;
     }
 
     void Node::set_local_scale(Vec3 scale)
     {
-        _local_scale = scale;
-        _world_matrix_dirty = true;
-        transform_notify_components();
+		auto& trans_mod = get_transform_mod();
+		set_mod_state(_mod_state | TRANSFORM_PENDING);
+		trans_mod.local_scale = scale;
+    }
+
+	Vec3 Node::get_pending_local_scale() const
+    {
+	    if (_transform_mod_index == -1)
+	    {
+			return _local_scale;
+	    }
+
+		const auto& trans_mod = _scene->get_raw_scene_data().node_transform_changes[_transform_mod_index];
+		return trans_mod.local_scale;
     }
 
     Quat Node::get_local_rotation() const
@@ -130,42 +150,72 @@ namespace sge
 
     void Node::set_local_rotation(Quat rot)
     {
-        _local_rotation = rot;
-        _world_matrix_dirty = true;
-        transform_notify_components();
+		auto& trans_mod = get_transform_mod();
+		set_mod_state(_mod_state | TRANSFORM_PENDING);
+		trans_mod.local_rot = rot;
     }
 
-    void Node::get_world_matrix(Mat4* out) const
+	Quat Node::get_pending_local_rotation() const
+	{
+		if (_transform_mod_index == -1)
+		{
+			return _local_rotation;
+		}
+
+		const auto& trans_mod = _scene->get_raw_scene_data().node_transform_changes[_transform_mod_index];
+		return trans_mod.local_rot;
+	}
+
+	Mat4 Node::get_world_matrix() const
     {
-        if (!_world_matrix_dirty)
-        {
-            *out = _cached_world_matrix;
-            return;
-        }
-
-        // Calculate the local matrix
-        const auto local = Mat4::translation(_local_position) * Mat4::rotate(_local_rotation) * Mat4::scale(_local_scale);
-
-        // Calculate the parent matrix
-        if (_root != NULL_ID)
-        {
-            Mat4 parent_mat;
-            _scene->get_node(_root)->get_world_matrix(&parent_mat);
-            _cached_world_matrix = parent_mat * local;
-            _world_matrix_dirty = false;
-        }
-        else
-        {
-            _cached_world_matrix = local;
-            _world_matrix_dirty = false;
-        }
+		return _cached_world_matrix;
     }
 
-    void Node::transform_notify_components()
-    {
-        for (auto component : _components)
-        {
-            component->on_node_transform_update(this);
-        }
-    }
+	NodeTransformMod& Node::get_transform_mod()
+	{
+		if (_transform_mod_index != -1)
+		{
+			return _scene->get_raw_scene_data().node_transform_changes[_transform_mod_index];
+		}
+
+		NodeTransformMod trans_mod;
+		trans_mod.node = this;
+		trans_mod.local_pos = _local_position;
+		trans_mod.local_scale = _local_scale;
+		trans_mod.local_rot = _local_rotation;
+
+		auto& transform_mod_array = _scene->get_raw_scene_data().node_transform_changes;
+		const auto index = transform_mod_array.size();
+    	_transform_mod_index = static_cast<int32>(index);
+		transform_mod_array.push_back(trans_mod);
+		return transform_mod_array[index];
+	}
+
+	NodeRootMod& Node::get_root_mod()
+	{
+		if (_root_mod_index != -1)
+		{
+			return _scene->get_raw_scene_data().node_root_changes[_root_mod_index];
+		}
+
+		NodeRootMod root_mod;
+		root_mod.node = this;
+		root_mod.root = nullptr;
+
+		auto& root_mod_array = _scene->get_raw_scene_data().node_root_changes;
+		const auto index = root_mod_array.size();
+		_root_mod_index = static_cast<int32>(index);
+		root_mod_array.push_back(root_mod);
+		return root_mod_array[index];
+	}
+
+	void Node::set_mod_state(ModState_t state)
+	{
+		if (state != NONE && _mod_state == NONE)
+		{
+			_scene->get_raw_scene_data().modified_nodes.push_back(this);
+		}
+
+		_mod_state = state;
+	}
 }

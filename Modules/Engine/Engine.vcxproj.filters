@@ -42,12 +42,6 @@
     <Filter Include="source\Tags">
       <UniqueIdentifier>{cea0a94a-edf7-4441-a0a9-4511c592deba}</UniqueIdentifier>
     </Filter>
-    <Filter Include="source\Util">
-      <UniqueIdentifier>{66040f94-0ac4-4be2-823a-203fe8f16738}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="include\Nodes">
-      <UniqueIdentifier>{7f679c28-bf0f-4005-9e8f-c83cf346f6f6}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Engine\config.h">
@@ -65,15 +59,6 @@
     <ClInclude Include="include\Engine\Components\Display\CStaticMesh.h">
       <Filter>include\Components\Display</Filter>
     </ClInclude>
-    <ClInclude Include="include\Engine\Components\CTransform3D.h">
-      <Filter>include\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\Components\Physics\CVelocity.h">
-      <Filter>include\Components\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\ProcessingFrame.h">
-      <Filter>include</Filter>
-    </ClInclude>
     <ClInclude Include="include\Engine\SceneData.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -81,9 +66,6 @@
       <Filter>include</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine\Components\Display\CSpotlight.h">
-      <Filter>include\Components\Display</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\Components\Display\CLightColor.h">
       <Filter>include\Components\Display</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine\Util\BasicComponentContainer.h">
@@ -94,9 +76,6 @@
     </ClInclude>
     <ClInclude Include="include\Engine\Components\Physics\CSensor.h">
       <Filter>include\Components\Physics</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\Util\EmptyComponentContainer.h">
-      <Filter>include\Util</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine\UpdatePipeline.h">
       <Filter>include</Filter>
@@ -119,26 +98,8 @@
     <ClInclude Include="include\Engine\Components\Display\CLightMaskReceiver.h">
       <Filter>include\Components\Display</Filter>
     </ClInclude>
-    <ClInclude Include="include\Engine\TagBuffer.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\Util\VectorUtils.h">
-      <Filter>include\Util</Filter>
-    </ClInclude>
     <ClInclude Include="include\Engine\SystemInfo.h">
       <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\TagCallbackInfo.h">
-      <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\Util\TagStorage.h">
-      <Filter>include\Util</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\Util\EntityRangePack.h">
-      <Filter>include\Util</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\Util\MapComponentContainer.h">
-      <Filter>include\Util</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine\Components\Display\CLightMaskVolume.h">
       <Filter>include\Components\Display</Filter>
@@ -149,11 +110,11 @@
     <ClInclude Include="include\Engine\Node.h">
       <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Engine\Nodes\RigidBodyNode.h">
-      <Filter>include\Nodes</Filter>
-    </ClInclude>
     <ClInclude Include="include\Engine\EventChannel.h">
       <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Util\CSharedData.h">
+      <Filter>include\Util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -169,22 +130,10 @@
     <ClCompile Include="source\Components\Display\CStaticMesh.cpp">
       <Filter>source\Components\Display</Filter>
     </ClCompile>
-    <ClCompile Include="source\Components\CTransform3D.cpp">
-      <Filter>source\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Components\Physics\CVelocity.cpp">
-      <Filter>source\Components\Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="source\ProcessingFrame.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
     <ClCompile Include="source\SystemFrame.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\Components\Display\CSpotLight.cpp">
-      <Filter>source\Components\Display</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Components\Display\CLightColor.cpp">
       <Filter>source\Components\Display</Filter>
     </ClCompile>
     <ClCompile Include="source\Components\Physics\CSensor.cpp">
@@ -213,12 +162,6 @@
     </ClCompile>
     <ClCompile Include="source\Components\Display\CLightMaskObstructor.cpp">
       <Filter>source\Components\Display</Filter>
-    </ClCompile>
-    <ClCompile Include="source\TagBuffer.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Util\VectorUtils.cpp">
-      <Filter>source\Util</Filter>
     </ClCompile>
     <ClCompile Include="source\Components\Display\CLightMaskVolume.cpp">
       <Filter>source\Components\Display</Filter>

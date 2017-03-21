@@ -8,7 +8,7 @@
 
 namespace sge
 {
-    class CCharacterController;
+    struct CCharacterController;
 
     namespace bullet_physics
     {

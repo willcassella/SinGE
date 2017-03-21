@@ -5,11 +5,16 @@
 
 namespace sge
 {
-    class SGE_ENGINE_API CLightMaskVolume final : public TComponentInterface<CLightMaskVolume>
+    struct SGE_ENGINE_API CLightMaskVolume
     {
-    public:
-
         SGE_REFLECTED_TYPE;
+		struct SharedData;
+
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		explicit CLightMaskVolume(NodeId node, SharedData& data);
 
         ///////////////////
         ///   Methods   ///
@@ -17,6 +22,16 @@ namespace sge
 
         static void register_type(Scene& scene);
 
-        void reset();
+		void to_archive(ArchiveWriter& writer) const;
+
+		void from_archive(ArchiveReader& reader);
+
+		NodeId node() const;
+
+		//////////////////
+		///   Fields   ///
+	private:
+
+		NodeId _node;
     };
 }

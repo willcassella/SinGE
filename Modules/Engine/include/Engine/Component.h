@@ -1,167 +1,15 @@
 // Component.h
 #pragma once
 
-#include <Core/Util/StringUtils.h>
-#include <Core/Reflection/Reflection.h>
+#include <Core/Containers/FixedString.h>
 #include <Core/Interfaces/IToArchive.h>
 #include <Core/Interfaces/IFromArchive.h>
-#include <Core/Reflection/ReflectionBuilder.h>
 #include "Node.h"
 
 namespace sge
 {
 	struct Scene;
-    struct TagBuffer;
     struct SystemFrame;
-	struct ProcessingFrame;
-    class ComponentInterface;
-
-	template <class C>
-	struct TComponentId;
-
-	/* Uniquely identifies an Entity within a Scene. */
-	using EntityId = uint64;
-
-	/* EntityId reserved for non-existant entities. */
-	constexpr EntityId NULL_ENTITY = 0;
-
-	/* EntityId reserved for the World entity. */
-	constexpr EntityId WORLD_ENTITY = 1;
-
-	/**
-	 * \brief Uniquely identifies a Component of any type within a Scene.
-	 */
-	struct SGE_ENGINE_API ComponentId
-	{
-		SGE_REFLECTED_TYPE;
-
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		ComponentId()
-			: _entity(NULL_ENTITY), _type(nullptr)
-		{
-		}
-		ComponentId(EntityId entity, const TypeInfo& type)
-			: _entity(entity), _type(&type)
-		{
-		}
-
-		template <class C>
-		ComponentId(TComponentId<C> id)
-			: _entity(id.entity()), _type(id.is_null() ? nullptr : &sge::get_type<C>())
-		{
-		}
-
-		static ComponentId null()
-		{
-			return{};
-		}
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		EntityId entity() const
-		{
-			return _entity;
-		}
-
-		const TypeInfo* type() const
-		{
-			return _type;
-		}
-
-		bool is_null() const
-		{
-			return _entity == NULL_ENTITY;
-		}
-
-		/////////////////////
-		///   Operators   ///
-	public:
-
-		friend bool operator==(const ComponentId& lhs, const ComponentId& rhs)
-		{
-			return lhs._entity == rhs._entity && lhs._type == rhs._type;
-		}
-		friend bool operator!=(const ComponentId& lhs, const ComponentId& rhs)
-		{
-			return !(lhs == rhs);
-		}
-        friend bool operator<(const ComponentId& lhs, const ComponentId& rhs)
-        {
-            return lhs._type < rhs._type || (lhs._type == rhs._type && lhs._entity < rhs._entity);
-        }
-	    friend bool operator>(const ComponentId& lhs, const ComponentId& rhs)
-        {
-            return lhs._type > rhs._type || (lhs._type == rhs._type && lhs._entity > rhs._entity);
-        }
-        friend bool operator<=(const ComponentId& lhs, const ComponentId& rhs)
-        {
-            return lhs < rhs || lhs == rhs;
-        }
-        friend bool operator>=(const ComponentId& lhs, const ComponentId& rhs)
-        {
-            return lhs > rhs || lhs == rhs;
-        }
-
-		//////////////////
-		///   Fields   ///
-	private:
-
-		EntityId _entity;
-		const TypeInfo* _type;
-	};
-
-	/**
-	 * \brief Uniquely identifies a Component of a specific type within a Scene.
-	 * \tparam C The type of Component this object identifies.
-	 */
-	template <class C>
-	struct TComponentId
-	{
-        SGE_REFLECTED_TYPE;
-
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		TComponentId()
-			: _entity(NULL_ENTITY)
-		{
-		}
-		TComponentId(EntityId entity)
-			: _entity(entity)
-		{
-		}
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		EntityId entity() const
-		{
-			return _entity;
-		}
-
-		const TypeInfo* type() const
-		{
-			return &sge::get_type<C>();
-		}
-
-		bool is_null() const
-		{
-			return _entity == NULL_ENTITY;
-		}
-
-		//////////////////
-		///   Fields   ///
-	private:
-
-		EntityId _entity;
-	};
 
     class SGE_ENGINE_API ComponentContainer
     {
@@ -175,171 +23,82 @@ namespace sge
         ///   Methods   ///
     public:
 
+        virtual const TypeInfo& get_component_type() const = 0;
+
         virtual void reset() = 0;
 
         virtual void to_archive(ArchiveWriter& writer) const = 0;
 
         virtual void from_archive(ArchiveReader& reader) = 0;
 
-        virtual const EntityId* get_instance_range() const = 0;
+        virtual void on_end_system_frame() = 0;
 
-        virtual std::size_t get_instance_range_length() const = 0;
+        virtual void on_end_update_frame() = 0;
 
-        virtual const TypeInfo& get_component_type() const { return sge::get_type<int>(); }
+        virtual void create_instances(const NodeId* nodes, std::size_t num_instances, void** out_instances) = 0;
 
-        /**
-         * \brief Creates a new instance of this type of component, for the given node.
-         * \param node The Id of the node to create this instance for.
-         */
-        virtual void create_node_instance(Node::Id node) {}
+        virtual void remove_instances(const NodeId* nodes, std::size_t num_instances) = 0;
 
-        /**
-         * \brief "Destroys" an instance of this type of component, for the given node.
-         * The Actual component data will not be removed until the end of the frame.
-         * \param node The Id of the node to remove the data from.
-         */
-        virtual void remove_node_instance(Node::Id node) {}
+		virtual void get_instances(const NodeId* nodes, std::size_t num_instances, void** out_instances) = 0;
 
-        /**
-         * \brief Called at the end of the frame, allows this container to reorganize it's internal data.
-         */
-        virtual void on_end_frame() {}
+		virtual std::size_t num_instance_nodes() const = 0;
 
-        /**
-         * \brief Gets the instance of this component associated with the given node.
-         * \param node The node to get the instance for.
-         * \return A pointer to the data for this instance.
-         */
-        virtual void* get_instance(Node::Id node) { return nullptr; }
+		virtual std::size_t get_instance_nodes(std::size_t start_index, std::size_t num_instances, std::size_t* out_num_instances, NodeId* out_instance_nodes) const = 0;
 
-        /**
-         * \brief Returns the event channel for this container, if one exists.
-         * \param event_type The type of event to get the channel for.
-         * \return A pointer to the channel for this event type, if it exists.
-         */
-        virtual EventChannel* get_event_channel(const TypeInfo& event_type) { return nullptr; }
+        virtual EventChannel* get_event_channel(const char* name) = 0;
 
-        /**
-         * \brief Called when the transform is updated for the given node.
-         * \param node The node that was transformed.
-         */
-        virtual void on_node_transform_update(const Node* node) {}
+		template <class T>
+		void create_instances(const NodeId* nodes, std::size_t num_instances, T** out_instances)
+		{
+			return this->create_instances(nodes, num_instances, reinterpret_cast<void**>(out_instances));
+		}
 
-        /**
-         * \brief Called when the root node is updated for the given node.
-         * \param node The node who's root was udpated.
-         */
-        virtual void on_node_root_update(const Node* node) {}
-
-        virtual void create_instances(
-            const EntityId* const* ord_ents_arrays,
-            const std::size_t* num_ents,
-            std::size_t num_arrays,
-            std::size_t num_new,
-            EntityId* out_new_ents) = 0;
-
-        virtual void remove_instances(const EntityId* ord_instances, std::size_t num) = 0;
-
-        virtual void reset_interface(std::size_t instance_index, ComponentInterface* interf) = 0;
+		template <class T>
+		void get_instances(const NodeId* nodes, std::size_t num_instances, T** out_instances)
+		{
+			return this->get_instances(nodes, num_instances, reinterpret_cast<void**>(out_instances));
+		}
     };
 
-    /**
-	 * \brief Provides access to a component within a processing frame.
+	/**
+	 * \brief Event generated for new component objects.
 	 */
-	class SGE_ENGINE_API ComponentInterface
+    template <class ComponentT>
+	struct ENewComponent
 	{
-        friend SystemFrame;
-
-		////////////////////////
-		///   Constructors   ///
-	public:
-
-		ComponentInterface();
-        virtual ~ComponentInterface() = default;
-
-		///////////////////
-		///   Methods   ///
-	public:
-
-		EntityId entity() const
-		{
-            return _entity;
-		}
-
-        ComponentId id() const;
-
-		virtual const TypeInfo& get_type() const = 0;
-
-		void from_property_archive(ArchiveReader& reader);
-
-        void destroy();
-
-	protected:
-
-        virtual void generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags);
-
-        void set_modified();
-
-        template <typename T>
-        void checked_setter(const T& new_value, T& old_value)
-        {
-            if (new_value != old_value)
-            {
-                old_value = new_value;
-                set_modified();
-            }
-        }
-
-	private:
-
-        void reset(EntityId entity);
-
-	    //////////////////
-		///   Fields   ///
-	private:
-
-        EntityId _entity;
-        std::vector<EntityId> _ord_modified;
-        std::vector<EntityId> _ord_destroyed;
-		bool _modified_current;
-        bool _destroyed_current;
+        NodeId node;
+        ComponentT* instance = nullptr;
 	};
 
+	/**
+	 * \brief Event generated for destroyed component objects.
+	 */
+    template <class ComponentT>
+	struct EDestroyedComponent
+	{
+        NodeId node;
+        ComponentT* instance = nullptr;
+	};
+
+	/**
+	 * \brief Event generated for modified component objects.
+	 */
+    template <class ComponentT>
+	struct EModifiedComponent
+	{
+        NodeId node;
+        ComponentT* instance = nullptr;
+		FixedString<16> property;
+	};
+
+	/**
+	 * \brief Event generated when a specific component property is modified.
+	 */
 	template <class ComponentT>
-	class TComponentInterface : public ComponentInterface
+	struct EModifiedComponentProperty
 	{
-		///////////////////
-		///   Methods   ///
-	public:
-
-		TComponentId<ComponentT> id() const
-		{
-			return{ this->entity() };
-		}
-	};
-
-	/**
-	 * \brief Tag applied to new component objects.
-	 */
-	struct SGE_ENGINE_API FNewComponent
-	{
-		SGE_REFLECTED_TYPE;
-	};
-
-	/**
-	 * \brief Tag applied to destroyed component objects.
-	 */
-	struct SGE_ENGINE_API FDestroyedComponent
-	{
-		SGE_REFLECTED_TYPE;
-	};
-
-	/**
-	 * \brief Tag applied to component objects that are modiified.
-	 */
-	struct SGE_ENGINE_API FModifiedComponent
-	{
-		SGE_REFLECTED_TYPE;
+		NodeId node;
+		ComponentT* instance;
 	};
 
 	/**
@@ -348,18 +107,3 @@ namespace sge
 	 */
 	SGE_ENGINE_API void register_builtin_components(Scene& scene);
 }
-
-namespace std
-{
-	template <>
-	struct hash< sge::ComponentId >
-	{
-		std::size_t operator()(const sge::ComponentId& key) const
-		{
-			return hash<sge::EntityId>()(key.entity()) ^ hash<const sge::TypeInfo*>()(key.type()) << 1;
-		}
-	};
-}
-
-template <class C>
-SGE_REFLECT_TYPE_TEMPLATE(sge::TComponentId, C);

@@ -16,21 +16,11 @@ namespace sge
 
         class PhysicsEntity final : public btMotionState
         {
-        public:
-
-            using Features_t = uint8;
-            enum : Features_t
-            {
-                FT_NONE = 0,
-                FT_TRANSFORM_3D = (1 << 0),
-                FT_SENSOR = (1 << 1),
-            };
-
             ////////////////////////
             ///   Constructors   ///
         public:
 
-            PhysicsEntity(EntityId entity, BulletPhysicsSystem::Data& data);
+            PhysicsEntity(NodeId node, BulletPhysicsSystem::Data& data);
             ~PhysicsEntity();
 
             ///////////////////
@@ -51,9 +41,7 @@ namespace sge
             ///   Fields   ///
         public:
 
-            Features_t features;
-
-            EntityId entity;
+			NodeId node;
 
             btTransform transform;
 

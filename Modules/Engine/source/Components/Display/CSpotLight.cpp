@@ -4,6 +4,7 @@
 #include "../../../include/Engine/Components/Display/CSpotlight.h"
 #include "../../../include/Engine/Scene.h"
 #include "../../../include/Engine/Util/BasicComponentContainer.h"
+#include "../../../include/Engine/Util/CSharedData.h"
 
 SGE_REFLECT_TYPE(sge::CSpotlight)
 .property("cone_radius", &CSpotlight::cone_radius, &CSpotlight::cone_radius)
@@ -12,141 +13,161 @@ SGE_REFLECT_TYPE(sge::CSpotlight)
 
 namespace sge
 {
-	struct CSpotlight::Data
+	struct CSpotlight::SharedData : CSharedData<CSpotlight>
 	{
-		///////////////////
-		///   Methods   ///
-	public:
-
-		void to_archive(ArchiveWriter& writer) const
-		{
-			if (shape == Shape::CONE)
-			{
-				writer.push_object_member("cone");
-				writer.object_member("radius", cone_radius);
-				writer.pop();
-			}
-			else if (shape == Shape::FRUSTUM)
-			{
-				writer.push_object_member("frustum");
-				writer.object_member("width", frustum_width);
-				writer.object_member("height", frustum_height);
-				writer.pop();
-			}
-
-			writer.object_member("distance", distance);
-			writer.object_member("intensity", intensity);
-		}
-
-		void from_archive(ArchiveReader& reader)
-		{
-			if (reader.pull_object_member("cone"))
-			{
-				shape = Shape::CONE;
-				reader.object_member("radius", cone_radius);
-				reader.pop();
-			}
-			else if (reader.pull_object_member("frustum"))
-			{
-				shape = Shape::FRUSTUM;
-				reader.object_member("width", frustum_width);
-				reader.object_member("height", frustum_height);
-				reader.pop();
-			}
-		}
-
-		//////////////////
-		///   Fields   ///
-	public:
-
-		Shape shape = Shape::CONE;
-		float cone_radius = 1.f;
-		float frustum_width = 1.f;
-		float frustum_height = 1.f;
-		float distance = 1.f;
-		float intensity = 1.f;
 	};
+
+	CSpotlight::CSpotlight(NodeId node, SharedData& shared_data)
+		: _node(node),
+		_shared_data(&shared_data)
+	{
+	}
 
 	void CSpotlight::register_type(Scene& scene)
 	{
-		scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CSpotlight, Data>>());
+		scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CSpotlight, SharedData>>());
 	}
 
-    void CSpotlight::reset(Data& data)
-    {
-        _data = &data;
-    }
+	void CSpotlight::to_archive(ArchiveWriter& writer) const
+	{
+		if (_shape == Shape::CONE)
+		{
+			writer.push_object_member("cone");
+			writer.object_member("radius", _cone_radius);
+			writer.pop();
+		}
+		else if (_shape == Shape::FRUSTUM)
+		{
+			writer.push_object_member("frustum");
+			writer.object_member("width", _frustum_width);
+			writer.object_member("height", _frustum_height);
+			writer.pop();
+		}
+
+		writer.object_member("distance", _distance);
+		writer.object_member("intensity", _intensity);
+	}
+
+	void CSpotlight::from_archive(ArchiveReader& reader)
+	{
+		if (reader.pull_object_member("cone"))
+		{
+			_shape = Shape::CONE;
+			reader.object_member("radius", _cone_radius);
+			reader.pop();
+		}
+		else if (reader.pull_object_member("frustum"))
+		{
+			_shape = Shape::FRUSTUM;
+			reader.object_member("width", _frustum_width);
+			reader.object_member("height", _frustum_height);
+			reader.pop();
+		}
+	}
+
+	NodeId CSpotlight::node() const
+	{
+		return _node;
+	}
 
     CSpotlight::Shape CSpotlight::shape() const
 	{
-		return _data->shape;
+		return _shape;
 	}
 
 	void CSpotlight::shape(Shape shape)
 	{
-        checked_setter(shape, _data->shape);
+		if (_shape != shape)
+		{
+			_shape = shape;
+			set_modified("shape");
+		}
 	}
 
 	void CSpotlight::set_cone(float radius)
 	{
-        checked_setter(Shape::CONE, _data->shape);
-        checked_setter(radius, _data->cone_radius);
+		shape(Shape::CONE);
+		cone_radius(radius);
 	}
 
 	void CSpotlight::set_frustum(float width, float height)
 	{
-        checked_setter(Shape::FRUSTUM, _data->shape);
-        checked_setter(width, _data->frustum_width);
-        checked_setter(height, _data->frustum_height);
+		shape(Shape::FRUSTUM);
+		frustum_width(width);
+		frustum_height(height);
 	}
 
 	float CSpotlight::distance() const
 	{
-		return _data->distance;
+		return _distance;
 	}
 
 	void CSpotlight::distance(float value)
 	{
-        checked_setter(value, _data->distance);
+		if (_distance != value)
+		{
+			_distance = value;
+			set_modified("distance");
+		}
 	}
 
 	float CSpotlight::intensity() const
 	{
-		return _data->intensity;
+		return _intensity;
 	}
 
 	void CSpotlight::intensity(float value)
 	{
-        checked_setter(value, _data->intensity);
+		if (_intensity != value)
+		{
+			_intensity = value;
+			set_modified("intensity");
+		}
 	}
 
 	float CSpotlight::cone_radius() const
 	{
-		return _data->cone_radius;
+		return _cone_radius;
 	}
 
 	void CSpotlight::cone_radius(float value)
 	{
-        checked_setter(value, _data->cone_radius);
+		if (_cone_radius != value)
+		{
+			_cone_radius = value;
+			set_modified("cone_radius");
+		}
 	}
 
 	float CSpotlight::frustum_width() const
 	{
-		return _data->frustum_width;
+		return _frustum_width;
 	}
 
 	void CSpotlight::frustum_width(float value)
 	{
-        checked_setter(value, _data->frustum_width);
+		if (_frustum_width != value)
+		{
+			_frustum_width = value;
+			set_modified("frustum_width");
+		}
 	}
 
 	float CSpotlight::frustum_height() const
 	{
-		return _data->frustum_height;
+		return _frustum_height;
 	}
 
 	void CSpotlight::frustum_height(float value)
 	{
-        checked_setter(value, _data->frustum_height);
+		if (_frustum_height != value)
+		{
+			set_modified("frustum_height");
+		}
+	}
+
+	void CSpotlight::set_modified(const char* property_name)
+	{
+		_shared_data->set_modified(_node, this, property_name);
 	}
 }

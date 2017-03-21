@@ -1,31 +1,57 @@
 // BasicComponentContainer.h
 #pragma once
 
+#include <set>
+#include <map>
+#include <vector>
 #include <algorithm>
 #include <Core/Interfaces/IFromString.h>
+#include <Core/Memory/Buffers/MultiStackBuffer.h>
 #include "../Component.h"
-#include "../Util/VectorUtils.h"
 
 namespace sge
 {
-    template <class ComponentT, typename ComponentDataT>
+    template <class ComponentT, typename SharedDataT>
     class BasicComponentContainer final : public ComponentContainer
     {
-        ///////////////////
-        ///   Methods   ///
+        ////////////////////////
+        ///   Constructors   ///
     public:
+
+        BasicComponentContainer()
+            : _new_instance_channel(sizeof(ENewComponent<ComponentT>), 8),
+            _destroyed_instance_channel(sizeof(EDestroyedComponent<ComponentT>), 8)
+            {
+            }
+
+            ///////////////////
+            ///   Methods   ///
+    public:
+
+        const TypeInfo& get_component_type() const override
+        {
+            return sge::get_type<ComponentT>();
+        }
 
         void reset() override
         {
-            _instance_set.clear();
-            _instance_data.clear();
+			_shared_data.reset();
+            _new_instance_channel.clear();
+            _destroyed_instance_channel.clear();
+            _instance_map.clear();
+            _instance_buffer.clear();
         }
 
         void to_archive(ArchiveWriter& writer) const override
         {
-            for (std::size_t i = 0; i < _instance_set.size(); ++i)
+            char id_str[20];
+
+            for (auto instance : _instance_map)
             {
-                writer.object_member(sge::to_string(_instance_set[i]).c_str(), _instance_data[i]);
+				instance.first.to_string(id_str, 20);
+                writer.push_object_member(id_str);
+                instance.second->to_archive(writer);
+                writer.pop();
             }
         }
 
@@ -33,88 +59,203 @@ namespace sge
         {
             reset();
 
-            reader.enumerate_object_members([this, &reader](const char* entity_id_str)
+			std::vector<ENewComponent<ComponentT>> new_instances;
+
+            reader.enumerate_object_members([this, &reader, &new_instances](const char* id_str)
             {
-                // Get the entity id
-                EntityId entity = NULL_ENTITY;
-                sge::from_string(entity, entity_id_str, std::strlen(entity_id_str));
+                // Get the node id
+				NodeId node;
+				node.from_string(id_str);
 
-                // Make sure it's valid
-                if (entity == NULL_ENTITY)
-                {
-                    return;
-                }
+				// Make sure it's valid
+				if (node.is_null())
+				{
+					return;
+				}
 
-                // Add the entity to the instance set
-                _instance_set.push_back(entity);
+				// Make sure it doesn't already exist in the map
+				const auto node_iter = this->_instance_map.find(node);
+				if (node_iter != this->_instance_map.end())
+				{
+					return;
+				}
 
-                // Add the data to the data set
-                ComponentDataT data;
-                sge::from_archive(data, reader);
-                _instance_data.push_back(std::move(data));
-            });
+				// Allocate space for the entity
+				auto* const buff = this->_instance_buffer.alloc(sizeof(ComponentT));
+				auto* const instance = new(buff) ComponentT(node, _shared_data);
 
-            // Make sure the data is ordered properly
-            std::size_t num_dups = 0;
-            const bool ordered = is_ordered(_instance_set.data(), _instance_set.size(), num_dups);
-            if (!ordered || num_dups != 0)
-            {
-                assert(false);
-                reset();
-            }
-        }
+				// Insert it into the map
+				this->_instance_map[node] = instance;
+				this->_instance_nodes.push_back(node);
 
-        const EntityId* get_instance_range() const override
-        {
-            return _instance_set.data();
-        }
+				// Deserialize it
+				instance->from_archive(reader);
 
-        std::size_t get_instance_range_length() const override
-        {
-            return _instance_set.size();
-        }
+				// Create the new instance event
+				ENewComponent<ComponentT> event;
+				event.node = node;
+				event.instance = instance;
+				new_instances.push_back(event);
+			});
 
-        void create_instances(
-            const EntityId* const* ordered_instances,
-            const std::size_t* lens,
-            std::size_t num_arrays,
-            std::size_t num_new_instances,
-            EntityId* out_new_instances) override
-        {
-            const std::size_t old_len = _instance_set.size();
-            _instance_set.insert(_instance_set.end(), num_new_instances, NULL_ENTITY);
-            _instance_data.insert(_instance_data.end(), num_new_instances, ComponentDataT{});
+			// Append all new instance events
+			_new_instance_channel.append(
+				new_instances.data(),
+				sizeof(ENewComponent<ComponentT>),
+				(int32)new_instances.size());
+		}
 
-            rev_multi_insert(_instance_set.data(), old_len, _instance_set.size(), ordered_instances, lens, num_arrays,
-                [&](std::size_t new_index, std::size_t old_index) // Swap function
-            {
-                _instance_set[new_index] = _instance_set[old_index];
-                _instance_data[new_index] = std::move(_instance_data[old_index]);
-            },
-                [&](EntityId new_entity, std::size_t index) // Insert function
-            {
-                _instance_set[index] = new_entity;
-                out_new_instances[num_new_instances - 1] = new_entity;
-                --num_new_instances;
-            });
-        }
+		void on_end_system_frame() override
+		{
+			_shared_data.on_end_system_frame();
+		}
 
-        void remove_instances(const EntityId* ordered_instances, std::size_t num) override
-        {
-            erase_ord_entities(_instance_set, _instance_data, ordered_instances, num);
-        }
+		void on_end_update_frame() override
+		{
+			// TODO: Destroy actual instances
+			_shared_data.on_end_update_frame();
+			_new_instance_channel.clear();
+			_destroyed_instance_channel.clear();
+		}
 
-        void reset_interface(std::size_t instance_index, ComponentInterface* interf) override
-        {
-            auto& data = _instance_data[instance_index];
-            static_cast<ComponentT*>(interf)->reset(data);
-        }
+		void create_instances(const NodeId* nodes, std::size_t num_nodes, void** out_instances) override
+		{
+			std::vector<ENewComponent<ComponentT>> new_instances;
+			new_instances.reserve(num_nodes);
+
+			for (std::size_t i = 0; i < num_nodes; ++i)
+			{
+				const auto node = nodes[i];
+
+				// Make sure the instance doesn't already exist
+				const auto iter = _instance_map.find(node);
+				if (iter != _instance_map.end())
+				{
+					out_instances[i] = nullptr;
+					continue;
+				}
+
+				// Construct the instance
+				void* const buff = _instance_buffer.alloc(sizeof(ComponentT));
+				auto* const instance = new (buff) ComponentT(node, _shared_data);
+				out_instances[i] = instance;
+
+				// Add it to the map
+				_instance_map[node] = instance;
+
+				// Add it to the instance node list
+				_instance_nodes.push_back(node);
+
+				// Create the new instance event
+				ENewComponent<ComponentT> event;
+				event.node = node;
+				event.instance = instance;
+				new_instances.push_back(event);
+			}
+
+			// Create the new instance events
+			_new_instance_channel.append(
+				new_instances.data(),
+				sizeof(ENewComponent<ComponentT>),
+				(int32)new_instances.size());
+		}
+
+		void remove_instances(const NodeId* nodes, std::size_t num_nodes) override
+		{
+			std::vector<EDestroyedComponent<ComponentT>> destroyed_events;
+			destroyed_events.reserve(num_nodes);
+
+			// Figure out which instances of the given nodes actually have these components
+			for (std::size_t i = 0; i < num_nodes; ++i)
+			{
+				const auto node = nodes[i];
+				const auto iter = _instance_map.find(node);
+				if (iter == _instance_map.end())
+				{
+					continue;
+				}
+
+				// Create the destroyed event
+				EDestroyedComponent<ComponentT> event;
+				event.node = node;
+				event.instance = iter->second;
+
+				destroyed_events.push_back(event);
+			}
+
+			// Add all events
+			_destroyed_instance_channel.append(
+				destroyed_events.data(),
+				sizeof(EDestroyedComponent<ComponentT>),
+				(int32)destroyed_events.size());
+		}
+
+		void get_instances(const NodeId* nodes, std::size_t num_instances, void** out_instances)
+		{
+			for (std::size_t i = 0; i < num_instances; ++i)
+			{
+				const auto node = nodes[i];
+
+				// Search for the id
+				const auto iter = _instance_map.find(node);
+				if (iter == _instance_map.end())
+				{
+					out_instances[i] = nullptr;
+					continue;
+				}
+
+				out_instances[i] = iter->second;
+			}
+		}
+
+		std::size_t num_instance_nodes() const override
+		{
+			return _instance_nodes.size();
+		}
+
+		std::size_t get_instance_nodes(
+			std::size_t start_index,
+			std::size_t num_instances,
+			std::size_t* out_num_instances,
+			NodeId* out_instances) const override
+		{
+			if (start_index >= _instance_nodes.size())
+			{
+				*out_num_instances = 0;
+				return 0;
+			}
+
+			const auto num_copy = std::min(_instance_nodes.size() - start_index, num_instances);
+			std::memcpy(out_instances, _instance_nodes.data() + start_index, num_copy * sizeof(NodeId));
+			*out_num_instances = num_copy;
+			return num_copy;
+		}
+
+		EventChannel* get_event_channel(const char* name) override
+		{
+			if (std::strcmp(name, "new") == 0)
+			{
+				return &_new_instance_channel;
+			}
+			else if (std::strcmp(name, "destroy") == 0)
+			{
+				return &_destroyed_instance_channel;
+			}
+			else
+			{
+				return _shared_data.get_event_channel(name);
+			}
+		}
 
         //////////////////
         ///   Fields   ///
     private:
 
-        std::vector<EntityId> _instance_set;
-        std::vector<ComponentDataT> _instance_data;
+		SharedDataT _shared_data;
+        EventChannel _new_instance_channel;
+        EventChannel _destroyed_instance_channel;
+        std::map<NodeId, ComponentT*> _instance_map;
+		std::vector<NodeId> _instance_nodes;
+		MultiStackBuffer _instance_buffer;
     };
 }

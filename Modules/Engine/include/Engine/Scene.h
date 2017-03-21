@@ -7,6 +7,7 @@ namespace sge
 {
 	struct TypeDB;
     struct UpdatePipeline;
+	struct SystemInfo;
 
 	/**
 	 * \brief Top-level scene interface.
@@ -14,6 +15,7 @@ namespace sge
 	struct SGE_ENGINE_API Scene
 	{
 		SGE_REFLECTED_TYPE;
+		friend SystemFrame;
 
 		////////////////////////
 		///   Constructors   ///
@@ -30,32 +32,36 @@ namespace sge
 		///   Methods   ///
 	public:
 
-        Node* create_node();
+        void create_nodes(std::size_t num_nodes, Node** out_nodes);
 
-        /**
-        * \brief Searches for a node with the given Id, and returns it.
-        * \param id The Id of the node to search for.
-        * \return A pointer to the node. This pointer will no longer be valid at the end of the scene update.
-        */
-        Node* get_node(Node::Id id);
+		void destroy_nodes(std::size_t num_nodes, Node* const* nodes);
 
-	    /**
-         * \brief Searches for a node with the given Id, and returns it.
-         * \param id The Id of the node to search for.
-         * \return A pointer to the node. This pointer will no longer be valid at the end of the scene update.
-         */
-        const Node* get_node(Node::Id id) const;
+        void get_nodes(const NodeId* nodes, std::size_t num_nodes, Node** out_nodes);
 
-	    /**
-         * \brief Constructs an array of all root nodes in the scene.
-         * \param out_roots The array to fill with the root nodes.
-         */
-        void get_root_nodes(std::vector<Node::Id>* out_roots) const;
+        void get_nodes(const NodeId* nodes, std::size_t num_nodes, const Node** out_nodes) const;
+
+		std::size_t num_root_nodes() const;
+
+        std::size_t get_root_nodes(
+			std::size_t start_index,
+			std::size_t num_nodes,
+			std::size_t* out_num_nodes,
+			NodeId* out_nodes) const;
+
+        ComponentContainer* get_component_container(const TypeInfo& type);
+
+		EventChannel* get_event_channel(const TypeInfo& component_type, const char* channel_name);
+
+		EventChannel* get_node_transform_changed_channel();
+
+		EventChannel* get_node_root_changed_channel();
 
 		/**
 		 * \brief Resets entity/component data. Essentially creates a new scene without unregistering component types.
 		 */
 		void reset_scene();
+
+        SceneData& get_raw_scene_data();
 
 		/**
 		 * \brief Returns raw scene data. You should not use this unless you know what you're doing.
@@ -107,10 +113,19 @@ namespace sge
 
 	private:
 
-        std::vector<SystemFrame> apply_changes(
-            UpdatePipeline& pipeline,
-            SystemFrame* frames,
-            std::size_t num_frames);
+		void initialize_hierarchy_depths();
+
+		void execute_job_queue(SystemInfo* const* jobs, std::size_t num_jobs, UpdatePipeline& pipeline, float time_delta);
+
+		void on_end_system_frame();
+
+		void update_matrices(Node* const* nodes, std::size_t num_nodes);
+
+		void update_child_matrices(
+			const Mat4& parent_matrix,
+			std::vector<Node*>& nodes,
+			std::size_t offset,
+			std::vector<ENodeTransformChanged>& out_events);
 
 		//////////////////
 		///   Fields   ///

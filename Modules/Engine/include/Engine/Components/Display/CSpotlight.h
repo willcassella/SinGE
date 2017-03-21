@@ -5,25 +5,29 @@
 
 namespace sge
 {
-	class SGE_ENGINE_API CSpotlight final : public TComponentInterface<CSpotlight>
+	struct SGE_ENGINE_API CSpotlight
 	{
-	public:
+		SGE_REFLECTED_TYPE;
 
+		struct SharedData;
 		enum class Shape
 		{
 			/**
-			 * \brief This spotlight is in the shape of a cone.
-			 */
+			* \brief This spotlight is in the shape of a cone.
+			*/
 			CONE,
 
 			/**
-			 * \brief This spotlight is in the shape of a frustum.
-			 */
+			* \brief This spotlight is in the shape of a frustum.
+			*/
 			FRUSTUM
 		};
 
-		struct Data;
-		SGE_REFLECTED_TYPE;
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		explicit CSpotlight(NodeId node, SharedData& shared_data);
 
 		///////////////////
 		///   Methods   ///
@@ -31,7 +35,11 @@ namespace sge
 
 		static void register_type(Scene& scene);
 
-        void reset(Data& data);
+		void to_archive(ArchiveWriter& writer) const;
+
+		void from_archive(ArchiveReader& reader);
+
+		NodeId node() const;
 
 		Shape shape() const;
 
@@ -61,10 +69,21 @@ namespace sge
 
 		void frustum_height(float value);
 
+	private:
+
+		void set_modified(const char* property_name);
+
 		//////////////////
 		///   Fields   ///
 	private:
 
-		Data* _data = nullptr;
+		Shape _shape = Shape::CONE;
+		float _cone_radius = 1.f;
+		float _frustum_width = 1.f;
+		float _frustum_height = 1.f;
+		float _distance = 1.f;
+		float _intensity = 1.f;
+		NodeId _node;
+		SharedData* _shared_data = nullptr;
 	};
 }

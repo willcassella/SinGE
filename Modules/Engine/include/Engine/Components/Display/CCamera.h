@@ -6,12 +6,16 @@
 
 namespace sge
 {
-	class SGE_ENGINE_API CPerspectiveCamera final : public TComponentInterface<CPerspectiveCamera>
+	struct SGE_ENGINE_API CPerspectiveCamera
 	{
+		SGE_REFLECTED_TYPE;
+		struct SharedData;
+
+		////////////////////////
+		///   Constructors   ///
 	public:
 
-		SGE_REFLECTED_TYPE;
-		struct Data;
+		explicit CPerspectiveCamera(NodeId node, SharedData& shared_data);
 
 		///////////////////
 		///   Methods   ///
@@ -19,7 +23,11 @@ namespace sge
 
 		static void register_type(Scene& scene);
 
-        void reset(Data& data);
+		void to_archive(ArchiveWriter& writer) const;
+
+		void from_archive(ArchiveReader& reader);
+
+		NodeId node() const;
 
 		float h_fov() const;
 
@@ -27,18 +35,26 @@ namespace sge
 
 		float z_min() const;
 
-		void z_min(float zMin);
+		void z_min(float value);
 
 		float z_max() const;
 
-		void z_max(float zMax);
+		void z_max(float value);
 
-		Mat4 get_projection_matrix(float screenRatio) const;
+		Mat4 get_projection_matrix(float screen_ratio) const;
+
+	private:
+
+		void set_modified(const char* prop_name);
 
 		//////////////////
 		///   Fields   ///
 	private:
 
-		Data* _data = nullptr;
+		Angle _h_fov;
+		float _z_min = 0.f;
+		float _z_max = 0.f;
+		NodeId _node;
+		SharedData* _shared_data = nullptr;
 	};
 }

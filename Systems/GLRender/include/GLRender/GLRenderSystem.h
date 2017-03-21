@@ -4,7 +4,6 @@
 #include <memory>
 #include <Core/Reflection/Reflection.h>
 #include <Engine/Scene.h>
-#include <Engine/TagBuffer.h>
 #include "build.h"
 
 namespace sge
@@ -38,15 +37,7 @@ namespace sge
 
 		private:
 
-			void render_scene(SystemFrame& frame, float current_time, float dt);
-
-            void cb_debug_draw_line(
-                SystemFrame& frame,
-                const EntityId* ent_range,
-                const TagIndex_t* indices,
-                const TagCount_t* counts,
-                std::size_t ent_range_len,
-                const FDebugLine* lines);
+			void render_scene(Scene& scene, SystemFrame& frame);
 
 			////////////////
 			///   Data   ///

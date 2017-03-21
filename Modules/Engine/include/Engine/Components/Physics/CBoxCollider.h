@@ -6,12 +6,16 @@
 
 namespace sge
 {
-	class SGE_ENGINE_API CBoxCollider final : public TComponentInterface<CBoxCollider>
+	struct SGE_ENGINE_API CBoxCollider
 	{
+		SGE_REFLECTED_TYPE;
+		struct SharedData;
+
+		/////////////////////////
+		///   Constructors    ///
 	public:
 
-		SGE_REFLECTED_TYPE;
-		struct Data;
+		explicit CBoxCollider(NodeId node, SharedData& shared_data);
 
 		////////////////////
 		////   Methods   ///
@@ -19,7 +23,11 @@ namespace sge
 
         static void register_type(Scene& scene);
 
-        void reset(Data& data);
+		void to_archive(ArchiveWriter& writer) const;
+
+		void from_archive(ArchiveReader& reader);
+
+		NodeId node() const;
 
 		float width() const;
 
@@ -37,10 +45,16 @@ namespace sge
 
         void shape(const Vec3& shape);
 
+	private:
+
+		void set_modified();
+
 		//////////////////
 		///   Fields   ///
 	private:
 
-		Data* _data = nullptr;
+		Vec3 _shape = { 1.f, 1.f, 1.f };
+		NodeId _node;
+		SharedData* _shared_data = nullptr;
 	};
 }

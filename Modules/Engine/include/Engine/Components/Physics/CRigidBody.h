@@ -1,21 +1,20 @@
 // CRigidBody.h
 #pragma once
 
-#include "../../Util/TagStorage.h"
+#include "../../Component.h"
 
 namespace sge
 {
-    class SGE_ENGINE_API CRigidBody final : public TComponentInterface<CRigidBody>
+    struct SGE_ENGINE_API CRigidBody
     {
-    public:
-
-        struct SGE_ENGINE_API FKinematicChanged
-        {
-            SGE_REFLECTED_TYPE;
-        };
-
-        struct Data;
         SGE_REFLECTED_TYPE;
+		struct SharedData;
+
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		explicit CRigidBody(NodeId node, SharedData& shared_data);
 
         ///////////////////
         ///   Methods   ///
@@ -23,7 +22,11 @@ namespace sge
 
         static void register_type(Scene& scene);
 
-        void reset(Data& data);
+		void to_archive(ArchiveWriter& writer) const;
+
+		void from_archive(ArchiveReader& reader);
+
+		NodeId node() const;
 
         bool kinematic() const;
 
@@ -57,15 +60,22 @@ namespace sge
 
     private:
 
-        void generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags) override;
-
         void prop_set_kinematic(bool value);
+
+		void set_modified(const char* property_name);
 
         //////////////////
         ///   Fields   ///
     private:
 
-        Data* _data = nullptr;
-        TagStorage<FKinematicChanged> _kinematic_changed_tags;
+		bool _kinematic = false;
+		float _mass = 1.f;
+		float _friction = 0.5f;
+		float _rolling_friction = 0.f;
+		float _spinning_friction = 0.f;
+		float _linear_damping = 0.f;
+		float _angular_damping = 0.f;
+		NodeId _node;
+        SharedData* _shared_data = nullptr;
     };
 }

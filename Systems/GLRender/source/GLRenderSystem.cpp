@@ -3,7 +3,6 @@
 #include <iostream>
 #include <Core/Reflection/ReflectionBuilder.h>
 #include <Resource/Archives/JsonArchive.h>
-#include <Engine/Components/CTransform3D.h>
 #include <Engine/Components/Display/CStaticMesh.h>
 #include <Engine/Components/Display/CCamera.h>
 #include <Engine/Tags/DebugDraw.h>
@@ -21,78 +20,93 @@ namespace sge
 {
 	namespace gl_render
 	{
-        void build_render_scene(GLRenderSystem::State& state, SystemFrame& frame)
+		static void insert_static_mesh_instance(GLRenderSystem::State& state, std::map<GLuint, std::size_t>& material_indices, Node& node, CStaticMesh& static_mesh)
+		{
+			// Get the mesh resource for this mesh
+			const auto& gl_mesh = state.get_static_mesh_resource(static_mesh.mesh());
+
+			// Get the material for this mesh
+			const auto& gl_mat = state.get_material_resource(static_mesh.material());
+
+			// Create a mesh instance object
+			MeshInstance instance;
+			instance.mat_uv_scale = { 1.f, 1.f };
+			instance.world_transform = node.get_world_matrix();
+
+			// Decide whether to use a lightmap
+			if (static_mesh.uses_lightmap() && !static_mesh.lightmap().empty())
+			{
+				// Get the lightmap
+				instance.lightmap = state.get_texture_2d_resource(static_mesh.lightmap(), true);
+			}
+			else
+			{
+				instance.lightmap = 0;
+			}
+
+			// Search for where to put this mesh
+			for (auto& mat_instance : state.render_scene.standard_material_instances)
+			{
+				if (mat_instance.material.program_id == gl_mat.program_id)
+				{
+					for (auto& mesh_instance : mat_instance.mesh_instances)
+					{
+						if (mesh_instance.vao == gl_mesh.vao)
+						{
+							mesh_instance.instances.push_back(instance);
+							return;
+						}
+					}
+
+					// Create a new mesh instance set
+					MeshInstanceSet mesh_set;
+					mesh_set.vao = gl_mesh.vao;
+					mesh_set.start_element_index = 0;
+					mesh_set.num_element_indices = gl_mesh.num_total_elements;
+					mesh_set.instances.push_back(instance);
+					mat_instance.mesh_instances.push_back(std::move(mesh_set));
+					return;
+				}
+			}
+
+			// Create a material instance
+			MaterialInstance mat_instance;
+			mat_instance.material = gl_mat;
+
+			// Create a mesh set
+			MeshInstanceSet mesh_set;
+			mesh_set.vao = gl_mesh.vao;
+			mesh_set.start_element_index = 0;
+			mesh_set.num_element_indices = gl_mesh.num_total_elements;
+			mesh_set.instances.push_back(instance);
+			mat_instance.mesh_instances.push_back(std::move(mesh_set));
+			state.render_scene.standard_material_instances.push_back(std::move(mat_instance));
+		}
+
+        static void build_render_scene(GLRenderSystem::State& state, Scene& scene)
         {
             std::map<GLuint, std::size_t> material_indices;
+			auto* static_mesh_component = scene.get_component_container(CStaticMesh::type_info);
 
-            // Get all static mesh entities
-            frame.process_entities(
-                [&state](
-                    ProcessingFrame& pframe,
-                    const CTransform3D& transform,
-                    const CStaticMesh& mesh)
-            {
-                // Get the mesh resource for this mesh
-                const auto& gl_mesh = state.get_static_mesh_resource(mesh.mesh());
+            // Get the nodes with static mesh components
+			NodeId static_mesh_nodes[32];
+			std::size_t sm_nodes_start_index = 0;
+			std::size_t sm_nodes_num_nodes;
+			while (static_mesh_component->get_instance_nodes(sm_nodes_start_index, 32, &sm_nodes_num_nodes, static_mesh_nodes))
+			{
+				sm_nodes_start_index += 32;
 
-                // Get the material for this mesh
-                const auto& gl_mat = state.get_material_resource(mesh.material());
+				// Get the data for each node
+				Node* node_instances[32];
+				CStaticMesh* sm_instances[32];
+				static_mesh_component->get_instances(static_mesh_nodes, sm_nodes_num_nodes, sm_instances);
+				scene.get_nodes(static_mesh_nodes, sm_nodes_num_nodes, node_instances);
 
-                // Create a mesh instance object
-                MeshInstance instance;
-                instance.mat_uv_scale = { 1.f, 1.f };
-                instance.world_transform = transform.get_world_matrix();
-
-                // Decide whether to use a lightmap
-                if (mesh.uses_lightmap() && !mesh.lightmap().empty())
-                {
-                    // Get the lightmap
-                    instance.lightmap = state.get_texture_2d_resource(mesh.lightmap(), true);
-                }
-                else
-                {
-                    instance.lightmap = 0;
-                }
-
-                // Search for where to put this mesh
-                for (auto& mat_instance : state.render_scene.standard_material_instances)
-                {
-                    if (mat_instance.material.program_id == gl_mat.program_id)
-                    {
-                        for (auto& mesh_instance : mat_instance.mesh_instances)
-                        {
-                            if (mesh_instance.vao == gl_mesh.vao)
-                            {
-                                mesh_instance.instances.push_back(instance);
-                                return ProcessControl::CONTINUE;
-                            }
-                        }
-
-                        // Create a new mesh instance set
-                        MeshInstanceSet mesh_set;
-                        mesh_set.vao = gl_mesh.vao;
-                        mesh_set.start_element_index = 0;
-                        mesh_set.num_element_indices = gl_mesh.num_total_elements;
-                        mesh_set.instances.push_back(instance);
-                        mat_instance.mesh_instances.push_back(std::move(mesh_set));
-                        return ProcessControl::CONTINUE;
-                    }
-                }
-
-                // Create a material instance
-                MaterialInstance mat_instance;
-                mat_instance.material = gl_mat;
-
-                // Create a mesh set
-                MeshInstanceSet mesh_set;
-                mesh_set.vao = gl_mesh.vao;
-                mesh_set.start_element_index = 0;
-                mesh_set.num_element_indices = gl_mesh.num_total_elements;
-                mesh_set.instances.push_back(instance);
-                mat_instance.mesh_instances.push_back(std::move(mesh_set));
-                state.render_scene.standard_material_instances.push_back(std::move(mat_instance));
-                return ProcessControl::CONTINUE;
-            });
+				for (std::size_t i = 0; i < sm_nodes_num_nodes; ++i)
+				{
+					insert_static_mesh_instance(state, material_indices, *node_instances[i], *sm_instances[i]);
+				}
+			}
         }
 
         static void set_render_target_params()
@@ -404,19 +418,10 @@ namespace sge
 
 		void GLRenderSystem::pipeline_register(UpdatePipeline& pipeline)
 		{
-            const auto async_token = pipeline.new_async_token();
-			const auto system_token = pipeline.register_system_fn(
+			pipeline.register_system_fn(
                 "gl_render",
-                async_token,
                 this,
                 &GLRenderSystem::render_scene);
-
-            pipeline.register_tag_callback_any_comp<FDebugLine>(
-                system_token,
-                async_token,
-                TCO_NONE,
-                this,
-                &GLRenderSystem::cb_debug_draw_line);
 		}
 
 	    void GLRenderSystem::set_viewport(int width, int height)
@@ -488,37 +493,37 @@ namespace sge
                 POST_BUFFER_HDR_UPLOAD_TYPE);
 	    }
 
-	    void GLRenderSystem::render_scene(SystemFrame& frame, float current_time, float dt)
+	    void GLRenderSystem::render_scene(Scene& scene, SystemFrame& frame)
 		{
             // Initialize the render scene data structure, if we haven't already
             if (!_state->initialized_render_scene)
             {
-                build_render_scene(*_state, frame);
+                build_render_scene(*_state, scene);
                 _state->initialized_render_scene = true;
             }
 
-			// Create matrices
-			bool hasCamera = false;
+			// Create camera matrices
 			Mat4 view;
 			Mat4 proj;
+			NodeId cam_node;
+			CPerspectiveCamera* cam_instance;
+			Node* cam_node_instance;
+			std::size_t unused;
 
-			// Get the first camera in the scene
-			frame.process_entities([&](
-				ProcessingFrame& /*pframe*/,
-				const CTransform3D& transform,
-				const CPerspectiveCamera& camera)
-			{
-				view = transform.get_world_matrix().inverse();
-				proj = camera.get_projection_matrix((float)this->_state->width / this->_state->height);
-				hasCamera = true;
-				return ProcessControl::BREAK;
-			});
+			auto* cam_component = scene.get_component_container(CPerspectiveCamera::type_info);
+			cam_component->get_instance_nodes(0, 1, &unused, &cam_node);
 
 			// If no camera was found, return
-            if (!hasCamera)
-            {
-                return;
-            }
+			if (cam_node.is_null())
+			{
+				return;
+			}
+
+			// Access the camera
+			cam_component->get_instances(&cam_node, 1, &cam_instance);
+			scene.get_nodes(&cam_node, 1, &cam_node_instance);
+			view = cam_node_instance->get_world_matrix().inverse();
+			proj = cam_instance->get_projection_matrix((float)this->_state->width / this->_state->height);
 
             // Render the scene
             render_scene_prepare_gbuffer(_state->gbuffer_framebuffer);
@@ -559,46 +564,5 @@ namespace sge
 			// Draw the screen quad
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 		}
-
-	    void GLRenderSystem::cb_debug_draw_line(
-            SystemFrame& /*frame*/,
-            const EntityId* ent_range,
-            const TagIndex_t* tag_indices,
-            const TagCount_t* counts,
-            std::size_t ent_range_len,
-            const FDebugLine* lines)
-	    {
-            std::size_t num_lines = 0;
-
-            // Count up the total number of lines
-            for (std::size_t i = 0; i < ent_range_len; ++i)
-            {
-                num_lines += counts[i];
-            }
-
-            // Reserve space for line verts
-            _state->frame_debug_lines.reserve(_state->frame_debug_lines.size() + num_lines * 2);
-
-            // For each line
-            for (std::size_t i = 0; i < num_lines; ++i)
-            {
-                // Create start vert
-                DebugLineVert start_vert;
-                start_vert.world_position = lines[i].world_start;
-                start_vert.color_rgb = color::RGBF32{
-                    static_cast<Scalar>(lines[i].color.red()) / 255,
-                    static_cast<Scalar>(lines[i].color.green()) / 255,
-                    static_cast<Scalar>(lines[i].color.blue()) / 255 };
-
-                // Create end vert
-                DebugLineVert end_vert;
-                end_vert.world_position = lines[i].world_end;
-                end_vert.color_rgb = start_vert.color_rgb;
-
-                // Add to the buffer
-                _state->frame_debug_lines.push_back(start_vert);
-                _state->frame_debug_lines.push_back(end_vert);
-            }
-	    }
 	}
 }

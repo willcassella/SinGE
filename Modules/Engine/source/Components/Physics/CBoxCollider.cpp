@@ -5,6 +5,7 @@
 #include "../../../include/Engine/Component.h"
 #include "../../../include/Engine/Scene.h"
 #include "../../../include/Engine/Util/BasicComponentContainer.h"
+#include "../../../include/Engine/Util/CSharedData.h"
 
 SGE_REFLECT_TYPE(sge::CBoxCollider)
 .property("width", &CBoxCollider::width, &CBoxCollider::width)
@@ -14,88 +15,89 @@ SGE_REFLECT_TYPE(sge::CBoxCollider)
 
 namespace sge
 {
-    struct CBoxCollider::Data
-    {
-        ///////////////////
-        ///   Methods   ///
-    public:
+	struct CBoxCollider::SharedData : public CSharedData<CBoxCollider>
+	{
+	};
 
-        void to_archive(ArchiveWriter& writer) const
-        {
-            writer.object_member("s", shape);
-        }
-
-        void from_archive(ArchiveReader& reader)
-        {
-            reader.object_member("s", shape);
-        }
-
-        //////////////////
-        ///   Fields   ///
-    public:
-
-        Vec3 shape = {1, 1, 1};
-    };
+	CBoxCollider::CBoxCollider(NodeId node, SharedData& shared_data)
+		: _node(node),
+		_shared_data(&shared_data)
+	{
+	}
 
     void CBoxCollider::register_type(Scene& scene)
     {
-        scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CBoxCollider, Data>>());
+        scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CBoxCollider, SharedData>>());
     }
 
-    void CBoxCollider::reset(Data& data)
-    {
-        _data = &data;
-    }
+	void CBoxCollider::to_archive(ArchiveWriter& writer) const
+	{
+		writer.object_member("s", _shape);
+	}
+
+	void CBoxCollider::from_archive(ArchiveReader& reader)
+	{
+		reader.object_member("s", _shape);
+	}
 
     float CBoxCollider::width() const
     {
-        return _data->shape.x();
+        return _shape.x();
     }
 
     void CBoxCollider::width(float value)
     {
         if (width() != value)
         {
-            _data->shape.x(value);
+            _shape.x(value);
             set_modified();
         }
     }
 
     float CBoxCollider::height() const
     {
-        return _data->shape.y();
+        return _shape.y();
     }
 
     void CBoxCollider::height(float value)
     {
         if (height() != value)
         {
-            _data->shape.y(value);
+            _shape.y(value);
             set_modified();
         }
     }
 
     float CBoxCollider::depth() const
     {
-        return _data->shape.z();
+        return _shape.z();
     }
 
     void CBoxCollider::depth(float value)
     {
         if (depth() != value)
         {
-            _data->shape.z(value);
+            _shape.z(value);
             set_modified();
         }
     }
 
     Vec3 CBoxCollider::shape() const
     {
-        return _data->shape;
+        return _shape;
     }
 
     void CBoxCollider::shape(const Vec3& value)
     {
-        checked_setter(value, _data->shape);
+		if (_shape != value)
+		{
+			_shape = value;
+			set_modified();
+		}
     }
+
+	void CBoxCollider::set_modified()
+	{
+		_shared_data->set_modified(_node, this, "shape");
+	}
 }

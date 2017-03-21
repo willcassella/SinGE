@@ -4,7 +4,7 @@
 #include "../../../include/Engine/Components/Gameplay/CCharacterController.h"
 #include "../../../include/Engine/Scene.h"
 #include "../../../include/Engine/Util/BasicComponentContainer.h"
-#include "../../../include/Engine/TagBuffer.h"
+#include "../../../include/Engine/Util/CSharedData.h"
 
 SGE_REFLECT_TYPE(sge::CCharacterController)
 .property("step_height", &CCharacterController::step_height, &CCharacterController::step_height)
@@ -13,116 +13,175 @@ SGE_REFLECT_TYPE(sge::CCharacterController)
 .property("fall_speed", &CCharacterController::fall_speed, &CCharacterController::fall_speed)
 .property("on_ground", &CCharacterController::on_ground, nullptr, PF_EDITOR_HIDDEN);
 
-SGE_REFLECT_TYPE(sge::CCharacterController::FJumpEvent);
-
-SGE_REFLECT_TYPE(sge::CCharacterController::FWalkEvent)
-.field_property("direction", &FWalkEvent::direction);
-
-SGE_REFLECT_TYPE(sge::CCharacterController::FTurnEvent)
-.field_property("amount", &FTurnEvent::amount);
-
 namespace sge
 {
-    struct CCharacterController::Data
+    struct CCharacterController::SharedData : CSharedData<CCharacterController>
     {
-        ///////////////////
-        ///   Methods   ///
+		////////////////////////
+		///   Constructors   ///
     public:
 
-        void to_archive(ArchiveWriter& writer) const
-        {
-            writer.object_member("stpht", step_height);
-            writer.object_member("mxslp", max_slope);
-            writer.object_member("jspd", jump_speed);
-            writer.object_member("fspd", fall_speed);
-            writer.object_member("grd", on_ground);
-        }
+		SharedData()
+			: jump_channel(sizeof(EJump), 2),
+			turn_channel(sizeof(ETurn), 2),
+			walk_channel(sizeof(EWalk), 2)
+    	{
+		}
 
-        void from_archive(ArchiveReader& reader)
-        {
-            reader.object_member("stpht", step_height);
-            reader.object_member("mxslp", max_slope);
-            reader.object_member("jspd", jump_speed);
-            reader.object_member("fsdp", fall_speed);
-            reader.object_member("grd", on_ground);
-        }
-
-        //////////////////
-        ///   Fields   ///
+		///////////////////
+		///   Methods   ///
     public:
 
-        float step_height = 0.1f;
-        Angle max_slope = degrees(30);
-        float jump_speed = 10.f;
-        float fall_speed = 55.f;
-        bool on_ground = true;
+		void reset()
+		{
+			CSharedData<CCharacterController>::reset();
+			jump_channel.clear();
+			turn_channel.clear();
+			walk_channel.clear();
+		}
+
+		void on_end_update_frame()
+		{
+			CSharedData<CCharacterController>::on_end_update_frame();
+			jump_channel.clear();
+			turn_channel.clear();
+			walk_channel.clear();
+		}
+
+		EventChannel* get_event_channel(const char* channel_name)
+		{
+			if (std::strcmp(channel_name, "jump_channel") == 0)
+			{
+				return &jump_channel;
+			}
+			else if (std::strcmp(channel_name, "turn_channel") == 0)
+			{
+				return &turn_channel;
+			}
+			else if (std::strcmp(channel_name, "walk_channel") == 0)
+			{
+				return &walk_channel;
+			}
+
+			return CSharedData<CCharacterController>::get_event_channel(channel_name);
+		}
+
+		//////////////////
+		///   Fields   ///
+    public:
+
+		EventChannel jump_channel;
+		EventChannel turn_channel;
+		EventChannel walk_channel;
     };
+
+	CCharacterController::CCharacterController(NodeId node, SharedData& shared_data)
+		: _node(node),
+		_shared_data(&shared_data)
+	{
+	}
 
     void CCharacterController::register_type(Scene& scene)
     {
-        scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CCharacterController, Data>>());
+        scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CCharacterController, SharedData>>());
     }
 
-    void CCharacterController::reset(Data& data)
-    {
-        _data = &data;
-    }
+	void CCharacterController::to_archive(ArchiveWriter& writer) const
+	{
+		writer.object_member("stpht", _step_height);
+		writer.object_member("mxslp", _max_slope);
+		writer.object_member("jspd", _jump_speed);
+		writer.object_member("fspd", _fall_speed);
+		writer.object_member("grd", _on_ground);
+	}
+
+	void CCharacterController::from_archive(ArchiveReader& reader)
+	{
+		reader.object_member("stpht", _step_height);
+		reader.object_member("mxslp", _max_slope);
+		reader.object_member("jspd", _jump_speed);
+		reader.object_member("fsdp", _fall_speed);
+		reader.object_member("grd", _on_ground);
+	}
+
+	NodeId CCharacterController::node() const
+	{
+		return _node;
+	}
 
     bool CCharacterController::on_ground() const
     {
-        return _data->on_ground;
+        return _on_ground;
     }
 
     void CCharacterController::set_on_ground(bool value)
     {
-        _data->on_ground = value;
+        _on_ground = value;
     }
 
     float CCharacterController::step_height() const
     {
-        return _data->step_height;
+        return _step_height;
     }
 
     void CCharacterController::step_height(float value)
     {
-        checked_setter(value, _data->step_height);
+		if (_step_height != value)
+		{
+			_step_height = value;
+			set_modified("step_height");
+		}
     }
 
     Angle CCharacterController::max_slope() const
     {
-        return _data->max_slope;
+        return _max_slope;
     }
 
     void CCharacterController::max_slope(Angle value)
     {
-        checked_setter(value, _data->max_slope);
+		if (_max_slope != value)
+		{
+			_max_slope = value;
+			set_modified("max_slope");
+		}
     }
 
     float CCharacterController::jump_speed() const
     {
-        return _data->jump_speed;
+        return _jump_speed;
     }
 
     void CCharacterController::jump_speed(float value)
     {
-        checked_setter(value, _data->jump_speed);
+		if (_jump_speed != value)
+		{
+			_jump_speed = value;
+			set_modified("jump_speed");
+		}
     }
 
     float CCharacterController::fall_speed() const
     {
-        return _data->fall_speed;
+		return _fall_speed;
     }
 
     void CCharacterController::fall_speed(float value)
     {
-        checked_setter(value, _data->fall_speed);
+		if (_fall_speed != value)
+		{
+			_fall_speed = value;
+			set_modified("fall_speed");
+		}
     }
 
     void CCharacterController::jump() const
     {
         if (on_ground())
         {
-            _jump_tags.add_single_tag(entity(), FJumpEvent{});
+			EJump event;
+			event.node = _node;
+			_shared_data->jump_channel.append(&event, sizeof(EJump), 1);
         }
     }
 
@@ -130,23 +189,23 @@ namespace sge
     {
         if (on_ground())
         {
-            _walk_tags.add_tag(entity(), FWalkEvent{ direction });
+			EWalk event;
+			event.node = _node;
+			event.direction = direction;
+			_shared_data->walk_channel.append(&event, sizeof(EWalk), 1);
         }
     }
 
     void CCharacterController::turn(Angle amount) const
     {
-        _turn_tags.add_tag(entity(), FTurnEvent{ amount });
+		ETurn event;
+		event.node = _node;
+		event.amount = amount;
+		_shared_data->turn_channel.append(&event, sizeof(ETurn), 1);
     }
 
-    void CCharacterController::generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags)
-    {
-        // Call the base implementation
-        ComponentInterface::generate_tags(tags);
-
-        // Create tags
-        _jump_tags.create_buffer(&type_info, tags);
-        _walk_tags.create_buffer(&type_info, tags);
-        _turn_tags.create_buffer(&type_info, tags);
-    }
+	void CCharacterController::set_modified(const char* property_name)
+	{
+		_shared_data->set_modified(_node, this, property_name);
+	}
 }

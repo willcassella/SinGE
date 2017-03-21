@@ -3,44 +3,38 @@
 
 #include <Core/Math/Angle.h>
 #include <Core/Math/Vec2.h>
-#include "../../Util/TagStorage.h"
+#include "../../Component.h"
 
 namespace sge
 {
-    class SGE_ENGINE_API CCharacterController final : public TComponentInterface<CCharacterController>
+    struct SGE_ENGINE_API CCharacterController
     {
-    public:
-
         SGE_REFLECTED_TYPE;
-        struct Data;
+        struct SharedData;
 
-        struct SGE_ENGINE_API FJumpEvent
+        struct EJump
         {
-            SGE_REFLECTED_TYPE;
+			NodeId node;
         };
 
-        struct SGE_ENGINE_API FWalkEvent
+        struct EWalk
         {
-            SGE_REFLECTED_TYPE;
-
-            //////////////////
-            ///   Fields   ///
-        public:
-
+			NodeId node;
             Vec2 direction;
         };
 
-        struct SGE_ENGINE_API FTurnEvent
+        struct ETurn
         {
-            SGE_REFLECTED_TYPE;
-
-            //////////////////
-            ///   Fields   ///
-        public:
-
             /* Amount to turn clockwise. */
+			NodeId node;
             Angle amount;
         };
+
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		explicit CCharacterController(NodeId node, SharedData& shared_data);
 
         ///////////////////
         ///   Methods   ///
@@ -48,7 +42,11 @@ namespace sge
 
         static void register_type(Scene& scene);
 
-        void reset(Data& data);
+		void to_archive(ArchiveWriter& writer) const;
+
+		void from_archive(ArchiveReader& reader);
+
+		NodeId node() const;
 
         bool on_ground() const;
 
@@ -78,15 +76,18 @@ namespace sge
 
     private:
 
-        void generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags) override;
+		void set_modified(const char* property_name);
 
         ////////////////
         ///   Data   ///
     private:
 
-        Data* _data = nullptr;
-        mutable TagStorage<FJumpEvent> _jump_tags;
-        mutable TagStorage<FWalkEvent> _walk_tags;
-        mutable TagStorage<FTurnEvent> _turn_tags;
+		float _step_height = 0.1f;
+		Angle _max_slope = degrees(30);
+		float _jump_speed = 10.f;
+		float _fall_speed = 55.f;
+		bool _on_ground = true;
+		NodeId _node;
+		SharedData* _shared_data = nullptr;
     };
 }

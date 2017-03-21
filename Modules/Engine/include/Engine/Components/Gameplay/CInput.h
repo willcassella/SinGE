@@ -2,41 +2,39 @@
 #pragma once
 
 #include <Core/Containers/FixedString.h>
-#include "../../Util/TagStorage.h"
+#include "../../Component.h"
 
 namespace sge
 {
-	class SGE_ENGINE_API CInput final : public TComponentInterface<CInput>
+	struct SGE_ENGINE_API CInput
 	{
+		SGE_REFLECTED_TYPE;
+		struct SharedData;
+
+		////////////////////////
+		///   Constructors   ///
 	public:
 
-		SGE_REFLECTED_TYPE;
+		explicit CInput(NodeId node, SharedData& shared_data);
 
 		////////////////
 		///   Tags   ///
 	public:
 
-        using Name_t = FixedString<32>;
+        using EventName_t = FixedString<32>;
 
 		/* Input event dispatched when an 'action' occurs. */
-		struct SGE_ENGINE_API FActionEvent
+		struct EAction
 		{
-			SGE_REFLECTED_TYPE;
-
-			//////////////////
-			///   Fields   ///
-		public:
-
-			Name_t name;
+			NodeId input_node;
+			EventName_t name;
 		};
 
 		/* Input event dispatched when an input axis changes. */
-		struct SGE_ENGINE_API FAxisEvent
+		struct EAxis
 		{
-			SGE_REFLECTED_TYPE;
-
-            ///////////////////
-            ///   Methods   ///
+			///////////////////
+			///   Methods   ///
 		public:
 
             float axis_half() const
@@ -63,7 +61,8 @@ namespace sge
 			///   Fields   ///
 		public:
 
-			Name_t name;
+			NodeId input_node;
+			EventName_t name;
 			float value;
             float min;
             float max;
@@ -75,21 +74,21 @@ namespace sge
 
         static void register_type(Scene& scene);
 
-        void reset();
+		void to_archive(ArchiveWriter& writer) const;
 
-        void add_action_event(Name_t action_name) const;
+		void from_archive(ArchiveReader& reader);
 
-        void add_axis_event(Name_t axis_name, float value, float min, float max) const;
+		NodeId node() const;
 
-	private:
+        void add_action_event(EventName_t action_name) const;
 
-        void generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags) override;
+        void add_axis_event(EventName_t axis_name, float value, float min, float max) const;
 
         //////////////////
         ///   Fields   ///
 	private:
 
-        mutable TagStorage<FActionEvent> _action_tags;
-        mutable TagStorage<FAxisEvent> _axis_tags;
+		NodeId _node;
+		SharedData* _shared_data = nullptr;
 	};
 }

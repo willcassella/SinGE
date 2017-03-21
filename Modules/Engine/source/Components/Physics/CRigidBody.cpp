@@ -4,7 +4,7 @@
 #include "../../../include/Engine/Components/Physics/CRigidBody.h"
 #include "../../../include/Engine/Scene.h"
 #include "../../../include/Engine/Util/BasicComponentContainer.h"
-#include "../../../include/Engine/TagBuffer.h"
+#include "../../../include/Engine/Util/CSharedData.h"
 
 SGE_REFLECT_TYPE(sge::CRigidBody)
 .property("kinematic", &CRigidBody::kinematic, &CRigidBody::prop_set_kinematic)
@@ -15,158 +15,156 @@ SGE_REFLECT_TYPE(sge::CRigidBody)
 .property("linear_damping", &CRigidBody::linear_damping, &CRigidBody::linear_damping)
 .property("angular_damping", &CRigidBody::angular_damping, &CRigidBody::angular_damping);
 
-SGE_REFLECT_TYPE(sge::CRigidBody::FKinematicChanged);
-
 namespace sge
 {
-    struct CRigidBody::Data
+    struct CRigidBody::SharedData : CSharedData<CRigidBody>
     {
-        ///////////////////
-        ///   Methods   ///
-    public:
-
-        void to_archive(ArchiveWriter& writer) const
-        {
-            writer.object_member("k", kinematic);
-            writer.object_member("m", mass);
-            writer.object_member("f", friction);
-            writer.object_member("rf", rolling_friction);
-            writer.object_member("sf", spinning_friction);
-            writer.object_member("lin", linear_damping);
-            writer.object_member("ang", angular_damping);
-        }
-
-        void from_archive(ArchiveReader& reader)
-        {
-            reader.object_member("k", kinematic);
-            reader.object_member("m", mass);
-            reader.object_member("f", friction);
-            reader.object_member("rf", rolling_friction);
-            reader.object_member("sf", spinning_friction);
-            reader.object_member("lin", linear_damping);
-            reader.object_member("ang", angular_damping);
-        }
-
-        //////////////////
-        ///   Fields   ///
-    public:
-
-        bool kinematic = false;
-
-        float mass = 1.f;
-
-        float friction = 0.5f;
-
-        float rolling_friction = 0.f;
-
-        float spinning_friction = 0.f;
-
-        float linear_damping = 0.f;
-
-        float angular_damping = 0.f;
     };
+
+	CRigidBody::CRigidBody(NodeId node, SharedData& shared_data)
+		: _node(node),
+		_shared_data(&shared_data)
+	{
+	}
 
     void CRigidBody::register_type(Scene& scene)
     {
-        scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CRigidBody, Data>>());
+        scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CRigidBody, SharedData>>());
     }
 
-    void CRigidBody::reset(Data& data)
-    {
-        _data = &data;
-    }
+	void CRigidBody::to_archive(ArchiveWriter& writer) const
+	{
+		writer.object_member("k", _kinematic);
+		writer.object_member("m", _mass);
+		writer.object_member("f", _friction);
+		writer.object_member("rf", _rolling_friction);
+		writer.object_member("sf", _spinning_friction);
+		writer.object_member("lin", _linear_damping);
+		writer.object_member("ang", _angular_damping);
+	}
+
+	void CRigidBody::from_archive(ArchiveReader& reader)
+	{
+		reader.object_member("k", _kinematic);
+		reader.object_member("m", _mass);
+		reader.object_member("f", _friction);
+		reader.object_member("rf", _rolling_friction);
+		reader.object_member("sf", _spinning_friction);
+		reader.object_member("lin", _linear_damping);
+		reader.object_member("ang", _angular_damping);
+	}
+
+	NodeId CRigidBody::node() const
+	{
+		return _node;
+	}
 
     bool CRigidBody::kinematic() const
     {
-        return _data->kinematic;
+        return _kinematic;
     }
 
     void CRigidBody::enable_kinematic()
     {
-        if (!_data->kinematic)
+        if (!_kinematic)
         {
-            _data->kinematic = true;
-            _kinematic_changed_tags.add_single_tag(entity(), FKinematicChanged{});
+            _kinematic = true;
+			set_modified("kinematic");
         }
     }
 
     void CRigidBody::disable_kinematic()
     {
-        if (_data->kinematic)
+        if (_kinematic)
         {
-            _data->kinematic = false;
-            _kinematic_changed_tags.add_single_tag(entity(), FKinematicChanged{});
+            _kinematic = false;
+			set_modified("kinematic");
         }
     }
 
     float CRigidBody::mass() const
     {
-        return _data->mass;
+        return _mass;
     }
 
     void CRigidBody::mass(float value)
     {
-        checked_setter(value, _data->mass);
+		if (_mass != value)
+		{
+			_mass = value;
+			set_modified("mass");
+		}
     }
 
     float CRigidBody::friction() const
     {
-        return _data->friction;
+        return _friction;
     }
 
     void CRigidBody::friction(float value)
     {
-        checked_setter(value, _data->friction);
+		if (_friction != value)
+		{
+			_friction = value;
+			set_modified("friction");
+		}
     }
 
     float CRigidBody::rolling_friction() const
     {
-        return _data->rolling_friction;
+        return _rolling_friction;
     }
 
     void CRigidBody::rolling_friction(float value)
     {
-        checked_setter(value, _data->rolling_friction);
+		if (_rolling_friction != value)
+		{
+			_rolling_friction = value;
+			set_modified("rolling_friction");
+		}
     }
 
     float CRigidBody::spinning_friction() const
     {
-        return _data->spinning_friction;
+		return _spinning_friction;
     }
 
     void CRigidBody::spinning_friction(float value)
     {
-        checked_setter(value, _data->spinning_friction);
+		if (_spinning_friction != value)
+		{
+			_spinning_friction = value;
+			set_modified("spinning_friction");
+		}
     }
 
     float CRigidBody::linear_damping() const
     {
-        return _data->linear_damping;
+        return _linear_damping;
     }
 
     void CRigidBody::linear_damping(float value)
     {
-        checked_setter(value, _data->linear_damping);
+		if (_linear_damping != value)
+		{
+			_linear_damping = value;
+			set_modified("linear_damping");
+		}
     }
 
     float CRigidBody::angular_damping() const
     {
-        return _data->angular_damping;
+        return _angular_damping;
     }
 
     void CRigidBody::angular_damping(float value)
     {
-        checked_setter(value, _data->angular_damping);
-    }
-
-    void CRigidBody::generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags)
-    {
-        // Call the base implementation
-        ComponentInterface::generate_tags(tags);
-
-        // Create tags
-        _kinematic_changed_tags.create_buffer(&type_info, tags);
-    }
+		if (_angular_damping != value)
+		{
+			_angular_damping = value;
+			set_modified("angular_damping");
+		}
+	}
 
     void CRigidBody::prop_set_kinematic(bool value)
     {
@@ -179,4 +177,9 @@ namespace sge
             disable_kinematic();
         }
     }
+
+	void CRigidBody::set_modified(const char* property_name)
+	{
+		_shared_data->set_modified(_node, this, property_name);
+	}
 }

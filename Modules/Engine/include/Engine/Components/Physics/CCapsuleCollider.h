@@ -5,12 +5,16 @@
 
 namespace sge
 {
-    class SGE_ENGINE_API CCapsuleCollider final : public TComponentInterface<CCapsuleCollider>
+    struct SGE_ENGINE_API CCapsuleCollider
     {
-    public:
-
         SGE_REFLECTED_TYPE;
-        struct Data;
+        struct SharedData;
+
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		explicit CCapsuleCollider(NodeId node, SharedData& shared_data);
 
         ///////////////////
         ///   Methods   ///
@@ -18,7 +22,11 @@ namespace sge
 
         static void register_type(Scene& scene);
 
-        void reset(Data& data);
+		void to_archive(ArchiveWriter& writer) const;
+
+		void from_archive(ArchiveReader& reader);
+
+		NodeId node() const;
 
         float radius() const;
 
@@ -28,10 +36,16 @@ namespace sge
 
         void height(float value);
 
+	private:
+
+		void set_modified(const char* property_name);
+
         //////////////////
         ///   Fields   ///
     private:
 
-        Data* _data = nullptr;
+		Vec2 _shape = { 1.f, 1.f };
+		NodeId _node;
+        SharedData* _shared_data = nullptr;
     };
 }

@@ -2,6 +2,7 @@ bin/
 build/
 packages/
 .vscode/
+.vs/
 
 *.suo
 *.VC.db

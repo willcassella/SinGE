@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -21,32 +21,32 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{EC7300DC-B09B-4626-80F6-432B5982638F}</ProjectGuid>
     <RootNamespace>Engine</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -170,7 +170,6 @@
     <ClInclude Include="include\Engine\EventChannel.h" />
     <ClInclude Include="include\Engine\Component.h" />
     <ClInclude Include="include\Engine\Components\Display\CCamera.h" />
-    <ClInclude Include="include\Engine\Components\Display\CLightColor.h" />
     <ClInclude Include="include\Engine\Components\Display\CLightMaskObstructor.h" />
     <ClInclude Include="include\Engine\Components\Display\CLightMaskReceiver.h" />
     <ClInclude Include="include\Engine\Components\Display\CSpotlight.h" />
@@ -179,34 +178,23 @@
     <ClInclude Include="include\Engine\Components\Gameplay\CCharacterController.h" />
     <ClInclude Include="include\Engine\Components\Gameplay\CInput.h" />
     <ClInclude Include="include\Engine\Components\Physics\CBoxCollider.h" />
-    <ClInclude Include="include\Engine\Components\CTransform3D.h" />
     <ClInclude Include="include\Engine\Components\Physics\CCapsuleCollider.h" />
     <ClInclude Include="include\Engine\Components\Physics\CRigidBody.h" />
     <ClInclude Include="include\Engine\Components\Physics\CSensor.h" />
-    <ClInclude Include="include\Engine\Components\Physics\CVelocity.h" />
     <ClInclude Include="include\Engine\config.h" />
     <ClInclude Include="include\Engine\Node.h" />
-    <ClInclude Include="include\Engine\Nodes\RigidBodyNode.h" />
     <ClInclude Include="include\Engine\SystemInfo.h" />
-    <ClInclude Include="include\Engine\TagBuffer.h" />
-    <ClInclude Include="include\Engine\TagCallbackInfo.h" />
     <ClInclude Include="include\Engine\Tags\DebugDraw.h" />
     <ClInclude Include="include\Engine\UpdatePipeline.h" />
-    <ClInclude Include="include\Engine\ProcessingFrame.h" />
     <ClInclude Include="include\Engine\Scene.h" />
     <ClInclude Include="include\Engine\SceneData.h" />
     <ClInclude Include="include\Engine\SystemFrame.h" />
     <ClInclude Include="include\Engine\Util\BasicComponentContainer.h" />
-    <ClInclude Include="include\Engine\Util\EmptyComponentContainer.h" />
-    <ClInclude Include="include\Engine\Util\EntityRangePack.h" />
-    <ClInclude Include="include\Engine\Util\MapComponentContainer.h" />
-    <ClInclude Include="include\Engine\Util\TagStorage.h" />
-    <ClInclude Include="include\Engine\Util\VectorUtils.h" />
+    <ClInclude Include="include\Engine\Util\CSharedData.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Component.cpp" />
     <ClCompile Include="source\Components\Display\CCamera.cpp" />
-    <ClCompile Include="source\Components\Display\CLightColor.cpp" />
     <ClCompile Include="source\Components\Display\CLightMaskObstructor.cpp" />
     <ClCompile Include="source\Components\Display\CLightMaskReceiver.cpp" />
     <ClCompile Include="source\Components\Display\CLightMaskVolume.cpp" />
@@ -215,20 +203,15 @@
     <ClCompile Include="source\Components\Gameplay\CCharacterController.cpp" />
     <ClCompile Include="source\Components\Gameplay\CInput.cpp" />
     <ClCompile Include="source\Components\Physics\CBoxCollider.cpp" />
-    <ClCompile Include="source\Components\CTransform3D.cpp" />
     <ClCompile Include="source\Components\Physics\CCapsuleCollider.cpp" />
     <ClCompile Include="source\Components\Physics\CRigidBody.cpp" />
     <ClCompile Include="source\Components\Physics\CSensor.cpp" />
-    <ClCompile Include="source\Components\Physics\CVelocity.cpp" />
     <ClCompile Include="source\Engine\UpdatePipeline.cpp" />
     <ClCompile Include="source\EventChannel.cpp" />
     <ClCompile Include="source\Node.cpp" />
-    <ClCompile Include="source\ProcessingFrame.cpp" />
     <ClCompile Include="source\Scene.cpp" />
     <ClCompile Include="source\SystemFrame.cpp" />
-    <ClCompile Include="source\TagBuffer.cpp" />
     <ClCompile Include="source\Tags\DebugDraw.cpp" />
-    <ClCompile Include="source\Util\VectorUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">

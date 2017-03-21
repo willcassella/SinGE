@@ -10,7 +10,6 @@
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
 #include <Engine/UpdatePipeline.h>
-#include <Engine/Components/CTransform3D.h>
 #include <Engine/Components/Gameplay/CInput.h>
 #include <Engine/Components/Gameplay/CCharacterController.h>
 #include <Engine/Components/Display/CCamera.h>
@@ -20,117 +19,78 @@
 #include <BulletPhysics/Config.h>
 #include <GLWindow/GLEventWindow.h>
 
-namespace sge
+static void action_input_response(
+	sge::EventChannel& action_event,
+	sge::EventChannel::SubscriberId subscriber,
+	sge::ComponentContainer& character_component)
 {
-    void input_test(
-        SystemFrame& frame,
-        const EntityId* entities,
-        const TagCount_t* tag_counts,
-        std::size_t num_ents,
-        const CInput::FActionEvent* action_events)
-    {
-        frame.process_entities_mut(zip_ord_ents(entities, num_ents),
-            [&action_events, tag_counts](
-            ProcessingFrame& pframe,
-            CCharacterController& character,
-            CTransform3D& transform)
-        {
-            const std::size_t input_index = pframe.user_iterator(0);
+	sge::CInput::EAction events[8];
+	sge::int32 num_events;
 
-            for (auto end = action_events + tag_counts[input_index]; action_events != end; ++action_events)
-            {
-                auto input = *action_events;
-                Vec3 dir;
-                const Scalar speed = 0.1;
+	while (action_event.consume(subscriber, sizeof(sge::CInput::EAction), 8, events, &num_events))
+	{
+		for (sge::int32 i = 0; i < num_events; ++i)
+		{
+			// Access character component for this event
+			sge::CCharacterController* character;
+			character_component.get_instances(&events[i].input_node, 1, &character);
+			if (!character)
+			{
+				continue;
+			}
 
-                if (input.name == "forward")
-                {
-                    dir.z(-speed);
-                }
-                else if (input.name == "backward")
-                {
-                    dir.z(speed);
-                }
-                else if (input.name == "strafe_left")
-                {
-                    dir.x(-speed);
-                }
-                else if (input.name == "strafe_right")
-                {
-                    dir.x(speed);
-                }
-                else if (input.name == "jump")
-                {
-                    character.jump();
-                }
-                else if (input.name == "turn_left")
-                {
-                    character.turn(degrees(1));
-                }
-                else if (input.name == "turn_right")
-                {
-                    character.turn(degrees(-1));
-                }
+			const float speed = 0.1;
+			if (events[i].name == "jump")
+			{
+				// Make it jump
+				character->jump();
+			}
+			else if (events[i].name == "forward")
+			{
+				character->walk(sge::Vec2{ 0, speed });
+			}
+			else if (events[i].name == "backward")
+			{
+				character->walk(sge::Vec2{ 0, -speed });
+			}
+			else if (events[i].name == "strafe_left")
+			{
+				character->walk(sge::Vec2{ -speed, 0 });
+			}
+			else if (events[i].name == "strafe_right")
+			{
+				character->walk(sge::Vec2{ speed, 0 });
+			}
+		}
+	}
+}
 
-                character.walk(Vec2{ dir.x(), -dir.z() });
-            }
-        });
-    }
+static void axis_input_response(
+	sge::EventChannel& axis_event,
+	sge::EventChannel::SubscriberId subscriber_id,
+	sge::Scene& scene,
+	sge::ComponentContainer& character_components)
+{
+	sge::CInput::EAxis events[8];
+	sge::int32 num_events;
 
-    void axis_test(
-        SystemFrame& frame,
-        const EntityId* entities,
-        const TagCount_t* tag_counts,
-        std::size_t num_ents,
-        const CInput::FAxisEvent* axis_events)
-    {
-        std::vector<EntityId> process_children;
+	while (axis_event.consume(subscriber_id, sizeof(sge::CInput::EAxis), 8, events, &num_events))
+	{
+		for (sge::int32 i = 0; i < num_events; ++i)
+		{
+			if (events[i].name == "turn")
+			{
+				// Access the node instance for this event
+				sge::Node* node;
+				scene.get_nodes(&events[i].input_node, 1, &node);
 
-        frame.process_entities_mut(zip_ord_ents(entities, num_ents),
-            [&axis_events, &process_children, tag_counts](
-                ProcessingFrame& pframe,
-                const CCharacterController& /*character*/,
-                CTransform3D& transform,
-                CInput& input)
-        {
-            // Get the children of the transform (so we can rotate the camera)
-            process_children = transform.get_children();
-
-            // Rotate the main body
-            for (std::size_t i = 0; i < *tag_counts; ++i)
-            {
-                const auto& axis = axis_events[i];
-
-                if (axis.name == "turn")
-                {
-                    auto rot = transform.get_local_rotation();
-                    rot.rotate_by_axis_angle(Vec3::up(), degrees(axis.value) / 5, true);
-                    transform.set_local_rotation(rot);
-                }
-            }
-
-            return ProcessControl::BREAK;
-        });
-
-        frame.process_entities_mut(zip(ord_ents_range(process_children)),
-            [tag_counts, axis_events](
-                ProcessingFrame& pframe,
-                CPerspectiveCamera& cam,
-                CTransform3D& transform)
-        {
-            for (std::size_t i = 0; i < *tag_counts; ++i)
-            {
-                const auto& axis = axis_events[i];
-
-                if (axis.name == "look")
-                {
-                    auto rot = transform.get_local_rotation();
-                    rot.rotate_by_axis_angle(Vec3::right(), degrees(axis.value) / 5, true);
-                    transform.set_local_rotation(rot);
-                }
-            }
-        });
-    }
+				// Make it turn
+				auto rot = node->get_local_rotation();
+				rot.rotate_by_axis_angle(sge::Vec3::up(), sge::degrees(events[i].value) / 5, true);
+				node->set_local_rotation(rot);
+			}
+		}
+	}
 }
 
 int main(int argc, char* argv[])
@@ -194,16 +154,6 @@ int main(int argc, char* argv[])
 
     // Create a pipeline
     sge::UpdatePipeline pipeline;
-    pipeline.register_tag_callback<sge::CInput>(
-        sge::UpdatePipeline::NO_SYSTEM,
-        sge::UpdatePipeline::FULLY_ASYNC,
-        sge::TCO_NONE,
-        sge::input_test);
-    pipeline.register_tag_callback<sge::CInput>(
-        sge::UpdatePipeline::NO_SYSTEM,
-        sge::UpdatePipeline::FULLY_ASYNC,
-        sge::TCO_NONE,
-        sge::axis_test);
 
     // Register the input window
     event_window.register_pipeline(pipeline);
@@ -224,6 +174,20 @@ int main(int argc, char* argv[])
     config_reader->object_member("bullet_physics", physics_config);
     sge::bullet_physics::BulletPhysicsSystem physics_system{ physics_config };
     physics_system.register_pipeline(pipeline);
+
+	// Get the input component action event channel
+	auto* const action_channel = scene.get_event_channel(sge::CInput::type_info, "action_event");
+	auto* const axis_channel = scene.get_event_channel(sge::CInput::type_info, "axis_event");
+	const auto action_subscriber = action_channel->subscribe();
+	const auto axis_subscriber = axis_channel->subscribe();
+	auto* const character_component = scene.get_component_container(sge::CCharacterController::type_info);
+
+	// Create an input response system
+	pipeline.register_system_fn("input_response", [=](sge::Scene& scene, sge::SystemFrame& /*frame*/)
+	{
+		action_input_response(*action_channel, action_subscriber, *character_component);
+		axis_input_response(*axis_channel, axis_subscriber, scene, *character_component);
+	});
 
     // Load the pipeline config
     if (config_reader->pull_object_member("update_pipeline"))

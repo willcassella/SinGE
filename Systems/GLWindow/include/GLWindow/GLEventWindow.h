@@ -69,7 +69,7 @@ namespace sge
 
         static void glfw_cursor_callback(GLFWwindow* window, double x, double y);
 
-        void process_input(SystemFrame& frame, float current_time, float dt);
+        void process_input(Scene& scene, SystemFrame& frame);
 
         //////////////////
         ///   Fields   ///

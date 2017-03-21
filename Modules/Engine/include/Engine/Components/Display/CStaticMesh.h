@@ -3,17 +3,22 @@
 
 #include <Resource/Resources/StaticMesh.h>
 #include "../../Component.h"
-#include "../../Util/TagStorage.h"
 
 namespace sge
 {
 	/* Component applied to entities that should render a static mesh. */
-	class SGE_ENGINE_API CStaticMesh final : public TComponentInterface<CStaticMesh>
+	class SGE_ENGINE_API CStaticMesh final
 	{
-    public:
+	public:
 
 		SGE_REFLECTED_TYPE;
-		struct Data;
+		struct SharedData;
+
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		explicit CStaticMesh(NodeId node, SharedData& shared_data);
 
 		///////////////////
 		///   Methods   ///
@@ -21,7 +26,9 @@ namespace sge
 
 		static void register_type(Scene& scene);
 
-        void reset(Data& data);
+        void to_archive(ArchiveWriter& writer) const;
+
+        void from_archive(ArchiveReader& reader);
 
 		const std::string& mesh() const;
 
@@ -49,34 +56,18 @@ namespace sge
 
 	private:
 
-        void generate_tags(std::map<const TypeInfo*, std::vector<TagBuffer>>& tags) override;
+		void set_modified(const char* property_name);
 
-		////////////////
-		///   Tags   ///
-	public:
+        //////////////////
+        ///   Fields   ///
+    private:
 
-		struct SGE_ENGINE_API FMeshChanged
-		{
-			SGE_REFLECTED_TYPE;
-		};
-
-		struct SGE_ENGINE_API FMaterialChanged
-		{
-			SGE_REFLECTED_TYPE;
-		};
-
-        struct SGE_ENGINE_API FLightmapChanged
-        {
-            SGE_REFLECTED_TYPE;
-        };
-
-		//////////////////
-		///   Fields   ///
-	private:
-
-		Data* _data = nullptr;
-        TagStorage<FMeshChanged> _mesh_changed;
-        TagStorage<FMaterialChanged> _material_changed;
-        TagStorage<FLightmapChanged> _lightmap_changed;
+		NodeId _node;
+        std::string _mesh;
+        std::string _material;
+        std::string _lightmap;
+        IVec2<int32> _lightmap_size = { 512, 512 };
+        bool _use_lightmap = false;
+		SharedData* _shared_data;
 	};
 }
