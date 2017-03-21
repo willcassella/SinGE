@@ -13,10 +13,11 @@ namespace sge
     public:
 
         FixedString()
-            : _value{ 0 }
         {
+            std::memset(_value, 0, sizeof(_value));
         }
         FixedString(const char* str)
+            : FixedString()
         {
             set_str(str);
         }
@@ -32,7 +33,6 @@ namespace sge
 
         void set_str(const char* str)
         {
-            std::memset(_value, 0, sizeof(_value));
             std::strncpy(_value, str, Size);
         }
 
