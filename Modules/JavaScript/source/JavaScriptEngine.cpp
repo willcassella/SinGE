@@ -106,104 +106,6 @@ namespace sge
 		return JS_INVALID_REFERENCE;
 	}
 
-	JsValueRef CALLBACK js_process_entities_mut(
-		JsValueRef /*callee*/,
-		bool /*isConstructCall*/,
-		JsValueRef* args,
-		unsigned short argc,
-		void* cbState)
-	{
-		if (argc < 3)
-		{
-			return JS_INVALID_REFERENCE;
-		}
-
-		auto* jsEngine = static_cast<JavaScriptEngine::State*>(cbState);
-
-		// Create an array to hold the types
-		const int numTypes = argc - 2;
-		const TypeInfo** types = SGE_STACK_ALLOC(const TypeInfo*, numTypes);
-		JsValueRef* jsProtos = SGE_STACK_ALLOC(JsValueRef, numTypes);
-
-		// Get the types passed to this function
-		for (unsigned short i = 1; i < argc - 1; ++i)
-		{
-			// Get the type name argument
-			char* typeName = nullptr;
-			std::size_t len = 0;
-			JsStringToPointerUtf8Copy(args[i], &typeName, &len);
-
-			// Search for the component type
-			auto* type = jsEngine->scene->get_component_type(typeName);
-			JsStringFree(typeName);
-
-			// If the type doesn't exist, we can't do anything
-			if (!type)
-			{
-				return JS_INVALID_REFERENCE;
-			}
-
-			// Add the type to the types array
-			types[i - 1] = type;
-
-			// Get the javascript prototype for this type
-			jsProtos[i - 1] = jsEngine->get_js_prototype(*type);
-		}
-
-		// Create an array for all the arguments we'll pass to the processing function
-		JsValueRef* jsArgs = SGE_STACK_ALLOC(JsValueRef, numTypes + 3);
-
-		// JsArgs inerits the 'this' argument
-		jsArgs[0] = args[0];
-
-		// First real argument (pframe) is a foreign object
-		jsArgs[1] = jsEngine->js_environment.null_value; // TODO: Initialize real pframe object
-
-		// Initialize all of the component arguments
-		for (int i = 0; i < numTypes; ++i)
-		{
-			jsArgs[i + 3] = JsForeignObject::create_js_foreign_object();
-		}
-
-		// Create an array of foreign objects for all of the components
-		byte* foreignObjectBuffer = SGE_STACK_ALLOC(byte, JsForeignObject::object_pointer_alloc_size() * numTypes);
-
-		// Wrapper function to call
-		auto processFn = [jsProcessFn = args[argc - 1], jsArgs, numTypes, foreignObjectBuffer, types, jsProtos](
-			ProcessingFrame& pframe,
-			ComponentInterface* const components[]) -> ProcessControl
-		{
-			// Get the entity ID as an int TODO: FIX THIS
-			JsIntToNumber(static_cast<int>(pframe.entity()), &jsArgs[2]);
-
-			// Initialize all of the component arguments
-			for (int i = 0; i < numTypes; ++i)
-			{
-				JsForeignObject::stack_init_pointer(
-					&foreignObjectBuffer[JsForeignObject::object_pointer_alloc_size() * i],
-					jsArgs[i + 3],
-					*types[i],
-					jsProtos[i],
-					components[i]);
-			}
-
-			// Run the processing function
-			auto error = JsCallFunction(jsProcessFn, jsArgs, numTypes + 3, nullptr);
-			return ProcessControl::CONTINUE;
-		};
-
-		// Run the process function
-		jsEngine->frame->process_entities_mut(types, numTypes, processFn);
-
-		// Null out all the js arguments
-		for (int i = 0; i < numTypes; ++i)
-		{
-			JsSetExternalData(jsArgs[i + 3], nullptr);
-		}
-
-		return JS_INVALID_REFERENCE;
-	}
-
 	JsValueRef CALLBACK js_new_object(
 		JsValueRef /*callee*/,
 		bool /*isConstructCall*/,
@@ -313,13 +215,6 @@ namespace sge
 		JsGetPropertyIdFromNameUtf8("new_type", &newTypePropId);
 		JsCreateFunction(&js_new_type, _state.get(), &newTypeFn);
 		JsSetProperty(_state->js_environment.global_object, newTypePropId, newTypeFn, true);
-
-		// Create 'process_entities_mut' function
-		JsPropertyIdRef processEntitiesMutPropId = JS_INVALID_REFERENCE;
-		JsValueRef processEntitiesMutFn = JS_INVALID_REFERENCE;
-		JsGetPropertyIdFromNameUtf8("process_entities_mut", &processEntitiesMutPropId);
-		JsCreateFunction(&js_process_entities_mut, _state.get(), &processEntitiesMutFn);
-		JsSetProperty(_state->js_environment.global_object, processEntitiesMutPropId, processEntitiesMutFn, true);
 
 		// Create 'new_object' function
 		JsPropertyIdRef newObjectPropId = JS_INVALID_REFERENCE;
