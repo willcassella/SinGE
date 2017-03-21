@@ -42,11 +42,12 @@ namespace sge
         std::vector<NodeId> root_nodes;
 
         /* Scene modification data */
-        std::vector<Node*> new_nodes;
-        std::vector<Node*> destroyed_nodes;
-		std::vector<Node*> modified_nodes;
-        std::vector<NodeTransformMod> node_transform_changes;
-        std::vector<NodeRootMod> node_root_changes;
+        std::vector<NodeRootMod> system_node_root_changes; // All nodes that had their roots modified during this system frame
+        std::vector<NodeTransformMod> system_node_transform_changes; // All nodes that had their transform modified during this system frame
+        std::vector<Node*> system_new_nodes; // All nodes that were created during this system frame
+		std::vector<Node*> system_destroyed_nodes; // All nodes that were destroyed during this system frame
+        std::vector<Node*> update_destroyed_nodes; // All nodes that were destroyed this update frame
+		std::vector<Node*> update_modified_nodes; // All nodes that had their mod_state modified this update frame
 
 		/* Node event channels */
 		EventChannel new_node_channel;

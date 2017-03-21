@@ -119,6 +119,14 @@ namespace sge
 
 		void on_end_system_frame();
 
+		void update_hierarchy(Node* const* nodes, std::size_t num_nodes);
+
+		void update_child_hierarchy(
+			uint32 parent_hierachy_depth,
+			bool parent_destroyed,
+			std::vector<Node*>& nodes,
+			std::size_t offset);
+
 		void update_matrices(Node* const* nodes, std::size_t num_nodes);
 
 		void update_child_matrices(

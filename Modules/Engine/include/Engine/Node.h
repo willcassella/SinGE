@@ -141,9 +141,19 @@ namespace sge
             NEW = 1 << 4,
 
 	        /**
-             * \brief This node has been marked for destruction this frame.
+             * \brief This node has been marked for destruction during this system frame.
              */
-            DELETED = 1 << 5,
+            DESTROYED_PENDING = 1 << 5,
+
+	        /**
+			 * \brief This node (and all of its children) have been marked for destruction during this system frame.
+			 */
+			DESTROYED_APPLIED = 1 << 6,
+
+	        /**
+			 * \brief Helper element, represents bits used when a node has been modified.
+			 */
+			H_NODE_MODIFIED = ~(DESTROYED_PENDING | DESTROYED_APPLIED)
         };
 
         ////////////////////////
@@ -273,15 +283,15 @@ namespace sge
 	    /**
          * \brief Returns the local-to-world matrix for this node.
          */
-        Mat4 get_world_matrix() const;
+        const Mat4& get_world_matrix() const;
 
     private:
 
-		NodeTransformMod& get_transform_mod();
+		static bool sort_by_hierarchy_depth(const Node* lhs, const Node* rhs);
 
-		NodeRootMod& get_root_mod();
+		NodeTransformMod& get_or_create_transform_mod();
 
-		void set_mod_state(ModState_t state);
+		NodeRootMod& get_or_create_root_mod();
 
         //////////////////
         ///   Fields   ///

@@ -41,9 +41,21 @@ namespace sge
 
     void Node::set_root(Node* root)
     {
-		auto& root_mod = get_root_mod();
-		set_mod_state(_mod_state | ROOT_PENDING);
+		auto& root_mod = get_or_create_root_mod();
 		root_mod.root = root;
+
+		// Create a transform mod for this node, to force the matrix to update
+		// NOTE: In the future I would like to use this to implement options for how the transform should be updated
+		// when modifying the root
+		get_or_create_transform_mod();
+
+		// Update mod state
+		if ((_mod_state & H_NODE_MODIFIED) == 0)
+		{
+			_scene->get_raw_scene_data().update_modified_nodes.push_back(this);
+		}
+
+		_mod_state |= ROOT_PENDING | TRANSFORM_PENDING;
     }
 
 	NodeId Node::get_pending_root() const
@@ -53,7 +65,7 @@ namespace sge
 			return _root;
 		}
 
-		const auto* const root = _scene->get_raw_scene_data().node_root_changes[_root_mod_index].root;
+		const auto* const root = _scene->get_raw_scene_data().system_node_root_changes[_root_mod_index].root;
 		return root ? root->get_id() : NodeId::null_id();
     }
 
@@ -104,9 +116,16 @@ namespace sge
 
     void Node::set_local_position(Vec3 pos)
     {
-		auto& trans_mod = get_transform_mod();
-		set_mod_state(_mod_state | TRANSFORM_PENDING);
+		auto& trans_mod = get_or_create_transform_mod();
 		trans_mod.local_pos = pos;
+
+		// Update mod state
+		if ((_mod_state & H_NODE_MODIFIED) == 0)
+		{
+			_scene->get_raw_scene_data().update_modified_nodes.push_back(this);
+		}
+
+		_mod_state |= TRANSFORM_PENDING;
     }
 
 	Vec3 Node::get_pending_local_position() const
@@ -116,7 +135,7 @@ namespace sge
 			return _local_position;
 		}
 
-		const auto& trans_mod = _scene->get_raw_scene_data().node_transform_changes[_transform_mod_index];
+		const auto& trans_mod = _scene->get_raw_scene_data().system_node_transform_changes[_transform_mod_index];
 		return trans_mod.local_pos;
 	}
 
@@ -127,9 +146,16 @@ namespace sge
 
     void Node::set_local_scale(Vec3 scale)
     {
-		auto& trans_mod = get_transform_mod();
-		set_mod_state(_mod_state | TRANSFORM_PENDING);
+		auto& trans_mod = get_or_create_transform_mod();
 		trans_mod.local_scale = scale;
+
+		// Update mod state
+		if ((_mod_state & H_NODE_MODIFIED) == 0)
+		{
+			_scene->get_raw_scene_data().update_modified_nodes.push_back(this);
+		}
+
+		_mod_state |= TRANSFORM_PENDING;
     }
 
 	Vec3 Node::get_pending_local_scale() const
@@ -139,7 +165,7 @@ namespace sge
 			return _local_scale;
 	    }
 
-		const auto& trans_mod = _scene->get_raw_scene_data().node_transform_changes[_transform_mod_index];
+		const auto& trans_mod = _scene->get_raw_scene_data().system_node_transform_changes[_transform_mod_index];
 		return trans_mod.local_scale;
     }
 
@@ -150,9 +176,14 @@ namespace sge
 
     void Node::set_local_rotation(Quat rot)
     {
-		auto& trans_mod = get_transform_mod();
-		set_mod_state(_mod_state | TRANSFORM_PENDING);
+		auto& trans_mod = get_or_create_transform_mod();
 		trans_mod.local_rot = rot;
+
+		// Update mod state
+		if ((_mod_state & H_NODE_MODIFIED) == 0)
+		{
+			_scene->get_raw_scene_data().update_modified_nodes.push_back(this);
+		}
     }
 
 	Quat Node::get_pending_local_rotation() const
@@ -162,20 +193,25 @@ namespace sge
 			return _local_rotation;
 		}
 
-		const auto& trans_mod = _scene->get_raw_scene_data().node_transform_changes[_transform_mod_index];
+		const auto& trans_mod = _scene->get_raw_scene_data().system_node_transform_changes[_transform_mod_index];
 		return trans_mod.local_rot;
 	}
 
-	Mat4 Node::get_world_matrix() const
+	const Mat4& Node::get_world_matrix() const
     {
 		return _cached_world_matrix;
     }
 
-	NodeTransformMod& Node::get_transform_mod()
+	bool Node::sort_by_hierarchy_depth(const Node* lhs, const Node* rhs)
+	{
+		return lhs->_hierarchy_depth < rhs->_hierarchy_depth;
+	}
+
+	NodeTransformMod& Node::get_or_create_transform_mod()
 	{
 		if (_transform_mod_index != -1)
 		{
-			return _scene->get_raw_scene_data().node_transform_changes[_transform_mod_index];
+			return _scene->get_raw_scene_data().system_node_transform_changes[_transform_mod_index];
 		}
 
 		NodeTransformMod trans_mod;
@@ -184,38 +220,28 @@ namespace sge
 		trans_mod.local_scale = _local_scale;
 		trans_mod.local_rot = _local_rotation;
 
-		auto& transform_mod_array = _scene->get_raw_scene_data().node_transform_changes;
+		auto& transform_mod_array = _scene->get_raw_scene_data().system_node_transform_changes;
 		const auto index = transform_mod_array.size();
     	_transform_mod_index = static_cast<int32>(index);
 		transform_mod_array.push_back(trans_mod);
 		return transform_mod_array[index];
 	}
 
-	NodeRootMod& Node::get_root_mod()
+	NodeRootMod& Node::get_or_create_root_mod()
 	{
 		if (_root_mod_index != -1)
 		{
-			return _scene->get_raw_scene_data().node_root_changes[_root_mod_index];
+			return _scene->get_raw_scene_data().system_node_root_changes[_root_mod_index];
 		}
 
 		NodeRootMod root_mod;
 		root_mod.node = this;
 		root_mod.root = nullptr;
 
-		auto& root_mod_array = _scene->get_raw_scene_data().node_root_changes;
+		auto& root_mod_array = _scene->get_raw_scene_data().system_node_root_changes;
 		const auto index = root_mod_array.size();
 		_root_mod_index = static_cast<int32>(index);
 		root_mod_array.push_back(root_mod);
 		return root_mod_array[index];
-	}
-
-	void Node::set_mod_state(ModState_t state)
-	{
-		if (state != NONE && _mod_state == NONE)
-		{
-			_scene->get_raw_scene_data().modified_nodes.push_back(this);
-		}
-
-		_mod_state = state;
 	}
 }
