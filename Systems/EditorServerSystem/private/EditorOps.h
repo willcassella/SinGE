@@ -6,7 +6,6 @@ namespace sge
 	struct Scene;
 	struct SceneData;
 	struct TypeDB;
-	struct SystemFrame;
 	class ArchiveWriter;
 	class ArchiveReader;
 
@@ -16,31 +15,31 @@ namespace sge
 		{
 			void get_type_info_query(const TypeDB& type_db, ArchiveReader& reader, ArchiveWriter& writer);
 
-			void get_scene_query(const SystemFrame& frame, ArchiveWriter& writer);
+			void get_scene_query(Scene& scene, ArchiveWriter& writer);
 
 			void get_component_types_query(const Scene& scene, ArchiveWriter& writer);
 
-			void new_entity_query(SystemFrame& frame, ArchiveReader& reader);
+			void new_node_query(Scene& scene, ArchiveReader& reader);
 
-			void destroy_entity_query(SystemFrame& frame, ArchiveReader& reader);
+			void destroy_node_query(Scene& scene, ArchiveReader& reader);
 
-			void set_entity_name_query(SystemFrame& frame, ArchiveReader& reader);
+			void set_node_name_query(Scene& scene, ArchiveReader& reader);
 
-			void set_entity_parent_query(SystemFrame& frame, ArchiveReader& reader);
+			void set_node_root_query(Scene& scene, ArchiveReader& reader);
 
-			void new_component_query(SystemFrame& frame, ArchiveReader& reader);
+			void new_component_query(Scene& scene, ArchiveReader& reader);
 
-			void destroy_component_query(SystemFrame& frame, ArchiveReader& reader);
+			void destroy_component_query(Scene& scene, ArchiveReader& reader);
 
-			void get_component_query(SystemFrame& frame, ArchiveReader& reader, ArchiveWriter& writer);
+			void get_component_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 
-			void set_component_query(SystemFrame& frame, ArchiveReader& reader);
+			void set_component_query(Scene& scene, ArchiveReader& reader);
 
 			void get_resource_query(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 
 			void save_scene_query(const Scene& scene, ArchiveReader& reader);
 
-            void generate_lightmaps(SystemFrame& frame);
+            void generate_lightmaps(Scene& scene);
 		}
 	}
 }

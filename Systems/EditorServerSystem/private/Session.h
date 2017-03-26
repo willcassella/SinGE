@@ -35,6 +35,8 @@ namespace sge
 
 			SystemFrame& get_frame();
 
+			Scene& get_scene();
+
 			void enequeue_message(Packet* packet);
 
 			/**
@@ -48,7 +50,7 @@ namespace sge
 
             void write_ops();
 
-            void async_post_write_ops();
+            void post_write_ops();
 
 			static void report_error(std::error_code error);
 

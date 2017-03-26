@@ -176,6 +176,11 @@ namespace sge
          */
         const std::string& get_name() const;
 
+		/**
+		 * \brief Sets the name of this node.
+		 */
+		void set_name(std::string name);
+
 	    /**
          * \brief Returns the current modification state for this node.
          */

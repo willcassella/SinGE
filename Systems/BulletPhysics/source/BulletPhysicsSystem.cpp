@@ -72,7 +72,7 @@ namespace sge
 					}
 
 					// Make it jump
-					phys_ent->character_controller->jump();
+					phys_ent->character_controller->jump(btVector3{ 0.0, 0.0, 0.0 });
 				}
 			}
 		}

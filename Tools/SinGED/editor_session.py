@@ -5,12 +5,16 @@ import json
 import threading
 import queue
 
+
 class EditorSession(object):
     CONNECTION_TIMEOUT = 2
     BUFFER_SIZE = 2 ** 14
 
     SEQUENCE_NUMBER_SIZE = 4
     CONTENT_LENGTH_SIZE = 4
+
+    # Sequence number indicating that this message is not associated with a known sequence number
+    NULL_SEQUENCE_NUMBER = 0
 
     # Indicates that any-priority packets should be run
     PRIORITY_ANY = 'PRIORITY_ANY'
@@ -62,7 +66,7 @@ class EditorSession(object):
         # Try connecting to the server
         try:
             self._sock.connect((host, port))
-        except Exception as e:
+        except Exception as _:
             return False
 
         # Spin up a thread for receiving messages
@@ -87,8 +91,8 @@ class EditorSession(object):
             if self._len_socket_data() == 0:
                 return None
 
-        # If an error occured, quit
-        except socket.error as e:
+        # If an error occurred, quit
+        except socket.error as _:
             return None
 
         # Set it to block while loading the packet
@@ -105,7 +109,7 @@ class EditorSession(object):
         in_content = json.loads(in_str)
 
         # Return the packet info
-        return (seq_number, in_content)
+        return seq_number, in_content
 
     def send_message(self, seq_number, message):
         # Convert the json to a byte string
@@ -129,7 +133,7 @@ class EditorSession(object):
     def create_query(self, seq_number, priority):
         # Create a message for each handler
         message = {}
-        for query,handler in self._query_handlers.items():
+        for query, handler in self._query_handlers.items():
             handler_message = handler(seq_number, priority)
 
             # If the handler has a message to send

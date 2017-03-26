@@ -19,7 +19,6 @@
 #include <Lightmapper/Lightmapper.h>
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
-#include <Engine/Components/CTransform3D.h>
 #include <Engine/Components/Display/CStaticMesh.h>
 
 namespace sge
@@ -179,236 +178,316 @@ namespace sge
 				}
 			}
 
-			void new_entity_query(SystemFrame& frame, ArchiveReader& reader)
+			void new_node_query(Scene& scene, ArchiveReader& reader)
 			{
-				// Get the number of entities to create
-				uint32 num_entities;
-				if (!reader.number(num_entities))
+				// Get the number of nodes to create
+				uint32 num_nodes;
+				if (!reader.number(num_nodes))
 				{
 					return;
 				}
 
-				// Create the entities
-				for (uint32 i = 0; i < num_entities; ++i)
+				// Create the nodes
+				for (uint32 i = 0; i < num_nodes; ++i)
 				{
-                    EntityId entity = NULL_ENTITY;
-					frame.create_entities(&entity, 1);
-					std::cout << "Created entity " << entity << std::endl;
+                    Node* node = nullptr;
+					scene.create_nodes(1, &node);
+					std::cout << "Created node " << node->get_id().to_u64() << std::endl;
 				}
 			}
 
-			void destroy_entity_query(SystemFrame& frame, ArchiveReader& reader)
+			void destroy_node_query(Scene& scene, ArchiveReader& reader)
 			{
-				// Enumerate entities to destroy
-				reader.enumerate_array_elements([&frame, &reader](std::size_t /*i*/)
+				reader.enumerate_array_elements([&scene, &reader](std::size_t /*i*/)
 				{
-					// Get the entity id
-					EntityId entity = NULL_ENTITY;
-					sge::from_archive(entity, reader);
+					// Get the id of the node to destroy
+					NodeId node_id;
+					sge::from_archive(node_id, reader);
+
+					// Get the node
+					Node* node = nullptr;
+					scene.get_nodes(&node_id, 1, &node);
+					if (!node)
+					{
+						return;
+					}
 
 					// Destroy it
-					std::cout << "Destroying entity " << entity << std::endl;
-                    frame.destroy_entities(&entity, 1);
+					std::cout << "Destroying node " << node_id.to_u64() << std::endl;
+                    scene.destroy_nodes(1, &node);
 				});
 			}
 
-			void set_entity_name_query(SystemFrame& frame, ArchiveReader& reader)
+			void set_node_name_query(Scene& scene, ArchiveReader& reader)
 			{
-				// Enumerate entities to set the names of
-				reader.enumerate_object_members([&frame, &reader](const char* entity_id_str)
+				reader.enumerate_object_members([&scene, &reader](const char* node_id_str)
 				{
-					// Get the entity to set the name of
-					EntityId entity_id = NULL_ENTITY;
-					sge::from_string(entity_id, entity_id_str, std::strlen(entity_id_str));
+					// Get the node to set the name of
+					NodeId node_id;
+					node_id.from_string(node_id_str);
 
 					// Get the name to set
 					std::string name;
 					sge::from_archive(name, reader);
 
+					// Get the node
+					Node* node;
+					scene.get_nodes(&node_id, 1, &node);
+					if (!node)
+					{
+						return;
+					}
+
 					// Set the name
-					std::cout << "Setting name on entity " << entity_id << " to '" << name << "'" << std::endl;
-					frame.set_entity_name(entity_id, std::move(name));
+					std::cout << "Setting name on node " << node_id_str << " to '" << name << "'" << std::endl;
+					node->set_name(std::move(name));
 				});
 			}
 
-			void set_entity_parent_query(SystemFrame& frame, ArchiveReader& reader)
+			void set_node_root_query(Scene& scene, ArchiveReader& reader)
 			{
-				// Enumerate entities to set the names of
-				reader.enumerate_object_members([&frame, &reader](const char* entity_id_str)
+				reader.enumerate_object_members([&scene, &reader](const char* node_id_str)
 				{
-					// Get the id of the entity to set the parent of
-					EntityId entity_id = NULL_ENTITY;
-					sge::from_string(entity_id, entity_id_str, std::strlen(entity_id_str));
+					// Get the node to set the parent of
+					NodeId node_id;
+					Node* node = nullptr;
+					node_id.from_string(node_id_str);
+					scene.get_nodes(&node_id, 1, &node);
+					if (!node)
+					{
+						std::cout << "Error: Invalid node id to set root of." << std::endl;
+						return;
+					}
 
-					// Get the id of the entity to set as the parent
-					EntityId parent_id = NULL_ENTITY;
-					sge::from_archive(parent_id, reader);
+					// Get the node to set as the root
+					NodeId root_id;
+					Node* root = nullptr;
+					root_id.from_archive(reader);
+					scene.get_nodes(&root_id, 1, &root);
+					if (!root && !root_id.is_null())
+					{
+						std::cout << "Error: Invalid node id to set as root." << std::endl;
+						return;
+					}
 
-					// Set the parent
-					frame.set_entities_parent(parent_id, &entity_id, 1);
-					std::cout << "Setting parent on entity " << entity_id << " to " << parent_id << std::endl;
+					// Set the root
+					std::cout << "Setting root on node " << node_id_str << " to " << root_id.to_u64() << std::endl;
+					node->set_root(root);
 				});
 			}
 
-			void new_component_query(SystemFrame& frame, ArchiveReader& reader)
+			void new_component_query(Scene& scene, ArchiveReader& reader)
 			{
-				// Enumerate entities to add components to
-				reader.enumerate_object_members([&frame, &reader](const char* entity_id_str)
+				// Enumerate nodes to add components to
+				reader.enumerate_object_members([&scene, &reader](const char* node_id_str)
 				{
-					EntityId entity_id;
-					sge::from_string(entity_id, entity_id_str, std::strlen(entity_id_str));
+					NodeId node_id;
+					node_id.from_string(node_id_str);
 
 					// Enumerate component types to add
-					reader.enumerate_array_elements([entity_id, &frame, &reader](std::size_t /*i*/)
+					reader.enumerate_array_elements([node_id, &scene, &reader](std::size_t /*i*/)
 					{
 						std::string component_type;
 						sge::from_archive(component_type, reader);
 
 						// Get the component type
-						const auto* type = frame.scene().get_component_type(component_type.c_str());
+						const auto* const type = scene.get_component_type(component_type.c_str());
 						if (!type)
 						{
+							std::cout << "Error: Invalid component type name: '" << component_type << "'" << std::endl;
+							return;
+						}
+
+						// Get the component container
+						auto* const container = scene.get_component_container(*type);
+						if (!container)
+						{
+							std::cout << "Error: Invalid component type: '" << component_type << "'" << std::endl;
 							return;
 						}
 
 						// Create the component
-						frame.create_components(*type, &entity_id, 1);
-						std::cout << "Created '" << type->name() << "' component on entity " << entity_id << std::endl;
+						void* instance = nullptr;
+						container->create_instances(&node_id, 1, &instance);
+						std::cout << "Created '" << type->name() << "' component on node " << node_id.to_u64() << std::endl;
 					});
 				});
 			}
 
-			void destroy_component_query(SystemFrame& frame, ArchiveReader& reader)
+			void destroy_component_query(Scene& scene, ArchiveReader& reader)
 			{
-				// Enumerate componen types to destroy
-				reader.enumerate_object_members([&frame, &reader](const char* component_type_name)
+				// Enumerate component types to destroy
+				reader.enumerate_object_members([&scene, &reader](const char* component_type_name)
 				{
 					// Get the component type
-					const auto* type = frame.scene().get_component_type(component_type_name);
+					const auto* const type = scene.get_component_type(component_type_name);
 					if (!type)
 					{
+						std::cout << "Error: Invalid component type name '" << component_type_name << "'" << std::endl;
+						return;
+					}
+
+					// Get the container
+					auto* const container = scene.get_component_container(*type);
+					if (!container)
+					{
+						std::cout << "Error: Invalid component type '" << component_type_name << "'" << std::endl;
 						return;
 					}
 
 					// Enumerate instances to destroy
-					reader.enumerate_array_elements([type, &frame, &reader](std::size_t /*i*/)
+					reader.enumerate_array_elements([component_type_name, container, &scene, &reader](std::size_t /*i*/)
 					{
-						// Get the entity
-						EntityId entity = NULL_ENTITY;
-						sge::from_archive(entity, reader);
+						// Get the node
+						NodeId node;
+						node.from_archive(reader);
 
 						// Destroy it
-						std::cout << "Destroyed '" << type->name() << "' component on entity " << entity << std::endl;
-						frame.destroy_components(*type, &entity, 1);
+						container->remove_instances(&node, 1);
+						std::cout << "Destroyed '" << component_type_name << "' component on node " << node.to_u64() << std::endl;
 					});
 				});
 			}
 
-			void get_scene_query(const SystemFrame& frame, ArchiveWriter& writer)
+			void get_scene_query(Scene& scene, ArchiveWriter& writer)
 			{
-				const auto& scene_data = frame.scene().get_raw_scene_data();
+				const auto& scene_data = scene.get_raw_scene_data();
 				std::cout << "Sending scene information" << std::endl;
-				writer.object_member("next_entity_id", scene_data.next_entity_id);
 
-				// Iterate over entities
-				writer.push_object_member("entities");
-				for (auto entity : scene_data.entity_parents)
+				// Iterate over nodes
+				writer.push_object_member("nodes");
+				for (auto node : scene_data.nodes)
 				{
-					writer.push_object_member(sge::to_string(entity.first).c_str());
-					writer.object_member("name", frame.get_entity_name(entity.first));
-					writer.object_member("parent", frame.get_entity_parent(entity.first));
-					writer.pop(); // entity
+					char node_id_str[20];
+					node.first.to_string(node_id_str, 20);
+
+					writer.push_object_member(node_id_str);
+					writer.object_member("name", node.second->get_name());
+					writer.object_member("root", node.second->get_root());
+					writer.object_member("lpos", node.second->get_local_position());
+					writer.object_member("lscale", node.second->get_local_scale());
+					writer.object_member("lrot", node.second->get_local_rotation());
+					writer.pop(); // node_id_str
 				}
-				writer.pop(); // "entities"
+				writer.pop(); // "nodes"
 
 				// Iterate over components
 				writer.push_object_member("components");
 				for (const auto& component_type : scene_data.components)
 				{
-                    const auto begin = component_type.second->get_instance_range();
-                    const std::size_t len = component_type.second->get_instance_range_length();
+					NodeId instance_nodes[8];
+					std::size_t num_nodes = 0;
+					std::size_t start_index = 0;
 
-					// Skip this component if there are no entities
-					if (len == 0)
+					writer.push_object_member(component_type.first->name().c_str());
+
+					// Get instances of this component
+					while (component_type.second->get_instance_nodes(start_index, 8, &num_nodes, instance_nodes))
 					{
-						continue;
+						start_index += 8;
+						for (std::size_t i = 0; i < num_nodes; ++i)
+						{
+							writer.array_element(instance_nodes[i]);
+						}
 					}
 
-					// Write instances
-					writer.push_object_member(component_type.first->name().c_str());
-                    writer.typed_array(begin, len);
 				    writer.pop(); // type name
 				}
 				writer.pop(); // "components"
 			}
 
-			void get_component_query(SystemFrame& frame, ArchiveReader& reader, ArchiveWriter& writer)
+			void get_component_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
 			{
 				// Enumerate the types to get the properties from
-				reader.enumerate_object_members([&frame, &reader, &writer](const char* typeName)
+				reader.enumerate_object_members([&scene, &reader, &writer](const char* component_type_name)
 				{
-					writer.push_object_member(typeName);
-
 					// Get the type
-					const auto* type = frame.scene().get_component_type(typeName);
+					const auto* const type = scene.get_component_type(component_type_name);
 					if (!type)
 					{
+						std::cout << "Error: Invalid component type name: '" << component_type_name << "'" << std::endl;
 						return;
 					}
 
-					// Enumerate the instances
-					reader.enumerate_array_elements([type, &frame, &reader, &writer](std::size_t /*i*/)
+					// Get the container
+					auto* const container = scene.get_component_container(*type);
+					if (!container)
 					{
-						// Get the current entity id
-						EntityId entity_id;
-						sge::from_archive(entity_id, reader);
-						writer.push_object_member(sge::to_string(entity_id).c_str());
+						std::cout << "Error: Invalid component type: '" << component_type_name << "'" << std::endl;
+						return;
+					}
+
+					writer.push_object_member(component_type_name);
+
+					// Enumerate the instances
+					reader.enumerate_array_elements([container, type, &scene, &reader, &writer](std::size_t /*i*/)
+					{
+						// Get the node id
+						NodeId node_id;
+						node_id.from_archive(reader);
 
 						// Access the component
-                        const EntityId* proc_range[] = { &entity_id };
-                        const std::size_t range_len = 1;
-						frame.process_entities(proc_range, &range_len, 1, 0, 1, &type, 1,
-                            [type, entity_id, &writer](ProcessingFrame&, auto comp) -> ProcessControl
+						void* component;
+						container->get_instances(&node_id, 1, &component);
+						if (!component)
 						{
-							std::cout << "Reading properties of '" << type->name() << "' component on entity '" << entity_id << "'" << std::endl;
-							ArchiveWriter* writers[] = { &writer };
-							read_properties(Any<>{ *type, comp[0] }, writers, 1);
-							return ProcessControl::BREAK;
-						});
+							std::cout << "Invalid node id: " << node_id.to_u64() << std::endl;
+							return;
+						}
 
-						writer.pop();
+						// Output the Id
+						char node_id_str[20];
+						node_id.to_string(node_id_str, 20);
+						writer.push_object_member(node_id_str);
+
+						// Access the component
+						std::cout << "Reading properties of '" << type->name() << "' component on node " << node_id_str << std::endl;
+						ArchiveWriter* writers[] = { &writer };
+						read_properties(Any<>{ *type, component }, writers, 1);
+
+						writer.pop(); // node_id_str
 					});
 
-					writer.pop();
+					writer.pop(); // component_type_name
 				});
 			}
 
-			void set_component_query(SystemFrame& frame, ArchiveReader& reader)
+			void set_component_query(Scene& scene, ArchiveReader& reader)
 			{
 				// Enumerate types of components changed
-				reader.enumerate_object_members([&frame, &reader](const char* typeName)
+				reader.enumerate_object_members([&scene, &reader](const char* component_type_name)
 				{
-					auto* type = frame.scene().get_component_type(typeName);
+					const auto* const type = scene.get_component_type(component_type_name);
 					if (!type)
 					{
+						std::cout << "Invalid component type name: '" << component_type_name << "'" << std::endl;
 						return;
 					}
 
-					// Enumerate the EntityIds of components changed
-					reader.enumerate_object_members([type, &frame, &reader](const char* entityId)
+					auto* const container = scene.get_component_container(*type);
+					if (!container)
 					{
-                        const EntityId entity_id = std::strtoull(entityId, nullptr, 10);
+						std::cout << "Invalid component type: '" << component_type_name << "'" << std::endl;
+						return;
+					}
 
-					    // Process the component and deserialize it
-                        const EntityId* proc_range[] = { &entity_id };
-                        const std::size_t range_len = 1;
-						frame.process_entities_mut(proc_range, &range_len, 1, 0, 1, &type, 1,
-                            [type, &reader](ProcessingFrame& pframe, auto comp) -> ProcessControl
+					// Enumerate the node Ids of changed components
+					reader.enumerate_object_members([type, container, &scene, &reader](const char* node_id_str)
+					{
+						NodeId node_id;
+						node_id.from_string(node_id_str);
+
+					    // Retrieve the component instance
+						void* component;
+						container->get_instances(&node_id, 1, &component);
+						if (!component)
 						{
-							std::cout << "Writing properties of '" << type->name() << "' component on entity '" << pframe.entity() << "'" << std::endl;
-							write_properties(AnyMut<>{ *type, comp[0] }, reader);
-							return ProcessControl::BREAK;
-						});
+							return;
+						}
+
+						// Deserialize it
+						std::cout << "Writing properties of '" << type->name() << "' component on node '" << node_id_str << "'" << std::endl;
+						write_properties(AnyMut<>{ *type, component }, reader);
 					});
 				});
 			}
@@ -513,7 +592,7 @@ namespace sge
                 color::RGBAF32* irradiance_pixels = nullptr;
             };
 
-            void generate_lightmaps(SystemFrame& frame)
+            void generate_lightmaps(Scene& scene)
 			{
                 std::map<std::string, std::unique_ptr<StaticMesh>> meshes;
                 std::map<std::string, std::unique_ptr<Material>> materials;
@@ -524,87 +603,101 @@ namespace sge
                 // Gather occluders and targets
                 std::cout << "Gather scene data..." << std::endl;
                 const auto gather_start = std::chrono::high_resolution_clock::now();
-			    frame.process_entities_mut([&](
-                    ProcessingFrame& pframe,
-                    CTransform3D& transform,
-                    CStaticMesh& mesh)
-			    {
-                    if (!mesh.uses_lightmap())
-                    {
-                        return ProcessControl::CONTINUE;
-                    }
 
-                    StaticMesh* static_mesh = nullptr;
+				auto* const static_mesh_container = scene.get_component_container(CStaticMesh::type_info);
+				NodeId instance_node_ids[8];
+				Node* instance_nodes[8];
+				CStaticMesh* mesh_instances[8];
+				std::size_t start_index = 0;
+				std::size_t num_nodes = 0;
 
-                    // Try to load the mesh
-                    {
-                        const auto mesh_iter = meshes.find(mesh.mesh());
-                        if (mesh_iter == meshes.end())
-                        {
-                            auto new_static_mesh = std::make_unique<StaticMesh>();
-                            new_static_mesh->from_file(mesh.mesh().c_str());
-                            static_mesh = new_static_mesh.get();
-                            meshes.insert(std::make_pair(mesh.mesh(), std::move(new_static_mesh)));
-                        }
-                        else
-                        {
-                            static_mesh = mesh_iter->second.get();
-                        }
-                    }
+				while (static_mesh_container->get_instance_nodes(start_index, 8, &num_nodes, instance_node_ids))
+				{
+					start_index += 8;
+					static_mesh_container->get_instances(instance_node_ids, num_nodes, mesh_instances);
+					scene.get_nodes(instance_node_ids, num_nodes, instance_nodes);
 
-                    Material* material = nullptr;
+					for (std::size_t i = 0; i < 8; ++i)
+					{
+						auto* const node = instance_nodes[i];
+						auto* const mesh = mesh_instances[i];
 
-                    // Try to load the material
-                    {
-                        const auto mat_iter = materials.find(mesh.material());
-                        if (mat_iter == materials.end())
-                        {
-                            auto new_material = std::make_unique<Material>();
-                            new_material->from_file(mesh.material().c_str());
-                            material = new_material.get();
-                            materials.insert(std::make_pair(mesh.material(), std::move(new_material)));
-                        }
-                        else
-                        {
-                            material = mat_iter->second.get();
-                        }
-                    }
+						if (!mesh->uses_lightmap())
+						{
+							continue;
+						}
 
-                    // Add the object to the list of occluders
-                    LightmapOccluder occluder;
-                    occluder.mesh = static_mesh;
-                    occluder.base_color = material->base_color();
-                    occluder.world_transform = transform.get_world_matrix();
-                    occluders.push_back(occluder);
+						StaticMesh* static_mesh = nullptr;
 
-                    // Add the object to the list of lightmap objects
-                    LightmapObject object;
-                    object.mesh = static_mesh;
-                    object.world_transform = occluder.world_transform;
-                    lightmap_objects.push_back(object);
+						// Try to load the mesh
+						{
+							const auto mesh_iter = meshes.find(mesh->mesh());
+							if (mesh_iter == meshes.end())
+							{
+								auto new_static_mesh = std::make_unique<StaticMesh>();
+								new_static_mesh->from_file(mesh->mesh().c_str());
+								static_mesh = new_static_mesh.get();
+								meshes.insert(std::make_pair(mesh->mesh(), std::move(new_static_mesh)));
+							}
+							else
+							{
+								static_mesh = mesh_iter->second.get();
+							}
+						}
 
-                    // Get the path for the lightmap
-                    auto lightmap_path = mesh.lightmap();
-                    if (lightmap_path.empty())
-                    {
-                        lightmap_path = "Content/Lightmaps/" + frame.get_entity_name(pframe.entity()) + ".exr";
-                        mesh.lightmap(lightmap_path);
-                    }
+						Material* material = nullptr;
 
-                    // Create a lightmap object for this object
-                    Lightmap lightmap;
-                    lightmap.path = std::move(lightmap_path);
-                    lightmap.width = mesh.lightmap_width();
-                    lightmap.height = mesh.lightmap_height();
-                    lightmap.lightmap_texels = (LightmapTexel*)std::calloc(lightmap.width * lightmap.height, sizeof(LightmapTexel));
-                    lightmap.lightmap_texel_mask = (byte*)std::calloc(lightmap.width * lightmap.height, 1);
-                    lightmap.irradiance_pixels = (color::RGBAF32*)std::calloc(lightmap.width * lightmap.height, sizeof(color::RGBAF32));
-                    lightmap.lightmap_pixels = (color::RGBAF32*)std::calloc(lightmap.width * lightmap.height, sizeof(color::RGBAF32));
+						// Try to load the material
+						{
+							const auto mat_iter = materials.find(mesh->material());
+							if (mat_iter == materials.end())
+							{
+								auto new_material = std::make_unique<Material>();
+								new_material->from_file(mesh->material().c_str());
+								material = new_material.get();
+								materials.insert(std::make_pair(mesh->material(), std::move(new_material)));
+							}
+							else
+							{
+								material = mat_iter->second.get();
+							}
+						}
 
-                    // Add the lightmap to the list of lightmaps
-			        lightmap_object_lightmaps.push_back(std::move(lightmap));
-                    return ProcessControl::CONTINUE;
-                });
+						// Add the object to the list of occluders
+						LightmapOccluder occluder;
+						occluder.mesh = static_mesh;
+						occluder.base_color = material->base_color();
+						occluder.world_transform = node->get_world_matrix();
+						occluders.push_back(occluder);
+
+						// Add the object to the list of lightmap objects
+						LightmapObject object;
+						object.mesh = static_mesh;
+						object.world_transform = occluder.world_transform;
+						lightmap_objects.push_back(object);
+
+						// Get the path for the lightmap
+						auto lightmap_path = mesh->lightmap();
+						if (lightmap_path.empty())
+						{
+							lightmap_path = "Content/Lightmaps/" + node->get_name() + ".exr";
+							mesh->lightmap(lightmap_path);
+						}
+
+						// Create a lightmap object for this object
+						Lightmap lightmap;
+						lightmap.path = std::move(lightmap_path);
+						lightmap.width = mesh->lightmap_width();
+						lightmap.height = mesh->lightmap_height();
+						lightmap.lightmap_texels = (LightmapTexel*)std::calloc(lightmap.width * lightmap.height, sizeof(LightmapTexel));
+						lightmap.lightmap_texel_mask = (byte*)std::calloc(lightmap.width * lightmap.height, 1);
+						lightmap.irradiance_pixels = (color::RGBAF32*)std::calloc(lightmap.width * lightmap.height, sizeof(color::RGBAF32));
+						lightmap.lightmap_pixels = (color::RGBAF32*)std::calloc(lightmap.width * lightmap.height, sizeof(color::RGBAF32));
+
+						// Add the lightmap to the list of lightmaps
+						lightmap_object_lightmaps.push_back(std::move(lightmap));
+					}
+				}
                 const auto gather_end = std::chrono::high_resolution_clock::now();
 
                 // Debug time

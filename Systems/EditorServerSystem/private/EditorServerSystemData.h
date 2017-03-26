@@ -27,6 +27,7 @@ namespace sge
 	public:
 
 		SystemFrame* frame;
+		Scene* scene;
 		asio::io_service io;
 
 	private:

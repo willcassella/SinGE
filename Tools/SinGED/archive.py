@@ -1,7 +1,7 @@
 # archive.py
 
 import struct
-import json
+
 
 class Archive(object):
     NODE_NULL = 0
@@ -139,8 +139,8 @@ class Archive(object):
         return buffer
 
     @staticmethod
-    def binary_node_type(buffer, type):
-        buffer += struct.pack('B', type)
+    def binary_node_type(buffer, type_v):
+        buffer += struct.pack('B', type_v)
 
     @staticmethod
     def binary_number(buffer, node, fmt):
@@ -202,7 +202,7 @@ class Archive(object):
     @staticmethod
     def binary_node(buffer, node):
         if node.type == Archive.NODE_NULL:
-            Archive.binary_node_type(Archive.NODE_NULL)
+            Archive.binary_node_type(buffer, Archive.NODE_NULL)
 
         elif node.type == Archive.NODE_UINT8:
             Archive.binary_number(buffer, node, 'B')

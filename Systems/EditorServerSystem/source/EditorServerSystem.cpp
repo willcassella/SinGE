@@ -1,6 +1,5 @@
 // EditorServerSystem.cpp
 
-#include <chrono>
 #include <Engine/UpdatePipeline.h>
 #include "../private/EditorServerSystemData.h"
 
@@ -24,10 +23,8 @@ namespace sge
 
 	void EditorServerSystem::register_pipeline(UpdatePipeline& pipeline)
 	{
-        auto async_token = pipeline.new_async_token();
         pipeline.register_system_fn(
             "editor_server_serve",
-            async_token,
             this,
             &EditorServerSystem::serve_fn);
 	}
@@ -42,10 +39,11 @@ namespace sge
 		_serve_time_ms = milliseconds;
 	}
 
-	void EditorServerSystem::serve_fn(SystemFrame& frame, float current_time, float dt)
+	void EditorServerSystem::serve_fn(Scene& scene, SystemFrame& frame)
 	{
 		// Run the service
 		_data->frame = &frame;
+		_data->scene = &scene;
         _data->io.poll();
 	}
 }

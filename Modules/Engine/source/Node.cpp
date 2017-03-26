@@ -29,6 +29,11 @@ namespace sge
         return _name;
     }
 
+	void Node::set_name(std::string name)
+	{
+		_name = std::move(name);
+	}
+
     Node::ModState_t Node::get_mod_state() const
     {
         return _mod_state;
