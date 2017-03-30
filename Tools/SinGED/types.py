@@ -5,32 +5,42 @@ from bpy.types import PropertyGroup
 from bpy.props import BoolProperty, IntProperty, FloatProperty, StringProperty, PointerProperty, EnumProperty, FloatVectorProperty
 from functools import partial
 
-def get_unused_component_types(scene=None, context=None):
-    result = []
-    filter = SinGEDProps.sge_scene.get_components(bpy.context.active_object.sge_entity_id)
 
+def get_unused_component_types(scene=None, context=None):
+    # Unused arguments
+    del scene, context
+    node_id = bpy.context.active_object.sge_node_id
+    sge_scene = SinGEDProps.sge_scene
+    node = sge_scene.get_node(node_id)
+
+    used_component = sge_scene.get_node_components(node)
+    result = []
     for component_type in SinGEDProps.sge_typedb.component_types:
-        if component_type not in filter:
+        if component_type not in (c.type.type_name for c in used_component):
             result.append((component_type, component_type, ''))
 
     return result
 
+
 def property_getter(self, name, default):
+    return default
+
     # Get the component type and property path
     property_path = self.sge_property_path.split('.')
     component_type = property_path[0]
-    property_path = property_path[1: ]
+    property_path = property_path[1:]
 
-    # Get the active object entity id
-    entity_id = bpy.context.active_object.sge_entity_id
+    # Get the active object node id
+    node_id = bpy.context.active_object.sge_node_id
 
     # Get the property value
-    value = SinGEDProps.sge_scene.get_property_value(entity_id, component_type, property_path, name)
+    value = SinGEDProps.sge_scene.get_property_value(node_id, component_type, property_path, name)
 
-    # Returnt the default if there is no value
+    # Return the default if there is no value
     if value is None:
         return default
     return value
+
 
 def property_setter(self, name, value):
     # Get the component type and property path
@@ -38,17 +48,19 @@ def property_setter(self, name, value):
     component_type = property_path[0]
     property_path = property_path[1: ]
 
-    # Get the active object entity id
-    entity_id = bpy.context.active_object.sge_entity_id
+    # Get the active object node id
+    node_id = bpy.context.active_object.sge_node_id
 
     # Set the property value
-    SinGEDProps.sge_scene.set_property_value(entity_id, component_type, property_path, name, value)
+    SinGEDProps.sge_scene.set_property_value(node_id, component_type, property_path, name, value)
 
     # Add a query to retrieve the component value
-    SinGEDProps.sge_scene.add_get_component_query(entity_id, component_type)
+    SinGEDProps.sge_scene.add_get_component_query(node_id, component_type)
+
 
 class SGETypes(PropertyGroup):
     sge_component_types = EnumProperty(items=get_unused_component_types)
+
 
 class SinGEDProps(PropertyGroup):
     sge_host = StringProperty(name='Host', default='localhost')
@@ -60,6 +72,7 @@ class SinGEDProps(PropertyGroup):
     sge_typedb = None
     sge_scene = None
     sge_resource_manager = None
+
 
 class SGETypeBase(PropertyGroup):
     @classmethod
@@ -81,6 +94,7 @@ class SGETypeBase(PropertyGroup):
 
             prop_type.sge_draw(layout.column(), self, attr_name)
 
+
 class SGEPrimitiveBase(object):
     @staticmethod
     def sge_unregister():
@@ -91,6 +105,7 @@ class SGEPrimitiveBase(object):
         # Draw the property
         layout.prop(parent_obj, parent_attr_name)
 
+
 class SGEBool(SGEPrimitiveBase):
     @staticmethod
     def sge_create_property(name):
@@ -99,6 +114,7 @@ class SGEBool(SGEPrimitiveBase):
             get=lambda self: property_getter(self, name, False),
             set=lambda self, value: property_setter(self, name, value))
 
+
 class SGEInt(SGEPrimitiveBase):
     @staticmethod
     def sge_create_property(name):
@@ -106,6 +122,7 @@ class SGEInt(SGEPrimitiveBase):
             name=name,
             get=lambda self: property_getter(self, name, 0),
             set=lambda self, value: property_setter(self, name, value))
+
 
 class SGEUInt(SGEPrimitiveBase):
     @staticmethod
@@ -116,6 +133,7 @@ class SGEUInt(SGEPrimitiveBase):
             get=lambda self: property_getter(self, name, 0),
             set=lambda self, value: property_setter(self, name, value))
 
+
 class SGEFloat(SGEPrimitiveBase):
     @staticmethod
     def sge_create_property(name):
@@ -124,6 +142,7 @@ class SGEFloat(SGEPrimitiveBase):
             get=lambda self: property_getter(self, name, 0.0),
             set=lambda self, value: property_setter(self, name, value))
 
+
 class SGEString(SGEPrimitiveBase):
     @staticmethod
     def sge_create_property(name):
@@ -131,6 +150,7 @@ class SGEString(SGEPrimitiveBase):
             name=name,
             get=lambda self: property_getter(self, name, ""),
             set=lambda self, value: property_setter(self, name, value))
+
 
 class SGEColorRGBA8(SGEPrimitiveBase):
     @staticmethod
@@ -160,6 +180,7 @@ class SGEColorRGBA8(SGEPrimitiveBase):
             get=lambda self: SGEColorRGBA8.sge_get(self, name),
             set=lambda self, value: SGEColorRGBA8.sge_set(self, name, value))
 
+
 class SGEVec3(SGEPrimitiveBase):
     @staticmethod
     def sge_get(self, name):
@@ -181,6 +202,7 @@ class SGEVec3(SGEPrimitiveBase):
             size=3,
             get=lambda self: SGEVec3.sge_get(self, name),
             set=lambda self, value: SGEVec3.sge_set(self, name, value))
+
 
 def create_blender_type(typedb, type_name, type_info):
     # Create dictionaries for the class and the properties

@@ -27,6 +27,7 @@ class ResourceManager(object):
 
             # Mark this resource as having been sent in a query
             info[1] = True
+            print("Requesting resource: {}".format(path))
 
         # See if we even need to send a message
         if len(message) == 0:
@@ -43,6 +44,8 @@ class ResourceManager(object):
             type = resource['type']
             path = resource['path']
             value = resource['value']
+
+            print("Received resource: {}".format(path))
 
             # Construct the resource
             res = self._resource_constructor(self, path, type, value)

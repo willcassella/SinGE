@@ -12,6 +12,7 @@ from . import archive
 SHORT_MAX = 32767
 USHORT_MAX = 0xFFFF
 
+
 class MeshData(object):
     def __init__(self):
         self.next_elem_index = 0
@@ -23,11 +24,13 @@ class MeshData(object):
         self.mat_uv = list()
         self.lm_uv = list()
 
+
 class MeshMaterial(object):
     def __init__(self):
         self.path = ""
         self.start_elem_index = 0
         self.num_elems = 0
+
 
 def export_submesh(obj, mesh_data, mat_uv_name, lm_uv_name):
     # Make sure this mesh has the required UV layers
@@ -150,7 +153,8 @@ def export_submesh(obj, mesh_data, mat_uv_name, lm_uv_name):
     # Free data
     mesh.free_tangents()
     bpy.data.meshes.remove(mesh)
-    return (True, None)
+    return True, None
+
 
 def export_sge_mesh(context, path, selected_only, mat_uv_name, lm_uv_name=None):
     if selected_only:
@@ -265,7 +269,8 @@ def export_sge_mesh(context, path, selected_only, mat_uv_name, lm_uv_name=None):
         buff = writer.to_binary()
         file.write(buff)
 
-    return (True, None)
+    return True, None
+
 
 class SGEStaticMeshExporter(Operator, ExportHelper):
     """Exports a mesh to the sge::StaticMesh file format"""
@@ -311,8 +316,10 @@ class SGEStaticMeshExporter(Operator, ExportHelper):
 
         return {'FINISHED'}
 
+
 def export_menu_func(self, context):
     self.layout.operator(SGEStaticMeshExporter.bl_idname, text="SGE Static Mesh (.sbin)")
+
 
 def from_json(path, value):
     mesh = bmesh.new()

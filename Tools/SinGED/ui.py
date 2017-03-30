@@ -5,8 +5,9 @@ from bpy.types import Panel
 from bpy.props import PointerProperty
 from . import types, operators
 
-class SinGEDEntityPanel(Panel):
-    bl_label = 'SinGED entity'
+
+class SinGEDNodePanel(Panel):
+    bl_label = 'SinGED node'
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = 'object'
@@ -17,8 +18,8 @@ class SinGEDEntityPanel(Panel):
         if types.SinGEDProps.sge_session is None:
             return False
 
-        # If the current object does not have an entity id, don't draw the panel
-        if context.active_object.sge_entity_id == 0:
+        # If the current object does not have an node id, don't draw the panel
+        if context.active_object.sge_node_id == 0:
             return False
 
         # Draw the panel
@@ -26,21 +27,22 @@ class SinGEDEntityPanel(Panel):
 
     def draw(self, context):
         layout = self.layout
-        entity_id = context.active_object.sge_entity_id
+        node_id = context.active_object.sge_node_id
 
-        # Draw the entity id
-        layout.label(text="Entity Id: {}".format(context.active_object.sge_entity_id))
+        # Draw the node id
+        layout.label(text="Node Id: {}".format(node_id))
 
         # Draw the add component box
         if len(types.get_unused_component_types()) != 0:
             layout.prop(context.scene.singed.sge_types, 'sge_component_types', text='Type')
             op = layout.operator(operators.SinGEDNewComponent.bl_idname, text='Add new component')
-            op.entity_id = context.active_object.sge_entity_id
-            op.component_type = context.scene.singed.sge_types.sge_component_types
+            op.node_id = node_id
+            op.component_type_name = context.scene.singed.sge_types.sge_component_types
         else:
             layout.label("All component types in use by this object.")
 
         return
+
 
 class SinGEDMaterialPanel(Panel):
     bl_label = 'SinGED Material Properties'
@@ -69,6 +71,7 @@ class SinGEDMaterialPanel(Panel):
         # Draw the 'path' property
         layout.prop(context.active_object.active_material, 'sge_path', text="Material Path")
 
+
 class SinGEDComponentPanelBase(Panel):
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
@@ -80,15 +83,19 @@ class SinGEDComponentPanelBase(Panel):
 
     @classmethod
     def poll(cls, context):
-        component_name = cls.sge_blender_type.sge_type_name
+        component_type_name = cls.sge_blender_type.sge_type_name
+        sge_scene = types.SinGEDProps.sge_scene
         obj = context.active_object
 
-        # If this object doesn't have an entity id, don't draw the panel
-        if obj.sge_entity_id == 0:
+        # If this object doesn't have a node id, don't draw the panel
+        if obj.sge_node_id == 0:
             return False
 
+        node = sge_scene.get_node(obj.sge_node_id)
+        component_type = sge_scene.get_component_type(component_type_name)
+
         # If this object doesn't have this type of component attached, don't draw the panel
-        if component_name not in types.SinGEDProps.sge_scene.get_components(obj.sge_entity_id):
+        if component_type.get_instance(node) is None:
             return False
 
         # Draw the panel
@@ -99,11 +106,12 @@ class SinGEDComponentPanelBase(Panel):
 
         # Draw the 'remove component' button
         remove = layout.operator(operators.SinGEDDestroyComponent.bl_idname, text='Remove Component')
-        remove.entity_id = context.active_object.sge_entity_id
-        remove.component_type = self.sge_blender_type.sge_type_name
+        remove.node_id = context.active_object.sge_node_id
+        remove.component_type_name = self.sge_blender_type.sge_type_name
 
         # Draw the component properties
         self.sge_blender_type.sge_draw(layout, bpy.context.scene.singed.sge_types, self.sge_blender_type.__name__)
+
 
 def initialize_blender_component_properties_path(obj, path):
     # Initialize the path to this object
@@ -117,11 +125,8 @@ def initialize_blender_component_properties_path(obj, path):
             prop = getattr(obj, attr_name)
             initialize_blender_component_properties_path(prop, "{}.{}".format(path, prop_name))
 
-def create_blender_component(typedb, type_name, blender_type):
-    # We don't want to create a UI for the Transform component
-    if type_name == 'sge::CTransform3D':
-        return
 
+def create_blender_component(typedb, type_name, blender_type):
     # Add the type to the types class
     setattr(types.SGETypes, blender_type.__name__, PointerProperty(type=blender_type))
 

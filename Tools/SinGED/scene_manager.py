@@ -1,87 +1,162 @@
 # scene_manager.py
 
 from copy import deepcopy
-from editor_session import EditorSession
+from . import editor_session
 
 
-# Recursively updates a dictionary D with E.
-# This assumes that E has a structure that is a subset of D
-def recursive_update(d, e):
-    for k, v in e.items():
+# Recursively updates a dictionary a with b.
+# This assumes that b has a structure that is a subset of a
+# Returns whether the dictionary a was modified.
+def recursive_update(a, b):
+    modified = False
+    for k, v in b.items():
         if isinstance(v, dict):
-            recursive_update(d[k], v)
+            modified = recursive_update(a[k], v) or modified
         else:
-            d[k] = v
-
-
-class NodeId(object):
-    NULL_ID = 0
-
-    @staticmethod
-    def from_str(node_id_str):
-        result = NodeId()
-        result._id = int(node_id_str)
-        return result
-
-    def __init__(self, id_v=NULL_ID):
-        self._id = id_v
-
-    def is_null(self):
-        return self._id == NodeId.NULL_ID
-
-    # Returns if this NodeId is a real (server-valid) id
-    def is_real(self):
-        return self._id >= NodeId.NULL_ID
-
-    def set(self, id_v, force=False):
-        # If the Id isn't a real id, and the caller hasn't forced a set
-        if id_v < NodeId.NULL_ID and not force:
-            return
-
-        self._id = id_v
-
-    def get(self):
-        return self._id
-
-    def __eq__(self, other):
-        return self._id == other.get()
-
-    def __ne__(self, other):
-        return self._id != other.get()
-
-    def __hash__(self):
-        return hash(self._id)
-
-    def __str__(self):
-        return str(self._id)
+            modified = a[k] != v or modified
+            a[k] = v
+    return modified
 
 
 class Node(object):
-    UPDATE_ID_ALLOCATED = 'UPDATE_ID_ALLOCATED'
-    UPDATE_ROOT_CHANGED = 'UPDATE_ROOT_CHANGED'
-    UPDATE_NAME_CHANGED = 'UPDATE_NAME_CHANGED'
-    UPDATE_LOCAL_TRANSFORM_CHANGED = 'UPDATE_LOCAL_TRANSFORM_CHANGED'
-    UPDATE_NEW_COMPONENT = 'UPDATE_NEW_COMPONENT'
-    UPDATE_DESTROYED_COMPONENT = 'UPDATE_DESTROYED_COMPONENT'
+    NULL_ID = 0
 
     def __init__(self):
-        self.id = NodeId()
-        self.root = NodeId()
+        self.id = None
+        self.fake_id = None
+        self.root = None
         self.name = ""
         self.local_position = [0.0, 0.0, 0.0]
         self.local_scale = [1.0, 1.0, 1.0]
         self.local_rotation = [0.0, 0.0, 0.0, 1.0]
-        self.components = set()
         self.user_data = None
+        self.destroyed = False
+
+    def get_root_id(self):
+        return self.root.id if self.root is not None else Node.NULL_ID
+
+    def is_real(self):
+        return self.id > Node.NULL_ID
+
+    def is_fake(self):
+        return self.id < Node.NULL_ID
 
 
 class ComponentType(object):
-    def __init__(self, name):
-        self.name = name
+    def __init__(self, type_name):
+        self.type_name = type_name
         self.instances = dict()
+        self.new_instances = set()
+        self.changed_instances = set()
+        self.destroyed_instances = set()
         self.new_instance_callback = None
         self.update_instance_callback = None
         self.destroy_instance_callback = None
+
+    def get_instance(self, node):
+        return self.instances.get(node, None)
+
+    def set_new_instance_callback(self, callback):
+        self.new_instance_callback = callback
+
+    def set_update_instance_callback(self, callback):
+        self.update_instance_callback = callback
+
+    def set_destroy_instance_callback(self, callback):
+        self.destroy_instance_callback = callback
+
+    def request_new_instance(self, node):
+        assert(not node.destroyed and node not in self.instances)
+
+        instance = ComponentInstance(node, self)
+        self.instances[node] = instance
+        self.new_instances.add(instance)
+        return instance
+
+    def request_destroy_instance(self, node):
+        if node not in self.instances:
+            return
+
+        # Get the instance
+        instance = self.instances[node]
+        if instance.destroyed:
+            return
+
+        # Destroy the instance
+        instance.destroyed = True
+        self.destroyed_instances.add(instance)
+
+        # If the user callback exists, run it
+        if self.destroy_instance_callback is not None:
+            self.destroy_instance_callback(instance)
+
+
+class ComponentInstance(object):
+    def __init__(self, node, type_v):
+        self.type = type_v
+        self.node = node
+        self.destroyed = False
+        self.is_loaded = False
+        self.value = None
+        self.changed_props = dict()
+        self.loaded_callbacks = list()
+
+    def _set_property(self, prop_name, value):
+        old_value = self.value[prop_name]
+        if isinstance(value, dict):
+            assert(isinstance(old_value, dict))
+            changed = recursive_update(old_value, value)
+        else:
+            changed = old_value != value
+            self.value[prop_name] = value
+        return changed
+
+    def get_value_immediate(self, default=None):
+        if not self.is_loaded:
+            return default
+        return self.value
+
+    def get_value_async(self, callback):
+        if not self.is_loaded:
+            self.loaded_callbacks.append(lambda instance: callback(instance.value))
+            return
+        callback(self.value)
+
+    def set_value(self, value):
+        for prop_name, prop_val in value.items():
+            self.set_property(prop_name, prop_val)
+
+    def server_set_value(self, seq_num, value):
+        modified = False
+        for prop_name, prop_val in value.items():
+            # If this property was not expected to be changed, or it's the final change
+            if seq_num == 0 or prop_name not in self.changed_props or self.changed_props[prop_name] == seq_num:
+                modified = self._set_property(prop_name, prop_val) or modified
+            # Remove it from the change table
+            self.changed_props.pop(prop_name, None)
+        return modified
+
+    def get_property_immediate(self, prop_name, default=None):
+        if not self.is_loaded:
+            return default
+        return self.value[prop_name]
+
+    def get_property_async(self, prop_name, callback):
+        if not self.is_loaded:
+            self.loaded_callbacks.append(lambda instance: callback(instance.value[prop_name]))
+            return
+        callback(self.value[prop_name])
+
+    def set_property(self, prop_name, value):
+        if not self.is_loaded:
+            value = deepcopy(value)
+            self.loaded_callbacks.append(lambda instance: instance.set_property(prop_name, value))
+            return
+
+        changed = self._set_property(prop_name, value)
+        if changed:
+            self.changed_props[prop_name] = None
+            self.type.changed_instances.add(self)
 
 
 class SceneManager(object):
@@ -94,14 +169,11 @@ class SceneManager(object):
         self._unsent_new_nodes = dict()
         self._sent_new_nodes = dict()
         self._destroyed_nodes = set()
-        self._node_changed_roots = set()
-        self._node_changed_names = set()
-        self._node_changed_local_transforms = set()
-        self._new_component_queries = dict()
+        self._node_changed_roots = dict()
+        self._node_changed_names = dict()
+        self._node_changed_local_transforms = dict()
+        self._new_components = dict()
         self._components = dict()
-        self._destroyed_components = dict()
-        self._get_component_queries = dict()
-        self._set_component_queries = dict()
         self._sent_scene_query = False
         self._save_scene_path = ''
         self._generate_lightmaps_query = False
@@ -109,26 +181,24 @@ class SceneManager(object):
     def register_handlers(self, session):
         session.add_query_handler('get_scene', self._get_scene_query)
         session.add_response_handler('get_scene', self._get_scene_response)
-        #session.add_query_handler('new_node', self._new_node_query)
-        #session.add_response_handler('new_node', self._new_node_response)
-        #session.add_query_handler('destroy_node', self._destroy_node_query)
-        #session.add_response_handler('destroy_node', self._destroy_node_response)
-        #session.add_query_handler('node_root_change', self._node_root_change_query)
-        #session.add_response_handler('node_root_change', self._node_root_change_response)
-        #session.add_query_handler('node_name_change', self._node_name_change_query)
-        #session.add_response_handler('node_name_change', self._node_name_change_response)
-        #session.add_query_handler('node_local_transform_change', self._node_local_transform_change_query)
-        #session.add_response_handler('node_local_transform_change', self._node_local_transform_change_response)
-        #session.add_query_handler('new_component', self._new_component_query)
-        #session.add_response_handler('new_component', self._new_component_response)
-        #session.add_query_handler('destroy_component', self._destroy_component_query)
-        #session.add_response_handler('destroy_component', self._destroy_component_response)
-        session.add_query_handler('get_component', self._get_component_query)
-        session.add_response_handler('get_component', self._get_component_response)
-        #session.add_query_handler('set_component', self._set_component_query)
-        #session.add_response_handler('set_component', self._set_component_response)
-        #session.add_query_handler('save_scene', self._save_scene_query)
-        #session.add_query_handler('gen_lightmaps', self._gen_lightmaps_query)
+        session.add_query_handler('new_node', self._new_node_query)
+        session.add_response_handler('new_node', self._new_node_response)
+        session.add_query_handler('destroy_node', self._destroy_node_query)
+        session.add_response_handler('destroy_node', self._destroy_node_response)
+        session.add_query_handler('node_root_update', self._node_root_update_query)
+        session.add_response_handler('node_root_update', self._node_root_update_response)
+        session.add_query_handler('node_name_update', self._node_name_update_query)
+        session.add_response_handler('node_name_update', self._node_name_update_response)
+        session.add_query_handler('node_local_transform_update', self._node_local_transform_update_query)
+        session.add_response_handler('node_local_transform_update', self._node_local_transform_update_response)
+        session.add_query_handler('new_component', self._new_component_query)
+        session.add_response_handler('new_component', self._new_component_response)
+        session.add_query_handler('destroy_component', self._destroy_component_query)
+        session.add_response_handler('destroy_component', self._destroy_component_response)
+        session.add_query_handler('component_property_update', self._component_property_update_query)
+        session.add_response_handler('component_property_update', self._component_property_update_response)
+        session.add_query_handler('save_scene', self._save_scene_query)
+        session.add_query_handler('gen_lightmaps', self._gen_lightmaps_query)
 
     def _get_scene_query(self, seq_number, priority):
         # Unused arguments
@@ -136,7 +206,7 @@ class SceneManager(object):
 
         if not self._sent_scene_query:
             self._sent_scene_query = True
-            return True # Actual value doesn't matter
+            return True  # Actual value doesn't matter
 
     def _get_scene_response(self, seq_number, response):
         # Unused arguments
@@ -147,49 +217,72 @@ class SceneManager(object):
 
         # Store all new nodes
         new_nodes = set()
+        root_ids = dict()
 
         # For each node in the scene
         for node_id_str, value in response['nodes'].items():
-            node_id = NodeId.from_str(node_id_str)
+            node_id = int(node_id_str)
 
             # Insert a new entry into the nodes table
             node = Node()
             node.id = node_id
             self._nodes[node_id] = node
+            root_ids[node] = value['root']
 
             # Initialize the node
             node.name = value['name']
-            node.root = NodeId(value['root'])
             node.local_position = value['lpos']
             node.local_rotation = value['lrot']
             node.local_scale = value['lscale']
 
-            # Add the entity to the list of newly created entities
+            # Add the node to the list of newly created nodes
             new_nodes.add(node)
+
+        # Add nodes to roots
+        for node, root_id in root_ids.items():
+            node.root = self.get_node(root_id)
+
+        new_components = dict()
 
         # For each component type
         for component_type_name, instances in response['components'].items():
             component_type = self._components.setdefault(component_type_name, ComponentType(component_type_name))
 
-            if instances in None:
+            # Stupid serialization system corner case
+            if instances is None:
                 continue
 
+            new_instances = list()
             # For each instance of this component type
-            for node_id_num in instances:
-                node_id = NodeId(node_id_num)
-                assert(node_id in self._nodes)
+            for node_id_str, value in instances.items():
+                node_id = int(node_id_str)
                 node = self._nodes[node_id]
 
-                # Add the component value dictionary
-                component_type.instances[node_id] = dict()
+                # Add the component instance object
+                instance = ComponentInstance(node, component_type)
+                component_type.instances[node] = instance
+                instance.value = value
+                instance.is_loaded = True
+                instance.loaded_callbacks = None
+                new_instances.append(instance)
 
-                # Add the component to the node
-                node.components.add(component_type)
+            if component_type.new_instance_callback is not None:
+                new_components[component_type] = new_instances
 
         # Run the 'new_node' callback on all new nodes
+        if self._new_node_callback is not None:
+            for node in new_nodes:
+                self._new_node_callback(self, node)
+
+        # Run the 'update_node' callback on all new nodes
         if self._update_node_callback is not None:
             for node in new_nodes:
                 self._update_node_callback(self, node)
+
+        # Run the 'new_instance' callback on all components
+        for component_type, instances in new_components.items():
+            for instance in instances:
+                component_type.new_instance_callback(instance)
 
     def _new_node_query(self, seq_number, priority):
         # Unused arguments
@@ -199,13 +292,13 @@ class SceneManager(object):
             return None
 
         message = dict()
-        for fake_id, node in self._unsent_new_nodes:
-            # Set all of the properties of the node, except for root
+        for fake_id, node in self._unsent_new_nodes.items():
+            if node.destroyed:
+                continue
+
+            # Only send fake id and name, other properties will be updated later
             node_dict = message[fake_id] = dict()
             node_dict['name'] = node.name
-            node_dict['lpos'] = node.local_position.copy()
-            node_dict['lscale'] = node.local_scale.copy()
-            node_dict['lrot'] = node.local_rotation.copy()
 
         # Reset the table of unsent nodes
         self._sent_new_nodes[seq_number] = self._unsent_new_nodes
@@ -217,45 +310,58 @@ class SceneManager(object):
         if seq_number not in self._sent_new_nodes:
             # Create new nodes
             new_nodes = list()
+            root_ids = dict()
+
             for node_response in response.values():
                 node = Node()
-                node.id = NodeId(node_response['id'])
-                node.root = NodeId(node_response['root'])
+                node.id = node_response['id']
                 node.name = node_response['name']
-                node.local_position = node_response['lpos']
-                node.local_rotation = node_response['lrot']
-                node.local_scale = node_response['lscale']
+                node.local_position = node_response.get('lpos', [0.0, 0.0, 0.0])
+                node.local_rotation = node_response.get('lrot', [0.0, 0.0, 0.0, 1.0])
+                node.local_scale = node_response.get('lscale', [1.0, 1.0, 1.0])
+                root_ids[node] = node_response.get('root', Node.NULL_ID)
                 self._nodes[node.id] = node
                 new_nodes.append(node)
+
+            # Set node roots
+            for node, root_id in root_ids.items():
+                node.root = self.get_node(root_id)
 
             # Call 'new_node' on all created nodes
             if self._new_node_callback is not None:
                 for new_node in new_nodes:
                     self._new_node_callback(self, new_node)
+
+            # Call 'update_node' on all created nodes
+            if self._update_node_callback is not None:
+                for new_node in new_nodes:
+                    self._update_node_callback(self, new_node)
             return
 
         # Get the nodes that were supposed to go with this sequence number
         pending_nodes = self._sent_new_nodes[seq_number]
+        del self._sent_new_nodes[seq_number]
         assert(len(pending_nodes) == len(response))
 
+        updated_nodes = list()
         for fake_id_str, node_response in response.items():
-            fake_id = NodeId.from_str(fake_id_str)
+            fake_id = int(fake_id_str)
             node = pending_nodes[fake_id]
 
-            # Update properties
-            node.id = NodeId(node_response['id'])
-            node.name = node_response['name']
-            node.local_position = node_response['lpos']
-            node.local_rotation = node_response['lrot']
-            node.local_scale = node_response['lscale']
+            # Apply Id
+            node.id = node_response['id']
+            self._nodes[node.id] = node
 
-        # Call the update function on nodes
+            # If the node has been destroyed, don't add it to be updated
+            if node.destroyed:
+                continue
+
+            updated_nodes.append(node)
+
+        # Call the update function on updated nodes
         if self._update_node_callback is not None:
-            for node in pending_nodes.values():
+            for node in updated_nodes:
                 self._update_node_callback(self, node)
-
-        # Remove the pending nodes
-        del self._sent_new_nodes[seq_number]
 
     def _destroy_node_query(self, seq_number, priority):
         # Unused arguments
@@ -264,264 +370,463 @@ class SceneManager(object):
         if len(self._destroyed_nodes) == 0:
             return None
 
-        message = list(self._destroyed_nodes)
-        self._destroyed_nodes.clear()
+        message = list()
+        remaining = set()
+        for node in self._destroyed_nodes:
+
+            # If the node isn't real yet (so they created it and then immediately destroyed it), don't destroy it yet
+            if node.is_fake():
+                remaining.add(node)
+                continue
+
+            message.append(node.id)
+
+        self._destroyed_nodes = remaining
         return message
 
     def _destroy_node_response(self, seq_number, response):
         # Unused arguments
         del seq_number
 
-        for node_id_num in response:
-            node_id = NodeId(node_id_num)
+        destroyed_nodes = list()
+
+        # Figure out which ones haven't actually been destroyed yet
+        for node_id in response:
             if node_id in self._nodes:
-                # Run the deletion callback, if it exists
-                if self._destroy_node_callback is not None:
-                    self._destroy_node_callback(self, self._nodes[node_id])
 
-                # Delete the node
-                del self._nodes[node_id]
+                # Destroy the node
+                node = self._nodes[node_id]
+                destroyed_nodes.append(node)
 
-    def _node_root_change_query(self, seq_number, priority):
+        # Destroy them
+        for node in destroyed_nodes:
+            self.request_destroy_node(node)
+
+    def _node_root_update_query(self, seq_number, priority):
         # Unused arguments
-        del seq_number, priority
+        del priority
 
         if len(self._node_changed_roots) == 0:
             return None
 
         message = dict()
-        for changed_root_node_id in self._node_changed_roots:
-            assert(changed_root_node_id in self._nodes)
-            node = self._nodes[changed_root_node_id]
-            message[changed_root_node_id] = node.root
+        for node, existing_seq_num in list(self._node_changed_roots.items()):
+            # If the node was destroyed, remove it from the list and continue
+            if node.destroyed:
+                del self._node_changed_roots[node]
+                continue
 
-        self._node_changed_roots.clear()
+            # If this node is fake, don't add it to the query yet
+            if node.is_fake():
+                continue
+
+            # If this message has already been sent out skip it
+            if existing_seq_num is not None:
+                continue
+
+            # If this node's root is null, add it to the query
+            if node.root is None:
+                message[node.id] = Node.NULL_ID
+                self._node_changed_roots[node] = seq_number
+                continue
+
+            # If this node's root is fake, don't add it to the query yet
+            if node.root.is_fake():
+                continue
+
+            # Otherwise, add it to the message
+            message[node.id] = node.root.id
+            self._node_changed_roots[node] = seq_number
+
+        if len(message) == 0:
+            return None
         return message
 
-    def _node_root_change_response(self, seq_number, response):
-        # Unused arguments
-        del seq_number
-
+    def _node_root_update_response(self, seq_number, response):
         updated_nodes = list()
 
-        for node_id_str, root_id_num in response.items():
-            node_id = NodeId.from_str(node_id_str)
-            root_id = NodeId(root_id_num)
-            assert(node_id in self._nodes and root_id in self._nodes)
-
-            # Update the node
+        # For each node and root in the response
+        for node_id_str, root_id in response.items():
+            node_id = int(node_id_str)
             node = self._nodes[node_id]
-            if node.root != root_id:
-                node.root = root_id
-                updated_nodes.append(node)
+
+            # If this node's root was not expected to be changed, or the change is final
+            if seq_number == 0 or node not in self._node_changed_roots or self._node_changed_roots[node] == seq_number:
+                # If the new root is different than the old
+                if node.get_root_id() != root_id:
+                    node.root = self.get_node(root_id)
+                    updated_nodes.append(node)
+
+                # Remove it from the changed root table
+                self._node_changed_roots.pop(node, None)
 
         # Call the update callback, if any
         if self._update_node_callback is not None:
             for node in updated_nodes:
                 self._update_node_callback(node)
 
-    def _node_name_change_query(self, seq_number, priority):
-        # Unused arguments
-        del seq_number, priority
+    def _node_name_update_query(self, seq_number, priority):
+        # Unused parameters
+        del priority
 
-        if len(self._set_node_name_queries) == 0:
+        if len(self._node_changed_names) == 0:
             return None
 
-        message = self._set_node_name_queries
-        self._set_node_name_queries = dict()
+        message = dict()
+        for node, existing_seq_num in list(self._node_changed_names.items()):
+            # If the node was destroyed, remove it from the table and continue
+            if node.destroyed:
+                del self._node_changed_names[node]
+                continue
+
+            # If the node is fake, don't add it yet
+            if node.is_fake():
+                continue
+
+            # If the node's query hasn't been responded to yet, ignore it
+            if existing_seq_num is not None:
+                continue
+
+            # Add it to the query
+            message[node.id] = node.name
+            self._node_changed_names[node] = seq_number
+
+        if len(message) == 0:
+            return None
         return message
 
-    def _node_name_change_response(self, seq_number, response):
-        # Unused arguments
-        del seq_number
-
+    def _node_name_update_response(self, seq_number, response):
         updated_nodes = list()
 
+        # For each node and name in the response
         for node_id_str, name in response.items():
-            node_id = NodeId.from_str(node_id_str)
+            node_id = int(node_id_str)
             node = self._nodes[node_id]
-            if node.name != name:
-                node.name = name
-                updated_nodes.append(node)
 
-        # Call the user callback
+            # If the node's name was not expected to be changed, or the change is final
+            if seq_number == 0 or node not in self._node_changed_names or self._node_changed_names[node] == seq_number:
+                # If the new name is different from the old one
+                if node.name != name:
+                    node.name = name
+                    updated_nodes.append(node)
+
+                # Remove it from the changed table
+                self._node_changed_names.pop(node, None)
+
+        # Call the user callback on all updated nodes
         if self._update_node_callback is not None:
             for node in updated_nodes:
                 self._update_node_callback(self, node)
 
-    def _node_local_transform_change_query(self, seq_number, priority):
-        # Unused arguments
-        del seq_number
-
+    def _node_local_transform_update_query(self, seq_number, priority):
         # Setting the transform is not a high priority update
-        if priority != EditorSession.PRIORITY_ANY:
+        if priority != editor_session.EditorSession.PRIORITY_ANY:
             return None
 
         if len(self._node_changed_local_transforms) == 0:
             return None
 
         message = dict()
-        for node_id in self._node_changed_local_transforms:
-            node = self._nodes[node_id]
-            entry = message[node_id] = dict()
+        for node, existing_seq_num in list(self._node_changed_local_transforms.items()):
+            # If the node was destroyed, remove it and continue
+            if node.destroyed:
+                del self._node_changed_local_transforms[node]
+                continue
+
+            # If the node is fake, don't add it yet
+            if node.is_fake():
+                continue
+
+            # If the node is in the table for a previously sent query
+            if existing_seq_num is not None:
+                continue
+
+            # Add it to the query
+            entry = message[node.id] = dict()
             entry['lpos'] = node.local_position.copy()
             entry['lrot'] = node.local_rotation.copy()
             entry['lscale'] = node.local_scale.copy()
+            self._node_changed_local_transforms[node] = seq_number
 
-        self._node_changed_local_transforms.clear()
+        if len(message) == 0:
+            return None
         return message
 
-    def _node_local_transform_change_response(self, seq_number, response):
-        # If we were responsible for the query that caused this
-        if seq_number != EditorSession.NULL_SEQUENCE_NUMBER:
-            return
-
-        # For each transformed node
+    def _node_local_transform_update_response(self, seq_number, response):
+        updated_nodes = list()
+        # For each transformed node, and it's new transform
         for node_id_str, trans in response.items():
-            node_id = NodeId.from_str(node_id_str)
+            node_id = int(node_id_str)
             node = self._nodes[node_id]
-            node.local_position = trans['lpos']
-            node.local_rotation = trans['lrot']
-            node.local_scale = trans['lscale']
 
-            # Call the update callback
-            if self._update_node_callback is not None:
+            # If the node's name was not expected to be changed, or the change is final
+            if seq_number == 0 \
+                    or node not in self._node_changed_local_transforms \
+                    or self._node_changed_local_transforms[node] == seq_number:
+                # If the new transform is different than the old one
+                different = node.local_position != trans['lpos']
+                different = different or node.local_scale != trans['lscale']
+                different = different or node.local_rotation != trans['lrot']
+
+                # Update the node
+                if different:
+                    node.local_position = trans['lpos']
+                    node.local_scale = trans['lscale']
+                    node.local_rotation = trans['lrot']
+                    updated_nodes.append(node)
+
+                # Remove it from the change table
+                self._node_changed_local_transforms.pop(node, None)
+
+        # Call the update callback
+        if self._update_node_callback is not None:
+            for node in updated_nodes:
                 self._update_node_callback(self, node)
 
     def _new_component_query(self, seq_number, priority):
         # Unused arguments
-        del seq_number, priority
+        del seq_number
 
-        # Make sure there are actually outstanding 'new_component' queries
-        if len(self._new_component_queries) == 0:
-            return None
+        if priority != editor_session.EditorSession.PRIORITY_ANY:
+            return
 
         # Construct the message
         message = dict()
-        for node_id, components in self._new_component_queries.items():
-            message[node_id] = list(components)
 
-        # Reset the 'new_component' query table
-        self._new_component_queries.clear()
+        # For each component type
+        for component_type_name, component_type in self._components.items():
+            remaining = set()
+            new_instances = list()
+
+            for instance in component_type.new_instances:
+                # If the node was destroyed, don't add it
+                if instance.node.destroyed:
+                    continue
+
+                # If the node is fake, don't add it YET
+                if instance.node.is_fake():
+                    remaining.add(instance)
+                    continue
+
+                # Add it to the message
+                new_instances.append(instance.node.id)
+
+            # Reset the new instance set
+            component_type.new_instances = remaining
+
+            # Add it to the message only if new components were actually created
+            if len(new_instances) == 0:
+                continue
+            message[component_type_name] = new_instances
+
+        if len(message) == 0:
+            return None
         return message
 
     def _new_component_response(self, seq_number, response):
-        # Unused arguments
-        del seq_number
-
+        # For each component type and set of instances in the response
         for component_type_name, instances in response.items():
             # Get the component type object
             component_type = self._components[component_type_name]
+            new_instances = list()
+            loaded_instances = list()
+            updated_instances = list()
 
             # For each newly created instance
-            for node_id_num in instances:
-                node_id = NodeId(node_id_num)
+            for node_id_str, value in instances.items():
+                node_id = int(node_id_str)
                 node = self._nodes[node_id]
-                node.components.append(component_type)
-                component_type.instances[node_id] = dict()
+
+                # If an instance doesn't already exist, create it
+                if node not in component_type.instances:
+                    instance = ComponentInstance(node, component_type)
+                    component_type.instances[node] = instance
+                    instance.is_loaded = True
+                    instance.value = value
+                    new_instances.append(instance)
+                    continue
+
+                # Get the existing instance
+                instance = component_type.instances[node]
+
+                # If the instance hasn't been loaded
+                if not instance.is_loaded:
+                    instance.value = value
+                    instance.is_loaded = True
+                    loaded_instances.append(instance)
+                    continue
+
+                # Update the value
+                modified = instance.server_set_value(seq_number, value)
+                if modified:
+                    updated_instances.append(instance)
+
+            # Call the new instance callback, if one exists
+            if component_type.new_instance_callback is not None:
+                for instance in new_instances:
+                    component_type.new_instance_callback(instance)
+
+            # Run callbacks for loaded instances
+            for instance in loaded_instances:
+                for callback in instance.loaded_callbacks:
+                    callback(instance)
+                instance.loaded_callbacks = None
+
+            # Run the instance update callback, if one exists
+            if component_type.update_instance_callback is not None:
+                for instance in updated_instances:
+                    component_type.update_instance_callback(instance)
 
     def _destroy_component_query(self, seq_number, priority):
         # Unused arguments
         del seq_number, priority
 
-        if len(self._destroyed_components) == 0:
-            return None
-
         # Create the message
         message = dict()
-        for component_type, instances in self._destroyed_components.items():
-            message[component_type] = list(instances)
 
-        self._destroyed_components.clear()
+        for component_type_name, component_type in self._components.items():
+            destroyed_instances = list()
+            remaining = set()
+
+            for instance in component_type.destroyed_instances:
+                # If the node was destroyed, don't add it; it will be destroyed anyway (or was already)
+                if instance.node.destroyed:
+                    continue
+
+                # If the node is fake, don't add it YET
+                if instance.node.is_fake():
+                    remaining.add(instance)
+                    continue
+
+                # If the instance hasn't been loaded yet, don't add it YET (it might not have been created yet)
+                if not instance.is_loaded:
+                    remaining.add(instance)
+                    continue
+
+                # Add it to the destroyed list
+                destroyed_instances.append(instance.node.id)
+
+            # Reset the destroyed instance set
+            component_type.destroyed_instances = remaining
+
+            # Only add the list to the query if it actually has anything
+            if len(destroyed_instances) == 0:
+                continue
+            message[component_type_name] = destroyed_instances
+
+        if len(message) == 0:
+            return None
         return message
 
     def _destroy_component_response(self, seq_number, response):
         # Unused arguments
         del seq_number
 
-        for component_type_name, instances in response.items():
+        # For each component type with destroyed instances
+        for component_type_name, instance_ids in response.items():
             component_type = self._components[component_type_name]
-            for node_id_num in instances:
-                node_id = NodeId(node_id_num)
+            destroyed_instances = list()
 
-                # Remove the instance id from the component type's set
-                component_type.instances.remove(node_id)
+            # For each destroyed instance
+            for node_id in instance_ids:
 
-                # Remove the component type from the node's component set
-                if node_id in self._nodes:
-                    node = self._nodes[node_id]
-                    node.components.remove(component_type)
+                # If the node has been destroyed, skip it
+                if node_id not in self._nodes:
+                    continue
 
-                # Run the user callback
-                if component_type.destroyed_instance_callback is not None:
-                    component_type.destroyed_instance_callback(self, component_type, node_id)
+                # Get the node
+                node = self._nodes[node_id]
 
-    def _get_component_query(self, seq_number, priority):
-        # Unused arguments
-        del seq_number, priority
+                # If the instance has already been destroyed, skip it
+                if node not in component_type.instances:
+                    continue
 
-        # If there are no get component queries, just skip this
-        if len(self._get_component_queries) == 0:
-            return None
+                # Get the instance
+                instance = component_type.instances[node]
+                destroyed_instances.append(instance)
 
-        # Create a message object
+                # Remove the instance
+                instance.destroyed = True
+                del component_type.instances[node]
+
+            # Run the user callback
+            if component_type.destroy_instance_callback is not None:
+                for instance in destroyed_instances:
+                    component_type.destroy_instance_callback(instance)
+
+    def _component_property_update_query(self, seq_number, priority):
+        # Unused parameters
+        del priority
+
         message = dict()
 
-        # For each entry in the table of 'get_component' queries
-        for component_type, instances in self._get_component_queries.items():
-            message[component_type] = [node_id.get() for node_id in instances]
+        # For each component type
+        for component_type_name, component_type in self._components.items():
+            updated_instances = dict()
 
-        # Restore the get_component structure
-        self._get_component_queries.clear()
+            # For each instance of this component type that was changed
+            remaining = set()
+            for changed_instance in component_type.changed_instances:
+                updated_props = dict()
+
+                # If this instance is destroyed, skip it
+                if changed_instance.destroyed or changed_instance.node.destroyed:
+                    continue
+
+                # If the instance is not real, or it hasn't been loaded yet, don't add it YET
+                if changed_instance.node.is_fake() or not changed_instance.is_loaded:
+                    remaining.add(changed_instance)
+                    continue
+
+                # For each property of this instance that was changed
+                for changed_prop_name, existing_seq_num in changed_instance.changed_props.items():
+                    # If this property change has not been sent yet, add it to the query
+                    if existing_seq_num is None:
+                        updated_props[changed_prop_name] = deepcopy(changed_instance.value[changed_prop_name])
+                        changed_instance.changed_props[changed_prop_name] = seq_number
+
+                # Only add this instance as changed if something was actually changed
+                if len(updated_props) == 0:
+                    continue
+                updated_instances[changed_instance.node.id] = updated_props
+
+            # Reset the set of changed instances
+            component_type.changed_instances = remaining
+
+            # Only add this component type if something was actually changed
+            if len(updated_instances) == 0:
+                continue
+            message[component_type_name] = updated_instances
+
+        # Only send the message if something was changed
+        if len(message) == 0:
+            return None
         return message
 
-    def _get_component_response(self, seq_number, response):
-        # Unused arguments
-        del seq_number
-
-        if response is None:
-            return
-
+    def _component_property_update_response(self, seq_number, response):
         # For each component type in the response
         for component_type_name, instances in response.items():
+            component_type = self._components[component_type_name]
 
-            # For each node in the response
-            for node_id_str, component_value in instances.items():
-                node_id = NodeId.from_str(node_id_str)
+            updated_instances = list()
 
-                # Get the component
-                component_type = self._components[component_type_name]
+            # For each instance in the response
+            for node_id_str, value in instances.items():
+                node_id = int(node_id_str)
+                node = self._nodes[node_id]
 
-                # Set the component value
-                assert(node_id in component_type.instances)
-                component_type.instances[node_id] = component_value
+                # Get the component instance
+                instance = component_type.instances[node]
 
-                # Update the values with the values waiting to be set
-                recursive_update(
-                    component_value,
-                    self._set_component_queries.get(component_type, dict()).get(node_id, dict()))
+                # Set the value
+                modified = instance.server_set_value(seq_number, value)
+                if modified:
+                    updated_instances.append(instance)
 
-                # If there's a callback for this component type
-                if component_type.update_instance_callback is not None:
-                    node = self._nodes[node_id]
-                    component_type.update_instance_callback(self, component_type, node, component_value)
-
-    def _set_component_query(self, seq_number, priority):
-        # Unused arguments
-        del seq_number, priority
-
-        # Make sure there are actually outstanding 'set_component' queries
-        if len(self._set_component_queries) == 0:
-            return None
-
-        # Create the message
-        message = self._set_component_queries
-        self._set_component_queries = dict()
-        return message
-
-    def _set_component_response(self, seq_number, response):
-        # Pass it off to the get component response handler, for now
-        self._get_component_response(seq_number, response)
+            # If there's a callback for this component type
+            if component_type.update_instance_callback is not None:
+                for instance in updated_instances:
+                    component_type.update_instance_callback(instance)
 
     def _save_scene_query(self, seq_number, priority):
         # Unused arguments
@@ -547,6 +852,47 @@ class SceneManager(object):
         self._generate_lightmaps_query = False
         return True
 
+    def get_node(self, node_id):
+        if node_id == Node.NULL_ID:
+            return None
+        return self._nodes[node_id]
+
+    def get_component_type(self, component_type_name):
+        return self._components[component_type_name]
+
+    def get_node_components(self, node):
+        result = list()
+        for component_type in self._components.values():
+            instance = component_type.get_instance(node)
+            if instance is not None:
+                result.append(instance)
+
+        return result
+
+    def set_new_node_callback(self, callback):
+        self._new_node_callback = callback
+
+    def set_update_node_callback(self, callback):
+        self._update_node_callback = callback
+
+    def set_destroy_node_callback(self, callback):
+        self._destroy_node_callback = callback
+
+    def set_new_component_callback(self, component_type_name, callback):
+        # Get or set the component type, since this may be called before any queries are run
+        component = self._components.setdefault(component_type_name, ComponentType(component_type_name))
+        component.set_new_instance_callback(callback)
+
+    def set_update_component_callback(self, component_type_name, callback):
+        # Get or set the component type, since this may be called before any queries are run
+        component = self._components.setdefault(component_type_name, ComponentType(component_type_name))
+        component.set_update_instance_callback(callback)
+
+    def set_destroy_component_callback(self, component_type_name, callback):
+        # Get or set the component type, since this may be called before any queries are run
+        component = self._components.setdefault(component_type_name, ComponentType(component_type_name))
+        component.set_destroy_instance_callback(callback)
+
     def save_scene(self, path):
         self._save_scene_path = path
 
@@ -555,149 +901,60 @@ class SceneManager(object):
 
     def request_new_node(self, user_data):
         # Reserve fake node id
-        fake_id = NodeId(self._next_fake_node_id)
+        fake_id = self._next_fake_node_id
         self._next_fake_node_id -= 1
 
         # Construct the node object
         node = Node()
         node.id = fake_id
+        node.fake_id = fake_id
         node.user_data = user_data
 
         # Insert it into the table
         self._nodes[fake_id] = node
+        self._unsent_new_nodes[fake_id] = node
 
-        return fake_id
+        return node
 
-    def request_destroy_node(self, node_id):
-        # Make sure the node id is valid
-        if node_id not in self._nodes:
-            print("Attempt to destroy invalid node, {}".format(node_id))
+    def request_destroy_node(self, node):
+        # If the node has already been destroyed, just continue
+        if node.destroyed:
             return
-        node = self._nodes[node_id]
 
         # Find all of the nodes's children
         children = list()
         for child_node in self._nodes.values():
-            if child_node.root == node_id:
-                children.append(child_node.id)
+            if child_node.root == node:
+                children.append(child_node)
 
         # Destroy the children
-        for child_node_id in children:
-            self.request_destroy_node(child_node_id)
+        for child_node in children:
+            self.request_destroy_node(child_node)
 
         # Destroy all of the components
-        for component_type in list(node.components):
-            self.request_destroy_component(node.id, component_type)
+        for component_type in self._components.values():
+            component_type.request_destroy_instance(node)
 
         # Remove the node from the node dictionary
-        del self._nodes[node_id]
+        del self._nodes[node.id]
+        if node.fake_id is not None:
+            del self._nodes[node.fake_id]
 
         # Add it to the destroyed nodes set
-        self._destroyed_nodes.add(node_id)
+        self._destroyed_nodes.add(node)
 
         # Run the callback
         if self._destroy_node_callback is not None:
             self._destroy_node_callback(self, node)
 
-    def request_new_component(self, entity_id, component_type):
-        # Add the component to the entity object
-        self._components.setdefault(component_type, ComponentType()).instances[entity_id] = dict()
-        self._entities[entity_id].components.add(component_type)
+    def mark_name_dirty(self, node):
+        assert(node in self._nodes.values())
+        self._node_changed_names[node] = None
 
-        # Add the component and entity id to the query table
-        self._new_component_queries.setdefault(entity_id, set()).add(component_type)
-        self.add_get_component_query(entity_id, component_type)
+    def mark_root_dirty(self, node):
+        assert(node in self._nodes.values())
+        self._node_changed_roots[node] = None
 
-    def request_destroy_component(self, entity_id, component_type):
-        component = self._components[component_type]
-        entity = self._entities[entity_id]
-
-        # Make sure the component actually exists on the entity
-        if component_type not in entity.components:
-            return
-
-        # Extract the component value
-        component_value = component.instances[entity_id]
-        del component.instances[entity_id]
-        entity.components.remove(component_type)
-
-        # Add it to the destroyed components set
-        self._destroyed_components.setdefault(component_type, set()).add(entity_id)
-
-        # Run the destroy component callback
-        if component.destroy_instance_callback is not None:
-            component.destroy_instance_callback(self, self._entities[entity_id], component_value)
-
-    def get_entity_userdata(self, entity_id):
-        return self._entities[entity_id].user_data
-
-    def get_entity_name(self, entity_id):
-        return self._entities[entity_id].name
-
-    def set_entity_name(self, entity_id, name):
-        # Set the name on the entity object
-        self._entities[entity_id].name = name
-
-        # Add the name to the query table
-        self._set_entity_name_queries[entity_id] = name
-
-    def new_entity_callback(self, callback):
-        self._new_entity_callback = callback
-
-    def update_entity_callback(self, callback):
-        self._update_entity_callback = callback
-
-    def destroy_entity_callback(self, callback):
-        self._destroy_entity_callback = callback
-
-    def update_component_callback(self, component_type, callback):
-        # Get or set the component type, since this may be called before any queries are run
-        component = self._components.setdefault(component_type, ComponentType())
-        component.update_instance_callback = callback
-
-    def destroy_component_callback(self, component_type, callback):
-        # Get or set the component type, since this may be called before any queries are run
-        component = self._components.setdefault(component_type, ComponentType())
-        component.destroy_instance_callback = callback
-
-    def add_get_component_query(self, entity_id, component_type):
-        self._get_component_queries.setdefault(component_type, set()).add(entity_id)
-
-    def get_property_value(self, entity_id, component_type, property_path, property_name):
-        value = self._components[component_type].instances[entity_id]
-
-        # Follow the path to get the property value
-        for step in property_path:
-            if step in value:
-                value = value[step]
-            else:
-                self.add_get_component_query(entity_id, component_type)
-                return None
-
-        if property_name in value:
-            return value[property_name]
-        else:
-            self.add_get_component_query(entity_id, component_type)
-            return None
-
-    def set_property_value(self, entity_id, component_type, property_path, property_name, value):
-        in_value = self._components[component_type].instances[entity_id]
-        out_value = self._set_component_queries.setdefault(component_type, dict()).setdefault(entity_id, dict())
-
-        for step in property_path:
-            in_value = in_value.setdefault(step, dict())
-            out_value = out_value.setdefault(step, dict())
-
-        in_value[property_name] = value
-        out_value[property_name] = value
-
-    def get_components(self, entity_id):
-        return self._entities[entity_id].components
-
-    def get_component_value(self, entity_id, component_type):
-        return self._components[component_type].instances[entity_id]
-
-    def set_component_value(self, entity_id, component_type, value):
-        # Copy the value to the input and output dictionaries
-        self._components[component_type].instances[entity_id] = deepcopy(value)
-        self._set_component_queries.setdefault(component_type, dict())[entity_id] = deepcopy(value)
+    def mark_local_transform_dirty(self, node):
+        assert(node in self._nodes.values())
+        self._node_changed_local_transforms[node] = None

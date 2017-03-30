@@ -148,6 +148,8 @@ class EditorSession(object):
             if query in self._response_handlers:
                 # Run the response handler
                 self._response_handlers[query](seq_number, query_response)
+            else:
+                print("WARNING: Unregistered handler for response: {}".format(query))
 
     def cycle(self, priority):
         # Create and send the query

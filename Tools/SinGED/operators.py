@@ -5,27 +5,42 @@ from bpy.types import Operator
 from bpy.props import IntProperty, StringProperty
 from . import types
 
+
 class SinGEDNewComponent(Operator):
     bl_idname = 'singed.new_component'
     bl_label = 'SinGED New Component'
 
-    entity_id = IntProperty(name='Entity Id')
-    component_type = StringProperty(name='Type')
+    node_id = IntProperty(name='Node Id')
+    component_type_name = StringProperty(name='Type')
 
     def execute(self, context):
-        types.SinGEDProps.sge_scene.request_new_component(self.entity_id, self.component_type)
+        # Unused arguments
+        del context
+
+        sge_scene = types.SinGEDProps.sge_scene
+        node = sge_scene.get_node(self.node_id)
+        component_type = sge_scene.get_component_type(self.component_type_name)
+        component_type.request_new_instance(node)
         return {'FINISHED'}
+
 
 class SinGEDDestroyComponent(Operator):
     bl_idname = 'singed.destroy_component'
     bl_label = 'SinGED Destroy Component'
 
-    entity_id = IntProperty(name='Entity Id')
-    component_type = StringProperty(name='Type')
+    node_id = IntProperty(name='Node Id')
+    component_type_name = StringProperty(name='Type')
 
     def execute(self, context):
-        types.SinGEDProps.sge_scene.request_destroy_component(self.entity_id, self.component_type)
+        # Unused arguments
+        del context
+
+        sge_scene = types.SinGEDProps.sge_scene
+        node = sge_scene.get_node(self.node_id)
+        component_type = sge_scene.get_component_type(self.component_type_name)
+        component_type.request_destroy_instance(node)
         return {'FINISHED'}
+
 
 class SinGEDSaveScene(Operator):
     bl_idname = 'singed.save_scene'
@@ -34,13 +49,20 @@ class SinGEDSaveScene(Operator):
     path = StringProperty(name='Path')
 
     def execute(self, context):
+        # Unused arguments
+        del context
+
         types.SinGEDProps.sge_scene.save_scene(self.path)
         return {'FINISHED'}
+
 
 class SinGEDGenerateLightmaps(Operator):
     bl_idname = 'singed.generate_lightmaps'
     bl_label = 'SinGED Generate Lightmaps'
 
     def execute(self, context):
+        # Unused arguments
+        del context
+
         types.SinGEDProps.sge_scene.generate_lightmaps()
         return {'FINISHED'}

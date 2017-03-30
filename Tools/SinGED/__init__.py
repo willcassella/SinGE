@@ -28,6 +28,7 @@ else:
     from bpy.props import PointerProperty, IntProperty, StringProperty
     from . import types, ui, integration, static_mesh
 
+
 # Register classes in the module
 def register():
     print ("Registering ", __name__)
@@ -39,13 +40,14 @@ def register():
     bpy.utils.register_class(operators.SinGEDDestroyComponent)
     bpy.utils.register_class(operators.SinGEDSaveScene)
     bpy.utils.register_class(operators.SinGEDGenerateLightmaps)
-    bpy.utils.register_class(ui.SinGEDEntityPanel)
+    bpy.utils.register_class(ui.SinGEDNodePanel)
     bpy.utils.register_class(ui.SinGEDMaterialPanel)
     bpy.utils.register_class(static_mesh.SGEStaticMeshExporter)
     bpy.types.INFO_MT_file_export.append(static_mesh.export_menu_func)
     bpy.types.Scene.singed = PointerProperty(type=types.SinGEDProps)
     bpy.types.Object.sge_node_id = IntProperty(default=0)
     bpy.types.Material.sge_path = StringProperty()
+
 
 # Unregister classes
 def unregister():
@@ -60,7 +62,7 @@ def unregister():
     bpy.types.INFO_MT_file_export.remove(static_mesh.export_menu_func)
     bpy.utils.unregister_class(static_mesh.SGEStaticMeshExporter)
     bpy.utils.unregister_class(ui.SinGEDMaterialPanel)
-    bpy.utils.unregister_class(ui.SinGEDEntityPanel)
+    bpy.utils.unregister_class(ui.SinGEDNodePanel)
     bpy.utils.unregister_class(operators.SinGEDGenerateLightmaps)
     bpy.utils.unregister_class(operators.SinGEDSaveScene)
     bpy.utils.unregister_class(operators.SinGEDDestroyComponent)

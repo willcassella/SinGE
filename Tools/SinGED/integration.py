@@ -4,9 +4,9 @@ import bpy
 from bpy.props import BoolProperty
 from bpy.types import Operator, Panel
 from . import editor_session, type_db, scene_manager, resource_manager, types, ui, static_mesh, operators
-from functools import partial
 import time
 import math
+
 
 class Globals(object):
     # Global variable to prevent scene updates during critical sections
@@ -33,44 +33,67 @@ class Globals(object):
     def disable_update():
         Globals.should_update = False
 
-def create_blender_resource(res_manager, path, type, value):
-    if type == 'sge::StaticMesh':
+
+def create_blender_resource(res_manager, path, res_type, value):
+    # Unused arguments
+    del res_manager
+
+    if res_type == 'sge::StaticMesh':
         return static_mesh.from_json(path, value)
 
-def new_entity_callback(sge_scene, entity):
+
+def new_node_callback(sge_scene, node):
+    # Unused arguments
+    del sge_scene
+
     # Disable scene updates
     Globals.disable_update()
 
     # Create the object
-    obj = bpy.data.objects.new(entity.name, None)
+    obj = bpy.data.objects.new(node.name, None)
     bpy.context.scene.objects.link(obj)
 
-    # Set the entity id on it
-    obj.sge_entity_id = entity.id
-    entity.user_data = obj
+    # Set the node id on it
+    obj.sge_node_id = node.id
+    node.user_data = obj
 
     # Re-enable scene updates
     Globals.enable_update()
 
-def destroy_entity_callback(sge_scene, entity):
+
+def destroy_node_callback(sge_scene, node):
+    # Unused arguments
+    del sge_scene
+
+    if node.user_data is None:
+        return
+
     # Disable scene updates
     Globals.disable_update()
 
     # Delete the object
     bpy.ops.object.select_all(action='DESELECT')
-    entity.user_data.select = True
+    node.user_data.select = True
     bpy.ops.object.delete()
+
+    # Remove the user data
+    node.user_data = None
 
     # Re-enable scene updates
     Globals.enable_update()
 
-def validate_object_type(entity):
-    obj = entity.user_data
+
+def validate_object_type(sge_scene, node):
+    obj = node.user_data
     res = types.SinGEDProps.sge_resource_manager
     data = None
 
+    # Get relevant component containers
+    static_mesh_comp_cont = sge_scene.get_component_type('sge::CStaticMesh')
+    perspective_camera_comp_cont = sge_scene.get_component_type('sge::CPerspectiveCamera')
+
     # If the object is supposed to be a mesh
-    if 'sge::CStaticMesh' in entity.components:
+    if node in static_mesh_comp_cont.instances:
         # If it is a mesh
         if obj.type == 'MESH':
             return
@@ -79,8 +102,8 @@ def validate_object_type(entity):
         data = res.get_resource_immediate('BLENDER_DEFAULT_MESH')
 
     # If the object is supposed to be a camera
-    elif 'sge::CPerspectiveCamera' in entity.components:
-        # If it is a camera
+    elif node in perspective_camera_comp_cont.instances:
+        # If it's a camera
         if obj.type == 'CAMERA':
             return
 
@@ -94,9 +117,10 @@ def validate_object_type(entity):
     # Get the object's current transform
     rot_mode = obj.rotation_mode
     obj.rotation_mode = 'QUATERNION'
-    location = tuple(obj.location)
-    scale = tuple(obj.scale)
-    rotation = tuple(obj.rotation_quaternion)
+    local_position = tuple(obj.location)
+    local_scale = tuple(obj.scale)
+    local_rotation = tuple(obj.rotation_quaternion)
+    parent = obj.parent
 
     # Delete the object
     bpy.ops.object.select_all(action='DESELECT')
@@ -104,127 +128,139 @@ def validate_object_type(entity):
     bpy.ops.object.delete()
 
     # Create a new object
-    obj = bpy.data.objects.new(entity.name, data)
+    obj = bpy.data.objects.new(node.name, data)
     bpy.context.scene.objects.link(obj)
     bpy.context.scene.objects.active = obj
     obj.select = True
 
     # Restore entity data
-    obj.sge_entity_id = entity.id
-    entity.user_data = obj
+    obj.sge_node_id = node.id
+    node.user_data = obj
 
     # Restore the transform
+    obj.parent = parent
     obj.rotation_mode = 'QUATERNION'
-    obj.location = location
-    obj.scale = scale
-    obj.rotation_quaternion = rotation
+    obj.location = local_position
+    obj.scale = local_scale
+    obj.rotation_quaternion = local_rotation
     obj.rotation_mode = rot_mode
 
-def update_transform_component_callback(sge_scene, entity, value):
-    obj = entity.user_data
+
+def update_node_callback(sge_scene, node):
+    # Get the node's user data
+    obj = node.user_data
+
+    if obj is None:
+        return
+
+    # Assign Id and name
+    obj.sge_node_id = node.id
+    obj.name = node.name
+
+    # Make sure the parent is correct
+    if node.root is None:
+        obj.parent = None
+    else:
+        # Get the root node
+        obj.parent = node.root.user_data
 
     # Assign local position (swizzle components)
-    obj.location[0] = -value['local_position']['x']
-    obj.location[2] = value['local_position']['y']
-    obj.location[1] = value['local_position']['z']
+    obj.location[0] = -node.local_position[0]
+    obj.location[2] = node.local_position[1]
+    obj.location[1] = node.local_position[2]
 
     # Assign local scale (swizzle components)
-    obj.scale[0] = value['local_scale']['x']
-    obj.scale[2] = value['local_scale']['y']
-    obj.scale[1] = value['local_scale']['z']
+    obj.scale[0] = node.local_scale[0]
+    obj.scale[2] = node.local_scale[1]
+    obj.scale[1] = node.local_scale[2]
 
     # Assign local rotation (swizzle components)
     rot_mode = obj.rotation_mode
     obj.rotation_mode = 'QUATERNION'
-    obj.rotation_quaternion[0] = value['local_rotation']['w']
-    obj.rotation_quaternion[1] = -value['local_rotation']['x']
-    obj.rotation_quaternion[3] = value['local_rotation']['y']
-    obj.rotation_quaternion[2] = value['local_rotation']['z']
+    obj.rotation_quaternion[1] = -node.local_rotation[0]
+    obj.rotation_quaternion[3] = node.local_rotation[1]
+    obj.rotation_quaternion[2] = node.local_rotation[2]
+    obj.rotation_quaternion[0] = node.local_rotation[3]
     obj.rotation_mode = rot_mode
 
-def update_static_mesh_component_callback(sge_scene, entity, value):
+
+def update_static_mesh_component_callback(component_instance):
     # Disable scene updates
     Globals.disable_update()
 
     # Make sure the object is a mesh
-    validate_object_type(entity)
-    obj = entity.user_data
+    obj = component_instance.node.user_data
     assert(obj.type == 'MESH')
 
-    # Callback to set the material on the object
-    def set_material(data, res, path, mat):
-        if data.materials:
-            data.materials[0] = mat
-        else:
-            data.materials.append(mat)
-
-    # Get the material path
-    mat_path = value['material']
-
     # Callback to set the mesh on the object
-    def set_mesh(res, path, mesh):
-        nonlocal obj, mat_path
+    def set_mesh(res_m, path, mesh):
+        del res_m, path
+        nonlocal obj
         obj.data = mesh
-        #res.get_resource_async(mat_path, 'sge::Material', partial(set_material, obj.data))
 
     # Request the resources
     res = types.SinGEDProps.sge_resource_manager
-    res.get_resource_async(value['mesh'], 'sge::StaticMesh', set_mesh)
+    component_instance.get_property_async('mesh', lambda mesh: res.get_resource_async(mesh, 'sge::StaticMesh', set_mesh))
 
     # Re-enable updates
     Globals.enable_update()
 
-def update_entity_display_callback(sge_scene, entity, value):
-    obj = entity.user_data
 
+def update_node_display_callback(component_instance):
     # Disable scene updates
     Globals.disable_update()
 
     # Update object type
-    validate_object_type(entity)
+    validate_object_type(types.SinGEDProps.sge_scene, component_instance.node)
+
+    # If it's a mesh, call the update function
+    if component_instance.type.type_name == 'sge::CStaticMesh':
+        update_static_mesh_component_callback(component_instance)
 
     # Re-enable updates
     Globals.enable_update()
 
-def validate_entity(sge_scene, obj):
-    entity_id = obj.sge_entity_id
+
+def validate_node(sge_scene, obj):
+    node_id = obj.sge_node_id
 
     # If the object is brand new
-    if entity_id == 0:
+    if node_id == 0:
         # Validate the parent
         if obj.parent is not None:
-            validate_entity(sge_scene, obj.parent)
+            validate_node(sge_scene, obj.parent)
 
-        # Create a new entity for it
-        entity_id = sge_scene.request_new_entity(obj)
-        obj.sge_entity_id = entity_id
-        sge_scene.set_entity_name(entity_id, obj.name)
-        # TODO: Set parent
+        # Create a new node for it
+        node = sge_scene.request_new_node(obj)
+        obj.sge_node_id = node.id
 
-        # Give it a transform component, and set the value
-        sge_scene.request_new_component(entity_id, 'sge::CTransform3D')
-        sge_scene.set_component_value(entity_id, 'sge::CTransform3D', {
-            'local_position': {
-                'x': -obj.location[0],
-                'y': obj.location[2],
-                'z': obj.location[1],
-            },
-            'local_scale': {
-                'x': obj.scale[0],
-                'y': obj.scale[2],
-                'z': obj.scale[1],
-            },
-            'local_rotation': {
-                'w': obj.rotation_quaternion[0],
-                'x': -obj.rotation_quaternion[1],
-                'y': obj.rotation_quaternion[3],
-                'z': obj.rotation_quaternion[2],
-            },
-        })
+        # Set the name and root
+        node.name = obj.name
+        sge_scene.mark_name_dirty(node)
+        node.root = sge_scene.get_node(obj.parent.sge_node_id) if obj.parent is not None else scene_manager.Node.NULL_ID
+        sge_scene.mark_root_dirty(node)
+
+        # Set local position (swizzled)
+        node.local_position[0] = -obj.location[0]
+        node.local_position[1] = obj.location[2]
+        node.local_position[2] = obj.location[1]
+
+        # Set local scale (swizzled)
+        node.local_scale[0] = obj.scale[0]
+        node.local_scale[1] = obj.scale[2]
+        node.local_scale[2] = obj.scale[1]
+
+        # Set local rotation (swizzled)
+        node.local_rotation[0] = -obj.rotation_quaternion[1]
+        node.local_rotation[1] = obj.rotation_quaternion[3]
+        node.local_rotation[2] = obj.rotation_quatnerion[2]
+        node.local_rotation[3] = obj.rotation_quaternion[0]
+        sge_scene.mark_local_transform_dirty(node)
 
         # If it's a mesh
         if obj.type == 'MESH':
-            sge_scene.request_new_component(entity_id, 'sge::CStaticMesh')
+            static_mesh_comp_cont = sge_scene.get_component_type('sge::CStaticMesh')
+            static_mesh_comp_instance = static_mesh_comp_cont.request_new_instance(node)
             mesh_path = ''
 
             # If it's a cube, monkey, or torus
@@ -247,7 +283,7 @@ def validate_entity(sge_scene, obj):
             elif obj.name.startswith('Icosphere'):
                 mesh_path = "Content/Meshes/Primitives/icosphere.sbin"
 
-            # If it's a cylindar
+            # If it's a cylinder
             elif obj.name.startswith('Cylinder'):
                 mesh_path = "Content/Meshes/Primitives/cylinder.sbin"
 
@@ -256,44 +292,80 @@ def validate_entity(sge_scene, obj):
                 mesh_path = "Content/Meshes/Primitives/cone.sbin"
 
             # Set the mesh and material
-            sge_scene.set_component_value(entity_id, 'sge::CStaticMesh', {
-                'mesh': mesh_path,
-                'material': "Content/Materials/Misc/checkerboard.json",
-            })
+            static_mesh_comp_instance.set_property(node, 'mesh', mesh_path)
+            static_mesh_comp_instance.set_property(node, 'material', "Content/Materials/Misc/checkerboard.json")
 
         # If it's a camera
         if obj.type == 'CAMERA':
-            sge_scene.request_new_component(entity_id, 'sge::CPerspectiveCamera')
+            perspective_camera_comp_cont = sge_scene.get_component_type('sge::CPerspectiveCamera')
+            perspective_camera_comp_cont.request_new_instance(node)
 
         return
 
-    # The object is a duplicate, so create a new entity and copy everything from the old one
-    if sge_scene.get_entity_userdata(entity_id) != obj:
-        old_entity_id = entity_id
+    # Get the node associated with this object
+    node = sge_scene.get_node(node_id)
+
+    # Check The object is a duplicate, so create a new entity and copy everything from the old one
+    if node.user_data != obj:
+        old_node = node
 
         # Validate the parent
         if obj.parent is not None:
-            validate_entity(scene, obj.parent)
-            parent_id = obj.parent.sge_entity_id
+            validate_node(sge_scene, obj.parent)
+            root = sge_scene.get_node(obj.parent.sge_node_id)
         else:
-            parent_id = None
+            root = None
 
-        # Create the new entity object
-        entity_id = sge_scene.request_new_entity(obj)
-        sge_scene.set_entity_name(entity_id, obj.name)
-        #sge_scene.set_entity_parent(entity_id, parent_id)
-        obj.sge_entity_id = entity_id
+        # Create the new node object
+        node = sge_scene.request_new_node(obj)
+        obj.sge_node_id = node.id
 
-        # For each component on the original entity
-        for component_type in sge_scene.get_components(old_entity_id):
-            # Get the value on the old entity
-            component_value = sge_scene.get_component_value(old_entity_id, component_type)
+        # Set the name and root
+        node.name = obj.name
+        sge_scene.mark_name_dirty(node)
+        node.root = root
+        sge_scene.mark_root_dirty(node)
 
-            # Create the same type of component on the new entity
-            sge_scene.request_new_component(entity_id, component_type)
+        # Set local position (swizzled)
+        node.local_position[0] = -obj.location[0]
+        node.local_position[1] = obj.location[2]
+        node.local_position[2] = obj.location[1]
 
-            # Set the component value to the same as the old entity
-            sge_scene.set_component_value(entity_id, component_type, component_value)
+        # Set local scale (swizzled)
+        node.local_scale[0] = obj.scale[0]
+        node.local_scale[1] = obj.scale[2]
+        node.local_scale[2] = obj.scale[1]
+
+        # Set local rotation (swizzled)
+        node.local_rotation[0] = -obj.rotation_quaternion[1]
+        node.local_rotation[1] = obj.rotation_quaternion[3]
+        node.local_rotation[2] = obj.rotation_quaternion[2]
+        node.local_rotation[3] = obj.rotation_quaternion[0]
+
+        sge_scene.mark_local_transform_dirty(node)
+
+        # For each component on the original node
+        for old_instance in sge_scene.get_node_components(old_node):
+            component_type = old_instance.type
+
+            # Create the same type of component on the new node
+            new_instance = component_type.request_new_instance(node)
+
+            # Copy the value from the old noe
+            old_instance.get_value_async(lambda value: new_instance.set_value(value))
+        return
+
+    # Make sure the parent is correct
+    if obj.parent is None:
+        if node.root is not None:
+            node.root = None
+            sge_scene.mark_root_dirty(node)
+    elif node.root is None or node.root.user_data != obj.parent:
+        root_node = sge_scene.get_node(obj.parent.sge_node_id)
+        node.root = root_node
+        sge_scene.mark_root_dirty(node)
+        assert(not root_node.destroyed)
+
 
 def blender_update(scene):
     self = types.SinGEDProps
@@ -303,77 +375,81 @@ def blender_update(scene):
         return
 
     # Check previously selected objects
-    for entity_id in Globals.selected_objects:
-        obj = self.sge_scene.get_entity_userdata(entity_id)
+    for node_id in Globals.selected_objects:
+        node = self.sge_scene.get_node(node_id)
+        obj = node.user_data
         # If the current object no longer exists in the scene
         if scene not in obj.users_scene:
-            self.sge_scene.request_destroy_entity(entity_id)
+            self.sge_scene.request_destroy_node(node)
             continue
 
     # Validate all objects in current selection
     for obj in bpy.context.selected_objects:
-       validate_entity(self.sge_scene, obj)
+        validate_node(self.sge_scene, obj)
 
     # Save the current selection
-    Globals.selected_objects = [obj.sge_entity_id for obj in bpy.context.selected_objects]
+    Globals.selected_objects = [obj.sge_node_id for obj in bpy.context.selected_objects]
 
     # Check name on active object
-    active_entity = bpy.context.active_object
-    if active_entity is not None and active_entity.name != self.sge_scene.get_entity_name(active_entity.sge_entity_id):
-        self.sge_scene.set_entity_name(active_entity.sge_entity_id, active_entity.name)
+    active_obj = bpy.context.active_object
+    if active_obj is not None:
+        active_obj_node = self.sge_scene.get_node(active_obj.sge_node_id)
+        if active_obj_node.name != active_obj.name:
+            active_obj_node.name = active_obj.name
+            self.sge_scene.mark_name_dirty(active_obj_node)
 
-    # Make sure we don't perform realtime updates too frequently and overload the server
+    # Make sure we don't perform real-time updates too frequently and overload the server
     if time.time() - Globals.last_low_priority_update < bpy.context.scene.singed.sge_realtime_update_delay:
         return
 
     for obj in bpy.context.selected_objects:
-        entity_id = obj.sge_entity_id
-
-        # Helper function binding to get a transform property
-        transform_getter = partial(self.sge_scene.get_property_value, entity_id, 'sge::CTransform3D', [])
-
-        # Access the transform properties
-        local_position = transform_getter('local_position')
-        if local_position is None:
-            # Component hasn't been loaded yet
-            continue
-
-        local_scale = transform_getter('local_scale')
-        local_rotation = transform_getter('local_rotation')
-
-        # Helper function binding to set a transform property
-        transform_setter = partial(self.sge_scene.set_property_value, entity_id, 'sge::CTransform3D')
+        node_id = obj.sge_node_id
+        node = self.sge_scene.get_node(node_id)
 
         # Update translation properties as necessary (swizzle components)
-        if obj.location[0] != -local_position['x']:
-            transform_setter(['local_position'], 'x', -obj.location[0])
-        if obj.location[2] != local_position['y']:
-            transform_setter(['local_position'], 'y', obj.location[2])
-        if obj.location[1] != local_position['z']:
-            transform_setter(['local_position'], 'z', obj.location[1])
+        updated = False
+        if node.local_position[0] != -obj.location[0]:
+            node.local_position[0] = -obj.location[0]
+            updated = True
+        if node.local_position[1] != obj.location[2]:
+            node.local_position[1] = obj.location[2]
+            updated = True
+        if node.local_position[2] != obj.location[1]:
+            node.local_position[2] = obj.location[1]
+            updated = True
 
-        # Update scale properties as necessary (swizzle components)
-        if obj.scale[0] != local_scale['x']:
-            transform_setter(['local_scale'], 'x', obj.scale[0])
-        if obj.scale[2] != local_scale['y']:
-            transform_setter(['local_scale'], 'y', obj.scale[2])
-        if obj.scale[1] != local_scale['z']:
-            transform_setter(['local_scale'], 'z', obj.scale[1])
+        if node.local_scale[0] != obj.scale[0]:
+            node.local_scale[0] = obj.scale[0]
+            updated = True
+        if node.local_scale[1] != obj.scale[2]:
+            node.local_scale[1] = obj.scale[2]
+            updated = True
+        if node.local_scale[2] != obj.scale[1]:
+            node.local_scale[2] = obj.scale[1]
+            updated = True
 
         # Update rotation properties as necessary (swizzle components)
         rot_mode = obj.rotation_mode
         obj.rotation_mode = 'QUATERNION'
-        if not math.isclose(obj.rotation_quaternion[0], local_rotation['w'], rel_tol=1e-3):
-            transform_setter(['local_rotation'], 'w', obj.rotation_quaternion[0])
-        if not math.isclose(obj.rotation_quaternion[1], -local_rotation['x'], rel_tol=1e-3):
-            transform_setter(['local_rotation'], 'x', -obj.rotation_quaternion[1])
-        if not math.isclose(obj.rotation_quaternion[3], local_rotation['y'], rel_tol=1e-3):
-            transform_setter(['local_rotation'], 'y', obj.rotation_quaternion[3])
-        if not math.isclose(obj.rotation_quaternion[2], local_rotation['z'], rel_tol=1e-3):
-            transform_setter(['local_rotation'], 'z', obj.rotation_quaternion[2])
+        if not math.isclose(node.local_rotation[0], -obj.rotation_quaternion[1], rel_tol=1e-3):
+            node.local_rotation[0] = -obj.rotation_quaternion[1]
+            updated = True
+        if not math.isclose(node.local_rotation[1], obj.rotation_quaternion[3], rel_tol=1e-3):
+            node.local_rotation[1] = obj.rotation_quaternion[3]
+            updated = True
+        if not math.isclose(node.local_rotation[2], obj.rotation_quaternion[2], rel_tol=1e-3):
+            node.local_rotation[2] = obj.rotation_quaternion[2]
+            updated = True
+        if not math.isclose(node.local_rotation[3], obj.rotation_quaternion[0], rel_tol=1e-3):
+            node.local_rotation[3] = obj.rotation_quaternion[0]
+            updated = True
         obj.rotation_mode = rot_mode
 
+        if updated:
+            self.sge_scene.mark_local_transform_dirty(node)
+
     Globals.last_low_priority_update = time.time()
+
 
 def open_active_session(host, port):
     self = types.SinGEDProps
@@ -422,13 +498,14 @@ def open_active_session(host, port):
 
     # Create the scene manager object
     self.sge_scene = scene_manager.SceneManager()
-    self.sge_scene.new_entity_callback(new_entity_callback)
-    self.sge_scene.destroy_entity_callback(destroy_entity_callback)
-    self.sge_scene.update_component_callback('sge::CTransform3D', update_transform_component_callback)
-    self.sge_scene.update_component_callback('sge::CStaticMesh', update_static_mesh_component_callback)
-    self.sge_scene.destroy_component_callback('sge::CStaticMesh', update_entity_display_callback)
-    self.sge_scene.update_component_callback('sge::CPerspectiveCamera', update_entity_display_callback)
-    self.sge_scene.destroy_component_callback('sge::CPerspectiveCamera', update_entity_display_callback)
+    self.sge_scene.set_new_node_callback(new_node_callback)
+    self.sge_scene.set_update_node_callback(update_node_callback)
+    self.sge_scene.set_destroy_node_callback(destroy_node_callback)
+    self.sge_scene.set_new_component_callback('sge::CStaticMesh', update_node_display_callback)
+    self.sge_scene.set_update_component_callback('sge::CStaticMesh', update_static_mesh_component_callback)
+    self.sge_scene.set_destroy_component_callback('sge::CStaticMesh', update_node_display_callback)
+    self.sge_scene.set_new_component_callback('sge::CPerspectiveCamera', update_node_display_callback)
+    self.sge_scene.set_destroy_component_callback('sge::CPerspectiveCamera', update_node_display_callback)
     self.sge_scene.register_handlers(self.sge_session)
 
     # Create the resource manager object
@@ -442,6 +519,7 @@ def open_active_session(host, port):
 
     # Enable updates
     Globals.enable_update()
+
 
 def close_active_session():
     self = types.SinGEDProps
@@ -474,10 +552,15 @@ def close_active_session():
     # Restore undo stack size
     bpy.context.user_preferences.edit.undo_steps = Globals.blender_old_undo_steps
 
+
 def cycle_session(scene):
+    # Unused arguments
+    del scene
+
     # Make sure we're not in a critical section
     if Globals.should_update:
-        types.SinGEDProps.sge_session.cycle('PRIORITY_ANY')
+        types.SinGEDProps.sge_session.cycle(editor_session.EditorSession.PRIORITY_ANY)
+
 
 class SinGEDConnect(Operator):
     bl_idname = 'singed.connect'
@@ -494,6 +577,7 @@ class SinGEDConnect(Operator):
             return {'CANCELLED'}
 
         return {'FINISHED'}
+
 
 # Classes
 class SinGEDConnectPanel(Panel):
@@ -529,4 +613,4 @@ class SinGEDConnectPanel(Panel):
             save_button.path = context.scene.singed.sge_scene_path
 
             # Draw generate lightmaps button
-            gen_lightmaps_button = layout.operator(operators.SinGEDGenerateLightmaps.bl_idname, text='Generate Lightmaps')
+            layout.operator(operators.SinGEDGenerateLightmaps.bl_idname, text='Generate Lightmaps')
