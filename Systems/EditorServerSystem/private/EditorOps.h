@@ -19,21 +19,21 @@ namespace sge
 
 			void get_component_types_query(const Scene& scene, ArchiveWriter& writer);
 
-			void new_node_query(Scene& scene, ArchiveReader& reader);
+			void new_node_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 
-			void destroy_node_query(Scene& scene, ArchiveReader& reader);
+			void destroy_node_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 
-			void set_node_name_query(Scene& scene, ArchiveReader& reader);
+			void node_name_update_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 
-			void set_node_root_query(Scene& scene, ArchiveReader& reader);
+			void node_root_update_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 
-			void new_component_query(Scene& scene, ArchiveReader& reader);
+			void node_local_transform_update_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 
-			void destroy_component_query(Scene& scene, ArchiveReader& reader);
+			void new_component_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 
-			void get_component_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
+			void destroy_component_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 
-			void set_component_query(Scene& scene, ArchiveReader& reader);
+			void component_property_update_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 
 			void get_resource_query(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer);
 

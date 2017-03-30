@@ -16,6 +16,11 @@ namespace sge
 			using SequenceNumber_t = uint32;
 
 			/**
+			 * \brief Sequence number used when there is no corresponding sequence number to send.
+			 */
+			static constexpr SequenceNumber_t NULL_SEQUENCE_NUMBER = 0;
+
+			/**
 			 * \brief Offset of the sequence number object in the header.
 			 */
 			static constexpr std::size_t HEADER_SEQUENCE_NUMBER_OFFSET = 0;

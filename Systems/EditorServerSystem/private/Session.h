@@ -48,9 +48,9 @@ namespace sge
 			/* Receives a message from the client. */
 			void async_receive_message();
 
-            void write_ops();
+            bool write_ops(ArchiveReader& query_reader, ArchiveWriter& global_response_writer);
 
-            void post_write_ops();
+            bool post_write_ops(ArchiveReader& query_reader, ArchiveWriter& sender_response_writer);
 
 			static void report_error(std::error_code error);
 
@@ -71,7 +71,6 @@ namespace sge
 			/* Incoming message */
 			Packet::Header_t _in_header;
 			std::string _in_content;
-            JsonArchive _in_archive;
 		};
 	}
 }

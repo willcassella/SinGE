@@ -60,9 +60,9 @@ namespace sge
 				writer.pop();
 			}
 
-			static void read_properties(Any<> object, ArchiveWriter* const* writers, std::size_t num_writers)
+			static void read_properties(Any<> object, ArchiveWriter& writer)
 			{
-				object.type().enumerate_properties([object, writers, num_writers](const char* propName, const PropertyInfo& propInfo)
+				object.type().enumerate_properties([object, &writer](const char* propName, const PropertyInfo& propInfo)
 				{
 					if (propInfo.flags() & (PF_EDITOR_HIDDEN | PF_EDITOR_DEFAULT_COLLAPSED))
 					{
@@ -77,13 +77,10 @@ namespace sge
 						return;
 					}
 
-					for (std::size_t i = 0; i < num_writers; ++i)
-					{
-						writers[i]->push_object_member(propName);
-					}
+					writer.push_object_member(propName);
 
 					// Access the property
-					propInfo.get(object.object(), [writers, num_writers](Any<> prop)
+					propInfo.get(object.object(), [&writer](Any<> prop)
 					{
 						// If the property's type is a terminal type
 						if (prop.type().flags() & TF_RECURSE_TERMINAL)
@@ -95,27 +92,20 @@ namespace sge
 								return;
 							}
 
-							for (std::size_t i = 0; i < num_writers; ++i)
-							{
-								impl->to_archive(prop.object(), *writers[i]);
-							}
-
+							impl->to_archive(prop.object(), writer);
 							return;
 						}
 
-						read_properties(prop, writers, num_writers);
+						read_properties(prop, writer);
 					});
 
-					for (std::size_t i = 0; i < num_writers; ++i)
-					{
-						writers[i]->pop();
-					}
+					writer.pop(); // propName
 				});
 			}
 
-			static void write_properties(AnyMut<> object, ArchiveReader& reader)
+			static void write_properties(AnyMut<> object, ArchiveReader& reader, ArchiveWriter& writer)
 			{
-				reader.enumerate_object_members([object, &reader](const char* propName)
+				reader.enumerate_object_members([object, &reader, &writer](const char* propName)
 				{
 					// Search for the property
 					const auto* propInfo = object.type().find_property(propName);
@@ -125,22 +115,32 @@ namespace sge
 					}
 
 					// Modify the property
-					propInfo->mutate(object.object(), [&reader](AnyMut<> prop)
+					propInfo->mutate(object.object(), [propName, &reader, &writer](AnyMut<> prop)
 					{
 						// If we need to recurse deeper
-						if (reader.is_object())
+						if ((prop.type().flags() & TF_RECURSE_TERMINAL) == 0)
 						{
-							write_properties(prop, reader);
+							writer.push_object_member(propName);
+							write_properties(prop, reader, writer);
+							writer.pop(); // propName
+							return;
 						}
 
-						// Get the FromArchive impl for this type
-						const auto* const impl = sge::get_vtable<IFromArchive>(prop.type());
-						if (!impl)
+						// Get the FromArchive and ToArchive impls for this type
+						const auto* const from_archive_impl = sge::get_vtable<IFromArchive>(prop.type());
+						const auto* const to_archive_impl = sge::get_vtable<IToArchive>(prop.type());
+						if (!from_archive_impl || !to_archive_impl)
 						{
 							return;
 						}
 
-						impl->from_archive(prop.object(), reader);
+						// Update the property
+						from_archive_impl->from_archive(prop.object(), reader);
+
+						// Output the new value
+						writer.push_object_member(propName);
+						to_archive_impl->to_archive(prop.object(), writer);
+						writer.pop(); // propName
 					});
 				});
 			}
@@ -178,27 +178,32 @@ namespace sge
 				}
 			}
 
-			void new_node_query(Scene& scene, ArchiveReader& reader)
+			void new_node_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
 			{
-				// Get the number of nodes to create
-				uint32 num_nodes;
-				if (!reader.number(num_nodes))
+				reader.enumerate_object_members([&scene, &reader, &writer](const char* fake_id_str)
 				{
-					return;
-				}
-
-				// Create the nodes
-				for (uint32 i = 0; i < num_nodes; ++i)
-				{
-                    Node* node = nullptr;
+					// Create the node
+					Node* node = nullptr;
 					scene.create_nodes(1, &node);
-					std::cout << "Created node " << node->get_id().to_u64() << std::endl;
-				}
+
+					// Set the properties on the node
+					std::string name;
+					reader.object_member("name", name);
+					node->set_name(std::move(name));
+
+					// Output results on the writer
+					writer.push_object_member(fake_id_str);
+					writer.object_member("id", node->get_id());
+					writer.object_member("name", node->get_name());
+					writer.pop(); // fake_id_str
+
+					std::cout << "Created new node: " << node->get_id().to_u64() << std::endl;
+				});
 			}
 
-			void destroy_node_query(Scene& scene, ArchiveReader& reader)
+			void destroy_node_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
 			{
-				reader.enumerate_array_elements([&scene, &reader](std::size_t /*i*/)
+				reader.enumerate_array_elements([&scene, &reader, &writer](std::size_t /*i*/)
 				{
 					// Get the id of the node to destroy
 					NodeId node_id;
@@ -215,12 +220,15 @@ namespace sge
 					// Destroy it
 					std::cout << "Destroying node " << node_id.to_u64() << std::endl;
                     scene.destroy_nodes(1, &node);
+
+					// Add it to the writer
+					writer.array_element(node_id);
 				});
 			}
 
-			void set_node_name_query(Scene& scene, ArchiveReader& reader)
+			void node_name_update_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
 			{
-				reader.enumerate_object_members([&scene, &reader](const char* node_id_str)
+				reader.enumerate_object_members([&scene, &reader, &writer](const char* node_id_str)
 				{
 					// Get the node to set the name of
 					NodeId node_id;
@@ -241,12 +249,15 @@ namespace sge
 					// Set the name
 					std::cout << "Setting name on node " << node_id_str << " to '" << name << "'" << std::endl;
 					node->set_name(std::move(name));
+
+					// Output on the writer
+					writer.object_member(node_id_str, node->get_name());
 				});
 			}
 
-			void set_node_root_query(Scene& scene, ArchiveReader& reader)
+			void node_root_update_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
 			{
-				reader.enumerate_object_members([&scene, &reader](const char* node_id_str)
+				reader.enumerate_object_members([&scene, &reader, &writer](const char* node_id_str)
 				{
 					// Get the node to set the parent of
 					NodeId node_id;
@@ -273,51 +284,102 @@ namespace sge
 					// Set the root
 					std::cout << "Setting root on node " << node_id_str << " to " << root_id.to_u64() << std::endl;
 					node->set_root(root);
+
+					// Output on the writer
+					writer.object_member(node_id_str, root_id);
 				});
 			}
 
-			void new_component_query(Scene& scene, ArchiveReader& reader)
+			void node_local_transform_update_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
 			{
-				// Enumerate nodes to add components to
-				reader.enumerate_object_members([&scene, &reader](const char* node_id_str)
+				reader.enumerate_object_members([&scene, &reader, &writer](const char* node_id_str)
 				{
+					// Get the node to set the transform of
 					NodeId node_id;
+					Node* node = nullptr;
 					node_id.from_string(node_id_str);
-
-					// Enumerate component types to add
-					reader.enumerate_array_elements([node_id, &scene, &reader](std::size_t /*i*/)
+					scene.get_nodes(&node_id, 1, &node);
+					if (!node)
 					{
-						std::string component_type;
-						sge::from_archive(component_type, reader);
+						std::cout << "Error: Invalid node id to set local transform." << std::endl;
+						return;
+					}
 
-						// Get the component type
-						const auto* const type = scene.get_component_type(component_type.c_str());
-						if (!type)
-						{
-							std::cout << "Error: Invalid component type name: '" << component_type << "'" << std::endl;
-							return;
-						}
+					std::cout << "Setting local transform on node " << node_id_str << std::endl;
 
-						// Get the component container
-						auto* const container = scene.get_component_container(*type);
-						if (!container)
-						{
-							std::cout << "Error: Invalid component type: '" << component_type << "'" << std::endl;
-							return;
-						}
+					// Update the writer
+					writer.push_object_member(node_id_str);
+
+					// Set the transform
+					Vec3 local_pos = node->get_local_position();
+					reader.object_member("lpos", local_pos);
+					writer.object_member("lpos", local_pos);
+					node->set_local_position(local_pos);
+
+					Vec3 local_scale = node->get_local_scale();
+					reader.object_member("lscale", local_scale);
+					writer.object_member("lscale", local_scale);
+					node->set_local_scale(local_scale);
+
+					Quat local_rot = node->get_local_rotation();
+					reader.object_member("lrot", local_rot);
+					writer.object_member("lrot", local_rot);
+					node->set_local_rotation(local_rot);
+
+					writer.pop(); // node_id_str
+				});
+			}
+
+			void new_component_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
+			{
+				// Enumerate components to add nodes to
+				reader.enumerate_object_members([&scene, &reader, &writer](const char* component_type_name)
+				{
+					// Search for the component type name
+					const auto* const type = scene.get_component_type(component_type_name);
+					if (!type)
+					{
+						std::cout << "Error: Invalid component type name: '" << component_type_name << "'" << std::endl;
+						return;
+					}
+
+					// Get the component container
+					auto* const container = scene.get_component_container(*type);
+					if (!container)
+					{
+						std::cout << "Error: Invalid component type: '" << component_type_name << "'" << std::endl;
+						return;
+					}
+
+					writer.push_object_member(component_type_name);
+
+					// Enumerate nodes to add
+					reader.enumerate_array_elements([type, container, &scene, &reader, &writer](std::size_t /*i*/)
+					{
+						NodeId node_id;
+						node_id.from_archive(reader);
 
 						// Create the component
 						void* instance = nullptr;
 						container->create_instances(&node_id, 1, &instance);
 						std::cout << "Created '" << type->name() << "' component on node " << node_id.to_u64() << std::endl;
+
+						// Output values
+						char node_id_str[20];
+						node_id.to_string(node_id_str, 20);
+						writer.push_object_member(node_id_str);
+						read_properties(Any<>{ *type, instance }, writer);
+						writer.pop(); // node_id_str
 					});
+
+					writer.pop(); // component_type_name
 				});
 			}
 
-			void destroy_component_query(Scene& scene, ArchiveReader& reader)
+			void destroy_component_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
 			{
 				// Enumerate component types to destroy
-				reader.enumerate_object_members([&scene, &reader](const char* component_type_name)
+				reader.enumerate_object_members([&scene, &reader, &writer](const char* component_type_name)
 				{
 					// Get the component type
 					const auto* const type = scene.get_component_type(component_type_name);
@@ -335,8 +397,10 @@ namespace sge
 						return;
 					}
 
+					writer.push_object_member(component_type_name);
+
 					// Enumerate instances to destroy
-					reader.enumerate_array_elements([component_type_name, container, &scene, &reader](std::size_t /*i*/)
+					reader.enumerate_array_elements([component_type_name, container, &scene, &reader, &writer](std::size_t /*i*/)
 					{
 						// Get the node
 						NodeId node;
@@ -345,7 +409,12 @@ namespace sge
 						// Destroy it
 						container->remove_instances(&node, 1);
 						std::cout << "Destroyed '" << component_type_name << "' component on node " << node.to_u64() << std::endl;
+
+						// Output to the writer
+						writer.array_element(node);
 					});
+
+					writer.pop(); // component_type_name
 				});
 			}
 
@@ -376,6 +445,7 @@ namespace sge
 				for (const auto& component_type : scene_data.components)
 				{
 					NodeId instance_nodes[8];
+					void* instances[8];
 					std::size_t num_nodes = 0;
 					std::size_t start_index = 0;
 
@@ -385,9 +455,17 @@ namespace sge
 					while (component_type.second->get_instance_nodes(start_index, 8, &num_nodes, instance_nodes))
 					{
 						start_index += 8;
+						component_type.second->get_instances(instance_nodes, num_nodes, instances);
+
+						// For each instance
 						for (std::size_t i = 0; i < num_nodes; ++i)
 						{
-							writer.array_element(instance_nodes[i]);
+							char node_id_str[20];
+							instance_nodes[i].to_string(node_id_str, 20);
+
+							writer.push_object_member(node_id_str);
+							read_properties(Any<>{ *component_type.first, instances[i] }, writer);
+							writer.pop(); // node_id_str
 						}
 					}
 
@@ -396,66 +474,10 @@ namespace sge
 				writer.pop(); // "components"
 			}
 
-			void get_component_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
-			{
-				// Enumerate the types to get the properties from
-				reader.enumerate_object_members([&scene, &reader, &writer](const char* component_type_name)
-				{
-					// Get the type
-					const auto* const type = scene.get_component_type(component_type_name);
-					if (!type)
-					{
-						std::cout << "Error: Invalid component type name: '" << component_type_name << "'" << std::endl;
-						return;
-					}
-
-					// Get the container
-					auto* const container = scene.get_component_container(*type);
-					if (!container)
-					{
-						std::cout << "Error: Invalid component type: '" << component_type_name << "'" << std::endl;
-						return;
-					}
-
-					writer.push_object_member(component_type_name);
-
-					// Enumerate the instances
-					reader.enumerate_array_elements([container, type, &scene, &reader, &writer](std::size_t /*i*/)
-					{
-						// Get the node id
-						NodeId node_id;
-						node_id.from_archive(reader);
-
-						// Access the component
-						void* component;
-						container->get_instances(&node_id, 1, &component);
-						if (!component)
-						{
-							std::cout << "Invalid node id: " << node_id.to_u64() << std::endl;
-							return;
-						}
-
-						// Output the Id
-						char node_id_str[20];
-						node_id.to_string(node_id_str, 20);
-						writer.push_object_member(node_id_str);
-
-						// Access the component
-						std::cout << "Reading properties of '" << type->name() << "' component on node " << node_id_str << std::endl;
-						ArchiveWriter* writers[] = { &writer };
-						read_properties(Any<>{ *type, component }, writers, 1);
-
-						writer.pop(); // node_id_str
-					});
-
-					writer.pop(); // component_type_name
-				});
-			}
-
-			void set_component_query(Scene& scene, ArchiveReader& reader)
+			void component_property_update_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
 			{
 				// Enumerate types of components changed
-				reader.enumerate_object_members([&scene, &reader](const char* component_type_name)
+				reader.enumerate_object_members([&scene, &reader, &writer](const char* component_type_name)
 				{
 					const auto* const type = scene.get_component_type(component_type_name);
 					if (!type)
@@ -471,8 +493,10 @@ namespace sge
 						return;
 					}
 
+					writer.push_object_member(component_type_name);
+
 					// Enumerate the node Ids of changed components
-					reader.enumerate_object_members([type, container, &scene, &reader](const char* node_id_str)
+					reader.enumerate_object_members([type, container, &scene, &reader, &writer](const char* node_id_str)
 					{
 						NodeId node_id;
 						node_id.from_string(node_id_str);
@@ -487,8 +511,12 @@ namespace sge
 
 						// Deserialize it
 						std::cout << "Writing properties of '" << type->name() << "' component on node '" << node_id_str << "'" << std::endl;
-						write_properties(AnyMut<>{ *type, component }, reader);
+						writer.push_object_member(node_id_str);
+						write_properties(AnyMut<>{ *type, component }, reader, writer);
+						writer.pop(); // node_id_str
 					});
+
+					writer.pop(); // component_type_name
 				});
 			}
 
@@ -785,7 +813,7 @@ namespace sge
                 std::cout << "Computing indirect lighting..." << std::endl;
                 const auto gen_indirect_start = std::chrono::high_resolution_clock::now();
                 const int num_threads = std::thread::hardware_concurrency();
-                for (std::size_t pass_i = 0; pass_i < 5; ++pass_i)
+                for (std::size_t pass_i = 0; pass_i < 1; ++pass_i)
                 {
                     for (std::size_t i = 0; i < lightmap_objects.size(); ++i)
                     {

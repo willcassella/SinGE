@@ -76,179 +76,217 @@ namespace sge
                 // Read content
                 asio::read(self->socket, asio::buffer(&self->_in_content[0], self->_in_content.size()));
 
-                // Deserialze the string
-                self->_in_archive.from_string(self->_in_content.c_str());
+				// Log query time
+				const auto message_time = std::chrono::system_clock::now();
+				std::cout << "Received query at " << std::chrono::system_clock::to_time_t(message_time) << std::endl;
+
+                // Deserialze the query json string
+				JsonArchive query_archive;
+                query_archive.from_string(self->_in_content.c_str());
+				auto* const query_reader = query_archive.read_root();
+
+				// Create a global client output archive
+				JsonArchive global_response_archive;
+				auto* const global_response_writer = global_response_archive.write_root();
 
                 // Run write operations
-                self->write_ops();
+                const auto wrote_global_output = self->write_ops(*query_reader, *global_response_writer);
 
 				// Allow scene to update
 				self->get_frame().yield();
 
+				// Create an archive for the sender-exclusivce response
+				JsonArchive sender_response_archive;
+				auto* const sender_response_writer = sender_response_archive.write_root();
+
 				// Run post-write operations
-				self->post_write_ops();
+				const auto wrote_sender_output = self->post_write_ops(*query_reader, *sender_response_writer);
+
+				// Close reader and writer
+				query_reader->pop();
+				global_response_writer->pop();
+				sender_response_writer->pop();
+
+				// Log completion time
+				auto completed_time = std::chrono::system_clock::now();
+				std::cout << "Completed query at " << std::chrono::system_clock::to_time_t(completed_time) << std::endl;
+				std::cout << std::endl;
+
+				// Write sender-exclusive result
+				if (wrote_sender_output)
+				{
+					std::string result = sender_response_archive.to_string();
+					auto* packet = Packet::encode_packet(
+						Packet::sequence_number(self->_in_header),
+						result.c_str(),
+						static_cast<Packet::ContentLength_t>(result.size()));
+					self->enequeue_message(packet);
+				}
+
+				// Write global result
+				if (wrote_global_output)
+				{
+					std::string result = global_response_archive.to_string();
+					auto* packet = Packet::encode_packet(
+						Packet::sequence_number(self->_in_header),
+						result.c_str(),
+						static_cast<Packet::ContentLength_t>(result.size()));
+					self->enequeue_message(packet);
+				}
 
 				// Wait for a new message
 				self->async_receive_message();
             });
         }
 
-	    void Session::write_ops()
+	    bool Session::write_ops(ArchiveReader& query_reader, ArchiveWriter& global_response_writer)
 	    {
-		    // Log query time
-            const auto message_time = std::chrono::system_clock::now();
-            std::cout << "Received query at " << std::chrono::system_clock::to_time_t(message_time) << std::endl;
-
-		    // Create a reader for the input
-		    auto* in_reader = _in_archive.read_root();
+			bool wrote_output = false;
 
             // Handle a query to create a node
-            if (in_reader->pull_object_member("new_node"))
+            if (query_reader.pull_object_member("new_node"))
             {
-                ops::new_node_query(get_scene(), *in_reader);
-                in_reader->pop();
+				global_response_writer.push_object_member("new_node");
+                ops::new_node_query(get_scene(), query_reader, global_response_writer);
+				global_response_writer.pop(); // "new_node"
+                query_reader.pop();
+				wrote_output = true;
             }
 
+			// Handle a query to destroy a node
+			if (query_reader.pull_object_member("destroy_node"))
+			{
+				global_response_writer.push_object_member("destroy_node");
+				ops::destroy_node_query(get_scene(), query_reader, global_response_writer);
+				global_response_writer.pop(); // "destroy_node"
+				query_reader.pop();
+				wrote_output = true;
+			}
+
             // Handle a query to set a node's name
-            if (in_reader->pull_object_member("set_node_name"))
+            if (query_reader.pull_object_member("node_name_update"))
             {
-                ops::set_node_name_query(get_scene(), *in_reader);
-                in_reader->pop();
+				global_response_writer.push_object_member("node_name_update");
+                ops::node_name_update_query(get_scene(), query_reader, global_response_writer);
+				global_response_writer.pop(); // "node_name_update"
+            	query_reader.pop();
+				wrote_output = true;
             }
 
             // Handle a query to set a node's root
-            if (in_reader->pull_object_member("set_node_root"))
+            if (query_reader.pull_object_member("node_root_update"))
             {
-                ops::set_node_root_query(get_scene(), *in_reader);
-                in_reader->pop();
+				global_response_writer.push_object_member("node_root_update");
+                ops::node_root_update_query(get_scene(), query_reader, global_response_writer);
+				global_response_writer.pop(); // "node_root_update"
+				query_reader.pop();
+				wrote_output = true;
             }
 
-            // Handle a query to destroy a component
-            if (in_reader->pull_object_member("destroy_component"))
-            {
-                ops::destroy_component_query(get_scene(), *in_reader);
-                in_reader->pop();
-            }
-
-            // Handle a query to destroy a node
-            if (in_reader->pull_object_member("destroy_node"))
-            {
-                ops::destroy_node_query(get_scene(), *in_reader);
-                in_reader->pop();
-            }
-
-            // Handle a query to create a component
-            if (in_reader->pull_object_member("new_component"))
-            {
-                ops::new_component_query(get_scene(), *in_reader);
-                in_reader->pop();
-            }
-	    }
-
-        void Session::post_write_ops()
-        {
-			// Create an output archive
-			JsonArchive out;
-			auto* out_writer = out.write_root();
-			bool wrote_output = false;
-
-			// Get a reader for the input archive
-			auto in_reader = _in_archive.read_root();
-
-			// Handle a query to set the properties on a component
-			if (in_reader->pull_object_member("set_component"))
+			// Handle a query to set a node's transform
+			if (query_reader.pull_object_member("node_local_transform_update"))
 			{
-				ops::set_component_query(get_scene(), *in_reader);
-				in_reader->pop();
+				global_response_writer.push_object_member("node_local_transform_update");
+				ops::node_local_transform_update_query(get_scene(), query_reader, global_response_writer);
+				global_response_writer.pop(); // "node_local_transform_update"
+				query_reader.pop();
+				wrote_output = true;
 			}
 
-			// Handle a query for all component types
-			if (in_reader->pull_object_member("get_component_types"))
+            // Handle a query to create a component
+            if (query_reader.pull_object_member("new_component"))
+            {
+				global_response_writer.push_object_member("new_component");
+                ops::new_component_query(get_scene(), query_reader, global_response_writer);
+				global_response_writer.pop(); // "new_component"
+				query_reader.pop();
+				wrote_output = true;
+            }
+
+			// Handle a query to destroy a component
+			if (query_reader.pull_object_member("destroy_component"))
 			{
-				out_writer->push_object_member("get_component_types");
-				ops::get_component_types_query(get_scene(), *out_writer);
-				out_writer->pop();
-				in_reader->pop();
+				global_response_writer.push_object_member("destroy_component");
+				ops::destroy_component_query(get_scene(), query_reader, global_response_writer);
+				global_response_writer.pop(); // "destroy_component"
+				query_reader.pop();
+				wrote_output = true;
+			}
+
+			// Handle a query to set the properties on a component
+			if (query_reader.pull_object_member("component_property_update"))
+			{
+				global_response_writer.push_object_member("component_property_update");
+				ops::component_property_update_query(get_scene(), query_reader, global_response_writer);
+				global_response_writer.pop(); // "component_property_update"
+				query_reader.pop();
+				wrote_output = true;
+			}
+
+			return wrote_output;
+	    }
+
+        bool Session::post_write_ops(ArchiveReader& query_reader, ArchiveWriter& sender_response_writer)
+        {
+			bool wrote_output = false;
+
+			// Handle a query for all component types
+			if (query_reader.pull_object_member("get_component_types"))
+			{
+				sender_response_writer.push_object_member("get_component_types");
+				ops::get_component_types_query(get_scene(), sender_response_writer);
+				sender_response_writer.pop(); // "get_component_types"
+				query_reader.pop();
 				wrote_output = true;
 			}
 
 			// Handle a property info query
-			if (in_reader->pull_object_member("get_type_info"))
+			if (query_reader.pull_object_member("get_type_info"))
 			{
-				out_writer->push_object_member("get_type_info");
-				ops::get_type_info_query(get_scene().get_type_db(), *in_reader, *out_writer);
-				out_writer->pop();
-				in_reader->pop();
+				sender_response_writer.push_object_member("get_type_info");
+				ops::get_type_info_query(get_scene().get_type_db(), query_reader, sender_response_writer);
+				sender_response_writer.pop(); // "get_type_info"
+				query_reader.pop();
 				wrote_output = true;
 			}
 
 			// Handle a query for acessing the scene structure
-			if (in_reader->pull_object_member("get_scene"))
+			if (query_reader.pull_object_member("get_scene"))
 			{
-				out_writer->push_object_member("get_scene");
-				ops::get_scene_query(get_scene(), *out_writer);
-				out_writer->pop();
-				in_reader->pop();
-				wrote_output = true;
-			}
-
-			// Handle an object property query
-			if (in_reader->pull_object_member("get_component"))
-			{
-				out_writer->push_object_member("get_component");
-				ops::get_component_query(get_scene(), *in_reader, *out_writer);
-				in_reader->pop();
-				out_writer->pop();
+				sender_response_writer.push_object_member("get_scene");
+				ops::get_scene_query(get_scene(), sender_response_writer);
+				sender_response_writer.pop(); // "get_scene"
+				query_reader.pop();
 				wrote_output = true;
 			}
 
 			// Handle a resource query
-			if (in_reader->pull_object_member("get_resource"))
+			if (query_reader.pull_object_member("get_resource"))
 			{
-				out_writer->push_object_member("get_resource");
-				ops::get_resource_query(get_scene(), *in_reader, *out_writer);
-				in_reader->pop();
-				out_writer->pop();
+				sender_response_writer.push_object_member("get_resource");
+				ops::get_resource_query(get_scene(), query_reader, sender_response_writer);
+				sender_response_writer.pop(); // "get_resource"
+				query_reader.pop();
 				wrote_output = true;
 			}
 
 			// Handle a lightmap query
-			if (in_reader->pull_object_member("gen_lightmaps"))
+			if (query_reader.pull_object_member("gen_lightmaps"))
 			{
 				std::cout << "Generating lightmaps..." << std::endl;
 				ops::generate_lightmaps(get_scene());
 				std::cout << "Lightmaps generated." << std::endl;
-				in_reader->pop();
+				query_reader.pop();
 			}
 
 			// Handle a save query
-			if (in_reader->pull_object_member("save_scene"))
+			if (query_reader.pull_object_member("save_scene"))
 			{
-				ops::save_scene_query(get_scene(), *in_reader);
-				in_reader->pop();
+				ops::save_scene_query(get_scene(), query_reader);
+				query_reader.pop();
 			}
 
-			// Close reader and writer
-			in_reader->pop();
-			out_writer->pop();
-
-			// Log completion time
-			auto completed_time = std::chrono::system_clock::now();
-			std::cout << "Completed query at " << std::chrono::system_clock::to_time_t(completed_time) << std::endl;
-			std::cout << std::endl;
-
-			// If we wrote something, send it
-			if (wrote_output)
-			{
-				// Write result
-				std::string result = out.to_string();
-				auto* packet = Packet::encode_packet(
-					Packet::sequence_number(_in_header),
-					result.c_str(),
-					static_cast<Packet::ContentLength_t>(result.size()));
-
-				enequeue_message(packet);
-			}
+			return wrote_output;
         }
 
 	    void Session::report_error(std::error_code error)
