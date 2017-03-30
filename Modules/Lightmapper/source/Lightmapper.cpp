@@ -326,6 +326,10 @@ namespace sge
         const auto* const occluders = scene->occluders;
         const float normalization_factor = 1.f / (static_cast<float>(num_sample_sets) * 8) * 2 * 3.1415926539f;
 
+		// Create the ray valid mask
+		alignas(32) std::array<uint32, 8> valid_mask;
+		valid_mask.fill(0xFFFFFFFF);
+
         // Iterate from min to max
         for (int32 y = 0; y < height; ++y)
         {
@@ -344,10 +348,6 @@ namespace sge
                 const auto texel_pos = texels[texel_index].world_pos;
                 const auto texel_TBN = texels[texel_index].TBN;
                 const auto texel_norm = Vec3{ texel_TBN[2][0], texel_TBN[2][1], texel_TBN[2][2] };
-
-                // Create the ray valid mask
-                std::array<uint32, 8> valid_mask;
-                valid_mask.fill(0xFFFFFFFF);
 
                 // For each raycasting iteration
                 for (int iter_i = 0; iter_i < num_sample_sets; ++iter_i)
