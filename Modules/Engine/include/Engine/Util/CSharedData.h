@@ -15,7 +15,7 @@ namespace sge
 	public:
 
 		CSharedData()
-			: modified_instance_channel(sizeof(EModifiedComponent<ComponentT>), 8)
+			: modified_instance_channel(sizeof(EModifiedComponent), 8)
 		{
 		}
 
@@ -34,7 +34,7 @@ namespace sge
 			// Add events to the channel
 			modified_instance_channel.append(
 				modified_instances.data(),
-				sizeof(EModifiedComponent<ComponentT>),
+				sizeof(EModifiedComponent),
 				(int32)modified_instances.size());
 
 			modified_instances.clear();
@@ -59,7 +59,7 @@ namespace sge
 
 		void set_modified(NodeId node, ComponentT* instance, const char* prop_name)
 		{
-			EModifiedComponent<ComponentT> event;
+			EModifiedComponent event;
 			event.node = node;
 			event.instance = instance;
 			event.property = prop_name;
@@ -71,7 +71,7 @@ namespace sge
 		///   Fields   ///
 	public:
 
-		std::vector<EModifiedComponent<ComponentT>> modified_instances;
+		std::vector<EModifiedComponent> modified_instances;
 		EventChannel modified_instance_channel;
 	};
 }

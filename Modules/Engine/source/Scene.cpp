@@ -131,9 +131,14 @@ namespace sge
 		return comp->get_event_channel(channel_name);
 	}
 
-	EventChannel* Scene::get_node_transform_changed_channel()
+	EventChannel* Scene::get_node_local_transform_changed_channel()
 	{
-		return &_scene_data.node_transform_changed_channel;
+		return &_scene_data.node_local_transform_changed_channel;
+	}
+
+	EventChannel* Scene::get_node_world_transform_changed_channel()
+	{
+		return &_scene_data.node_world_transform_changed_channel;
 	}
 
 	EventChannel* Scene::get_node_root_changed_channel()
@@ -149,14 +154,15 @@ namespace sge
 		_scene_data.node_buffer.clear();
 		_scene_data.root_nodes.clear();
 		_scene_data.system_node_root_changes.clear();
-		_scene_data.system_node_transform_changes.clear();
+		_scene_data.system_node_local_transform_changes.clear();
 		_scene_data.system_new_nodes.clear();
 		_scene_data.system_destroyed_nodes.clear();
 		_scene_data.update_modified_nodes.clear();
 		_scene_data.update_destroyed_nodes.clear();
 		_scene_data.new_node_channel.clear();
 		_scene_data.destroyed_node_channel.clear();
-		_scene_data.node_transform_changed_channel.clear();
+		_scene_data.node_local_transform_changed_channel.clear();
+		_scene_data.node_world_transform_changed_channel.clear();
 		_scene_data.node_root_changed_channel.clear();
 
 		for (auto& component_type : _scene_data.components)
@@ -247,19 +253,19 @@ namespace sge
 			node->_id = id;
 			node->_scene = this;
 			node->_mod_state = Node::NEW | Node::TRANSFORM_PENDING;
-			node->_transform_mod_index = (int32)this->_scene_data.system_node_transform_changes.size();
+			node->_transform_mod_index = (int32)this->_scene_data.system_node_local_transform_changes.size();
 
 			// Deserialize node data
 			reader.object_member("root", node->_root);
 			reader.object_member("name", node->_name);
 
 			// Deserialize transform data
-			NodeTransformMod trans;
+			NodeLocalTransformMod trans;
 			trans.node = node;
 			reader.object_member("lpos", trans.local_pos);
 			reader.object_member("lscale", trans.local_scale);
 			reader.object_member("lrot", trans.local_rot);
-			this->_scene_data.system_node_transform_changes.push_back(trans);
+			this->_scene_data.system_node_local_transform_changes.push_back(trans);
 
 			// Insert it into the scene
 			data.nodes[id] = node;
@@ -396,7 +402,8 @@ namespace sge
 		// Clear event channels
 		_scene_data.new_node_channel.clear();
 		_scene_data.destroyed_node_channel.clear();
-		_scene_data.node_transform_changed_channel.clear();
+		_scene_data.node_local_transform_changed_channel.clear();
+		_scene_data.node_world_transform_changed_channel.clear();
 		_scene_data.node_root_changed_channel.clear();
 
 		// Update time
@@ -467,7 +474,7 @@ namespace sge
 
 		// Array of nodes that need to have their matrices updated
 		std::vector<Node*> outdated_matrices;
-		outdated_matrices.reserve(_scene_data.system_node_transform_changes.size());
+		outdated_matrices.reserve(_scene_data.system_node_local_transform_changes.size());
 
 		// Apply root updates
 		for (auto root_mod : _scene_data.system_node_root_changes)
@@ -507,7 +514,7 @@ namespace sge
 		}
 
 		// Transform nodes
-		for (auto node_trans : _scene_data.system_node_transform_changes)
+		for (auto node_trans : _scene_data.system_node_local_transform_changes)
 		{
 			// Apply transform
 			node_trans.node->_local_position = node_trans.local_pos;
@@ -518,7 +525,6 @@ namespace sge
 			node_trans.node->_transform_mod_index = -1;
 			outdated_matrices.push_back(node_trans.node);
 		}
-		_scene_data.system_node_transform_changes.clear();
 
 		// Update the hierarchy (adds to deleted list, and updates hierarchy depth)
 		update_hierarchy(outdated_hierarchy_elements.data(), outdated_hierarchy_elements.size());
@@ -533,14 +539,17 @@ namespace sge
 		const auto max_event_size = std::max({
 			sizeof(ENewNode),
 			sizeof(EDestroyedNode),
-			sizeof(ENodeRootChangd) });
+			sizeof(ENodeRootChangd),
+			sizeof(ENodeTransformChanged) });
 		const auto num_new_nodes = _scene_data.system_new_nodes.size();
 		const auto num_destroyed_nodes = _scene_data.system_destroyed_nodes.size();
 		const auto num_root_changes = _scene_data.system_node_root_changes.size();
+		const auto num_local_transform_changes = _scene_data.system_node_local_transform_changes.size();
 		const auto max_event_count = std::max({
 			num_new_nodes,
 			num_destroyed_nodes,
-			num_root_changes });
+			num_root_changes,
+			num_local_transform_changes });
 		void* const event_buff = std::malloc(max_event_count * max_event_size);
 
 		// Create new node events
@@ -568,11 +577,20 @@ namespace sge
 		}
 		_scene_data.node_root_changed_channel.append(event_buff, sizeof(ENodeRootChangd), (int32)num_root_changes);
 
+		// Create local transform changed events
+		const auto* const local_transform_changed_nodes = _scene_data.system_node_local_transform_changes.data();
+		for (std::size_t i = 0; i < num_local_transform_changes; ++i)
+		{
+			((ENodeTransformChanged*)event_buff)[i].node = local_transform_changed_nodes[i].node;
+		}
+		_scene_data.node_local_transform_changed_channel.append(event_buff, sizeof(ENodeTransformChanged), (int32)num_local_transform_changes);
+
 		// Add nodes destroyed this system frame to nodes destroyed this update frame
 		_scene_data.update_destroyed_nodes.insert(_scene_data.update_destroyed_nodes.end(), destroyed_nodes, destroyed_nodes + num_destroyed_nodes);
 
 		// Clean up
 		_scene_data.system_node_root_changes.clear();
+		_scene_data.system_node_local_transform_changes.clear();
 		_scene_data.system_new_nodes.clear();
 		_scene_data.system_destroyed_nodes.clear();
 		std::free(event_buff);
@@ -714,7 +732,7 @@ namespace sge
 		}
 
 		// Create events
-		_scene_data.node_transform_changed_channel.append(transform_events.data(), (int32)transform_events.size());
+		_scene_data.node_world_transform_changed_channel.append(transform_events.data(), (int32)transform_events.size());
 
 		// Clean up
 		std::free(root_ids);

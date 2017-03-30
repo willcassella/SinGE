@@ -140,7 +140,7 @@ namespace sge
 			return _local_position;
 		}
 
-		const auto& trans_mod = _scene->get_raw_scene_data().system_node_transform_changes[_transform_mod_index];
+		const auto& trans_mod = _scene->get_raw_scene_data().system_node_local_transform_changes[_transform_mod_index];
 		return trans_mod.local_pos;
 	}
 
@@ -170,7 +170,7 @@ namespace sge
 			return _local_scale;
 	    }
 
-		const auto& trans_mod = _scene->get_raw_scene_data().system_node_transform_changes[_transform_mod_index];
+		const auto& trans_mod = _scene->get_raw_scene_data().system_node_local_transform_changes[_transform_mod_index];
 		return trans_mod.local_scale;
     }
 
@@ -198,7 +198,7 @@ namespace sge
 			return _local_rotation;
 		}
 
-		const auto& trans_mod = _scene->get_raw_scene_data().system_node_transform_changes[_transform_mod_index];
+		const auto& trans_mod = _scene->get_raw_scene_data().system_node_local_transform_changes[_transform_mod_index];
 		return trans_mod.local_rot;
 	}
 
@@ -212,20 +212,20 @@ namespace sge
 		return lhs->_hierarchy_depth < rhs->_hierarchy_depth;
 	}
 
-	NodeTransformMod& Node::get_or_create_transform_mod()
+	NodeLocalTransformMod& Node::get_or_create_transform_mod()
 	{
 		if (_transform_mod_index != -1)
 		{
-			return _scene->get_raw_scene_data().system_node_transform_changes[_transform_mod_index];
+			return _scene->get_raw_scene_data().system_node_local_transform_changes[_transform_mod_index];
 		}
 
-		NodeTransformMod trans_mod;
+		NodeLocalTransformMod trans_mod;
 		trans_mod.node = this;
 		trans_mod.local_pos = _local_position;
 		trans_mod.local_scale = _local_scale;
 		trans_mod.local_rot = _local_rotation;
 
-		auto& transform_mod_array = _scene->get_raw_scene_data().system_node_transform_changes;
+		auto& transform_mod_array = _scene->get_raw_scene_data().system_node_local_transform_changes;
 		const auto index = transform_mod_array.size();
     	_transform_mod_index = static_cast<int32>(index);
 		transform_mod_array.push_back(trans_mod);

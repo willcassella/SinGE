@@ -52,7 +52,9 @@ namespace sge
 
 		EventChannel* get_event_channel(const TypeInfo& component_type, const char* channel_name);
 
-		EventChannel* get_node_transform_changed_channel();
+		EventChannel* get_node_local_transform_changed_channel();
+
+		EventChannel* get_node_world_transform_changed_channel();
 
 		EventChannel* get_node_root_changed_channel();
 

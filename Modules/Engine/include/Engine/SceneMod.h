@@ -8,7 +8,7 @@ namespace sge
 {
     struct Node;
 
-    struct NodeTransformMod
+    struct NodeLocalTransformMod
     {
         Node* node;
         Vec3 local_pos;

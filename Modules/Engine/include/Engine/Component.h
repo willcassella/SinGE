@@ -63,42 +63,38 @@ namespace sge
 	/**
 	 * \brief Event generated for new component objects.
 	 */
-    template <class ComponentT>
 	struct ENewComponent
 	{
         NodeId node;
-        ComponentT* instance = nullptr;
+        void* instance = nullptr;
 	};
 
 	/**
 	 * \brief Event generated for destroyed component objects.
 	 */
-    template <class ComponentT>
 	struct EDestroyedComponent
 	{
         NodeId node;
-        ComponentT* instance = nullptr;
+        void* instance = nullptr;
 	};
 
 	/**
 	 * \brief Event generated for modified component objects.
 	 */
-    template <class ComponentT>
 	struct EModifiedComponent
 	{
         NodeId node;
-        ComponentT* instance = nullptr;
+        void* instance = nullptr;
 		FixedString<16> property;
 	};
 
 	/**
 	 * \brief Event generated when a specific component property is modified.
 	 */
-	template <class ComponentT>
 	struct EModifiedComponentProperty
 	{
 		NodeId node;
-		ComponentT* instance;
+		void* instance;
 	};
 
 	/**

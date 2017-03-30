@@ -8,7 +8,7 @@
 namespace sge
 {
     struct Scene;
-	struct NodeTransformMod;
+	struct NodeLocalTransformMod;
 	struct NodeRootMod;
 
 	struct NodeId
@@ -294,7 +294,7 @@ namespace sge
 
 		static bool sort_by_hierarchy_depth(const Node* lhs, const Node* rhs);
 
-		NodeTransformMod& get_or_create_transform_mod();
+		NodeLocalTransformMod& get_or_create_transform_mod();
 
 		NodeRootMod& get_or_create_root_mod();
 

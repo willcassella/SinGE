@@ -19,7 +19,8 @@ namespace sge
 		SceneData()
 			: new_node_channel(sizeof(ENewNode), 32),
 			destroyed_node_channel(sizeof(EDestroyedNode), 32),
-			node_transform_changed_channel(sizeof(ENodeTransformChanged), 32),
+			node_local_transform_changed_channel(sizeof(ENodeTransformChanged), 32),
+			node_world_transform_changed_channel(sizeof(ENodeTransformChanged), 32),
 			node_root_changed_channel(sizeof(ENodeRootChangd), 32)
 		{
 		}
@@ -43,7 +44,7 @@ namespace sge
 
         /* Scene modification data */
         std::vector<NodeRootMod> system_node_root_changes; // All nodes that had their roots modified during this system frame
-        std::vector<NodeTransformMod> system_node_transform_changes; // All nodes that had their transform modified during this system frame
+        std::vector<NodeLocalTransformMod> system_node_local_transform_changes; // All nodes that had their transform modified during this system frame
         std::vector<Node*> system_new_nodes; // All nodes that were created during this system frame
 		std::vector<Node*> system_destroyed_nodes; // All nodes that were destroyed during this system frame
         std::vector<Node*> update_destroyed_nodes; // All nodes that were destroyed this update frame
@@ -52,7 +53,8 @@ namespace sge
 		/* Node event channels */
 		EventChannel new_node_channel;
 		EventChannel destroyed_node_channel;
-		EventChannel node_transform_changed_channel;
+		EventChannel node_local_transform_changed_channel;
+		EventChannel node_world_transform_changed_channel;
 		EventChannel node_root_changed_channel;
 	};
 }

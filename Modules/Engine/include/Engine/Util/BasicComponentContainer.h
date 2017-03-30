@@ -19,8 +19,8 @@ namespace sge
     public:
 
         BasicComponentContainer()
-            : _new_instance_channel(sizeof(ENewComponent<ComponentT>), 8),
-            _destroyed_instance_channel(sizeof(EDestroyedComponent<ComponentT>), 8)
+            : _new_instance_channel(sizeof(ENewComponent), 8),
+            _destroyed_instance_channel(sizeof(EDestroyedComponent), 8)
             {
             }
 
@@ -59,7 +59,7 @@ namespace sge
         {
             reset();
 
-			std::vector<ENewComponent<ComponentT>> new_instances;
+			std::vector<ENewComponent> new_instances;
 
             reader.enumerate_object_members([this, &reader, &new_instances](const char* id_str)
             {
@@ -92,7 +92,7 @@ namespace sge
 				instance->from_archive(reader);
 
 				// Create the new instance event
-				ENewComponent<ComponentT> event;
+				ENewComponent event;
 				event.node = node;
 				event.instance = instance;
 				new_instances.push_back(event);
@@ -101,7 +101,7 @@ namespace sge
 			// Append all new instance events
 			_new_instance_channel.append(
 				new_instances.data(),
-				sizeof(ENewComponent<ComponentT>),
+				sizeof(ENewComponent),
 				(int32)new_instances.size());
 		}
 
@@ -120,7 +120,7 @@ namespace sge
 
 		void create_instances(const NodeId* nodes, std::size_t num_nodes, void** out_instances) override
 		{
-			std::vector<ENewComponent<ComponentT>> new_instances;
+			std::vector<ENewComponent> new_instances;
 			new_instances.reserve(num_nodes);
 
 			for (std::size_t i = 0; i < num_nodes; ++i)
@@ -147,7 +147,7 @@ namespace sge
 				_instance_nodes.push_back(node);
 
 				// Create the new instance event
-				ENewComponent<ComponentT> event;
+				ENewComponent event;
 				event.node = node;
 				event.instance = instance;
 				new_instances.push_back(event);
@@ -156,13 +156,13 @@ namespace sge
 			// Create the new instance events
 			_new_instance_channel.append(
 				new_instances.data(),
-				sizeof(ENewComponent<ComponentT>),
+				sizeof(ENewComponent),
 				(int32)new_instances.size());
 		}
 
 		void remove_instances(const NodeId* nodes, std::size_t num_nodes) override
 		{
-			std::vector<EDestroyedComponent<ComponentT>> destroyed_events;
+			std::vector<EDestroyedComponent> destroyed_events;
 			destroyed_events.reserve(num_nodes);
 
 			// Figure out which instances of the given nodes actually have these components
@@ -176,7 +176,7 @@ namespace sge
 				}
 
 				// Create the destroyed event
-				EDestroyedComponent<ComponentT> event;
+				EDestroyedComponent event;
 				event.node = node;
 				event.instance = iter->second;
 
@@ -186,7 +186,7 @@ namespace sge
 			// Add all events
 			_destroyed_instance_channel.append(
 				destroyed_events.data(),
-				sizeof(EDestroyedComponent<ComponentT>),
+				sizeof(EDestroyedComponent),
 				(int32)destroyed_events.size());
 		}
 
