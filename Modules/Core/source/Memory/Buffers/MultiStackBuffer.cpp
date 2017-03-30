@@ -54,10 +54,11 @@ namespace sge
         {
             auto* buffer = (byte*)std::malloc(obj_size * STACK_SIZE);
             _stacks.push_back(buffer);
+			_num_elems = num_elems + 1;
             return buffer;
         }
 
-        _num_elems += 1;
+        _num_elems = num_elems + 1;
         return _stacks[stack_index] + (stack_offset * obj_size);
     }
 

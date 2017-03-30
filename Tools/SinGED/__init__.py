@@ -44,7 +44,7 @@ def register():
     bpy.utils.register_class(static_mesh.SGEStaticMeshExporter)
     bpy.types.INFO_MT_file_export.append(static_mesh.export_menu_func)
     bpy.types.Scene.singed = PointerProperty(type=types.SinGEDProps)
-    bpy.types.Object.sge_entity_id = IntProperty(default=0)
+    bpy.types.Object.sge_node_id = IntProperty(default=0)
     bpy.types.Material.sge_path = StringProperty()
 
 # Unregister classes
@@ -55,7 +55,7 @@ def unregister():
     integration.close_active_session()
 
     del bpy.types.Material.sge_path
-    del bpy.types.Object.sge_entity_id
+    del bpy.types.Object.sge_node_id
     del bpy.types.Scene.singed
     bpy.types.INFO_MT_file_export.remove(static_mesh.export_menu_func)
     bpy.utils.unregister_class(static_mesh.SGEStaticMeshExporter)
