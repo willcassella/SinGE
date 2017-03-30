@@ -141,11 +141,11 @@ namespace sge
 
         BulletPhysicsSystem::BulletPhysicsSystem(const Config& config)
             : _initialized_world(false),
-			_node_transform_event_channel(nullptr),
+			_node_world_transform_changed_event_channel(nullptr),
 			_character_controller_jump_event_channel(nullptr),
 			_character_controller_turn_event_channel(nullptr),
 			_character_controller_walk_event_channel(nullptr),
-			_node_transform_changed_sid(0),
+			_node_world_transform_changed_sid(0),
 			_character_controller_jump_sid(0),
 			_character_controller_turn_sid(0),
 			_character_controller_walk_sid(0)
@@ -177,8 +177,8 @@ namespace sge
             {
                 _initialized_world = true;
                 initialize_world(scene);
-				_node_transform_event_channel = scene.get_node_transform_changed_channel();
-				_node_transform_changed_sid = _node_transform_event_channel->subscribe();
+				_node_world_transform_changed_event_channel = scene.get_node_world_transform_changed_channel();
+				_node_world_transform_changed_sid = _node_world_transform_changed_event_channel->subscribe();
 				_character_controller_jump_event_channel = scene.get_event_channel(CCharacterController::type_info, "jump_channel");
 				_character_controller_jump_sid = _character_controller_jump_event_channel->subscribe();
 				_character_controller_turn_event_channel = scene.get_event_channel(CCharacterController::type_info, "turn_channel");
@@ -188,7 +188,7 @@ namespace sge
             }
 
 			// Consume events
-			on_transform_modified(*_node_transform_event_channel, _node_transform_changed_sid, *_data);
+			on_transform_modified(*_node_world_transform_changed_event_channel, _node_world_transform_changed_sid, *_data);
 			on_character_controller_jump(*_character_controller_jump_event_channel, _character_controller_jump_sid, *_data);
 			on_character_controller_turn(*_character_controller_turn_event_channel, _character_controller_turn_sid, *_data);
 			on_character_controller_walk(*_character_controller_walk_event_channel, _character_controller_walk_sid, *_data);
@@ -205,7 +205,7 @@ namespace sge
 
 			// Acknowledge transform events (so we don't get stuck in a feedback loop)
 			frame.yield();
-			_node_transform_event_channel->acknowledge_unconsumed(_node_transform_changed_sid);
+			_node_world_transform_changed_event_channel->acknowledge_unconsumed(_node_world_transform_changed_sid);
 
 			// Clear data
             _data->frame_transformed_nodes.clear();

@@ -47,11 +47,11 @@ namespace sge
 
             bool _initialized_world;
             std::unique_ptr<Data> _data;
-			EventChannel* _node_transform_event_channel;
+			EventChannel* _node_world_transform_changed_event_channel;
 			EventChannel* _character_controller_jump_event_channel;
 			EventChannel* _character_controller_turn_event_channel;
 			EventChannel* _character_controller_walk_event_channel;
-			EventChannel::SubscriberId _node_transform_changed_sid;
+			EventChannel::SubscriberId _node_world_transform_changed_sid;
 			EventChannel::SubscriberId _character_controller_jump_sid;
 			EventChannel::SubscriberId _character_controller_turn_sid;
 			EventChannel::SubscriberId _character_controller_walk_sid;
