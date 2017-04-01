@@ -46,6 +46,7 @@ namespace sge
 
 			Data()
 				: flags(PF_NONE),
+				index(0),
 				type(nullptr)
 			{
 			}
@@ -55,6 +56,7 @@ namespace sge
 		public:
 
 			PropertyFlags_t flags;
+			uint32 index;
 			std::string category;
 			std::string description;
 			const TypeInfo* type;
@@ -87,6 +89,14 @@ namespace sge
 		PropertyFlags_t flags() const
 		{
 			return _data.flags;
+		}
+
+		/**
+		 * \brief Returns the property registration index (used to order properties).
+		 */
+		uint32 index() const
+		{
+			return _data.index;
 		}
 
 		/**

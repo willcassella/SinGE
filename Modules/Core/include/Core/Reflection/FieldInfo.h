@@ -38,6 +38,7 @@ namespace sge
 
 			Data()
 				: flags(FF_NONE),
+				index(0),
 				type(nullptr),
 				offset(0)
 			{
@@ -48,6 +49,7 @@ namespace sge
 		public:
 
 			FieldFlags_t flags;
+			uint32 index;
 			const TypeInfo* type;
 			std::size_t offset;
 		};
@@ -71,6 +73,14 @@ namespace sge
 		FieldFlags_t flags() const
 		{
 			return _data.flags;
+		}
+
+		/**
+		 * \brief Returns the registration index of this field.
+		 */
+		uint32 index() const
+		{
+			return _data.index;
 		}
 
 		/**
