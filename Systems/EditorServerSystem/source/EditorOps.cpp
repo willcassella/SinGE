@@ -43,6 +43,7 @@ namespace sge
 					writer.push_object_member(propName);
 
 					// Write property information
+					writer.object_member("index", propInfo.index());
 					writer.object_member("type", propInfo.type().name());
 					writer.object_member("category", propInfo.category());
 					writer.object_member("description", propInfo.description());
