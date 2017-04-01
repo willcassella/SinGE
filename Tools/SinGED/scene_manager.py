@@ -141,6 +141,14 @@ class ComponentInstance(object):
             return default
         return self.value[prop_name]
 
+    def get_sub_property_immediate(self, prop_path, default=None):
+        if not self.is_loaded:
+            return default
+        value = self.value
+        for prop_name in prop_path:
+            value = value[prop_name]
+        return value
+
     def get_property_async(self, prop_name, callback):
         if not self.is_loaded:
             self.loaded_callbacks.append(lambda instance: callback(instance.value[prop_name]))
@@ -157,6 +165,25 @@ class ComponentInstance(object):
         if changed:
             self.changed_props[prop_name] = None
             self.type.changed_instances.add(self)
+
+    def set_sub_property_immediate(self, prop_path, value):
+        if not self.is_loaded:
+            return False
+            return
+
+        outer_prop_name = prop_path[0]
+        inner_prop_name = prop_path[-1]
+
+        old_value = self.value
+        for prop_name in prop_path[:-1]:
+            old_value = old_value[prop_name]
+
+        modified = recursive_update(old_value, {inner_prop_name: value})
+
+        if modified:
+            self.changed_props[outer_prop_name] = None
+            self.type.changed_instances.add(self)
+        return True
 
 
 class SceneManager(object):

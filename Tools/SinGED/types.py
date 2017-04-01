@@ -22,40 +22,38 @@ def get_unused_component_types(scene=None, context=None):
     return result
 
 
-def property_getter(self, name, default):
-    return default
+def construct_property_display_name(prop_name):
+    return prop_name.replace("_", " ")
 
-    # Get the component type and property path
-    property_path = self.sge_property_path.split('.')
-    component_type = property_path[0]
-    property_path = property_path[1:]
 
-    # Get the active object node id
+def construct_property_path(property_path_str, prop_name):
+    if len(property_path_str) == 0:
+        return [prop_name]
+    return property_path_str.split('.') + [prop_name]
+
+
+def property_getter(component_type_name, property_path, default):
+    # Get the active node and component instance
+    sge_scene = SinGEDProps.sge_scene
     node_id = bpy.context.active_object.sge_node_id
+    node = sge_scene.get_node(node_id)
+    component_type = sge_scene.get_component_type(component_type_name)
+    component_instance = component_type.get_instance(node)
 
     # Get the property value
-    value = SinGEDProps.sge_scene.get_property_value(node_id, component_type, property_path, name)
-
-    # Return the default if there is no value
-    if value is None:
-        return default
-    return value
+    return component_instance.get_sub_property_immediate(property_path, default)
 
 
-def property_setter(self, name, value):
-    # Get the component type and property path
-    property_path = self.sge_property_path.split('.')
-    component_type = property_path[0]
-    property_path = property_path[1: ]
-
-    # Get the active object node id
+def property_setter(component_type_name, property_path, value):
+    # Get the active node and component instance
+    sge_scene = SinGEDProps.sge_scene
     node_id = bpy.context.active_object.sge_node_id
+    node = sge_scene.get_node(node_id)
+    component_type = sge_scene.get_component_type(component_type_name)
+    component_instance = component_type.get_instance(node)
 
     # Set the property value
-    SinGEDProps.sge_scene.set_property_value(node_id, component_type, property_path, name, value)
-
-    # Add a query to retrieve the component value
-    SinGEDProps.sge_scene.add_get_component_query(node_id, component_type)
+    component_instance.set_sub_property_immediate(property_path, value)
 
 
 class SGETypes(PropertyGroup):
@@ -87,10 +85,10 @@ class SGETypeBase(PropertyGroup):
     def sge_draw(cls, layout, parent_obj, parent_attr_name):
         # Draw each property recursively
         self = getattr(parent_obj, parent_attr_name)
-        for prop_name, (attr_name, prop_type) in cls.sge_property_dict.items():
+        for attr_name, prop_name, prop_type in cls.sge_property_list:
             # If the property is a primitive type, don't give it a label
             if not issubclass(prop_type, SGEPrimitiveBase):
-                layout.label(prop_name)
+                layout.label(construct_property_display_name(prop_name))
 
             prop_type.sge_draw(layout.column(), self, attr_name)
 
@@ -110,64 +108,65 @@ class SGEBool(SGEPrimitiveBase):
     @staticmethod
     def sge_create_property(name):
         return BoolProperty(
-            name=name,
-            get=lambda self: property_getter(self, name, False),
-            set=lambda self, value: property_setter(self, name, value))
+            name=construct_property_display_name(name),
+            get=lambda outer: property_getter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), False),
+            set=lambda outer, value: property_setter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), value))
 
 
 class SGEInt(SGEPrimitiveBase):
     @staticmethod
     def sge_create_property(name):
         return IntProperty(
-            name=name,
-            get=lambda self: property_getter(self, name, 0),
-            set=lambda self, value: property_setter(self, name, value))
+            name=construct_property_display_name(name),
+            get=lambda outer: property_getter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), 0),
+            set=lambda outer, value: property_setter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), value))
 
 
 class SGEUInt(SGEPrimitiveBase):
     @staticmethod
     def sge_create_property(name):
         return IntProperty(
-            name=name,
+            name=construct_property_display_name(name),
             subtype='UNSIGNED',
-            get=lambda self: property_getter(self, name, 0),
-            set=lambda self, value: property_setter(self, name, value))
+            get=lambda outer: property_getter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), 0),
+            set=lambda outer, value: property_setter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), value))
 
 
 class SGEFloat(SGEPrimitiveBase):
     @staticmethod
     def sge_create_property(name):
         return FloatProperty(
-            name=name,
-            get=lambda self: property_getter(self, name, 0.0),
-            set=lambda self, value: property_setter(self, name, value))
+            name=construct_property_display_name(name),
+            get=lambda outer: property_getter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), 0.0),
+            set=lambda outer, value: property_setter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), value))
 
 
 class SGEString(SGEPrimitiveBase):
     @staticmethod
     def sge_create_property(name):
         return StringProperty(
-            name=name,
-            get=lambda self: property_getter(self, name, ""),
-            set=lambda self, value: property_setter(self, name, value))
+            name=construct_property_display_name(name),
+            get=lambda outer: property_getter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), ""),
+            set=lambda outer, value: property_setter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), value))
 
 
 class SGEColorRGBA8(SGEPrimitiveBase):
     @staticmethod
-    def sge_get(self, name):
-        value = property_getter(self, name, "ffffffff")
+    def sge_get(outer, prop_name):
+        value = property_getter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, prop_name), "ffffffff")
         red = int(value[: 2], 16)
         green = int(value[2: 4], 16)
         blue = int(value[4: 6], 16)
         alpha = int(value[6: 8], 16)
         return [float(red)/255, float(green)/255, float(blue)/255, float(alpha)/255]
 
-    def sge_set(self, name, value):
+    @staticmethod
+    def sge_set(outer, prop_name, value):
         red = int(value[0] * 255)
         green = int(value[1] * 255)
         blue = int(value[2] * 255)
         alpha = int(value[3] * 255)
-        property_setter(self, name, "%0.2x%0.2x%0.2x%0.2x" % (red, green, blue, alpha))
+        property_setter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, prop_name), "%0.2x%0.2x%0.2x%0.2x" % (red, green, blue, alpha))
 
     @staticmethod
     def sge_create_property(name):
@@ -177,45 +176,49 @@ class SGEColorRGBA8(SGEPrimitiveBase):
             size=4,
             min=0.0,
             max=1.0,
-            get=lambda self: SGEColorRGBA8.sge_get(self, name),
-            set=lambda self, value: SGEColorRGBA8.sge_set(self, name, value))
+            get=lambda outer: SGEColorRGBA8.sge_get(outer, name),
+            set=lambda outer, value: SGEColorRGBA8.sge_set(outer, name, value))
 
 
 class SGEVec3(SGEPrimitiveBase):
     @staticmethod
-    def sge_get(self, name):
-        value = property_getter(self, name, None)
+    def sge_get(outer, prop_name):
+        value = property_getter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, prop_name), None)
         if value is None:
             return [0.0, 0.0, 0.0]
         else:
             return [value['x'], value['y'], value['z']]
 
     @staticmethod
-    def sge_set(self, name, value):
-        property_setter(self, name, {'x': value[0], 'y': value[1], 'z': value[2]})
+    def sge_set(outer, prop_name, value):
+        property_setter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, prop_name), {'x': value[0], 'y': value[1], 'z': value[2]})
 
     @staticmethod
     def sge_create_property(name):
         return FloatVectorProperty(
-            name=name,
+            name=construct_property_display_name(name),
             subtype='XYZ',
             size=3,
-            get=lambda self: SGEVec3.sge_get(self, name),
+            get=lambda outer: SGEVec3.sge_get(outer, name),
             set=lambda self, value: SGEVec3.sge_set(self, name, value))
 
 
 def create_blender_type(typedb, type_name, type_info):
     # Create dictionaries for the class and the properties
-    property_dict = {}
+    property_list = list()
     class_dict = {
         'sge_type_name': type_name,
-        'sge_property_dict': property_dict,
+        'sge_property_list': property_list,
+        'sge_component_type_name': StringProperty(),
         'sge_property_path': StringProperty(),
     }
 
     # Define each property
     if 'properties' in type_info:
-        for prop_name, prop_info in type_info['properties'].items():
+        properties = list(type_info['properties'].items())
+        properties.sort(key=lambda prop: prop[1]['index'])
+
+        for prop_name, prop_info in properties:
             # Get the property's type
             prop_type = typedb.get_type(prop_info['type'])
 
@@ -225,8 +228,8 @@ def create_blender_type(typedb, type_name, type_info):
             # Create the class dictionary entry
             class_dict[attr_name] = prop_type.sge_create_property(prop_name)
 
-            # Create the property dictionary entry
-            property_dict[prop_name] = (attr_name, prop_type)
+            # Create the property list entry
+            property_list.append((attr_name, prop_name, prop_type))
 
     # Generate a sanitary name for the type
     class_name = type_name.replace("::", "_")

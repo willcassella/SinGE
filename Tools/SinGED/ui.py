@@ -113,17 +113,18 @@ class SinGEDComponentPanelBase(Panel):
         self.sge_blender_type.sge_draw(layout, bpy.context.scene.singed.sge_types, self.sge_blender_type.__name__)
 
 
-def initialize_blender_component_properties_path(obj, path):
-    # Initialize the path to this object
-    obj.sge_property_path = path
+def initialize_blender_component_properties_path(obj, component_type_name, path_str):
+    # Initialize the component type name and path to this object
+    obj.sge_component_type_name = component_type_name
+    obj.sge_property_path = path_str
 
     # For each property on the object
-    for prop_name, (attr_name, prop_type) in obj.sge_property_dict.items():
+    for attr_name, prop_name, prop_type in obj.sge_property_list:
         # If the property is an object type
         if issubclass(prop_type, types.SGETypeBase):
             # Initialize it
             prop = getattr(obj, attr_name)
-            initialize_blender_component_properties_path(prop, "{}.{}".format(path, prop_name))
+            initialize_blender_component_properties_path(prop, component_type_name, "{}.{}".format(path_str, prop_name))
 
 
 def create_blender_component(typedb, type_name, blender_type):
@@ -134,7 +135,7 @@ def create_blender_component(typedb, type_name, blender_type):
     component = getattr(bpy.context.scene.singed.sge_types, blender_type.__name__)
 
     # Initialize the property path
-    initialize_blender_component_properties_path(component, type_name)
+    initialize_blender_component_properties_path(component, type_name, "")
 
     # Create a dictionary for the panel type
     panel_class_dict = {
