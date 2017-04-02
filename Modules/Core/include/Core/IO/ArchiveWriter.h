@@ -189,6 +189,11 @@ namespace sge
 		}
 
 		/**
+		 * \brief Coerces this node's type to an Object, even if no members are added.
+		 */
+		virtual void as_object() = 0;
+
+		/**
 		 * \brief Sets this archive node as an object, and calls the given function
 		 * on the writer for the node set as a member of the object.
 		 * \param name The name of the member.

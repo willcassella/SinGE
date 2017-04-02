@@ -158,6 +158,14 @@ namespace sge
 			impl_typed_array(array, size);
 		}
 
+		void as_object() override
+		{
+			if (!_head->IsObject())
+			{
+				_head->SetObject();
+			}
+		}
+
 		void push_object_member(const char* name) override
 		{
 			// Set this node as an object, if it isn't already

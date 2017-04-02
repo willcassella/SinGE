@@ -232,20 +232,25 @@ namespace sge
             buffer->push_back(BAN_NULL);
         }
 
+		void as_object() override
+		{
+			assert(current_node.node_type == BAN_NULL || current_node.node_type == BAN_OBJECT);
+
+			if (current_node.node_type == BAN_NULL)
+			{
+				(*buffer)[current_node.offset] = BAN_OBJECT;
+				current_node.node_type = BAN_OBJECT;
+				buffer_append(BinaryArchiveSize_t{ 0 });
+				buffer_append(BinaryArchiveSize_t{ 0 });
+			}
+		}
+
         void push_object_member(const char* name) override
         {
-            assert(current_node.node_type == BAN_NULL || current_node.node_type == BAN_OBJECT /*You may not change a node's type.*/);
+			// Coerce this node to an object
+			as_object();
 
-            // Set the node as an object if it isn't already
-            if (current_node.node_type == BAN_NULL)
-            {
-                (*buffer)[current_node.offset] = BAN_OBJECT;
-                current_node.node_type = BAN_OBJECT;
-                buffer_append(BinaryArchiveSize_t{ 0 });
-                buffer_append(BinaryArchiveSize_t{ 0 });
-            }
-
-            // Increment the member count
+        	// Increment the member count
             *reinterpret_cast<BinaryArchiveSize_t*>(buffer->data() + current_node.offset + 1) += 1;
 
             // Push the current node onto the stack as a parent
