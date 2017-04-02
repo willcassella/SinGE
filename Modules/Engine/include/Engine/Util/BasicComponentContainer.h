@@ -21,11 +21,11 @@ namespace sge
         BasicComponentContainer()
             : _new_instance_channel(sizeof(ENewComponent), 8),
             _destroyed_instance_channel(sizeof(EDestroyedComponent), 8)
-            {
-            }
+        {
+        }
 
-            ///////////////////
-            ///   Methods   ///
+        ///////////////////
+        ///   Methods   ///
     public:
 
         const TypeInfo& get_component_type() const override
@@ -112,13 +112,33 @@ namespace sge
 
 		void on_end_update_frame() override
 		{
-			// TODO: Destroy actual instances
+			// Destroy instances
+			for (const auto destroyed_instance : _destroyed_instances)
+			{
+				const auto map_iter = _instance_map.find(destroyed_instance);
+				const auto inst_iter = std::find(_instance_nodes.begin(), _instance_nodes.end(), destroyed_instance);
+
+				// Call the destructor
+				map_iter->second->~ComponentT();
+
+				// Allow the system to reuse this memory location
+				_free_spots.push_back(map_iter->second);
+
+				// Remove it from the map
+				_instance_map.erase(map_iter);
+
+				// Remove it from the set of instance nodes
+				_instance_nodes.erase(inst_iter);
+			}
+			_destroyed_instances.clear();
+
+			// Clear events
 			_shared_data.on_end_update_frame();
 			_new_instance_channel.clear();
 			_destroyed_instance_channel.clear();
 		}
 
-		void create_instances(const NodeId* nodes, std::size_t num_nodes, void** out_instances) override
+		void create_instances(const Node* const* nodes, std::size_t num_nodes, void** out_instances) override
 		{
 			std::vector<ENewComponent> new_instances;
 			new_instances.reserve(num_nodes);
@@ -126,31 +146,59 @@ namespace sge
 			for (std::size_t i = 0; i < num_nodes; ++i)
 			{
 				const auto node = nodes[i];
+				if (!node)
+				{
+					out_instances[i] = nullptr;
+					continue;
+				}
+
+				const auto node_id = node->get_id();
 
 				// Make sure the instance doesn't already exist
-				const auto iter = _instance_map.find(node);
+				const auto iter = _instance_map.find(node_id);
 				if (iter != _instance_map.end())
 				{
 					out_instances[i] = nullptr;
 					continue;
 				}
 
+				// Allocate memory
+				void* buff;
+				if (_free_spots.empty())
+				{
+					buff = _instance_buffer.alloc(sizeof(ComponentT));
+				}
+				else
+				{
+					buff = _free_spots.back();
+					_free_spots.erase(_free_spots.end() - 1);
+				}
+
 				// Construct the instance
-				void* const buff = _instance_buffer.alloc(sizeof(ComponentT));
-				auto* const instance = new (buff) ComponentT(node, _shared_data);
+				auto* const instance = new (buff) ComponentT(node_id, _shared_data);
 				out_instances[i] = instance;
 
 				// Add it to the map
-				_instance_map[node] = instance;
+				_instance_map[node_id] = instance;
 
 				// Add it to the instance node list
-				_instance_nodes.push_back(node);
+				_instance_nodes.push_back(node_id);
 
 				// Create the new instance event
 				ENewComponent event;
-				event.node = node;
+				event.node = node_id;
 				event.instance = instance;
 				new_instances.push_back(event);
+
+				// If the node is destroyed, add the new instance to the destroyed list
+				if (node->get_mod_state() & Node::DESTROYED_APPLIED)
+				{
+					EDestroyedComponent destroyed_event;
+					destroyed_event.node = node_id;
+					destroyed_event.instance = instance;
+					_destroyed_instance_channel.append(&destroyed_event, 1);
+					_destroyed_instances.insert(node_id);
+				}
 			}
 
 			// Create the new instance events
@@ -169,17 +217,22 @@ namespace sge
 			for (std::size_t i = 0; i < num_nodes; ++i)
 			{
 				const auto node = nodes[i];
-				const auto iter = _instance_map.find(node);
-				if (iter == _instance_map.end())
+
+				// See if this component actually exists, or if it's already been deleted
+				const auto inst_iter = _instance_map.find(node);
+				const auto dest_iter = _destroyed_instances.find(node);
+
+				if (inst_iter == _instance_map.end() || dest_iter != _destroyed_instances.end())
 				{
 					continue;
 				}
 
+				_destroyed_instances.insert(node);
+
 				// Create the destroyed event
 				EDestroyedComponent event;
 				event.node = node;
-				event.instance = iter->second;
-
+				event.instance = inst_iter->second;
 				destroyed_events.push_back(event);
 			}
 
@@ -190,7 +243,7 @@ namespace sge
 				(int32)destroyed_events.size());
 		}
 
-		void get_instances(const NodeId* nodes, std::size_t num_instances, void** out_instances)
+		void get_instances(const NodeId* nodes, std::size_t num_instances, void** out_instances) override
 		{
 			for (std::size_t i = 0; i < num_instances; ++i)
 			{
@@ -254,8 +307,10 @@ namespace sge
 		SharedDataT _shared_data;
         EventChannel _new_instance_channel;
         EventChannel _destroyed_instance_channel;
+		std::set<NodeId> _destroyed_instances;
         std::map<NodeId, ComponentT*> _instance_map;
 		std::vector<NodeId> _instance_nodes;
 		MultiStackBuffer _instance_buffer;
+		std::vector<void*> _free_spots;
     };
 }

@@ -39,6 +39,7 @@ namespace sge
         /* Node data */
 		NodeId next_node_id = NodeId{ 1 };
         MultiStackBuffer node_buffer;
+		std::vector<void*> free_buffs;
         std::map<NodeId, Node*> nodes;
         std::vector<NodeId> root_nodes;
 
@@ -47,8 +48,8 @@ namespace sge
         std::vector<NodeLocalTransformMod> system_node_local_transform_changes; // All nodes that had their transform modified during this system frame
         std::vector<Node*> system_new_nodes; // All nodes that were created during this system frame
 		std::vector<Node*> system_destroyed_nodes; // All nodes that were destroyed during this system frame
-        std::vector<Node*> update_destroyed_nodes; // All nodes that were destroyed this update frame
 		std::vector<Node*> update_modified_nodes; // All nodes that had their mod_state modified this update frame
+        std::vector<NodeId> update_destroyed_nodes; // All nodes that were destroyed this update frame
 
 		/* Node event channels */
 		EventChannel new_node_channel;

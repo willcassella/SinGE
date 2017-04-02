@@ -41,8 +41,7 @@ namespace sge
 
 		uint64 to_u64() const
 		{
-			const uint64 result = 0;
-			return result + index;
+			return index;
 		}
 
 		void from_u64(uint64 value)
@@ -73,7 +72,7 @@ namespace sge
 			from_u64(value);
 		}
 
-		bool is_null()
+		bool is_null() const
 		{
 			return index == 0;
 		}

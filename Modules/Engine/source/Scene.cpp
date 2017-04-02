@@ -41,10 +41,19 @@ namespace sge
 			_scene_data.next_node_id.index += 1;
 
 			// Allocate space for it
-			auto* buff = _scene_data.node_buffer.alloc(sizeof(Node));
-			auto* node = new (buff) Node();
+			void* buff;
+			if (_scene_data.free_buffs.empty())
+			{
+				buff = _scene_data.node_buffer.alloc(sizeof(Node));
+			}
+			else
+			{
+				buff = _scene_data.free_buffs.back();
+				_scene_data.free_buffs.erase(_scene_data.free_buffs.end() - 1);
+			}
 
 			// Initialize it
+			auto* node = new (buff) Node();
 			node->_id = id;
 			node->_scene = this;
 			node->_mod_state = Node::NEW;
@@ -183,7 +192,7 @@ namespace sge
 
 	void Scene::to_archive(ArchiveWriter& writer) const
 	{
-		// Serialize next entity id
+		// Serialize next node id (so later nodes don't overlap)
 		writer.object_member("next_node_id", _scene_data.next_node_id);
 
 		// Serialize nodes
@@ -194,7 +203,7 @@ namespace sge
 			node.first.to_string(id_str, 20);
 			writer.push_object_member(id_str);
 
-			// Write the entity name and root id
+			// Write the node name and root id
 			writer.object_member("name", node.second->get_name());
 			writer.object_member("root", node.second->get_root());
 
@@ -399,6 +408,22 @@ namespace sge
 		}
 		_scene_data.update_modified_nodes.clear();
 
+		// Destroy desroyed nodes
+		for (const auto destroyed_node : _scene_data.update_destroyed_nodes)
+		{
+			const auto iter = _scene_data.nodes.find(destroyed_node);
+
+			// Call the destructor
+			iter->second->~Node();
+
+			// Add it to the free buffs table
+			_scene_data.free_buffs.push_back(iter->second);
+
+			// Remove it from the table
+			_scene_data.nodes.erase(iter);
+		}
+		_scene_data.update_destroyed_nodes.clear();
+
 		// Clear event channels
 		_scene_data.new_node_channel.clear();
 		_scene_data.destroyed_node_channel.clear();
@@ -467,12 +492,12 @@ namespace sge
 
 	void Scene::on_end_system_frame()
 	{
-		// Array of nodes that need to have their hierarchy traversed
+		// Array of nodes that need to have their hierarchy traversed (initially includes destroyed nodes, and root change nodes)
 		std::vector<Node*> outdated_hierarchy_elements;
 		outdated_hierarchy_elements.reserve(_scene_data.system_node_root_changes.size() + _scene_data.system_destroyed_nodes.size());
 		outdated_hierarchy_elements.assign(_scene_data.system_destroyed_nodes.begin(), _scene_data.system_destroyed_nodes.end());
 
-		// Array of nodes that need to have their matrices updated
+		// Array of nodes that need to have their matrices updated (initially includes just transformed nodes)
 		std::vector<Node*> outdated_matrices;
 		outdated_matrices.reserve(_scene_data.system_node_local_transform_changes.size());
 
@@ -526,7 +551,7 @@ namespace sge
 			outdated_matrices.push_back(node_trans.node);
 		}
 
-		// Update the hierarchy (adds to deleted list, and updates hierarchy depth)
+		// Update the hierarchy (adds to deleted list, and updates hierarchy depths)
 		update_hierarchy(outdated_hierarchy_elements.data(), outdated_hierarchy_elements.size());
 
 		// Sort outdated matrices by hierarchy depth
@@ -537,6 +562,7 @@ namespace sge
 
 		// Create a single temporary buffer for all event types
 		const auto max_event_size = std::max({
+			sizeof(NodeId),
 			sizeof(ENewNode),
 			sizeof(EDestroyedNode),
 			sizeof(ENodeRootChangd),
@@ -565,6 +591,7 @@ namespace sge
 		for (std::size_t i = 0; i < num_destroyed_nodes; ++i)
 		{
 			((EDestroyedNode*)event_buff)[i].node = destroyed_nodes[i];
+			_scene_data.update_destroyed_nodes.push_back(destroyed_nodes[i]->get_id());
 		}
 		_scene_data.destroyed_node_channel.append(event_buff, sizeof(EDestroyedNode), (int32)num_destroyed_nodes);
 
@@ -585,8 +612,18 @@ namespace sge
 		}
 		_scene_data.node_local_transform_changed_channel.append(event_buff, sizeof(ENodeTransformChanged), (int32)num_local_transform_changes);
 
-		// Add nodes destroyed this system frame to nodes destroyed this update frame
-		_scene_data.update_destroyed_nodes.insert(_scene_data.update_destroyed_nodes.end(), destroyed_nodes, destroyed_nodes + num_destroyed_nodes);
+		// Create array of destroyed NodeIds to notify component containers
+		for (std::size_t i = 0; i < num_destroyed_nodes; ++i)
+		{
+			((NodeId*)event_buff)[i] = destroyed_nodes[i]->get_id();
+		}
+
+		// Notify each component container, and run the end-system-frame handler
+		for (auto& component_type : _scene_data.components)
+		{
+			component_type.second->remove_instances((const NodeId*)event_buff, num_destroyed_nodes);
+			component_type.second->on_end_system_frame();
+		}
 
 		// Clean up
 		_scene_data.system_node_root_changes.clear();

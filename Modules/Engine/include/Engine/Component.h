@@ -9,6 +9,7 @@
 namespace sge
 {
 	struct Scene;
+	struct SceneData;
     struct SystemFrame;
 
     class SGE_ENGINE_API ComponentContainer
@@ -35,7 +36,7 @@ namespace sge
 
         virtual void on_end_update_frame() = 0;
 
-        virtual void create_instances(const NodeId* nodes, std::size_t num_instances, void** out_instances) = 0;
+        virtual void create_instances(const Node* const* nodes, std::size_t num_instances, void** out_instances) = 0;
 
         virtual void remove_instances(const NodeId* nodes, std::size_t num_instances) = 0;
 
