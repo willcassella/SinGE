@@ -51,9 +51,9 @@ namespace sge
 		///   Fields   ///
 	private:
 
-		Angle _h_fov;
-		float _z_min = 0.f;
-		float _z_max = 0.f;
+		Angle _h_fov = degrees(90.f);
+		float _z_min = 0.1f;
+		float _z_max = 100.f;
 		NodeId _node;
 		SharedData* _shared_data = nullptr;
 	};

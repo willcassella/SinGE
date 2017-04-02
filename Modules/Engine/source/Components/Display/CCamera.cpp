@@ -42,7 +42,12 @@ namespace sge
 		reader.object_member("z_max", _z_max);
 	}
 
-    float CPerspectiveCamera::h_fov() const
+	NodeId CPerspectiveCamera::node() const
+	{
+		return _node;
+	}
+
+	float CPerspectiveCamera::h_fov() const
 	{
 		return _h_fov.degrees();
 	}
@@ -92,6 +97,6 @@ namespace sge
 
 	void CPerspectiveCamera::set_modified(const char* prop_name)
 	{
-
+		_shared_data->set_modified(_node, this, prop_name);
 	}
 }
