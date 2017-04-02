@@ -17,6 +17,12 @@ namespace sge
         }
     }
 
+	void MultiStackBuffer::clear()
+	{
+		_num_elems = 0;
+		_stacks.clear();
+	}
+
     std::size_t MultiStackBuffer::num_elems()
     {
         return _num_elems;
@@ -62,9 +68,20 @@ namespace sge
         return _stacks[stack_index] + (stack_offset * obj_size);
     }
 
-	void MultiStackBuffer::clear()
+	void MultiStackBuffer::compact()
 	{
-		_num_elems = 0;
-		_stacks.clear();
+		const auto num_elems = _num_elems;
+		const auto last_stack = num_elems / STACK_SIZE;
+		const auto num_stacks = _stacks.size();
+		auto* const stacks = _stacks.data();
+
+		// Free memory associated with the stacks
+		for (auto i = last_stack; i < num_stacks; ++i)
+		{
+			std::free(stacks[i]);
+		}
+
+		// Remove them from the array
+		_stacks.erase(_stacks.begin() + last_stack, _stacks.end());
 	}
 }

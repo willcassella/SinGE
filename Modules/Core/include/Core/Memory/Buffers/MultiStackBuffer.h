@@ -39,6 +39,8 @@ namespace sge
 
         void* alloc(std::size_t obj_size);
 
+		void compact();
+
         //////////////////
         ///   Fields   ///
     private:
