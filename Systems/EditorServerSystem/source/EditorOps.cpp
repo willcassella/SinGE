@@ -157,15 +157,16 @@ namespace sge
 
 					// Search for the type
 					const auto* type = type_db.find_type(typeName.c_str());
-
-					// If the type was found
-					if (type)
+					if (!type)
 					{
-						std::cout << "Sending type info for " << typeName << std::endl;
-						writer.push_object_member(typeName.c_str());
-						read_type_info(*type, writer);
-						writer.pop();
+						std::cout << "Error: Type '" << typeName << "' was not found in type database." << std::endl;
+						return;
 					}
+
+					std::cout << "Sending type info for " << typeName << std::endl;
+					writer.push_object_member(typeName.c_str());
+					read_type_info(*type, writer);
+					writer.pop();
 				});
 			}
 
@@ -360,9 +361,12 @@ namespace sge
 						NodeId node_id;
 						node_id.from_archive(reader);
 
+						Node* node;
+						scene.get_nodes(&node_id, 1, &node);
+
 						// Create the component
 						void* instance = nullptr;
-						container->create_instances(&node_id, 1, &instance);
+						container->create_instances(&node, 1, &instance);
 						std::cout << "Created '" << type->name() << "' component on node " << node_id.to_u64() << std::endl;
 
 						// Output values
@@ -403,7 +407,7 @@ namespace sge
 					// Enumerate instances to destroy
 					reader.enumerate_array_elements([component_type_name, container, &scene, &reader, &writer](std::size_t /*i*/)
 					{
-						// Get the node
+						// Get the node id
 						NodeId node;
 						node.from_archive(reader);
 
@@ -424,14 +428,18 @@ namespace sge
 				const auto& scene_data = scene.get_raw_scene_data();
 				std::cout << "Sending scene information" << std::endl;
 
+				writer.as_object();
+
 				// Iterate over nodes
 				writer.push_object_member("nodes");
+				writer.as_object();
 				for (auto node : scene_data.nodes)
 				{
 					char node_id_str[20];
 					node.first.to_string(node_id_str, 20);
 
 					writer.push_object_member(node_id_str);
+					writer.as_object();
 					writer.object_member("name", node.second->get_name());
 					writer.object_member("root", node.second->get_root());
 					writer.object_member("lpos", node.second->get_local_position());
@@ -443,6 +451,7 @@ namespace sge
 
 				// Iterate over components
 				writer.push_object_member("components");
+				writer.as_object();
 				for (const auto& component_type : scene_data.components)
 				{
 					NodeId instance_nodes[8];
@@ -621,7 +630,7 @@ namespace sge
                 color::RGBAF32* irradiance_pixels = nullptr;
             };
 
-            void generate_lightmaps(Scene& scene)
+            void generate_lightmaps(Scene& scene, ArchiveReader& reader)
 			{
                 std::map<std::string, std::unique_ptr<StaticMesh>> meshes;
                 std::map<std::string, std::unique_ptr<Material>> materials;
@@ -771,6 +780,8 @@ namespace sge
                 sge::LightmapLight light;
                 light.direction = sge::Vec3{ 0, -0.5f, -0.5f }.normalized();
                 light.intensity = sge::color::RGBF32{ 0.5f, 0.5f, 0.5f };
+				reader.object_member("light_direction", light.direction);
+				reader.object_member("light_intensity", light.intensity);
 
                 // Compute direct lighting for all objects
                 std::cout << "Computing direction lighting..." << std::endl;
@@ -811,6 +822,8 @@ namespace sge
                 std::cout << " milliseconds." << std::endl;
 
                 // Compute indirect lighting for all objects
+				int32 num_sample_sets = 16;
+				reader.object_member("num_indirect_sample_sets", num_sample_sets);
                 std::cout << "Computing indirect lighting..." << std::endl;
                 const auto gen_indirect_start = std::chrono::high_resolution_clock::now();
                 const int num_threads = std::thread::hardware_concurrency();
@@ -827,7 +840,7 @@ namespace sge
                         {
                             jobs.push_back(std::async(std::launch::async, sge::compute_indirect_irradiance,
                                 lm_scene,
-                                16,
+                                num_sample_sets,
                                 lightmap.width,
                                 job_split,
                                 lightmap.lightmap_texels + job_i * job_split * lightmap.width,
@@ -838,7 +851,7 @@ namespace sge
                         // Compute final slice
                         sge::compute_indirect_irradiance(
                             lm_scene,
-                            16,
+                            num_sample_sets,
                             lightmap.width,
                             lightmap.height - (num_threads - 1) * job_split,
                             lightmap.lightmap_texels + (num_threads - 1) * job_split * lightmap.width,
@@ -868,7 +881,9 @@ namespace sge
                 const auto post_start = std::chrono::high_resolution_clock::now();
                 for (auto& lightmap : lightmap_object_lightmaps)
                 {
-                    sge::postprocess_irradiance(lightmap.width, lightmap.height, 4, lightmap.lightmap_pixels);
+					int32 num_post_steps = 4;
+					reader.object_member("post_process_steps", num_post_steps);
+                    sge::postprocess_irradiance(lightmap.width, lightmap.height, num_post_steps, lightmap.lightmap_pixels);
                     Image::save_rgbf(lightmap.lightmap_pixels->vec(), lightmap.width, lightmap.height, 4, lightmap.path.c_str());
 
                     // Free data

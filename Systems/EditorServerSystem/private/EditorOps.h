@@ -39,7 +39,7 @@ namespace sge
 
 			void save_scene_query(const Scene& scene, ArchiveReader& reader);
 
-            void generate_lightmaps(Scene& scene);
+            void generate_lightmaps(Scene& scene, ArchiveReader& reader);
 		}
 	}
 }

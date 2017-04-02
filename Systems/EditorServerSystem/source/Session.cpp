@@ -1,5 +1,6 @@
 // Session.cpp
 
+#include <chrono>
 #include <iostream>
 #include <Resource/Archives/JsonArchive.h>
 #include <Engine/Scene.h>
@@ -274,9 +275,15 @@ namespace sge
 			if (query_reader.pull_object_member("gen_lightmaps"))
 			{
 				std::cout << "Generating lightmaps..." << std::endl;
-				ops::generate_lightmaps(get_scene());
-				std::cout << "Lightmaps generated." << std::endl;
+
+				// Generate lightmaps, with timer
+				const auto start = std::chrono::high_resolution_clock::now();
+				ops::generate_lightmaps(get_scene(), query_reader);
+				const auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start);
+				sender_response_writer.object_member("gen_lightmaps", duration.count());
 				query_reader.pop();
+				std::cout << "Lightmaps generated." << std::endl;
+				wrote_output = true;
 			}
 
 			// Handle a save query
