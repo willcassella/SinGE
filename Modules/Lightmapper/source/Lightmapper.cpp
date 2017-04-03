@@ -6,11 +6,14 @@
 #include <embree2/rtcore_ray.h>
 #include <glm/glm.hpp>
 #include <Core/Math/Mat4.h>
+#include <Core/Memory/Functions.h>
 #include <Resource/Resources/Image.h>
 #include "../include/Lightmapper/Lightmapper.h"
 
 namespace sge
 {
+	static constexpr int RAY_SET_SIZE = 8;
+
     static Vec3 get_barycentric(float u, float v)
     {
         return Vec3{ u, v, 1.f - u - v };
@@ -51,6 +54,7 @@ namespace sge
         RTCScene rtc_scene;
         const LightmapOccluder* occluders;
         std::size_t num_occluders;
+		void** norm_buffs;
     };
 
     LightmapScene* new_lightmap_scene(
@@ -60,9 +64,10 @@ namespace sge
         // Create the scene
         auto* scene = new LightmapScene{};
         scene->rtc_device = rtcNewDevice();
-        scene->rtc_scene = rtcDeviceNewScene(scene->rtc_device, RTC_SCENE_STATIC, RTC_INTERSECT1 | RTC_INTERSECT8);
+        scene->rtc_scene = rtcDeviceNewScene(scene->rtc_device, RTC_SCENE_STATIC, RTC_INTERPOLATE | RTC_INTERSECT1 | RTC_INTERSECT8);
         scene->occluders = occluders;
         scene->num_occluders = num_occluders;
+		scene->norm_buffs = (void**)std::calloc(num_occluders, sizeof(void*));
 
         // Fill it
         auto* const rtc_scene = scene->rtc_scene;
@@ -70,6 +75,15 @@ namespace sge
         {
             const auto* const occluder_mesh = occluders[occluder_i].mesh;
             const auto occluder_transform = occluders[occluder_i].world_transform;
+			Mat4 occluder_inverse_transpose;
+
+			// Calculate the inverse transpose of the transformation matrix
+            {
+				glm::mat4 inv_trans;
+				std::memcpy(&inv_trans, &occluder_transform, sizeof(Mat4));
+				inv_trans = glm::transpose(glm::inverse(inv_trans));
+				std::memcpy(&occluder_inverse_transpose, &inv_trans, sizeof(Mat4));
+            }
 
             // Create the mesh
             auto rtc_mesh = rtcNewTriangleMesh(
@@ -78,16 +92,31 @@ namespace sge
                 occluder_mesh->num_triangles(),
                 occluder_mesh->num_verts());
 
-            // Load in vertex positions
+            // Map vertex position buffer
             const auto num_verts = occluder_mesh->num_verts();
             const auto* const vert_positions = occluder_mesh->vertex_positions();
             auto* const pos_buffer = (Vec4*)rtcMapBuffer(rtc_scene, rtc_mesh, RTC_VERTEX_BUFFER);
-            for (std::size_t vert_i = 0; vert_i < num_verts; ++vert_i)
+
+        	// Create user buffer for vertex normals
+			const auto* const vert_norms = occluder_mesh->vertex_normals();
+			auto* norm_buffer = (Vec3*)sge::aligned_alloc(sizeof(Vec3) * num_verts, 16);
+			scene->norm_buffs[occluder_i] = norm_buffer;
+
+			// Load in vertex positions and normals
+        	for (std::size_t vert_i = 0; vert_i < num_verts; ++vert_i)
             {
                 const auto pos = occluder_transform * vert_positions[vert_i];
-                pos_buffer[vert_i] = Vec4{ pos, 0.f };
+				const auto norm = occluder_inverse_transpose * Vec3{
+					vert_norms[vert_i].norm_f32_x(),
+					vert_norms[vert_i].norm_f32_y(),
+					vert_norms[vert_i].norm_f32_z()
+				};
+
+        		pos_buffer[vert_i] = Vec4{ pos, 0.f };
+				norm_buffer[vert_i] = norm;
             }
             rtcUnmapBuffer(rtc_scene, rtc_mesh, RTC_VERTEX_BUFFER);
+			rtcSetBuffer2(rtc_scene, rtc_mesh, RTC_USER_VERTEX_BUFFER, norm_buffer, 0, sizeof(Vec3));
 
             // Load in triangle indices
             const auto num_triangle_elements = occluder_mesh->num_triangle_elements();
@@ -108,6 +137,14 @@ namespace sge
     void free_lightmap_scene(
         LightmapScene* scene)
     {
+		const auto norm_buffs = scene->norm_buffs;
+		const auto num_occluders = scene->num_occluders;
+		for (std::size_t i = 0; i < num_occluders; ++i)
+		{
+			sge::aligned_free(norm_buffs[i]);
+		}
+		std::free(norm_buffs);
+
         // Destroy rtc resources
         rtcDeleteScene(scene->rtc_scene);
         rtcDeleteDevice(scene->rtc_device);
@@ -138,9 +175,7 @@ namespace sge
             {
                 glm::mat4 inverse_trans;
                 std::memcpy(&inverse_trans, &mesh_transform, sizeof(Mat4));
-
                 inverse_trans = glm::transpose(glm::inverse(inverse_trans));
-
                 std::memcpy(&mesh_inverse_transpose, &inverse_trans, sizeof(Mat4));
             }
 
@@ -324,11 +359,13 @@ namespace sge
         // Get the scene
         auto* const rtc_scene = scene->rtc_scene;
         const auto* const occluders = scene->occluders;
-        const float normalization_factor = 1.f / (static_cast<float>(num_sample_sets) * 8) * 2 * 3.1415926539f;
+        const float normalization_factor = 1.f / (static_cast<float>(num_sample_sets) * RAY_SET_SIZE) * 2 * 3.1415926539f;
 
 		// Create the ray valid mask
-		alignas(32) std::array<uint32, 8> valid_mask;
+		alignas(32) std::array<uint32, RAY_SET_SIZE> valid_mask;
 		valid_mask.fill(0xFFFFFFFF);
+
+		std::array<Vec3, RAY_SET_SIZE> ray_dirs;
 
         // Iterate from min to max
         for (int32 y = 0; y < height; ++y)
@@ -353,7 +390,7 @@ namespace sge
                 for (int iter_i = 0; iter_i < num_sample_sets; ++iter_i)
                 {
                     RTCRay8 indirect_rays;
-                    for (int i = 0; i < 8; ++i)
+                    for (int i = 0; i < RAY_SET_SIZE; ++i)
                     {
                         // Set origin
                         indirect_rays.orgx[i] = texel_pos.x();
@@ -365,6 +402,7 @@ namespace sge
                             randf(-1.0f, 1.0f),
                             randf(-1.0f, 1.0f),
                             randf(0.15f, 1.0f) }.normalized();
+						ray_dirs[i] = dir;
                         indirect_rays.dirx[i] = dir.x();
                         indirect_rays.diry[i] = dir.y();
                         indirect_rays.dirz[i] = dir.z();
@@ -383,7 +421,7 @@ namespace sge
 
                     // Test rays
                     auto result = color::RGBAF32::zero();
-                    for (int i = 0; i < 8; ++i)
+                    for (int i = 0; i < RAY_SET_SIZE; ++i)
                     {
                         // If the ray didn't hit anything
                         if (indirect_rays.geomID[i] == RTC_INVALID_GEOMETRY_ID)
@@ -392,10 +430,24 @@ namespace sge
                         }
 
 						// Get the hit normal direction
-						const auto hit_norm = Vec3{ indirect_rays.Ngx[i], indirect_rays.Ngy[i], indirect_rays.Ngz[i] };
+						Vec3 hit_norm;
+						rtcInterpolate2(
+							rtc_scene,
+							indirect_rays.geomID[i],
+							indirect_rays.primID[i],
+							indirect_rays.u[i],
+							indirect_rays.v[i],
+							RTC_USER_VERTEX_BUFFER,
+							hit_norm.vec(),
+							nullptr, // first derivative U
+							nullptr, // first derivative V
+							nullptr, // second derivative U
+							nullptr, // second derivative V
+							nullptr, // second direvative UV
+							3);
 
-						// Make sure we didn't hit the backside
-						if (Vec3::dot(hit_norm, texel_norm) <= 0.f)
+						// Make sure we didn't hit the backside (dot product between normal and ray should be negative)
+						if (Vec3::dot(hit_norm, ray_dirs[i]) >= 0.f)
 						{
 							continue;
 						}
