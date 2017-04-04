@@ -54,6 +54,10 @@ namespace sge
 
         void lightmap_height(int32 height);
 
+		Vec2 uv_scale() const;
+
+		void uv_scale(Vec2 value);
+
 	private:
 
 		void set_modified(const char* property_name);
@@ -66,6 +70,7 @@ namespace sge
         std::string _mesh;
         std::string _material;
         std::string _lightmap;
+		Vec2 _uv_scale = { 1.f, 1.f };
         IVec2<int32> _lightmap_size = { 512, 512 };
         bool _use_lightmap = false;
 		SharedData* _shared_data;

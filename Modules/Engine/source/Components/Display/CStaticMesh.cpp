@@ -12,6 +12,7 @@
 SGE_REFLECT_TYPE(sge::CStaticMesh)
 .property("mesh", &CStaticMesh::mesh, &CStaticMesh::mesh)
 .property("material", &CStaticMesh::material, &CStaticMesh::material)
+.property("uv_scale", &CStaticMesh::uv_scale, &CStaticMesh::uv_scale)
 .property("use_lightmap", &CStaticMesh::uses_lightmap, &CStaticMesh::set_uses_lightmap)
 .property("lightmap_width", &CStaticMesh::lightmap_width, &CStaticMesh::lightmap_width)
 .property("lightmap_height", &CStaticMesh::lightmap_height, &CStaticMesh::lightmap_height);
@@ -40,6 +41,7 @@ namespace sge
         writer.object_member("uselm", _use_lightmap);
         writer.object_member("lm", _lightmap);
         writer.object_member("lms", _lightmap_size);
+		writer.object_member("uvs", _uv_scale);
     }
 
     void CStaticMesh::from_archive(ArchiveReader & reader)
@@ -49,6 +51,7 @@ namespace sge
         reader.object_member("uselm", _use_lightmap);
         reader.object_member("lm", _lightmap);
         reader.object_member("lms", _lightmap_size);
+		reader.object_member("uvs", _uv_scale);
     }
 
 	const std::string& CStaticMesh::mesh() const
@@ -134,6 +137,20 @@ namespace sge
 			set_modified("lightmap_height");
         }
     }
+
+	Vec2 CStaticMesh::uv_scale() const
+	{
+		return _uv_scale;
+	}
+
+	void CStaticMesh::uv_scale(Vec2 value)
+	{
+		if (_uv_scale != value)
+		{
+			_uv_scale = value;
+			set_modified("uv_scale");
+		}
+	}
 
 	void CStaticMesh::set_modified(const char* property_name)
 	{
