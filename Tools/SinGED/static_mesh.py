@@ -12,6 +12,13 @@ from . import archive
 SHORT_MAX = 32767
 USHORT_MAX = 0xFFFF
 
+def to_short(num):
+    value = int(num * SHORT_MAX)
+    if value > SHORT_MAX + 10:
+        return SHORT_MAX
+    if value < -SHORT_MAX - 10:
+        return -SHORT_MAX
+    return value
 
 class MeshData(object):
     def __init__(self):
@@ -110,15 +117,15 @@ def export_submesh(obj, mesh_data, mat_uv_name, lm_uv_name):
 
             # Get vertex normal (swizzled)
             norm = model_mat_inv_transp * mathutils.Vector(mesh_loop.normal)
-            mesh_data.vnor.append( int(-norm[0] * SHORT_MAX) )
-            mesh_data.vnor.append( int(norm[2] * SHORT_MAX) )
-            mesh_data.vnor.append( int(norm[1] * SHORT_MAX) )
+            mesh_data.vnor.append( to_short(-norm[0]) )
+            mesh_data.vnor.append( to_short(norm[2]) )
+            mesh_data.vnor.append( to_short(norm[1]) )
 
             # Get vertex tangents (swizzled)
             tang = model_mat_inv_transp * mathutils.Vector(mesh_loop.tangent)
-            mesh_data.vtan.append( int(-tang[0] * SHORT_MAX) )
-            mesh_data.vtan.append( int(tang[2] * SHORT_MAX) )
-            mesh_data.vtan.append( int(tang[1] * SHORT_MAX) )
+            mesh_data.vtan.append( to_short(-tang[0]) )
+            mesh_data.vtan.append( to_short(tang[2]) )
+            mesh_data.vtan.append( to_short(tang[1]) )
 
             # Get bitangent signs
             mesh_data.vbts.append( int(mesh_loop.bitangent_sign) )

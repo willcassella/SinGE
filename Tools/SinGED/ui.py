@@ -33,13 +33,14 @@ class SinGEDNodePanel(Panel):
         layout.label(text="Node Id: {}".format(node_id))
 
         # Draw the add component box
+        box = layout.box()
         if len(types.get_unused_component_types()) != 0:
-            layout.prop(context.scene.singed.sge_types, 'sge_component_types', text='Type')
-            op = layout.operator(operators.SinGEDNewComponent.bl_idname, text='Add new component')
+            box.prop(context.scene.singed.sge_types, 'sge_component_types', text='Type')
+            op = box.operator(operators.SinGEDNewComponent.bl_idname, text='Add new component')
             op.node_id = node_id
             op.component_type_name = context.scene.singed.sge_types.sge_component_types
         else:
-            layout.label("All component types in use by this object.")
+            box.label("All component types in use by this object.")
 
         return
 
@@ -85,18 +86,24 @@ class SinGEDComponentPanelBase(Panel):
     def poll(cls, context):
         component_type_name = cls.sge_blender_type.sge_type_name
         sge_scene = types.SinGEDProps.sge_scene
-        obj = context.active_object
-
-        # If this object doesn't have a node id, don't draw the panel
-        if obj.sge_node_id == 0:
-            return False
-
-        node = sge_scene.get_node(obj.sge_node_id)
         component_type = sge_scene.get_component_type(component_type_name)
 
-        # If this object doesn't have this type of component attached, don't draw the panel
-        if component_type.get_instance(node) is None:
-            return False
+        # The selection must at least contain the active object
+        if len(context.selected_objects) == 0:
+            selected_objects = [context.active_object]
+        else:
+            selected_objects = context.selected_objects
+
+        # If any of the selected objects don't have a node id, don't draw the panel
+        for obj in selected_objects:
+            if obj.sge_node_id == 0:
+                return False
+
+            node = sge_scene.get_node(obj.sge_node_id)
+
+            # If this object doesn't have this type of component attached, don't draw the panel
+            if component_type.get_instance(node) is None:
+                return False
 
         # Draw the panel
         return True

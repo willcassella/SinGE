@@ -133,7 +133,7 @@ def validate_object_type(sge_scene, node):
     bpy.context.scene.objects.active = obj
     obj.select = True
 
-    # Restore entity data
+    # Restore node data
     obj.sge_node_id = node.id
     node.user_data = obj
 
@@ -253,7 +253,7 @@ def validate_node(sge_scene, obj):
         # Set local rotation (swizzled)
         node.local_rotation[0] = -obj.rotation_quaternion[1]
         node.local_rotation[1] = obj.rotation_quaternion[3]
-        node.local_rotation[2] = obj.rotation_quatnerion[2]
+        node.local_rotation[2] = obj.rotation_quaternion[2]
         node.local_rotation[3] = obj.rotation_quaternion[0]
         sge_scene.mark_local_transform_dirty(node)
 
@@ -263,8 +263,8 @@ def validate_node(sge_scene, obj):
             static_mesh_comp_instance = static_mesh_comp_cont.request_new_instance(node)
             mesh_path = ''
 
-            # If it's a cube, monkey, or torus
-            if obj.name.startswith('Cube') or obj.name.startswith('Suzanne') or obj.name.startswith('Torus'):
+            # If it's a cube
+            if obj.name.startswith('Cube'):
                 mesh_path = "Content/Meshes/Primitives/cube.sbin"
 
             # If it's a plane or a grid
@@ -275,13 +275,9 @@ def validate_node(sge_scene, obj):
             elif obj.name.startswith('Circle'):
                 mesh_path = "Content/Meshes/Primitives/circle.sbin"
 
-            # If it's a sphere
-            elif obj.name.startswith('Sphere'):
+            # If it's a sphere or Icosphere
+            elif obj.name.startswith('Sphere') or obj.name.startswith('Icosphere'):
                 mesh_path = "Content/Meshes/Primitives/sphere.sbin"
-
-            # If it's an Icosphere
-            elif obj.name.startswith('Icosphere'):
-                mesh_path = "Content/Meshes/Primitives/icosphere.sbin"
 
             # If it's a cylinder
             elif obj.name.startswith('Cylinder'):
@@ -291,9 +287,27 @@ def validate_node(sge_scene, obj):
             elif obj.name.startswith('Cone'):
                 mesh_path = "Content/Meshes/Primitives/cone.sbin"
 
+            # If it's a torus
+            elif obj.name.startswith('Torus'):
+                mesh_path = "Content/Meshes/Primitives/torus.sbin"
+
+            # If it's a monkey :D
+            elif obj.name.startswith('Suzanne'):
+                mesh_path = "Content/Meshes/Primitives/monkey.sbin"
+
             # Set the mesh and material
-            static_mesh_comp_instance.set_property(node, 'mesh', mesh_path)
-            static_mesh_comp_instance.set_property(node, 'material', "Content/Materials/Misc/checkerboard.json")
+            static_mesh_comp_instance.set_property('mesh', mesh_path)
+            static_mesh_comp_instance.set_property('material', "Content/Materials/Misc/checkerboard.json")
+
+            # Create a callback to set the display mesh
+            def set_mesh(res_m, path, mesh):
+                del res_m, path
+                nonlocal obj
+                obj.data = mesh
+
+            # Request the resources
+            res = types.SinGEDProps.sge_resource_manager
+            res.get_resource_async(mesh_path, 'sge::StaticMesh', set_mesh)
 
         # If it's a camera
         if obj.type == 'CAMERA':
@@ -305,7 +319,7 @@ def validate_node(sge_scene, obj):
     # Get the node associated with this object
     node = sge_scene.get_node(node_id)
 
-    # Check The object is a duplicate, so create a new entity and copy everything from the old one
+    # Check The object is a duplicate, so create a new node and copy everything from the old one
     if node.user_data != obj:
         old_node = node
 
@@ -365,6 +379,10 @@ def validate_node(sge_scene, obj):
         node.root = root_node
         sge_scene.mark_root_dirty(node)
         assert(not root_node.destroyed)
+
+
+def lightmaps_generated_callback(duration):
+    bpy.ops.singed.notification('INVOKE_DEFAULT', message="Lightmap generation completed in {} milliseconds".format(duration))
 
 
 def blender_update(scene):
@@ -492,6 +510,7 @@ def open_active_session(host, port):
     self.sge_typedb.insert_type('sge::String', types.SGEString)
     self.sge_typedb.insert_type('sge::color::RGBA8', types.SGEColorRGBA8)
     self.sge_typedb.insert_type('sge::Vec3', types.SGEVec3)
+    self.sge_typedb.insert_type('sge::Vec2', types.SGEVec2)
 
     # Add the typedb to the session object
     self.sge_typedb.register_handlers(self.sge_session)
@@ -506,6 +525,7 @@ def open_active_session(host, port):
     self.sge_scene.set_destroy_component_callback('sge::CStaticMesh', update_node_display_callback)
     self.sge_scene.set_new_component_callback('sge::CPerspectiveCamera', update_node_display_callback)
     self.sge_scene.set_destroy_component_callback('sge::CPerspectiveCamera', update_node_display_callback)
+    self.sge_scene.set_lightmaps_generated_callback(lightmaps_generated_callback)
     self.sge_scene.register_handlers(self.sge_session)
 
     # Create the resource manager object
@@ -602,15 +622,23 @@ class SinGEDConnectPanel(Panel):
             disconnector.establish_connection = False
 
         # Draw realtime update property
-        layout.split()
         layout.prop(context.scene.singed, 'sge_realtime_update_delay', text='Realtime Update Interval')
 
         if types.SinGEDProps.sge_session is not None:
             # Draw save/load scene button
-            layout.split()
-            layout.prop(context.scene.singed, 'sge_scene_path')
-            save_button = layout.operator(operators.SinGEDSaveScene.bl_idname, text='Save Scene')
+            box = layout.box()
+            box.prop(context.scene.singed, 'sge_scene_path')
+            save_button = box.operator(operators.SinGEDSaveScene.bl_idname, text='Save Scene')
             save_button.path = context.scene.singed.sge_scene_path
 
             # Draw generate lightmaps button
-            layout.operator(operators.SinGEDGenerateLightmaps.bl_idname, text='Generate Lightmaps')
+            box = layout.box()
+            box.prop(context.scene.singed, 'sge_lightmap_light_dir')
+            box.prop(context.scene.singed, 'sge_lightmap_light_intensity')
+            box.prop(context.scene.singed, 'sge_lightmap_num_indirect_sample_sets')
+            box.prop(context.scene.singed, 'sge_lightmap_num_post_steps')
+            gen_lightmaps = box.operator(operators.SinGEDGenerateLightmaps.bl_idname, text='Generate Lightmaps')
+            gen_lightmaps.light_dir = context.scene.singed.sge_lightmap_light_dir
+            gen_lightmaps.light_intensity = context.scene.singed.sge_lightmap_light_intensity
+            gen_lightmaps.num_indirect_sample_sets = context.scene.singed.sge_lightmap_num_indirect_sample_sets
+            gen_lightmaps.num_post_steps = context.scene.singed.sge_lightmap_num_post_steps

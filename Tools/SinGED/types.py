@@ -66,6 +66,10 @@ class SinGEDProps(PropertyGroup):
     sge_types = PointerProperty(type=SGETypes)
     sge_realtime_update_delay = FloatProperty(default=0.033, precision=3, unit='TIME')
     sge_scene_path = StringProperty(name='Path', default='')
+    sge_lightmap_light_dir = FloatVectorProperty(name="Light direction", subtype='XYZ', size=3, default=[0.0, -0.5, -0.5])
+    sge_lightmap_light_intensity = FloatVectorProperty(name="Light intensity", subtype='COLOR', size=3, default=[0.5, 0.5, 0.5])
+    sge_lightmap_num_indirect_sample_sets = IntProperty(name="Indirect sample sets", subtype='UNSIGNED', default=16)
+    sge_lightmap_num_post_steps = IntProperty(name="Post processing steps", subtype='UNSIGNED', default=4)
     sge_session = None
     sge_typedb = None
     sge_scene = None
@@ -180,6 +184,29 @@ class SGEColorRGBA8(SGEPrimitiveBase):
             set=lambda outer, value: SGEColorRGBA8.sge_set(outer, name, value))
 
 
+class SGEVec2(SGEPrimitiveBase):
+    @staticmethod
+    def sge_get(outer, prop_name):
+        value = property_getter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, prop_name), None)
+        if value is None:
+            return [0.0, 0.0]
+        else:
+            return [value['x'], value['y']]
+
+    @staticmethod
+    def sge_set(outer, prop_name, value):
+        property_setter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, prop_name), {'x': value[0], 'y': value[1]})
+
+    @staticmethod
+    def sge_create_property(name):
+        return FloatVectorProperty(
+            name=construct_property_display_name(name),
+            subtype='XYZ',
+            size=2,
+            get=lambda outer: SGEVec2.sge_get(outer, name),
+            set=lambda outer, value: SGEVec2.sge_set(outer, name, value))
+
+
 class SGEVec3(SGEPrimitiveBase):
     @staticmethod
     def sge_get(outer, prop_name):
@@ -200,7 +227,7 @@ class SGEVec3(SGEPrimitiveBase):
             subtype='XYZ',
             size=3,
             get=lambda outer: SGEVec3.sge_get(outer, name),
-            set=lambda self, value: SGEVec3.sge_set(self, name, value))
+            set=lambda outer, value: SGEVec3.sge_set(outer, name, value))
 
 
 def create_blender_type(typedb, type_name, type_info):

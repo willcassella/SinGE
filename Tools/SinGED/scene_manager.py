@@ -203,7 +203,8 @@ class SceneManager(object):
         self._components = dict()
         self._sent_scene_query = False
         self._save_scene_path = ''
-        self._generate_lightmaps_query = False
+        self._generate_lightmaps_query = None
+        self._lightmaps_generated_callback = None
 
     def register_handlers(self, session):
         session.add_query_handler('get_scene', self._get_scene_query)
@@ -226,6 +227,7 @@ class SceneManager(object):
         session.add_response_handler('component_property_update', self._component_property_update_response)
         session.add_query_handler('save_scene', self._save_scene_query)
         session.add_query_handler('gen_lightmaps', self._gen_lightmaps_query)
+        session.add_response_handler('gen_lightmaps', self._gen_lightmaps_response)
 
     def _get_scene_query(self, seq_number, priority):
         # Unused arguments
@@ -245,6 +247,7 @@ class SceneManager(object):
         # Store all new nodes
         new_nodes = set()
         root_ids = dict()
+        new_components = dict()
 
         # For each node in the scene
         for node_id_str, value in response['nodes'].items():
@@ -268,8 +271,6 @@ class SceneManager(object):
         # Add nodes to roots
         for node, root_id in root_ids.items():
             node.root = self.get_node(root_id)
-
-        new_components = dict()
 
         # For each component type
         for component_type_name, instances in response['components'].items():
@@ -349,6 +350,7 @@ class SceneManager(object):
                 root_ids[node] = node_response.get('root', Node.NULL_ID)
                 self._nodes[node.id] = node
                 new_nodes.append(node)
+                print("Received unrequested new node, id={}".format(node.id))
 
             # Set node roots
             for node, root_id in root_ids.items():
@@ -384,6 +386,7 @@ class SceneManager(object):
                 continue
 
             updated_nodes.append(node)
+            print("Allocated node id {} for fake node {}".format(node.id, node.fake_id))
 
         # Call the update function on updated nodes
         if self._update_node_callback is not None:
@@ -872,12 +875,16 @@ class SceneManager(object):
         # Unused arguments
         del seq_number, priority
 
-        if not self._generate_lightmaps_query:
-            return None
+        message = self._generate_lightmaps_query
+        self._generate_lightmaps_query = None
+        return message
 
-        # Actual value doesn't matter
-        self._generate_lightmaps_query = False
-        return True
+    def _gen_lightmaps_response(self, seq_number, response):
+        # Unused parameters
+        del seq_number
+
+        if self._lightmaps_generated_callback is not None:
+            self._lightmaps_generated_callback(response)
 
     def get_node(self, node_id):
         if node_id == Node.NULL_ID:
@@ -920,11 +927,19 @@ class SceneManager(object):
         component = self._components.setdefault(component_type_name, ComponentType(component_type_name))
         component.set_destroy_instance_callback(callback)
 
+    def set_lightmaps_generated_callback(self, callback):
+        self._lightmaps_generated_callback = callback
+
     def save_scene(self, path):
         self._save_scene_path = path
 
-    def generate_lightmaps(self):
-        self._generate_lightmaps_query = True
+    def generate_lightmaps(self, light_dir, light_intensity, num_indirect_sample_sets, num_post_steps):
+        self._generate_lightmaps_query = {
+            'light_direction': light_dir,
+            'light_intensity': light_intensity,
+            'num_indirect_sample_sets': num_indirect_sample_sets,
+            'post_process_steps': num_post_steps
+        }
 
     def request_new_node(self, user_data):
         # Reserve fake node id

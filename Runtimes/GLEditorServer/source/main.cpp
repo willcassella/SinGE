@@ -59,6 +59,7 @@ int main(int argc, char* argv[])
 	// Create a type database
 	sge::TypeDB type_db;
 	type_db.new_type<sge::Angle>();
+	type_db.new_type<sge::Vec2>();
 	type_db.new_type<sge::Vec3>();
 	type_db.new_type<sge::Quat>();
 	type_db.new_type<sge::StaticMesh>();

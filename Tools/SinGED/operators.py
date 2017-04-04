@@ -2,8 +2,19 @@
 
 import bpy
 from bpy.types import Operator
-from bpy.props import IntProperty, StringProperty
+from bpy.props import IntProperty, StringProperty, FloatVectorProperty
 from . import types
+
+
+class SinGEDNotification(Operator):
+    bl_idname = 'singed.notification'
+    bl_label = 'SinGED Notification'
+
+    message = StringProperty()
+
+    def execute(self, context):
+        self.report(type={'INFO'}, message=self.message)
+        return {'FINISHED'}
 
 
 class SinGEDNewComponent(Operator):
@@ -60,9 +71,32 @@ class SinGEDGenerateLightmaps(Operator):
     bl_idname = 'singed.generate_lightmaps'
     bl_label = 'SinGED Generate Lightmaps'
 
+    light_dir = FloatVectorProperty(
+        name="Light direction",
+        subtype='XYZ',
+        size=3)
+
+    light_intensity = FloatVectorProperty(
+        name="Light intensity",
+        subtype='COLOR',
+        size=3)
+
+    num_indirect_sample_sets = IntProperty(
+        name="Indirect sample sets",
+        subtype='UNSIGNED',
+        default=16)
+
+    num_post_steps = IntProperty(
+        name="Post-processing steps",
+        default=4)
+
     def execute(self, context):
         # Unused arguments
         del context
 
-        types.SinGEDProps.sge_scene.generate_lightmaps()
+        types.SinGEDProps.sge_scene.generate_lightmaps(
+            [self.light_dir[0], self.light_dir[1], self.light_dir[2]],
+            [self.light_intensity[0], self.light_intensity[1], self.light_intensity[2]],
+            self.num_indirect_sample_sets,
+            self.num_post_steps)
         return {'FINISHED'}
