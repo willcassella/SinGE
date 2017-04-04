@@ -178,9 +178,9 @@ namespace sge
 			_destroyed_character_controller_sid = _destroyed_character_controller_channel->subscribe();
 	    }
 
-	    void BulletPhysicsSystem::phys_tick(Scene& scene, SystemFrame& frame)
-        {
-			// Consume events
+	    void BulletPhysicsSystem::consume_events(Scene& scene)
+	    {
+			// Update transforms
 			on_transform_modified(*_node_world_transform_changed_channel, _node_world_transform_changed_sid, *_data);
 
 			// Consume sphere collider events
@@ -210,6 +210,11 @@ namespace sge
 			on_character_controller_turn(*_character_controller_turn_event_channel, _character_controller_turn_sid, *_data);
 			on_character_controller_walk(*_character_controller_walk_event_channel, _character_controller_walk_sid, *_data);
 			on_character_controller_destroyed(*_destroyed_character_controller_channel, _destroyed_character_controller_sid, *_data);
+	    }
+
+	    void BulletPhysicsSystem::phys_tick(Scene& scene, SystemFrame& frame)
+        {
+			consume_events(scene);
 
             // Simulate physics
             _data->phys_world.dynamics_world().stepSimulation(frame.time_delta(), 3);
@@ -232,9 +237,10 @@ namespace sge
 
         void BulletPhysicsSystem::debug_draw(Scene& scene, SystemFrame& frame)
         {
-            DebugDrawer drawer;
+			consume_events(scene);
 
             // Draw the world
+            DebugDrawer drawer;
             _data->phys_world.dynamics_world().setDebugDrawer(&drawer);
             _data->phys_world.dynamics_world().debugDrawWorld();
             _data->phys_world.dynamics_world().setDebugDrawer(nullptr);

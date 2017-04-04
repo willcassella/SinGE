@@ -37,6 +37,8 @@ namespace sge
 
         private:
 
+			void consume_events(Scene& scene);
+
             void phys_tick(Scene& scene, SystemFrame& frame);
 
             void debug_draw(Scene& scene, SystemFrame& frame);
