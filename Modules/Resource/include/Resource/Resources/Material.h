@@ -53,9 +53,14 @@ namespace sge
 			return _pixel_shader;
 		}
 
-        color::RGBF32 base_color() const
+		color::RGBF32 base_reflectivity() const
 		{
-            return _base_color;
+            return _base_reflectivity;
+		}
+
+		Vec2 base_uv_scale() const
+		{
+			return _base_uv_scale;
 		}
 
 		const ParamTable& param_table() const
@@ -99,7 +104,8 @@ namespace sge
 
 		std::string _vertex_shader;
 		std::string _pixel_shader;
-        color::RGBF32 _base_color = { 1.f, 1.f, 1.f };
+        color::RGBF32 _base_reflectivity = { 1.f, 1.f, 1.f };
+		Vec2 _base_uv_scale = { 1.f, 1.f };
 		ParamTable _param_table;
 	};
 }
