@@ -5,10 +5,10 @@
 #include <Resource/Archives/JsonArchive.h>
 #include <Engine/Components/Display/CStaticMesh.h>
 #include <Engine/Components/Display/CCamera.h>
-#include <Engine/Tags/DebugDraw.h>
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
 #include <Engine/UpdatePipeline.h>
+#include <Engine/Util/DebugDraw.h>
 #include "../include/GLRender/Config.h"
 #include "../private/GLRenderSystemState.h"
 #include "../private/DebugLine.h"
@@ -235,8 +235,6 @@ namespace sge
 		///   Constructors   ///
 
         GLRenderSystem::GLRenderSystem(const Config& config)
-			: _modified_node_transform_channel(nullptr),
-			_modified_node_transform_sid(EventChannel::INVALID_SID)
         {
             assert(config.validate() /*The given GLRenderSystem config object is not valid*/);
 
@@ -493,7 +491,9 @@ namespace sge
 
 		void GLRenderSystem::initialize_subscriptions(Scene& scene)
 		{
+			_debug_draw_line_channel = scene.get_debug_draw_line_channel();
 			_modified_node_transform_channel = scene.get_node_world_transform_changed_channel();
+			_debug_draw_line_sid = _debug_draw_line_channel->subscribe();
 			_modified_node_transform_sid = _modified_node_transform_channel->subscribe();
 		}
 
@@ -575,6 +575,8 @@ namespace sge
                 _state->initialized_render_scene = true;
             }
 
+			_state->gather_debug_lines(*_debug_draw_line_channel, _debug_draw_line_sid);
+
 			// Consume events
 			on_node_transform_update(*_modified_node_transform_channel, _modified_node_transform_sid, _state->render_scene);
 
@@ -605,7 +607,6 @@ namespace sge
             render_scene_prepare_gbuffer(_state->gbuffer_framebuffer);
             render_scene_fill_bound_gbuffer(_state->render_scene, view, proj);
             //render_scene_render_lightmasks(_state->render_scene, view, proj);
-            render_scene_shade_hdr(_state->post_framebuffer, *_state, view);
 
             // Draw debug lines
             if (!_state->frame_debug_lines.empty())
@@ -623,6 +624,8 @@ namespace sge
                 glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(_state->frame_debug_lines.size()));
                 _state->frame_debug_lines.clear();
             }
+
+			render_scene_shade_hdr(_state->post_framebuffer, *_state, view);
 
             /*---------------------------*/
             /*---   POST-PROCESSING   ---*/

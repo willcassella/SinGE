@@ -9,7 +9,6 @@
 namespace sge
 {
 	struct SystemFrame;
-    struct FDebugLine;
 
 	namespace gl_render
 	{
@@ -46,8 +45,10 @@ namespace sge
 		private:
 
 			std::unique_ptr<State> _state;
-			EventChannel* _modified_node_transform_channel;
-			EventChannel::SubscriberId _modified_node_transform_sid;
+			EventChannel* _debug_draw_line_channel = nullptr;
+			EventChannel* _modified_node_transform_channel = nullptr;
+			EventChannel::SubscriberId _modified_node_transform_sid = EventChannel::INVALID_SID;
+			EventChannel::SubscriberId _debug_draw_line_sid = EventChannel::INVALID_SID;
 		};
 	}
 }

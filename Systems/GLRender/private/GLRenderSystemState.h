@@ -75,6 +75,8 @@ namespace sge
 
 			GLuint get_texture_2d_resource(const std::string& path, bool hdr);
 
+			void gather_debug_lines(EventChannel& debug_line_channel, EventChannel::SubscriberId subscriber_id);
+
 			//////////////////
 			///   Fields   ///
 		public:
