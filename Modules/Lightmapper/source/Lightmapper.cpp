@@ -391,6 +391,15 @@ namespace sge
                             continue;
                         }
 
+						// Get the hit normal direction
+						const auto hit_norm = Vec3{ indirect_rays.Ngx[i], indirect_rays.Ngy[i], indirect_rays.Ngz[i] };
+
+						// Make sure we didn't hit the backside
+						if (Vec3::dot(hit_norm, texel_norm) <= 0.f)
+						{
+							continue;
+						}
+
                         // Get the hit triangle
                         const auto hit_mesh = occluders[indirect_rays.geomID[i]];
                         const auto* const hit_elems = hit_mesh.mesh->triangle_elements() + indirect_rays.primID[i] * 3;
