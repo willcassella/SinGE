@@ -30,14 +30,6 @@ namespace sge
             ///   Methods   ///
         public:
 
-            void add_box_collider(NodeId node, const CBoxCollider& component);
-
-            void remove_box_collider(NodeId node);
-
-            void add_capsule_collider(NodeId node, const CCapsuleCollider& component);
-
-            void remove_capsule_collider(NodeId node);
-
             void add_rigid_body(const Node& node, const CRigidBody& component);
 
             void remove_rigid_body(NodeId node);
@@ -52,7 +44,7 @@ namespace sge
 
             PhysicsEntity* get_physics_entity(NodeId node);
 
-            void post_modify_physics_entity(PhysicsEntity& phys_entity);
+            void post_remove_physics_entity_element(PhysicsEntity& phys_entity);
 
             //////////////////
             ///   Fields   ///

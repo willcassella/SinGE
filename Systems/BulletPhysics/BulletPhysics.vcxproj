@@ -198,6 +198,7 @@
     <ClInclude Include="include\BulletPhysics\BulletPhysicsSystem.h" />
     <ClInclude Include="include\BulletPhysics\Config.h" />
     <ClInclude Include="private\CharacterController.h" />
+    <ClInclude Include="private\Colliders.h" />
     <ClInclude Include="private\DebugDrawer.h" />
     <ClInclude Include="private\PhysicsEntity.h" />
     <ClInclude Include="private\PhysicsWorld.h" />
@@ -209,6 +210,7 @@
     <ClCompile Include="source\BulletPhysicsSystem.cpp" />
     <ClCompile Include="source\BulletPhysicsSystemData.cpp" />
     <ClCompile Include="source\CharacterController.cpp" />
+    <ClCompile Include="source\Colliders.cpp" />
     <ClCompile Include="source\Config.cpp" />
     <ClCompile Include="source\DebugDrawer.cpp" />
     <ClCompile Include="source\PhysicsEntity.cpp" />

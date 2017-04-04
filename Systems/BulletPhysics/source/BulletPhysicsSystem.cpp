@@ -15,6 +15,7 @@
 #include "../private/DebugDrawer.h"
 #include "../private/CharacterController.h"
 #include "../private/RigidBody.h"
+#include "../private/Colliders.h"
 #include "../private/Util.h"
 
 SGE_REFLECT_TYPE(sge::bullet_physics::BulletPhysicsSystem);
@@ -144,16 +145,28 @@ namespace sge
             : _initialized_world(false),
 			_node_world_transform_changed_event_channel(nullptr),
 			_new_rigid_body_event_channel(nullptr),
-			_destroyed_rigid_body_event_channel(nullptr),
 			_modified_rigid_body_event_channel(nullptr),
+			_destroyed_rigid_body_event_channel(nullptr),
+			_new_box_collider_channel(nullptr),
+			_modified_box_collider_channel(nullptr),
+			_destroyed_box_collider_channel(nullptr),
+			_new_capsule_collider_channel(nullptr),
+			_modified_capsule_collider_channel(nullptr),
+			_destroyed_capsule_collider_channel(nullptr),
 			_character_controller_jump_event_channel(nullptr),
 			_character_controller_turn_event_channel(nullptr),
 			_character_controller_walk_event_channel(nullptr),
 			_node_world_transform_changed_sid(EventChannel::INVALID_SID),
 			_new_rigid_body_sid(EventChannel::INVALID_SID),
-			_destroyed_rigid_body_sid(EventChannel::INVALID_SID),
 			_modified_rigid_body_sid(EventChannel::INVALID_SID),
-			_character_controller_jump_sid(EventChannel::INVALID_SID),
+			_destroyed_rigid_body_sid(EventChannel::INVALID_SID),
+			_new_box_collider_sid(EventChannel::INVALID_SID),
+			_modified_box_collider_sid(EventChannel::INVALID_SID),
+			_destroyed_box_collider_sid(EventChannel::INVALID_SID),
+			_new_capsule_collider_sid(EventChannel::INVALID_SID),
+    		_modified_capsule_collider_sid(EventChannel::INVALID_SID),
+			_destroyed_capsule_collider_sid(EventChannel::INVALID_SID),
+    		_character_controller_jump_sid(EventChannel::INVALID_SID),
 			_character_controller_turn_sid(EventChannel::INVALID_SID),
 			_character_controller_walk_sid(EventChannel::INVALID_SID)
         {
@@ -184,11 +197,27 @@ namespace sge
 
 			// Rigid Body event subscriptions
 			_new_rigid_body_event_channel = scene.get_event_channel(CRigidBody::type_info, "new");
-			_destroyed_rigid_body_event_channel = scene.get_event_channel(CRigidBody::type_info, "destroy");
 			_modified_rigid_body_event_channel = scene.get_event_channel(CRigidBody::type_info, "prop_mod");
+			_destroyed_rigid_body_event_channel = scene.get_event_channel(CRigidBody::type_info, "destroy");
 			_new_rigid_body_sid = _new_rigid_body_event_channel->subscribe();
-			_destroyed_rigid_body_sid = _destroyed_rigid_body_event_channel->subscribe();
 			_modified_rigid_body_sid = _modified_rigid_body_event_channel->subscribe();
+			_destroyed_rigid_body_sid = _destroyed_rigid_body_event_channel->subscribe();
+
+			// Box collider event subscriptions
+			_new_box_collider_channel = scene.get_event_channel(CBoxCollider::type_info, "new");
+			_modified_box_collider_channel = scene.get_event_channel(CBoxCollider::type_info, "prop_mod");
+			_destroyed_box_collider_channel = scene.get_event_channel(CBoxCollider::type_info, "destroy");
+			_new_box_collider_sid = _new_box_collider_channel->subscribe();
+			_modified_box_collider_sid = _modified_box_collider_channel->subscribe();
+			_destroyed_box_collider_sid = _destroyed_box_collider_channel->subscribe();
+
+			// Capsule collider event subscriptions
+			_new_capsule_collider_channel = scene.get_event_channel(CCapsuleCollider::type_info, "new");
+			_modified_capsule_collider_channel = scene.get_event_channel(CCapsuleCollider::type_info, "prop_mod");
+			_destroyed_capsule_collider_channel = scene.get_event_channel(CCapsuleCollider::type_info, "destroy");
+			_new_capsule_collider_sid = _new_capsule_collider_channel->subscribe();
+			_modified_capsule_collider_sid = _modified_capsule_collider_channel->subscribe();
+			_destroyed_capsule_collider_sid = _destroyed_capsule_collider_channel->subscribe();
 
 			// Character controller event subscriptions
 			_character_controller_jump_event_channel = scene.get_event_channel(CCharacterController::type_info, "jump_channel");
@@ -201,20 +230,30 @@ namespace sge
 
 	    void BulletPhysicsSystem::phys_tick(Scene& scene, SystemFrame& frame)
         {
-            // Initialize the world, if we haven't already
-            if (!_initialized_world)
-            {
-                _initialized_world = true;
-                initialize_world(scene);
-            }
-
 			// Consume events
 			on_transform_modified(*_node_world_transform_changed_event_channel, _node_world_transform_changed_sid, *_data);
 
 			// Consume rigid body events
 			on_new_rigid_body(scene, *_new_rigid_body_event_channel, _new_rigid_body_sid, *_data);
-			on_destroy_rigid_body(*_destroyed_rigid_body_event_channel, _destroyed_rigid_body_sid, *_data);
 			on_rigid_body_modified(*_modified_rigid_body_event_channel, _modified_rigid_body_sid, *_data);
+			on_destroy_rigid_body(*_destroyed_rigid_body_event_channel, _destroyed_rigid_body_sid, *_data);
+
+			// Consume box collider events
+			on_box_collider_new(*_new_box_collider_channel, _new_box_collider_sid, *_data);
+			on_box_collider_modified(*_modified_box_collider_channel, _modified_box_collider_sid, *_data);
+			on_box_collider_destroyed(*_destroyed_box_collider_channel, _destroyed_box_collider_sid, *_data);
+
+			// Consume capsule collider events
+			on_capsule_collider_new(*_new_capsule_collider_channel, _new_capsule_collider_sid, *_data);
+			on_capsule_collider_modified(*_modified_capsule_collider_channel, _modified_box_collider_sid, *_data);
+			on_capsule_collider_destroyed(*_destroyed_capsule_collider_channel, _destroyed_capsule_collider_sid, *_data);
+
+			// Initialize the world, if we haven't already
+			if (!_initialized_world)
+			{
+				_initialized_world = true;
+				initialize_world(scene);
+			}
 
 			// Consume character controller events
 			on_character_controller_jump(*_character_controller_jump_event_channel, _character_controller_jump_sid, *_data);
@@ -255,46 +294,7 @@ namespace sge
 
         void BulletPhysicsSystem::initialize_world(Scene& scene)
         {
-			auto* box_collider_component = scene.get_component_container(CBoxCollider::type_info);
-			auto* capsule_collider_component = scene.get_component_container(CCapsuleCollider::type_info);
-			auto* rigid_body_component = scene.get_component_container(CRigidBody::type_info);
 			auto* character_controller_component = scene.get_component_container(CCharacterController::type_info);
-
-			// Load all box colliders
-			{
-				NodeId box_collider_nodes[8];
-				std::size_t start_index = 0;
-				std::size_t num_instances;
-				while (box_collider_component->get_instance_nodes(start_index, 8, &num_instances, box_collider_nodes))
-				{
-					start_index += 8;
-					CBoxCollider* box_collider_instances[8];
-					box_collider_component->get_instances(box_collider_nodes, num_instances, box_collider_instances);
-
-					for (std::size_t i = 0; i < num_instances; ++i)
-					{
-						_data->add_box_collider(box_collider_nodes[i], *box_collider_instances[i]);
-					}
-				}
-			}
-
-            // Load all capsule collider
-			{
-				NodeId capsule_collider_nodes[8];
-				std::size_t start_index = 0;
-				std::size_t num_instances;
-				while (capsule_collider_component->get_instance_nodes(start_index, 8, &num_instances, capsule_collider_nodes))
-				{
-					start_index += 8;
-					CCapsuleCollider* capsule_collider_instances[8];
-					capsule_collider_component->get_instances(capsule_collider_nodes, num_instances, capsule_collider_instances);
-
-					for (std::size_t i = 0; i < num_instances; ++i)
-					{
-						_data->add_capsule_collider(capsule_collider_nodes[i], *capsule_collider_instances[i]);
-					}
-				}
-			}
 
 			// Load all character controllers
 			{

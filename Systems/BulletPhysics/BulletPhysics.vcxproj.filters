@@ -44,6 +44,9 @@
     <ClInclude Include="private\RigidBody.h">
       <Filter>private</Filter>
     </ClInclude>
+    <ClInclude Include="private\Colliders.h">
+      <Filter>private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Config.cpp">
@@ -65,6 +68,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\RigidBody.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Colliders.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
