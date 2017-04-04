@@ -42,6 +42,7 @@ namespace sge
 
     void EventChannel::unsubscribe(SubscriberId subscriber)
     {
+		assert(subscriber < MAX_SUBSCRIBERS);
         _subscribers_active[subscriber] = 0;
         _subscriber_indices[subscriber] = 0xFFFFFFFF;
     }
@@ -118,6 +119,7 @@ namespace sge
 
     int32 EventChannel::consume(SubscriberId subscriber, std::size_t event_object_size, int32 max_events, void* out_events, int32* out_num_events)
     {
+		assert(subscriber < MAX_SUBSCRIBERS);
         const auto buffer = _buffer;
         const auto capacity = _capacity;
         const auto end_index = _end_index;

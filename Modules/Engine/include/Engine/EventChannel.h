@@ -10,7 +10,8 @@ namespace sge
     struct SGE_ENGINE_API EventChannel
     {
         using SubscriberId = uint8;
-        static constexpr std::size_t MAX_SUBSCRIBERS = 12;
+		static constexpr SubscriberId INVALID_SID = 255;
+    	static constexpr std::size_t MAX_SUBSCRIBERS = 12;
 
         ////////////////////////
         ///   Constructors   ///
