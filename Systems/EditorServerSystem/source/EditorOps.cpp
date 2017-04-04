@@ -704,7 +704,7 @@ namespace sge
 						// Add the object to the list of occluders
 						LightmapOccluder occluder;
 						occluder.mesh = static_mesh;
-						occluder.base_color = material->base_color();
+						occluder.base_color = material->base_reflectivity();
 						occluder.world_transform = node->get_world_matrix();
 						occluders.push_back(occluder);
 
