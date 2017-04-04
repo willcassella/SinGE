@@ -167,6 +167,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Engine\Components\Physics\CSphereCollider.h" />
     <ClInclude Include="include\Engine\EventChannel.h" />
     <ClInclude Include="include\Engine\Component.h" />
     <ClInclude Include="include\Engine\Components\Display\CCamera.h" />
@@ -206,6 +207,7 @@
     <ClCompile Include="source\Components\Physics\CCapsuleCollider.cpp" />
     <ClCompile Include="source\Components\Physics\CRigidBody.cpp" />
     <ClCompile Include="source\Components\Physics\CSensor.cpp" />
+    <ClCompile Include="source\Components\Physics\CSphereCollider.cpp" />
     <ClCompile Include="source\Engine\UpdatePipeline.cpp" />
     <ClCompile Include="source\EventChannel.cpp" />
     <ClCompile Include="source\Node.cpp" />

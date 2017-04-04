@@ -13,6 +13,7 @@
 #include "../include/Engine/Components/Physics/CSensor.h"
 #include "../include/Engine/Components/Gameplay/CCharacterController.h"
 #include "../include/Engine/Components/Physics/CCapsuleCollider.h"
+#include "../include/Engine/Components/Physics/CSphereCollider.h"
 
 namespace sge
 {
@@ -30,5 +31,6 @@ namespace sge
         CSensor::register_type(scene);
         CCharacterController::register_type(scene);
         CCapsuleCollider::register_type(scene);
+		CSphereCollider::register_type(scene);
 	}
 }

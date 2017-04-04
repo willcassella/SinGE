@@ -40,7 +40,12 @@ namespace sge
 		reader.object_member("s", _shape);
 	}
 
-    float CBoxCollider::width() const
+	NodeId CBoxCollider::node() const
+	{
+		return _node;
+	}
+
+	float CBoxCollider::width() const
     {
         return _shape.x();
     }
