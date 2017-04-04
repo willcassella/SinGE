@@ -30,13 +30,11 @@ namespace sge
             ///   Methods   ///
         public:
 
-            void add_rigid_body(const Node& node, const CRigidBody& component);
-
-            void remove_rigid_body(NodeId node);
-
             PhysicsEntity& get_or_create_physics_entity(NodeId node);
 
             PhysicsEntity* get_physics_entity(NodeId node);
+
+			void post_add_physics_entity_element(PhysicsEntity& phys_entity);
 
             void post_remove_physics_entity_element(PhysicsEntity& phys_entity);
 

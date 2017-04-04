@@ -114,6 +114,9 @@ namespace sge
 
 					// Add the character controller to the world
 					phys_data.phys_world.dynamics_world().addAction(physics_entity.character_controller.get());
+
+					// Figure out if we need to delete the collision object
+					phys_data.post_add_physics_entity_element(physics_entity);
 				}
 			}
         }

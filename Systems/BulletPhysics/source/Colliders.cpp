@@ -31,6 +31,9 @@ namespace sge
 					assert(physics_entity.sphere_collider == nullptr);
 					physics_entity.sphere_collider = std::make_unique<btSphereShape>(component->radius());
 					physics_entity.collider.addChildShape(btTransform::getIdentity(), physics_entity.sphere_collider.get());
+
+					// Create collision object, if necessary
+					phys_data.post_add_physics_entity_element(physics_entity);
 				}
 			}
 		}
@@ -108,6 +111,9 @@ namespace sge
 					assert(physics_entity.box_collider == nullptr);
 					physics_entity.box_collider = std::make_unique<btBoxShape>(to_bullet(component->shape() / 2));
 					physics_entity.collider.addChildShape(btTransform::getIdentity(), physics_entity.box_collider.get());
+
+					// Create collision object, if necessary
+					phys_data.post_add_physics_entity_element(physics_entity);
 				}
 			}
 		}
@@ -189,6 +195,9 @@ namespace sge
 					// Create a new capsule collider
 					phys_entity.capsule_collider = std::make_unique<btCapsuleShape>(component->radius(), component->height());
 					phys_entity.collider.addChildShape(btTransform::getIdentity(), phys_entity.capsule_collider.get());
+
+					// Add a collision object, if necessary
+					phys_data.post_add_physics_entity_element(phys_entity);
 				}
 			}
 		}

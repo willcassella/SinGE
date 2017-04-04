@@ -4,6 +4,7 @@
 #include <Engine/Components/Physics/CRigidBody.h>
 #include "../private/RigidBody.h"
 #include "../private/PhysicsEntity.h"
+#include "../private/Util.h"
 
 namespace sge
 {
@@ -33,7 +34,50 @@ namespace sge
 			// Create rigid bodies
 			for (int32 i = 0; i < num_events; ++i)
 			{
-				phys_data.add_rigid_body(*nodes[i], *instances[i]);
+				auto& physics_entity = phys_data.get_or_create_physics_entity(node_ids[i]);
+				assert(physics_entity.rigid_body == nullptr);
+
+				// Set the entitiy's position
+				physics_entity.transform.setOrigin(to_bullet(nodes[i]->get_local_position()));
+				physics_entity.transform.setRotation(to_bullet(nodes[i]->get_local_rotation()));
+
+				// Calculate local inertia from the collision shape
+				btScalar mass = 0.f;
+				btVector3 local_inertia{ 0.f, 0.f, 0.f };
+				if (!instances[i]->kinematic())
+				{
+					mass = instances[i]->mass();
+					physics_entity.collider.calculateLocalInertia(mass, local_inertia);
+				}
+
+				// Create the rigid body construction info
+				btRigidBody::btRigidBodyConstructionInfo cinfo{
+					mass,
+					&physics_entity,
+					&physics_entity.collider,
+					local_inertia };
+				cinfo.m_friction = instances[i]->friction();
+				cinfo.m_rollingFriction = instances[i]->rolling_friction();
+				cinfo.m_spinningFriction = instances[i]->spinning_friction();
+				cinfo.m_linearDamping = instances[i]->linear_damping();
+				cinfo.m_angularDamping = instances[i]->angular_damping();
+
+				// Create the rigid body
+				physics_entity.rigid_body = std::make_unique<btRigidBody>(cinfo);
+
+				// Set kinematic flags
+				if (instances[i]->kinematic())
+				{
+					physics_entity.rigid_body->setActivationState(DISABLE_DEACTIVATION);
+					physics_entity.rigid_body->setCollisionFlags(
+						physics_entity.rigid_body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+				}
+
+				// Add it to the world
+				phys_data.phys_world.dynamics_world().addRigidBody(physics_entity.rigid_body.get());
+
+				// Remove collision object if necessary
+				phys_data.post_add_physics_entity_element(physics_entity);
 			}
 		}
 	}
@@ -50,7 +94,17 @@ namespace sge
 		{
 			for (int32 i = 0; i < num_events; ++i)
 			{
-				phys_data.remove_rigid_body(events[i].node);
+				const auto node = events[i].node;
+
+				auto* physics_entity = phys_data.get_physics_entity(node);
+				assert(physics_entity != nullptr && physics_entity->rigid_body != nullptr);
+
+				// Remove the rigid body from the world and delete it
+				phys_data.phys_world.dynamics_world().removeRigidBody(physics_entity->rigid_body.get());
+				physics_entity->rigid_body = nullptr;
+
+				// Evaluate if we should keep the physics entity or not
+				phys_data.post_remove_physics_entity_element(*physics_entity);
 			}
 		}
 	}

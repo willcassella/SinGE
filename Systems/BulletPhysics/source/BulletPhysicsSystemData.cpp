@@ -12,61 +12,6 @@ namespace sge
 {
     namespace bullet_physics
 	{
-        void BulletPhysicsSystem::Data::add_rigid_body(const Node& node, const CRigidBody& rigid_body)
-        {
-            auto& physics_entity = get_or_create_physics_entity(node.get_id());
-            assert(physics_entity.rigid_body == nullptr);
-
-            // Set the entitiy's position
-			physics_entity.transform.setOrigin(to_bullet(node.get_local_position()));
-			physics_entity.transform.setRotation(to_bullet(node.get_local_rotation()));
-
-            // Calculate local inertia from the collision shape
-            btVector3 local_inertia;
-            physics_entity.collider.calculateLocalInertia(rigid_body.mass(), local_inertia);
-
-            // Create the rigid body construction info
-            btRigidBody::btRigidBodyConstructionInfo cinfo{
-                rigid_body.mass(),
-                &physics_entity,
-                &physics_entity.collider,
-                local_inertia };
-            cinfo.m_friction = rigid_body.friction();
-            cinfo.m_rollingFriction = rigid_body.rolling_friction();
-            cinfo.m_spinningFriction = rigid_body.spinning_friction();
-            cinfo.m_linearDamping = rigid_body.linear_damping();
-            cinfo.m_angularDamping = rigid_body.angular_damping();
-
-            // Create the rigid body
-            physics_entity.rigid_body = std::make_unique<btRigidBody>(cinfo);
-
-            // Set if it's kinematic or not
-            if (rigid_body.kinematic())
-            {
-                physics_entity.rigid_body->setMassProps(0, { 0, 0, 0 });
-                physics_entity.rigid_body->setActivationState(DISABLE_DEACTIVATION);
-                physics_entity.rigid_body->setCollisionFlags(
-                    physics_entity.rigid_body->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-            }
-
-            // Add it to the world
-            phys_world.dynamics_world().addRigidBody(physics_entity.rigid_body.get());
-        }
-
-        void BulletPhysicsSystem::Data::remove_rigid_body(NodeId node)
-        {
-            auto* physics_entity = get_physics_entity(node);
-            assert(physics_entity != nullptr && physics_entity->rigid_body != nullptr);
-
-            // Remove the rigid body from the world
-            phys_world.dynamics_world().removeRigidBody(physics_entity->rigid_body.get());
-
-            // Delete the rigid body
-            physics_entity->rigid_body = nullptr;
-
-            post_remove_physics_entity_element(*physics_entity);
-        }
-
         PhysicsEntity& BulletPhysicsSystem::Data::get_or_create_physics_entity(NodeId node)
         {
             // Search for the entity
@@ -79,7 +24,10 @@ namespace sge
 
             // Create a new physics entity
             auto phys = std::make_unique<PhysicsEntity>(node, *this);
-            return *physics_entities.insert(std::make_pair(node, std::move(phys))).first->second;
+			auto* phys_entity_ptr = phys.get();
+            physics_entities.insert(std::make_pair(node, std::move(phys)));
+
+			return *phys_entity_ptr;
         }
 
         PhysicsEntity* BulletPhysicsSystem::Data::get_physics_entity(NodeId node)
@@ -88,12 +36,69 @@ namespace sge
             return iter == physics_entities.end() ? nullptr : iter->second.get();
         }
 
-        void BulletPhysicsSystem::Data::post_remove_physics_entity_element(PhysicsEntity& phys_entity)
+	    void BulletPhysicsSystem::Data::post_add_physics_entity_element(PhysicsEntity& phys_entity)
+	    {
+			// If the physics entity does not have a ghost object, rigid body, or character controller, give it a basic collision object
+			if (phys_entity.ghost_object == nullptr && phys_entity.rigid_body == nullptr && phys_entity.character_controller == nullptr)
+			{
+				if (phys_entity.collision_object != nullptr)
+				{
+					return;
+				}
+
+				// Create the collision object
+				phys_entity.collision_object = std::make_unique<btCollisionObject>();
+				phys_entity.collision_object->setCollisionShape(&phys_entity.collider);
+				phys_entity.collision_object->setWorldTransform(phys_entity.transform);
+				phys_entity.collision_object->setInterpolationWorldTransform(phys_entity.transform);
+
+				// Add it to the world
+				phys_world.dynamics_world().addCollisionObject(phys_entity.collision_object.get());
+			}
+			else
+			{
+				if (phys_entity.collision_object == nullptr)
+				{
+					return;
+				}
+
+				// Remove the collision object from the world, and destroy it
+				phys_world.dynamics_world().removeCollisionObject(phys_entity.collision_object.get());
+				phys_entity.collision_object = nullptr;
+			}
+	    }
+
+	    void BulletPhysicsSystem::Data::post_remove_physics_entity_element(PhysicsEntity& phys_entity)
         {
-            // If the physics entity has no child shapes, no rigid body, no ghost object, and no character controller
-            if (phys_entity.collider.getNumChildShapes() == 0 && phys_entity.rigid_body == nullptr && phys_entity.ghost_object == nullptr && phys_entity.character_controller == nullptr)
+            // If the physics entity has no rigid body, no ghost object, and no character controller
+            if (phys_entity.rigid_body == nullptr &&
+				phys_entity.ghost_object == nullptr &&
+				phys_entity.character_controller == nullptr)
             {
-                // ... Then there's no reason to keep it
+				// If it has child shapes, then we can't remove it (evaluate if we need to add a collision object)
+				if (phys_entity.collider.getNumChildShapes() != 0)
+				{
+					if (phys_entity.collision_object != nullptr)
+					{
+						return;
+					}
+
+					// Create a collision object, and add it to the world
+					phys_entity.collision_object = std::make_unique<btCollisionObject>();
+					phys_entity.collision_object->setCollisionShape(&phys_entity.collider);
+					phys_entity.collision_object->setWorldTransform(phys_entity.transform);
+					phys_entity.collision_object->setInterpolationWorldTransform(phys_entity.transform);
+					phys_world.dynamics_world().addCollisionObject(phys_entity.collision_object.get());
+					return;
+				}
+
+                // Remove the collision object, if any
+				if (phys_entity.collision_object != nullptr)
+				{
+					phys_world.dynamics_world().removeCollisionObject(phys_entity.collision_object.get());
+				}
+
+				// Destroy it
                 auto iter = physics_entities.find(phys_entity.node);
                 physics_entities.erase(iter);
             }

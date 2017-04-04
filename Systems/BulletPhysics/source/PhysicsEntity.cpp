@@ -46,21 +46,21 @@ namespace sge
             // Set the main transform
             transform = trans;
 
-            // Set the rigid body transform
+			if (collision_object)
+			{
+				collision_object->setWorldTransform(trans);
+				collision_object->setInterpolationWorldTransform(trans);
+			}
+			if (ghost_object)
+			{
+				ghost_object->setWorldTransform(trans);
+				ghost_object->setInterpolationWorldTransform(trans);
+			}
             if (rigid_body)
             {
                 rigid_body->setWorldTransform(trans);
                 rigid_body->setInterpolationWorldTransform(trans);
             }
-
-            // Set the ghost object trnasform
-            if (ghost_object)
-            {
-                ghost_object->setWorldTransform(trans);
-                ghost_object->setInterpolationWorldTransform(trans);
-            }
-
-            // Set the character controller transform
             if (character_controller)
             {
                 character_controller->ghost_object.setWorldTransform(trans);

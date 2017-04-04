@@ -42,21 +42,18 @@ namespace sge
         public:
 
 			NodeId node;
-
             btTransform transform;
-
             btCompoundShape collider;
 
-			std::unique_ptr<btSphereShape> sphere_collider;
-
+			// Not the best way to do this, but it works
+			// I think what I'd rather have is seperate sets of things that correspond to the same object
+        	std::unique_ptr<btSphereShape> sphere_collider;
             std::unique_ptr<btBoxShape> box_collider;
-
             std::unique_ptr<btCapsuleShape> capsule_collider;
 
+			std::unique_ptr<btCollisionObject> collision_object;
+        	std::unique_ptr<btPairCachingGhostObject> ghost_object;
             std::unique_ptr<btRigidBody> rigid_body;
-
-            std::unique_ptr<btPairCachingGhostObject> ghost_object;
-
             std::unique_ptr<CharacterController> character_controller;
 
         private:
