@@ -47,6 +47,8 @@ namespace sge
 
             btCompoundShape collider;
 
+			std::unique_ptr<btSphereShape> sphere_collider;
+
             std::unique_ptr<btBoxShape> box_collider;
 
             std::unique_ptr<btCapsuleShape> capsule_collider;

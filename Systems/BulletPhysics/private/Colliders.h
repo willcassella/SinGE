@@ -7,6 +7,21 @@ namespace sge
 {
 	namespace bullet_physics
 	{
+		void on_sphere_collider_new(
+			EventChannel& new_sphere_collider_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data);
+
+		void on_sphere_collider_destroyed(
+			EventChannel& destroyed_sphere_collider_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data);
+
+		void on_sphere_collider_modified(
+			EventChannel& modified_sphere_collider_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data);
+
 		void on_box_collider_new(
 			EventChannel& new_box_collider_channel,
 			EventChannel::SubscriberId subscriber_id,
@@ -36,5 +51,6 @@ namespace sge
 			EventChannel& modifed_capsule_collider_channel,
 			EventChannel::SubscriberId subscriber_id,
 			BulletPhysicsSystem::Data& phys_data);
+
 	}
 }

@@ -2,6 +2,7 @@
 
 #include <Core/Reflection/ReflectionBuilder.h>
 #include <Engine/UpdatePipeline.h>
+#include <Engine/Components/Physics/CSphereCollider.h>
 #include <Engine/Components/Physics/CBoxCollider.h>
 #include <Engine/Components/Physics/CCapsuleCollider.h>
 #include <Engine/Components/Physics/CRigidBody.h>
@@ -71,6 +72,9 @@ namespace sge
 			_new_rigid_body_channel(nullptr),
 			_modified_rigid_body_channel(nullptr),
 			_destroyed_rigid_body_channel(nullptr),
+			_new_sphere_collider_channel(nullptr),
+			_modified_sphere_collider_channel(nullptr),
+			_destroyed_sphere_collider_channel(nullptr),
 			_new_box_collider_channel(nullptr),
 			_modified_box_collider_channel(nullptr),
 			_destroyed_box_collider_channel(nullptr),
@@ -87,6 +91,9 @@ namespace sge
 			_new_rigid_body_sid(EventChannel::INVALID_SID),
 			_modified_rigid_body_sid(EventChannel::INVALID_SID),
 			_destroyed_rigid_body_sid(EventChannel::INVALID_SID),
+			_new_sphere_collider_sid(EventChannel::INVALID_SID),
+			_modified_sphere_collider_sid(EventChannel::INVALID_SID),
+			_destroyed_sphere_collider_sid(EventChannel::INVALID_SID),
 			_new_box_collider_sid(EventChannel::INVALID_SID),
 			_modified_box_collider_sid(EventChannel::INVALID_SID),
 			_destroyed_box_collider_sid(EventChannel::INVALID_SID),
@@ -133,6 +140,14 @@ namespace sge
 			_modified_rigid_body_sid = _modified_rigid_body_channel->subscribe();
 			_destroyed_rigid_body_sid = _destroyed_rigid_body_channel->subscribe();
 
+			// Sphere collider subscriptions
+			_new_sphere_collider_channel = scene.get_event_channel(CSphereCollider::type_info, "new");
+			_modified_sphere_collider_channel = scene.get_event_channel(CSphereCollider::type_info, "prop_mod");
+			_destroyed_sphere_collider_channel = scene.get_event_channel(CSphereCollider::type_info, "destroy");
+			_new_sphere_collider_sid = _new_sphere_collider_channel->subscribe();
+			_modified_sphere_collider_sid = _modified_sphere_collider_channel->subscribe();
+			_destroyed_sphere_collider_sid = _destroyed_sphere_collider_channel->subscribe();
+
 			// Box collider event subscriptions
 			_new_box_collider_channel = scene.get_event_channel(CBoxCollider::type_info, "new");
 			_modified_box_collider_channel = scene.get_event_channel(CBoxCollider::type_info, "prop_mod");
@@ -169,10 +184,10 @@ namespace sge
 			// Consume events
 			on_transform_modified(*_node_world_transform_changed_channel, _node_world_transform_changed_sid, *_data);
 
-			// Consume rigid body events
-			on_rigid_body_new(scene, *_new_rigid_body_channel, _new_rigid_body_sid, *_data);
-			on_rigid_body_modified(*_modified_rigid_body_channel, _modified_rigid_body_sid, *_data);
-			on_rigid_body_modified(*_destroyed_rigid_body_channel, _destroyed_rigid_body_sid, *_data);
+			// Consume sphere collider events
+			on_sphere_collider_new(*_new_sphere_collider_channel, _new_sphere_collider_sid, *_data);
+			on_sphere_collider_modified(*_modified_sphere_collider_channel, _modified_sphere_collider_sid, *_data);
+			on_sphere_collider_destroyed(*_destroyed_sphere_collider_channel, _destroyed_sphere_collider_sid, *_data);
 
 			// Consume box collider events
 			on_box_collider_new(*_new_box_collider_channel, _new_box_collider_sid, *_data);
@@ -183,6 +198,11 @@ namespace sge
 			on_capsule_collider_new(*_new_capsule_collider_channel, _new_capsule_collider_sid, *_data);
 			on_capsule_collider_modified(*_modified_capsule_collider_channel, _modified_box_collider_sid, *_data);
 			on_capsule_collider_destroyed(*_destroyed_capsule_collider_channel, _destroyed_capsule_collider_sid, *_data);
+
+			// Consume rigid body events
+			on_rigid_body_new(scene, *_new_rigid_body_channel, _new_rigid_body_sid, *_data);
+			on_rigid_body_modified(*_modified_rigid_body_channel, _modified_rigid_body_sid, *_data);
+			on_rigid_body_modified(*_destroyed_rigid_body_channel, _destroyed_rigid_body_sid, *_data);
 
 			// Consume character controller events
 			on_character_controller_new(*_new_character_controller_channel, _new_character_controller_sid, *_data, scene);

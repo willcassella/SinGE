@@ -50,6 +50,9 @@ namespace sge
 			EventChannel* _new_rigid_body_channel;
 			EventChannel* _modified_rigid_body_channel;
 			EventChannel* _destroyed_rigid_body_channel;
+			EventChannel* _new_sphere_collider_channel;
+			EventChannel* _modified_sphere_collider_channel;
+			EventChannel* _destroyed_sphere_collider_channel;
 			EventChannel* _new_box_collider_channel;
 			EventChannel* _modified_box_collider_channel;
 			EventChannel* _destroyed_box_collider_channel;
@@ -66,6 +69,9 @@ namespace sge
 			EventChannel::SubscriberId _new_rigid_body_sid;
 			EventChannel::SubscriberId _modified_rigid_body_sid;
 			EventChannel::SubscriberId _destroyed_rigid_body_sid;
+			EventChannel::SubscriberId _new_sphere_collider_sid;
+			EventChannel::SubscriberId _modified_sphere_collider_sid;
+			EventChannel::SubscriberId _destroyed_sphere_collider_sid;
 			EventChannel::SubscriberId _new_box_collider_sid;
 			EventChannel::SubscriberId _modified_box_collider_sid;
 			EventChannel::SubscriberId _destroyed_box_collider_sid;
