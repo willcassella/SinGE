@@ -185,13 +185,13 @@
     <ClInclude Include="include\Engine\config.h" />
     <ClInclude Include="include\Engine\Node.h" />
     <ClInclude Include="include\Engine\SystemInfo.h" />
-    <ClInclude Include="include\Engine\Tags\DebugDraw.h" />
     <ClInclude Include="include\Engine\UpdatePipeline.h" />
     <ClInclude Include="include\Engine\Scene.h" />
     <ClInclude Include="include\Engine\SceneData.h" />
     <ClInclude Include="include\Engine\SystemFrame.h" />
     <ClInclude Include="include\Engine\Util\BasicComponentContainer.h" />
     <ClInclude Include="include\Engine\Util\CSharedData.h" />
+    <ClInclude Include="include\Engine\Util\DebugDraw.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Component.cpp" />
@@ -213,7 +213,6 @@
     <ClCompile Include="source\Node.cpp" />
     <ClCompile Include="source\Scene.cpp" />
     <ClCompile Include="source\SystemFrame.cpp" />
-    <ClCompile Include="source\Tags\DebugDraw.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">

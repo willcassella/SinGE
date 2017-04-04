@@ -9,6 +9,7 @@
 #include "../include/Engine/UpdatePipeline.h"
 #include "../include/Engine/SystemInfo.h"
 #include "../include/Engine/Component.h"
+#include "../include/Engine/Util/DebugDraw.h"
 
 SGE_REFLECT_TYPE(sge::Scene)
 .implements<IToArchive>()
@@ -20,7 +21,8 @@ namespace sge
 	///   Constructors   ///
 
 	Scene::Scene(TypeDB& typedb)
-		: _type_db(&typedb)
+		: _type_db(&typedb),
+		_debug_draw_line_channel(sizeof(DebugLine), 256)
 	{
 		_current_time = 0;
 	}
@@ -155,9 +157,15 @@ namespace sge
 		return &_scene_data.node_root_changed_channel;
 	}
 
+	EventChannel* Scene::get_debug_draw_line_channel()
+	{
+		return &_debug_draw_line_channel;
+	}
+
 	void Scene::reset_scene()
 	{
 		_current_time = 0;
+		_debug_draw_line_channel.clear();
 		_scene_data.next_node_id.index = 1;
 		_scene_data.nodes.clear();
 		_scene_data.node_buffer.clear();
@@ -425,6 +433,7 @@ namespace sge
 		_scene_data.update_destroyed_nodes.clear();
 
 		// Clear event channels
+		_debug_draw_line_channel.clear();
 		_scene_data.new_node_channel.clear();
 		_scene_data.destroyed_node_channel.clear();
 		_scene_data.node_local_transform_changed_channel.clear();

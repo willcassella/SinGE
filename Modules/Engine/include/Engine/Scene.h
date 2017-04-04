@@ -58,6 +58,8 @@ namespace sge
 
 		EventChannel* get_node_root_changed_channel();
 
+		EventChannel* get_debug_draw_line_channel();
+
 		/**
 		 * \brief Resets entity/component data. Essentially creates a new scene without unregistering component types.
 		 */
@@ -144,5 +146,6 @@ namespace sge
 		TypeDB* _type_db;
 		float _current_time;
         SceneData _scene_data;
+		EventChannel _debug_draw_line_channel;
 	};
 }

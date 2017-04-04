@@ -7,14 +7,8 @@
 
 namespace sge
 {
-    struct SGE_ENGINE_API FDebugLine
+    struct DebugLine
     {
-        SGE_REFLECTED_TYPE;
-
-        //////////////////
-        ///   Fields   ///
-    public:
-
         /* Starting point for the line in world coordintes. */
         Vec3 world_start;
 
@@ -22,6 +16,6 @@ namespace sge
         Vec3 world_end;
 
         /* Color of the line. */
-        color::RGBA8 color;
+        color::RGBF32 color;
     };
 }
