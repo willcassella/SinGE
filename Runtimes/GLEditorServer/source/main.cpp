@@ -70,15 +70,6 @@ int main(int argc, char* argv[])
 	sge::Scene scene{ type_db };
 	sge::register_builtin_components(scene);
 
-	// Load the scene
-	std::string scene_path;
-	if (config_reader->object_member("scene", scene_path))
-	{
-		sge::JsonArchive scene_archive;
-		scene_archive.from_file(scene_path.c_str());
-		scene_archive.deserialize_root(scene);
-	}
-
     // Create a pipeline
     sge::UpdatePipeline pipeline;
 
@@ -97,6 +88,7 @@ int main(int argc, char* argv[])
 
 	sge::gl_render::GLRenderSystem render_system{ render_config };
 	render_system.pipeline_register(pipeline);
+	render_system.initialize_subscriptions(scene);
 
 	// Create an editor server
 	sge::EditorServerSystem editorServer{ 1995 };
@@ -113,6 +105,15 @@ int main(int argc, char* argv[])
     {
         assert(false /*Engine update pipeline not specified*/);
     }
+
+	// Load the scene
+	std::string scene_path;
+	if (config_reader->object_member("scene", scene_path))
+	{
+		sge::JsonArchive scene_archive;
+		scene_archive.from_file(scene_path.c_str());
+		scene_archive.deserialize_root(scene);
+	}
 
 	// Loop until the user closes the window
 	while (!glfwWindowShouldClose(window))

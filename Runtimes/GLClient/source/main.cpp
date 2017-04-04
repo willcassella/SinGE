@@ -163,15 +163,6 @@ int main(int argc, char* argv[])
 	sge::Scene scene{ type_db };
 	sge::register_builtin_components(scene);
 
-	// Load the scene
-	std::string scene_path;
-	if (config_reader->object_member("scene", scene_path))
-	{
-		sge::JsonArchive scene_archive;
-		scene_archive.from_file(scene_path.c_str());
-		scene_archive.deserialize_root(scene);
-	}
-
     // Create a pipeline
     sge::UpdatePipeline pipeline;
 
@@ -188,12 +179,14 @@ int main(int argc, char* argv[])
 
 	sge::gl_render::GLRenderSystem renderSystem{ render_config };
     renderSystem.pipeline_register(pipeline);
+	renderSystem.initialize_subscriptions(scene);
 
     // Create a bullet physics system
     sge::bullet_physics::Config physics_config;
     config_reader->object_member("bullet_physics", physics_config);
     sge::bullet_physics::BulletPhysicsSystem physics_system{ physics_config };
     physics_system.register_pipeline(pipeline);
+	physics_system.initialize_subscriptions(scene);
 
 	// Get the input component action event channel
 	auto* const action_channel = scene.get_event_channel(sge::CInput::type_info, "action_event");
@@ -220,6 +213,15 @@ int main(int argc, char* argv[])
         assert(false /*Engine update pipeline not specified*/);
     }
 
+	// Load the scene
+	std::string scene_path;
+	if (config_reader->object_member("scene", scene_path))
+	{
+		sge::JsonArchive scene_archive;
+		scene_archive.from_file(scene_path.c_str());
+		scene_archive.deserialize_root(scene);
+	}
+
     // Store the last time we printed out frame time
     auto last_printout = std::chrono::steady_clock::now();
 
@@ -237,10 +239,7 @@ int main(int argc, char* argv[])
             last_printout = std::chrono::steady_clock::now();
         }
 
-		// Swap front and back buffers
 		glfwSwapBuffers(window);
-
-		// Poll for and process events
 		glfwPollEvents();
 	}
 
