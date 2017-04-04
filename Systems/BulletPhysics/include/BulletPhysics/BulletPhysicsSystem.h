@@ -33,6 +33,8 @@ namespace sge
 
             void register_pipeline(UpdatePipeline& pipeline);
 
+			void initialize_subscriptions(Scene& scene);
+
         private:
 
             void phys_tick(Scene& scene, SystemFrame& frame);
@@ -48,10 +50,16 @@ namespace sge
             bool _initialized_world;
             std::unique_ptr<Data> _data;
 			EventChannel* _node_world_transform_changed_event_channel;
+			EventChannel* _new_rigid_body_event_channel;
+			EventChannel* _destroyed_rigid_body_event_channel;
+			EventChannel* _modified_rigid_body_event_channel;
 			EventChannel* _character_controller_jump_event_channel;
 			EventChannel* _character_controller_turn_event_channel;
 			EventChannel* _character_controller_walk_event_channel;
 			EventChannel::SubscriberId _node_world_transform_changed_sid;
+			EventChannel::SubscriberId _new_rigid_body_sid;
+			EventChannel::SubscriberId _destroyed_rigid_body_sid;
+			EventChannel::SubscriberId _modified_rigid_body_sid;
 			EventChannel::SubscriberId _character_controller_jump_sid;
 			EventChannel::SubscriberId _character_controller_turn_sid;
 			EventChannel::SubscriberId _character_controller_walk_sid;

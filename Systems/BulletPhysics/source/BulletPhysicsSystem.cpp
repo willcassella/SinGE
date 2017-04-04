@@ -14,6 +14,7 @@
 #include "../private/PhysicsEntity.h"
 #include "../private/DebugDrawer.h"
 #include "../private/CharacterController.h"
+#include "../private/RigidBody.h"
 #include "../private/Util.h"
 
 SGE_REFLECT_TYPE(sge::bullet_physics::BulletPhysicsSystem);
@@ -142,13 +143,19 @@ namespace sge
         BulletPhysicsSystem::BulletPhysicsSystem(const Config& config)
             : _initialized_world(false),
 			_node_world_transform_changed_event_channel(nullptr),
+			_new_rigid_body_event_channel(nullptr),
+			_destroyed_rigid_body_event_channel(nullptr),
+			_modified_rigid_body_event_channel(nullptr),
 			_character_controller_jump_event_channel(nullptr),
 			_character_controller_turn_event_channel(nullptr),
 			_character_controller_walk_event_channel(nullptr),
-			_node_world_transform_changed_sid(0),
-			_character_controller_jump_sid(0),
-			_character_controller_turn_sid(0),
-			_character_controller_walk_sid(0)
+			_node_world_transform_changed_sid(EventChannel::INVALID_SID),
+			_new_rigid_body_sid(EventChannel::INVALID_SID),
+			_destroyed_rigid_body_sid(EventChannel::INVALID_SID),
+			_modified_rigid_body_sid(EventChannel::INVALID_SID),
+			_character_controller_jump_sid(EventChannel::INVALID_SID),
+			_character_controller_turn_sid(EventChannel::INVALID_SID),
+			_character_controller_walk_sid(EventChannel::INVALID_SID)
         {
             _data = std::make_unique<Data>();
         }
@@ -170,25 +177,46 @@ namespace sge
                 &BulletPhysicsSystem::debug_draw);
         }
 
-        void BulletPhysicsSystem::phys_tick(Scene& scene, SystemFrame& frame)
+	    void BulletPhysicsSystem::initialize_subscriptions(Scene& scene)
+	    {
+			_node_world_transform_changed_event_channel = scene.get_node_world_transform_changed_channel();
+			_node_world_transform_changed_sid = _node_world_transform_changed_event_channel->subscribe();
+
+			// Rigid Body event subscriptions
+			_new_rigid_body_event_channel = scene.get_event_channel(CRigidBody::type_info, "new");
+			_destroyed_rigid_body_event_channel = scene.get_event_channel(CRigidBody::type_info, "destroy");
+			_modified_rigid_body_event_channel = scene.get_event_channel(CRigidBody::type_info, "prop_mod");
+			_new_rigid_body_sid = _new_rigid_body_event_channel->subscribe();
+			_destroyed_rigid_body_sid = _destroyed_rigid_body_event_channel->subscribe();
+			_modified_rigid_body_sid = _modified_rigid_body_event_channel->subscribe();
+
+			// Character controller event subscriptions
+			_character_controller_jump_event_channel = scene.get_event_channel(CCharacterController::type_info, "jump_channel");
+			_character_controller_turn_event_channel = scene.get_event_channel(CCharacterController::type_info, "turn_channel");
+			_character_controller_walk_event_channel = scene.get_event_channel(CCharacterController::type_info, "walk_channel");
+			_character_controller_jump_sid = _character_controller_jump_event_channel->subscribe();
+			_character_controller_turn_sid = _character_controller_turn_event_channel->subscribe();
+			_character_controller_walk_sid = _character_controller_walk_event_channel->subscribe();
+	    }
+
+	    void BulletPhysicsSystem::phys_tick(Scene& scene, SystemFrame& frame)
         {
             // Initialize the world, if we haven't already
             if (!_initialized_world)
             {
                 _initialized_world = true;
                 initialize_world(scene);
-				_node_world_transform_changed_event_channel = scene.get_node_world_transform_changed_channel();
-				_node_world_transform_changed_sid = _node_world_transform_changed_event_channel->subscribe();
-				_character_controller_jump_event_channel = scene.get_event_channel(CCharacterController::type_info, "jump_channel");
-				_character_controller_jump_sid = _character_controller_jump_event_channel->subscribe();
-				_character_controller_turn_event_channel = scene.get_event_channel(CCharacterController::type_info, "turn_channel");
-				_character_controller_turn_sid = _character_controller_turn_event_channel->subscribe();
-				_character_controller_walk_event_channel = scene.get_event_channel(CCharacterController::type_info, "walk_channel");
-				_character_controller_walk_sid = _character_controller_walk_event_channel->subscribe();
             }
 
 			// Consume events
 			on_transform_modified(*_node_world_transform_changed_event_channel, _node_world_transform_changed_sid, *_data);
+
+			// Consume rigid body events
+			on_new_rigid_body(scene, *_new_rigid_body_event_channel, _new_rigid_body_sid, *_data);
+			on_destroy_rigid_body(*_destroyed_rigid_body_event_channel, _destroyed_rigid_body_sid, *_data);
+			on_rigid_body_modified(*_modified_rigid_body_event_channel, _modified_rigid_body_sid, *_data);
+
+			// Consume character controller events
 			on_character_controller_jump(*_character_controller_jump_event_channel, _character_controller_jump_sid, *_data);
 			on_character_controller_turn(*_character_controller_turn_event_channel, _character_controller_turn_sid, *_data);
 			on_character_controller_walk(*_character_controller_walk_event_channel, _character_controller_walk_sid, *_data);
@@ -264,26 +292,6 @@ namespace sge
 					for (std::size_t i = 0; i < num_instances; ++i)
 					{
 						_data->add_capsule_collider(capsule_collider_nodes[i], *capsule_collider_instances[i]);
-					}
-				}
-			}
-
-			// Load all rigid bodies
-			{
-				NodeId rigid_body_nodes[8];
-				std::size_t start_index = 0;
-				std::size_t num_instances;
-				while (rigid_body_component->get_instance_nodes(start_index, 8, &num_instances, rigid_body_nodes))
-				{
-					start_index += 8;
-					CRigidBody* rigid_body_instances[8];
-					const Node* node_instances[8];
-					rigid_body_component->get_instances(rigid_body_nodes, num_instances, rigid_body_instances);
-					scene.get_nodes(rigid_body_nodes, num_instances, node_instances);
-
-					for (std::size_t i = 0; i < num_instances; ++i)
-					{
-						_data->add_rigid_body(*node_instances[8], *rigid_body_instances[i]);
 					}
 				}
 			}

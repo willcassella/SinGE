@@ -202,6 +202,7 @@
     <ClInclude Include="private\PhysicsEntity.h" />
     <ClInclude Include="private\PhysicsWorld.h" />
     <ClInclude Include="private\BulletPhysicsSystemData.h" />
+    <ClInclude Include="private\RigidBody.h" />
     <ClInclude Include="private\Util.h" />
   </ItemGroup>
   <ItemGroup>
@@ -211,6 +212,7 @@
     <ClCompile Include="source\Config.cpp" />
     <ClCompile Include="source\DebugDrawer.cpp" />
     <ClCompile Include="source\PhysicsEntity.cpp" />
+    <ClCompile Include="source\RigidBody.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
