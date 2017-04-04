@@ -71,7 +71,7 @@ namespace sge
 
                         // Set the uv scale
                         glUniform2fv(
-                            mat_instance.material.uniforms.mat_uv_scale_uniform,
+                            mat_instance.material.uniforms.inst_mat_uv_scale_uniform,
                             1,
                             instance.mat_uv_scale.vec());
 
@@ -108,7 +108,7 @@ namespace sge
                         glBindTexture(GL_TEXTURE_2D, instance.lightmap);
 
                         // Set the uv scale
-                        glUniform2fv(mat_instance.material.uniforms.mat_uv_scale_uniform, 1, instance.mat_uv_scale.vec());
+                        glUniform2fv(mat_instance.material.uniforms.inst_mat_uv_scale_uniform, 1, instance.mat_uv_scale.vec());
 
                         // Draw the mesh
                         glDrawRangeElements(
@@ -134,7 +134,7 @@ namespace sge
             gl_material::set_bound_material_params(&next_active_texture, instance.material.params);
 
             // Bind standard uniforms
-            glUniform2fv(instance.material.uniforms.mat_uv_scale_uniform, 1, instance.mat_uv_scale.vec());
+            glUniform2fv(instance.material.uniforms.inst_mat_uv_scale_uniform, 1, instance.mat_uv_scale.vec());
             glUniformMatrix4fv(instance.material.uniforms.model_matrix_uniform, 1, GL_FALSE, instance.world_transform.vec());
             glUniformMatrix4fv(instance.material.uniforms.view_matrix_uniform, 1, GL_FALSE, view.vec());
             glUniformMatrix4fv(instance.material.uniforms.proj_matrix_uniform, 1, GL_FALSE, proj.vec());

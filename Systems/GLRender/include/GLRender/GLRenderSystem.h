@@ -33,6 +33,8 @@ namespace sge
 
 			void pipeline_register(UpdatePipeline& pipeline);
 
+			void initialize_subscriptions(Scene& scene);
+
             void set_viewport(int width, int height);
 
 		private:
@@ -44,6 +46,8 @@ namespace sge
 		private:
 
 			std::unique_ptr<State> _state;
+			EventChannel* _modified_node_transform_channel;
+			EventChannel::SubscriberId _modified_node_transform_sid;
 		};
 	}
 }

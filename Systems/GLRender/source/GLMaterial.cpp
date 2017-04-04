@@ -45,7 +45,8 @@ namespace sge
                 out_uniforms->model_matrix_uniform = glGetUniformLocation(mat_id, MODEL_MATRIX_UNIFORM_NAME);
                 out_uniforms->view_matrix_uniform = glGetUniformLocation(mat_id, VIEW_MATRIX_UNIFORM_NAME);
                 out_uniforms->proj_matrix_uniform = glGetUniformLocation(mat_id, PROJ_MATRIX_UNIFORM_NAME);
-                out_uniforms->mat_uv_scale_uniform = glGetUniformLocation(mat_id, MAT_UV_SCALE_UNIFORM_NAME);
+				out_uniforms->base_mat_uv_scale_uniform = glGetUniformLocation(mat_id, BASE_MAT_UV_SCALE_UNIFORM_NAME);
+				out_uniforms->inst_mat_uv_scale_uniform = glGetUniformLocation(mat_id, INST_MAT_UV_SCALE_UNIFORM_NAME);
                 out_uniforms->prec_lightmap_uniform = glGetUniformLocation(mat_id, PREC_LIGHTMAP_UNIFORM_NAME);
             }
 

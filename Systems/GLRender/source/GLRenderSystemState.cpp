@@ -40,6 +40,11 @@ namespace sge
                 // Get standard uniforms for the material program
                 gl_material::get_material_standard_uniforms(gl_mat.program_id, &gl_mat.uniforms);
 
+				// Set base uv scale
+				glUseProgram(gl_mat.program_id);
+				glUniform2fv(gl_mat.uniforms.base_mat_uv_scale_uniform, 1, material.base_uv_scale().vec());
+				glUseProgram(0);
+
                 // Get all of the default int parameters for this material
                 for (const auto& int_param : material.param_table().bool_params)
                 {

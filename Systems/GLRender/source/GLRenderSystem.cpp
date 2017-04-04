@@ -30,7 +30,8 @@ namespace sge
 
 			// Create a mesh instance object
 			MeshInstance instance;
-			instance.mat_uv_scale = { 1.f, 1.f };
+			instance.node_id = node.get_id();
+			instance.mat_uv_scale = static_mesh.uv_scale();
 			instance.world_transform = node.get_world_matrix();
 
 			// Decide whether to use a lightmap
@@ -81,6 +82,70 @@ namespace sge
 			mesh_set.instances.push_back(instance);
 			mat_instance.mesh_instances.push_back(std::move(mesh_set));
 			state.render_scene.standard_material_instances.push_back(std::move(mat_instance));
+		}
+
+		static void update_render_scene_transforms(RenderScene& render_scene, const NodeId* nodes, const Mat4* world_transforms, std::size_t num_nodes)
+		{
+			for (auto& mat : render_scene.standard_material_instances)
+			{
+				// Search through normal mesh instances
+				for (auto& mesh : mat.mesh_instances)
+				{
+					for (auto& instance : mesh.instances)
+					{
+						// Search for a matching node id
+						for (std::size_t i = 0; i < num_nodes; ++i)
+						{
+							if (nodes[i] == instance.node_id)
+							{
+								instance.world_transform = world_transforms[i];
+								break;
+							}
+						}
+					}
+				}
+
+				// Search through override instances
+				for (auto& override_param_mesh : mat.param_override_instances)
+				{
+					for (auto& instance : override_param_mesh.instances)
+					{
+						// Search for a matching node id
+						for (std::size_t i = 0; i < num_nodes; ++i)
+						{
+							if (nodes[i] == instance.node_id)
+							{
+								instance.world_transform = world_transforms[i];
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		static void on_node_transform_update(
+			EventChannel& node_transform_update_channel,
+			EventChannel::SubscriberId subscriber_id,
+			RenderScene& render_scene)
+		{
+			// Get events
+			ENodeTransformChanged events[16];
+			int32 num_events;
+			while (node_transform_update_channel.consume(subscriber_id, events, &num_events))
+			{
+				// Get ids and transforms
+				NodeId nodes[16];
+				Mat4 world_transforms[16];
+				for (int32 i = 0; i < num_events; ++i)
+				{
+					nodes[i] = events[i].node->get_id();
+					world_transforms[i] = events[i].node->get_world_matrix();
+				}
+
+				// Update render scene
+				update_render_scene_transforms(render_scene, nodes, world_transforms, num_events);
+			}
 		}
 
         static void build_render_scene(GLRenderSystem::State& state, Scene& scene)
@@ -170,6 +235,8 @@ namespace sge
 		///   Constructors   ///
 
         GLRenderSystem::GLRenderSystem(const Config& config)
+			: _modified_node_transform_channel(nullptr),
+			_modified_node_transform_sid(EventChannel::INVALID_SID)
         {
             assert(config.validate() /*The given GLRenderSystem config object is not valid*/);
 
@@ -424,6 +491,12 @@ namespace sge
                 &GLRenderSystem::render_scene);
 		}
 
+		void GLRenderSystem::initialize_subscriptions(Scene& scene)
+		{
+			_modified_node_transform_channel = scene.get_node_world_transform_changed_channel();
+			_modified_node_transform_sid = _modified_node_transform_channel->subscribe();
+		}
+
 	    void GLRenderSystem::set_viewport(int width, int height)
 	    {
             _state->width = width;
@@ -501,6 +574,9 @@ namespace sge
                 build_render_scene(*_state, scene);
                 _state->initialized_render_scene = true;
             }
+
+			// Consume events
+			on_node_transform_update(*_modified_node_transform_channel, _modified_node_transform_sid, _state->render_scene);
 
 			// Create camera matrices
 			Mat4 view;

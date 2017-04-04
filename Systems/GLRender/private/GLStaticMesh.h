@@ -27,16 +27,16 @@ namespace sge
 
             struct MeshSlice
             {
-                GLuint material;
-                uint32 start_element_index;
-                uint32 num_element_indices;
+                GLuint material = 0;
+                uint32 start_element_index = 0;
+                uint32 num_element_indices = 0;
             };
 
             struct StaticMesh
             {
-                GLuint vao;
-                GLuint ebo;
-                GLint num_total_elements;
+                GLuint vao = 0;
+                GLuint ebo = 0;
+                GLint num_total_elements = 0;
                 std::array<GLuint, NUM_VERTEX_BUFFERS> vertex_buffers;
                 std::vector<MeshSlice> material_slices;
             };

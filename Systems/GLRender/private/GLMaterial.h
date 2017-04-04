@@ -26,7 +26,8 @@ namespace sge
 			constexpr const char* MODEL_MATRIX_UNIFORM_NAME = "model";
 			constexpr const char* VIEW_MATRIX_UNIFORM_NAME = "view";
 			constexpr const char* PROJ_MATRIX_UNIFORM_NAME = "projection";
-            constexpr const char* MAT_UV_SCALE_UNIFORM_NAME = "mat_uv_scale";
+            constexpr const char* BASE_MAT_UV_SCALE_UNIFORM_NAME = "base_mat_uv_scale";
+			constexpr const char* INST_MAT_UV_SCALE_UNIFORM_NAME = "inst_mat_uv_scale";
             constexpr const char* PREC_LIGHTMAP_UNIFORM_NAME = "lightmap";
 
             /**
@@ -47,11 +48,12 @@ namespace sge
              */
             struct MaterialStandardUniforms
             {
-                GLint model_matrix_uniform;
-                GLint view_matrix_uniform;
-                GLint proj_matrix_uniform;
-                GLint mat_uv_scale_uniform;
-                GLint prec_lightmap_uniform;
+                GLint model_matrix_uniform = -1;
+                GLint view_matrix_uniform = -1;
+                GLint proj_matrix_uniform = -1;
+                GLint base_mat_uv_scale_uniform = -1;
+				GLint inst_mat_uv_scale_uniform = -1;
+                GLint prec_lightmap_uniform = -1;
             };
 
 		    /**
@@ -59,7 +61,7 @@ namespace sge
              */
             struct Material
             {
-                GLuint program_id;
+                GLuint program_id = 0;
                 MaterialStandardUniforms uniforms;
                 MaterialParams params;
             };

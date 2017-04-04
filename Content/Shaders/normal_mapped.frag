@@ -10,7 +10,8 @@ uniform float roughness_constant = 0.5;
 uniform float metallic_constant = 0;
 uniform bool use_roughness_map = false;
 uniform bool use_metallic_map = false;
-uniform vec2 uv_scale = vec2(1, 1);
+uniform vec2 base_mat_uv_scale = vec2(1, 1);
+uniform vec2 inst_mat_uv_scale = vec2(1, 1);
 
 in VS_OUT {
     vec2 mat_tex_coords;
@@ -36,7 +37,7 @@ void main()
         normalize(fs_in.cam_normal));
 
     // Transform normal sample to range [-1, 1]
-    vec3 normal = texture(normal_map, fs_in.mat_tex_coords * uv_scale).xyz;
+    vec3 normal = texture(normal_map, fs_in.mat_tex_coords * base_mat_uv_scale * inst_mat_uv_scale).xyz;
     normal = normalize(normal * 2.0f - 1.0f);
 
     // Output position, normal, and albedo
@@ -44,7 +45,7 @@ void main()
     out_normal = normalize(TBN * normal);
 
     // Output albedo
-    out_albedo = texture(albedo, fs_in.mat_tex_coords * uv_scale);
+    out_albedo = texture(albedo, fs_in.mat_tex_coords * base_mat_uv_scale * inst_mat_uv_scale);
 
     // Output irradiance
     out_irradiance = texture(lightmap, fs_in.lm_tex_coords);
@@ -52,7 +53,7 @@ void main()
     // Output roughness
     if (use_roughness_map)
     {
-        out_roughness_metallic.r = texture(roughness_map, fs_in.mat_tex_coords * uv_scale).r;
+        out_roughness_metallic.r = texture(roughness_map, fs_in.mat_tex_coords * base_mat_uv_scale * inst_mat_uv_scale).r;
     }
     else
     {
@@ -62,7 +63,7 @@ void main()
     // Output metallic
     if (use_metallic_map)
     {
-        out_roughness_metallic.g = texture(metallic_map, fs_in.mat_tex_coords * uv_scale).r;
+        out_roughness_metallic.g = texture(metallic_map, fs_in.mat_tex_coords * base_mat_uv_scale * inst_mat_uv_scale).r;
     }
     else
     {

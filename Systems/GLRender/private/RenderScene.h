@@ -15,7 +15,8 @@ namespace sge
         {
             Mat4 world_transform;
             Vec2 mat_uv_scale;
-            GLuint lightmap;
+			NodeId node_id;
+            GLuint lightmap = 0;
         };
 
         /**
@@ -23,9 +24,9 @@ namespace sge
          */
         struct MeshInstanceSet
         {
-            GLuint vao;
-            GLuint start_element_index;
-            GLuint num_element_indices;
+            GLuint vao = 0;
+            GLuint start_element_index = 0;
+            GLuint num_element_indices = 0;
             std::vector<MeshInstance> instances;
         };
 
@@ -36,7 +37,8 @@ namespace sge
         {
             Mat4 world_transform;
             Vec2 mat_uv_scale;
-            GLuint lightmap;
+			NodeId node_id;
+            GLuint lightmap = 0;
             gl_material::MaterialParams override_params;
         };
 
@@ -45,9 +47,9 @@ namespace sge
          */
         struct MeshInstanceMaterialOverrideSet
         {
-            GLuint vao;
-            GLuint start_element_index;
-            GLuint num_element_indices;
+            GLuint vao = 0;
+            GLuint start_element_index = 0;
+            GLuint num_element_indices = 0;
             std::vector<MaterialOverrideMeshInstance> instances;
         };
 
