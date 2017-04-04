@@ -655,7 +655,7 @@ namespace sge
 					static_mesh_container->get_instances(instance_node_ids, num_nodes, mesh_instances);
 					scene.get_nodes(instance_node_ids, num_nodes, instance_nodes);
 
-					for (std::size_t i = 0; i < 8; ++i)
+					for (std::size_t i = 0; i < num_nodes; ++i)
 					{
 						auto* const node = instance_nodes[i];
 						auto* const mesh = mesh_instances[i];
