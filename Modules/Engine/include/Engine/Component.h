@@ -86,7 +86,7 @@ namespace sge
 	{
         NodeId node;
         void* instance = nullptr;
-		FixedString<16> property;
+		FixedString<24> property;
 	};
 
 	/**
