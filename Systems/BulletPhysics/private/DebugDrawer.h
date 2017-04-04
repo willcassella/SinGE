@@ -2,7 +2,7 @@
 #pragma once
 
 #include <Core/Math/Vec3.h>
-#include <Engine/Tags/DebugDraw.h>
+#include <Engine/Util/DebugDraw.h>
 #include <btBulletCollisionCommon.h>
 
 namespace sge
@@ -43,7 +43,7 @@ namespace sge
             ///   Fields   ///
         public:
 
-            std::vector<FDebugLine> lines;
+            std::vector<DebugLine> lines;
         };
     }
 }

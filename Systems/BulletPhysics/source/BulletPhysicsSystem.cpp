@@ -9,7 +9,6 @@
 #include <Engine/Components/Gameplay/CCharacterController.h>
 #include <Engine/SystemFrame.h>
 #include <Engine/Scene.h>
-#include <Engine/Tags/DebugDraw.h>
 #include "../include/BulletPhysics/BulletPhysicsSystem.h"
 #include "../private/BulletPhysicsSystemData.h"
 #include "../private/PhysicsEntity.h"
@@ -240,8 +239,8 @@ namespace sge
             _data->phys_world.dynamics_world().debugDrawWorld();
             _data->phys_world.dynamics_world().setDebugDrawer(nullptr);
 
-            // Create a tag buffer
-
+            // Add events to the channel
+			scene.get_debug_draw_line_channel()->append(drawer.lines.data(), (int32)drawer.lines.size());
         }
     }
 }
