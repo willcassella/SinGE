@@ -67,41 +67,6 @@ namespace sge
             post_remove_physics_entity_element(*physics_entity);
         }
 
-        void BulletPhysicsSystem::Data::add_character_controller(
-            const Node& node,
-            const CCharacterController& character_controller)
-        {
-            auto& physics_entity = get_or_create_physics_entity(node.get_id());
-            assert(physics_entity.character_controller == nullptr);
-
-            // Set the transform of the entity
-			physics_entity.transform.setOrigin(to_bullet(node.get_local_position()));
-			physics_entity.transform.setRotation(to_bullet(node.get_local_rotation()));
-
-            // Create the character controller
-            physics_entity.character_controller = std::make_unique<CharacterController>(physics_entity, character_controller);
-
-            // Add the ghost object to the world
-            phys_world.dynamics_world().addCollisionObject(&physics_entity.character_controller->ghost_object,
-                btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
-
-            // Add the character controller to the world
-            phys_world.dynamics_world().addAction(physics_entity.character_controller.get());
-        }
-
-        void BulletPhysicsSystem::Data::remove_character_contoller(NodeId node)
-        {
-            auto* phys_entity = get_physics_entity(node);
-            assert(phys_entity != nullptr && phys_entity->character_controller != nullptr);
-
-            // Remove it from the world
-            phys_world.dynamics_world().removeAction(phys_entity->character_controller.get());
-            phys_world.dynamics_world().removeCollisionObject(&phys_entity->character_controller->ghost_object);
-            phys_entity->character_controller = nullptr;
-
-			post_remove_physics_entity_element(*phys_entity);
-        }
-
         PhysicsEntity& BulletPhysicsSystem::Data::get_or_create_physics_entity(NodeId node)
         {
             // Search for the entity

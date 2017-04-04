@@ -7,7 +7,7 @@
 
 namespace sge
 {
-	void bullet_physics::on_new_rigid_body(
+	void bullet_physics::on_rigid_body_new(
 		Scene& scene,
 		EventChannel& new_rigid_body_channel,
 		EventChannel::SubscriberId subscriber_id,
@@ -38,7 +38,7 @@ namespace sge
 		}
 	}
 
-	void bullet_physics::on_destroy_rigid_body(
+	void bullet_physics::on_rigid_body_destroyed(
 		EventChannel& destroyed_rigid_body_channel,
 		EventChannel::SubscriberId subscriber_id,
 		BulletPhysicsSystem::Data& phys_data)
@@ -56,14 +56,14 @@ namespace sge
 	}
 
 	void bullet_physics::on_rigid_body_modified(
-		EventChannel& rigid_body_modified_channel,
+		EventChannel& modified_rigid_body_channel,
 		EventChannel::SubscriberId subscriber_id,
 		BulletPhysicsSystem::Data& phys_data)
 	{
 		// Get events
 		EModifiedComponent events[8];
 		int32 num_events;
-		while (rigid_body_modified_channel.consume(subscriber_id, events, &num_events))
+		while (modified_rigid_body_channel.consume(subscriber_id, events, &num_events))
 		{
 			// For each event
 			for (int32 i = 0; i < num_events; ++i)

@@ -41,27 +41,27 @@ namespace sge
 
             void debug_draw(Scene& scene, SystemFrame& frame);
 
-            void initialize_world(Scene& scene);
-
             //////////////////
             ///   Fields   ///
         private:
 
-            bool _initialized_world;
             std::unique_ptr<Data> _data;
-			EventChannel* _node_world_transform_changed_event_channel;
-			EventChannel* _new_rigid_body_event_channel;
-			EventChannel* _modified_rigid_body_event_channel;
-			EventChannel* _destroyed_rigid_body_event_channel;
+			EventChannel* _node_world_transform_changed_channel;
+			EventChannel* _new_rigid_body_channel;
+			EventChannel* _modified_rigid_body_channel;
+			EventChannel* _destroyed_rigid_body_channel;
 			EventChannel* _new_box_collider_channel;
 			EventChannel* _modified_box_collider_channel;
 			EventChannel* _destroyed_box_collider_channel;
 			EventChannel* _new_capsule_collider_channel;
 			EventChannel* _modified_capsule_collider_channel;
 			EventChannel* _destroyed_capsule_collider_channel;
+			EventChannel* _new_character_controller_channel;
+			EventChannel* _modified_character_controller_channel;
 			EventChannel* _character_controller_jump_event_channel;
 			EventChannel* _character_controller_turn_event_channel;
 			EventChannel* _character_controller_walk_event_channel;
+			EventChannel* _destroyed_character_controller_channel;
 			EventChannel::SubscriberId _node_world_transform_changed_sid;
 			EventChannel::SubscriberId _new_rigid_body_sid;
 			EventChannel::SubscriberId _modified_rigid_body_sid;
@@ -72,9 +72,12 @@ namespace sge
 			EventChannel::SubscriberId _new_capsule_collider_sid;
 			EventChannel::SubscriberId _modified_capsule_collider_sid;
 			EventChannel::SubscriberId _destroyed_capsule_collider_sid;
+			EventChannel::SubscriberId _new_character_controller_sid;
+			EventChannel::SubscriberId _modified_character_controller_sid;
 			EventChannel::SubscriberId _character_controller_jump_sid;
 			EventChannel::SubscriberId _character_controller_turn_sid;
 			EventChannel::SubscriberId _character_controller_walk_sid;
+			EventChannel::SubscriberId _destroyed_character_controller_sid;
         };
     }
 }

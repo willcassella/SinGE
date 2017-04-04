@@ -5,6 +5,7 @@
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletDynamics/Character/btKinematicCharacterController.h>
 #include <Core/Math/Vec3.h>
+#include "../include/BulletPhysics/BulletPhysicsSystem.h"
 
 namespace sge
 {
@@ -46,5 +47,36 @@ namespace sge
             Angle _turn_amount;
             Vec3 _walk_dir;
         };
+
+		void on_character_controller_new(
+			EventChannel& new_character_controller_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data,
+			Scene& scene);
+
+		void on_character_controller_destroyed(
+			EventChannel& destroyed_character_controller_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data);
+
+		void on_character_controller_modified(
+			EventChannel& modified_character_controller_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data);
+
+		void on_character_controller_jump(
+			EventChannel& jump_event_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data);
+
+		void on_character_controller_turn(
+			EventChannel& turn_event_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data);
+
+		void on_character_controller_walk(
+			EventChannel& walk_event_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data);
     }
 }

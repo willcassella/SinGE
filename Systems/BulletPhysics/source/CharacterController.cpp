@@ -2,7 +2,9 @@
 
 #include <Engine/Components/Gameplay/CCharacterController.h>
 #include <Core/Math/Mat4.h>
+#include <Engine/Scene.h>
 #include "../private/CharacterController.h"
+#include "../private/BulletPhysicsSystemData.h"
 #include "../private/PhysicsEntity.h"
 #include "../private/Util.h"
 
@@ -67,5 +69,182 @@ namespace sge
         {
             _turn_amount = _turn_amount + amount;
         }
+
+		void on_character_controller_new(
+			EventChannel& new_character_controller_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data,
+			Scene& scene)
+        {
+	        // Get events
+			ENewComponent events[8];
+			int32 num_events;
+			while (new_character_controller_channel.consume(subscriber_id, events, &num_events))
+			{
+				NodeId node_ids[8];
+				const Node* nodes[8];
+				const CCharacterController* components[8];
+
+				// Gather node ids and instances
+				for (int32 i = 0; i < num_events; ++i)
+				{
+					node_ids[i] = events[i].node;
+					components[i] = (const CCharacterController*)events[i].instance;
+				}
+
+				// Get nodes
+				scene.get_nodes(node_ids, num_events, nodes);
+
+				// Iterate over events
+				for (int32 i = 0; i < num_events; ++i)
+				{
+					auto& physics_entity = phys_data.get_or_create_physics_entity(node_ids[i]);
+					assert(physics_entity.character_controller == nullptr);
+
+					// Set the transform of the entity
+					physics_entity.transform.setOrigin(to_bullet(nodes[i]->get_local_position()));
+					physics_entity.transform.setRotation(to_bullet(nodes[i]->get_local_rotation()));
+
+					// Create the character controller
+					physics_entity.character_controller = std::make_unique<CharacterController>(physics_entity, *components[i]);
+
+					// Add the ghost object to the world
+					phys_data.phys_world.dynamics_world().addCollisionObject(&physics_entity.character_controller->ghost_object,
+						btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
+
+					// Add the character controller to the world
+					phys_data.phys_world.dynamics_world().addAction(physics_entity.character_controller.get());
+				}
+			}
+        }
+
+		void on_character_controller_destroyed(
+			EventChannel& destroyed_character_controller_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data)
+        {
+	        // Get events
+			EDestroyedComponent events[8];
+			int32 num_events;
+			while (destroyed_character_controller_channel.consume(subscriber_id, events, &num_events))
+			{
+				for (int32 i = 0; i < num_events; ++i)
+				{
+					auto* const phys_entity = phys_data.get_physics_entity(events[i].node);
+					assert(phys_entity != nullptr && phys_entity->character_controller != nullptr);
+
+					// Remove it from the world
+					phys_data.phys_world.dynamics_world().removeAction(phys_entity->character_controller.get());
+					phys_data.phys_world.dynamics_world().removeCollisionObject(&phys_entity->character_controller->ghost_object);
+					phys_entity->character_controller = nullptr;
+
+					// Evaluate if we still need this physics object
+					phys_data.post_remove_physics_entity_element(*phys_entity);
+				}
+			}
+        }
+
+		void on_character_controller_modified(
+			EventChannel& modified_character_controller_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data)
+        {
+	        // Get events
+			EModifiedComponent events[8];
+			int32 num_events;
+			while (modified_character_controller_channel.consume(subscriber_id, events, &num_events))
+			{
+				for (int32 i = 0; i < num_events; ++i)
+				{
+					const auto node = events[i].node;
+					const auto* const component = (const CCharacterController*)events[i].instance;
+
+					auto* const phys_entity = phys_data.get_physics_entity(events[i].node);
+					assert(phys_entity != nullptr && phys_entity->character_controller != nullptr);
+					auto* const character_controller = phys_entity->character_controller.get();
+
+					// Update properties
+					character_controller->setStepHeight(component->step_height());
+					character_controller->setMaxSlope(component->max_slope());
+					character_controller->setJumpSpeed(component->jump_speed());
+					character_controller->setFallSpeed(component->fall_speed());
+				}
+			}
+        }
+
+		void on_character_controller_jump(
+			EventChannel& jump_event_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data)
+		{
+			// Get events
+			CCharacterController::EJump events[8];
+			int32 num_events;
+			while (jump_event_channel.consume(subscriber_id, events, &num_events))
+			{
+				for (int32 i = 0; i < num_events; ++i)
+				{
+					// Get the physics state for this node
+					auto* phys_ent = phys_data.get_physics_entity(events[i].node);
+					if (!phys_ent || !phys_ent->character_controller)
+					{
+						continue;
+					}
+
+					// Make it jump
+					phys_ent->character_controller->jump(btVector3{ 0.0, 0.0, 0.0 });
+				}
+			}
+		}
+
+		void on_character_controller_turn(
+			EventChannel& turn_event_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data)
+		{
+			// Get events
+			CCharacterController::ETurn events[8];
+			int32 num_events;
+			while (turn_event_channel.consume(subscriber_id, events, &num_events))
+			{
+				for (int32 i = 0; i < num_events; ++i)
+				{
+					// Get the physics state for this node
+					auto* const phys_ent = phys_data.get_physics_entity(events[i].node);
+					if (!phys_ent || !phys_ent->character_controller)
+					{
+						continue;
+					}
+
+					// Make it turn
+					phys_ent->character_controller->turn(events[i].amount);
+				}
+			}
+		}
+
+		void on_character_controller_walk(
+			EventChannel& walk_event_channel,
+			EventChannel::SubscriberId subscriber_id,
+			BulletPhysicsSystem::Data& phys_data)
+		{
+			// Get events
+			CCharacterController::EWalk events[8];
+			int32 num_events;
+			while (walk_event_channel.consume(subscriber_id, events, &num_events))
+			{
+				for (int32 i = 0; i < num_events; ++i)
+				{
+					// Get the physics state for this node
+					auto* const phys_ent = phys_data.get_physics_entity(events[i].node);
+					if (!phys_ent || !phys_ent->character_controller)
+					{
+						continue;
+					}
+
+					// Make it walk
+					phys_ent->character_controller->walk(events[i].direction);
+				}
+			}
+		}
     }
 }

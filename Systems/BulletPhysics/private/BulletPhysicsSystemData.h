@@ -34,12 +34,6 @@ namespace sge
 
             void remove_rigid_body(NodeId node);
 
-            void add_character_controller(
-                const Node& node,
-                const CCharacterController& character_controller);
-
-            void remove_character_contoller(NodeId node);
-
             PhysicsEntity& get_or_create_physics_entity(NodeId node);
 
             PhysicsEntity* get_physics_entity(NodeId node);
