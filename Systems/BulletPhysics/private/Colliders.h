@@ -10,7 +10,8 @@ namespace sge
 		void on_sphere_collider_new(
 			EventChannel& new_sphere_collider_channel,
 			EventChannel::SubscriberId subscriber_id,
-			BulletPhysicsSystem::Data& phys_data);
+			BulletPhysicsSystem::Data& phys_data,
+			Scene& scene);
 
 		void on_sphere_collider_destroyed(
 			EventChannel& destroyed_sphere_collider_channel,
@@ -25,7 +26,8 @@ namespace sge
 		void on_box_collider_new(
 			EventChannel& new_box_collider_channel,
 			EventChannel::SubscriberId subscriber_id,
-			BulletPhysicsSystem::Data& phys_data);
+			BulletPhysicsSystem::Data& phys_data,
+			Scene& scene);
 
 		void on_box_collider_destroyed(
 			EventChannel& destroyed_box_collider_channel,
@@ -40,7 +42,8 @@ namespace sge
 		void on_capsule_collider_new(
 			EventChannel& new_capsule_collider_channel,
 			EventChannel::SubscriberId subscriber_id,
-			BulletPhysicsSystem::Data& phys_data);
+			BulletPhysicsSystem::Data& phys_data,
+			Scene& scene);
 
 		void on_capsule_collider_destroyed(
 			EventChannel& destroyed_capsule_collider_channel,

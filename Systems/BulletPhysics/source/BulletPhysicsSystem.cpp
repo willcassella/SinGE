@@ -184,17 +184,17 @@ namespace sge
 			on_transform_modified(*_node_world_transform_changed_channel, _node_world_transform_changed_sid, *_data);
 
 			// Consume sphere collider events
-			on_sphere_collider_new(*_new_sphere_collider_channel, _new_sphere_collider_sid, *_data);
+			on_sphere_collider_new(*_new_sphere_collider_channel, _new_sphere_collider_sid, *_data, scene);
 			on_sphere_collider_modified(*_modified_sphere_collider_channel, _modified_sphere_collider_sid, *_data);
 			on_sphere_collider_destroyed(*_destroyed_sphere_collider_channel, _destroyed_sphere_collider_sid, *_data);
 
 			// Consume box collider events
-			on_box_collider_new(*_new_box_collider_channel, _new_box_collider_sid, *_data);
+			on_box_collider_new(*_new_box_collider_channel, _new_box_collider_sid, *_data, scene);
 			on_box_collider_modified(*_modified_box_collider_channel, _modified_box_collider_sid, *_data);
 			on_box_collider_destroyed(*_destroyed_box_collider_channel, _destroyed_box_collider_sid, *_data);
 
 			// Consume capsule collider events
-			on_capsule_collider_new(*_new_capsule_collider_channel, _new_capsule_collider_sid, *_data);
+			on_capsule_collider_new(*_new_capsule_collider_channel, _new_capsule_collider_sid, *_data, scene);
 			on_capsule_collider_modified(*_modified_capsule_collider_channel, _modified_box_collider_sid, *_data);
 			on_capsule_collider_destroyed(*_destroyed_capsule_collider_channel, _destroyed_capsule_collider_sid, *_data);
 

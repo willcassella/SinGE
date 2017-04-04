@@ -98,12 +98,8 @@ namespace sge
 				// Iterate over events
 				for (int32 i = 0; i < num_events; ++i)
 				{
-					auto& physics_entity = phys_data.get_or_create_physics_entity(node_ids[i]);
+					auto& physics_entity = phys_data.get_or_create_physics_entity(node_ids[i], *nodes[i]);
 					assert(physics_entity.character_controller == nullptr);
-
-					// Set the transform of the entity
-					physics_entity.transform.setOrigin(to_bullet(nodes[i]->get_local_position()));
-					physics_entity.transform.setRotation(to_bullet(nodes[i]->get_local_rotation()));
 
 					// Create the character controller
 					physics_entity.character_controller = std::make_unique<CharacterController>(physics_entity, *components[i]);

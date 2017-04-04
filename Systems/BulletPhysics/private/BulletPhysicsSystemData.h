@@ -30,7 +30,7 @@ namespace sge
             ///   Methods   ///
         public:
 
-            PhysicsEntity& get_or_create_physics_entity(NodeId node);
+            PhysicsEntity& get_or_create_physics_entity(NodeId node_id, const Node& node);
 
             PhysicsEntity* get_physics_entity(NodeId node);
 

@@ -34,12 +34,8 @@ namespace sge
 			// Create rigid bodies
 			for (int32 i = 0; i < num_events; ++i)
 			{
-				auto& physics_entity = phys_data.get_or_create_physics_entity(node_ids[i]);
+				auto& physics_entity = phys_data.get_or_create_physics_entity(node_ids[i], *nodes[i]);
 				assert(physics_entity.rigid_body == nullptr);
-
-				// Set the entitiy's position
-				physics_entity.transform.setOrigin(to_bullet(nodes[i]->get_local_position()));
-				physics_entity.transform.setRotation(to_bullet(nodes[i]->get_local_rotation()));
 
 				// Calculate local inertia from the collision shape
 				btScalar mass = 0.f;

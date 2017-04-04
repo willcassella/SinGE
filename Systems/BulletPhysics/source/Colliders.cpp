@@ -1,5 +1,6 @@
 // Colliders.cpp
 
+#include <Engine/Scene.h>
 #include <Engine/Components/Physics/CSphereCollider.h>
 #include <Engine/Components/Physics/CBoxCollider.h>
 #include <Engine/Components/Physics/CCapsuleCollider.h>
@@ -14,22 +15,32 @@ namespace sge
 		void on_sphere_collider_new(
 			EventChannel& new_sphere_collider_channel,
 			EventChannel::SubscriberId subscriber_id,
-			BulletPhysicsSystem::Data& phys_data)
+			BulletPhysicsSystem::Data& phys_data,
+			Scene& scene)
 		{
 			// Get events
 			ENewComponent events[8];
 			int32 num_events;
 			while (new_sphere_collider_channel.consume(subscriber_id, events, &num_events))
 			{
+				NodeId node_ids[8];
+				const CSphereCollider* components[8];
 				for (int32 i = 0; i < num_events; ++i)
 				{
-					NodeId node = events[i].node;
-					const auto* const component = (const CSphereCollider*)events[i].instance;
+					node_ids[i] = events[i].node;
+					components[i] = (const CSphereCollider*)events[i].instance;
+				}
 
+				// Get nodes
+				const Node* nodes[8];
+				scene.get_nodes(node_ids, num_events, nodes);
+
+				for (int32 i = 0; i < num_events; ++i)
+				{
 					// Add the sphere collider
-					auto& physics_entity = phys_data.get_or_create_physics_entity(node);
+					auto& physics_entity = phys_data.get_or_create_physics_entity(node_ids[i], *nodes[i]);
 					assert(physics_entity.sphere_collider == nullptr);
-					physics_entity.sphere_collider = std::make_unique<btSphereShape>(component->radius());
+					physics_entity.sphere_collider = std::make_unique<btSphereShape>(components[i]->radius());
 					physics_entity.collider.addChildShape(btTransform::getIdentity(), physics_entity.sphere_collider.get());
 
 					// Create collision object, if necessary
@@ -94,22 +105,32 @@ namespace sge
 		void on_box_collider_new(
 			EventChannel& new_box_collider_channel,
 			EventChannel::SubscriberId subscriber_id,
-			BulletPhysicsSystem::Data& phys_data)
+			BulletPhysicsSystem::Data& phys_data,
+			Scene& scene)
 		{
 			// Get events
 			ENewComponent events[8];
 			int32 num_events;
 			while (new_box_collider_channel.consume(subscriber_id, events, &num_events))
 			{
+				NodeId node_ids[8];
+				const CBoxCollider* components[8];
 				for (int32 i = 0; i < num_events; ++i)
 				{
-					NodeId node = events[i].node;
-					const auto* const component = (const CBoxCollider*)events[i].instance;
+					node_ids[i] = events[i].node;
+					components[i] = (const CBoxCollider*)events[i].instance;
+				}
 
+				// Get nodes
+				const Node* nodes[8];
+				scene.get_nodes(node_ids, num_events, nodes);
+
+				for (int32 i = 0; i < num_events; ++i)
+				{
 					// Add the box collider
-					auto& physics_entity = phys_data.get_or_create_physics_entity(node);
+					auto& physics_entity = phys_data.get_or_create_physics_entity(node_ids[i], *nodes[i]);
 					assert(physics_entity.box_collider == nullptr);
-					physics_entity.box_collider = std::make_unique<btBoxShape>(to_bullet(component->shape() / 2));
+					physics_entity.box_collider = std::make_unique<btBoxShape>(to_bullet(components[i]->shape() / 2));
 					physics_entity.collider.addChildShape(btTransform::getIdentity(), physics_entity.box_collider.get());
 
 					// Create collision object, if necessary
@@ -177,23 +198,33 @@ namespace sge
 		void on_capsule_collider_new(
 			EventChannel& new_capsule_collider_channel,
 			EventChannel::SubscriberId subscriber_id,
-			BulletPhysicsSystem::Data& phys_data)
+			BulletPhysicsSystem::Data& phys_data,
+			Scene& scene)
 		{
 			// Get events
 			ENewComponent events[8];
 			int32 num_events;
 			while (new_capsule_collider_channel.consume(subscriber_id, events, &num_events))
 			{
+				NodeId node_ids[8];
+				const CCapsuleCollider* components[8];
 				for (int32 i = 0; i < num_events; ++i)
 				{
-					NodeId node = events[i].node;
-					const auto* const component = (CCapsuleCollider*)events[i].instance;
+					node_ids[i] = events[i].node;
+					components[i] = (const CCapsuleCollider*)events[i].instance;
+				}
 
-					auto& phys_entity = phys_data.get_or_create_physics_entity(node);
+				// Get nodes
+				const Node* nodes[8];
+				scene.get_nodes(node_ids, num_events, nodes);
+
+				for (int32 i = 0; i < num_events; ++i)
+				{
+					auto& phys_entity = phys_data.get_or_create_physics_entity(node_ids[i], *nodes[i]);
 					assert(phys_entity.capsule_collider == nullptr);
 
 					// Create a new capsule collider
-					phys_entity.capsule_collider = std::make_unique<btCapsuleShape>(component->radius(), component->height());
+					phys_entity.capsule_collider = std::make_unique<btCapsuleShape>(components[i]->radius(), components[i]->height());
 					phys_entity.collider.addChildShape(btTransform::getIdentity(), phys_entity.capsule_collider.get());
 
 					// Add a collision object, if necessary

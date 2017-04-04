@@ -1,21 +1,17 @@
 // BulletPhysicsSystemData.cpp
 
-#include <Engine/Components/Physics/CBoxCollider.h>
-#include <Engine/Components/Physics/CCapsuleCollider.h>
-#include <Engine/Components/Physics/CRigidBody.h>
 #include "../private/BulletPhysicsSystemData.h"
 #include "../private/PhysicsEntity.h"
-#include "../private/CharacterController.h"
 #include "../private/Util.h"
 
 namespace sge
 {
     namespace bullet_physics
 	{
-        PhysicsEntity& BulletPhysicsSystem::Data::get_or_create_physics_entity(NodeId node)
+        PhysicsEntity& BulletPhysicsSystem::Data::get_or_create_physics_entity(NodeId node_id, const Node& node)
         {
             // Search for the entity
-            auto iter = physics_entities.find(node);
+            auto iter = physics_entities.find(node_id);
             if (iter != physics_entities.end())
             {
                 // Return the existing physics entity
@@ -23,9 +19,13 @@ namespace sge
             }
 
             // Create a new physics entity
-            auto phys = std::make_unique<PhysicsEntity>(node, *this);
+            auto phys = std::make_unique<PhysicsEntity>(node_id, *this);
 			auto* phys_entity_ptr = phys.get();
-            physics_entities.insert(std::make_pair(node, std::move(phys)));
+            physics_entities.insert(std::make_pair(node_id, std::move(phys)));
+
+			// Set the transform
+			phys_entity_ptr->transform.setOrigin(to_bullet(node.get_local_position()));
+			phys_entity_ptr->transform.setRotation(to_bullet(node.get_local_rotation()));
 
 			return *phys_entity_ptr;
         }
