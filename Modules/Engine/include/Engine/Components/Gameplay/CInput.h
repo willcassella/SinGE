@@ -17,8 +17,8 @@ namespace sge
 
 		explicit CInput(NodeId node, SharedData& shared_data);
 
-		////////////////
-		///   Tags   ///
+		//////////////////
+		///   Events   ///
 	public:
 
         using EventName_t = FixedString<32>;

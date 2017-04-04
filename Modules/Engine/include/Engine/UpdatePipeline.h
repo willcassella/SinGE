@@ -14,7 +14,6 @@ namespace sge
     struct SceneData;
     struct SystemFrame;
     struct SystemInfo;
-    struct TagCallbackInfo;
 
     struct SGE_ENGINE_API UpdatePipeline
     {
