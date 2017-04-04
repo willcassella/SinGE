@@ -33,19 +33,6 @@ namespace sge
                     _constraint_solver.get(),
                     _collision_configuration.get());
                 _dynamics_world->setGravity(btVector3{ 0, -10, 0 });
-
-                // Create an infinite plane
-                _ground_shape = std::make_unique<btStaticPlaneShape>(btVector3{ 0, 1, 0 }, 1.f);
-                _ground_motion_state = std::make_unique<btDefaultMotionState>(btTransform(btQuaternion{ 0, 0, 0, 1 }, btVector3{ 0, 1, 0 }));
-
-                btRigidBody::btRigidBodyConstructionInfo groundRigidBodyCI{
-                    0.f,
-                    _ground_motion_state.get(),
-                    _ground_shape.get(),
-                    btVector3{ 0, 0, 0 } };
-                _ground_body = std::make_unique<btRigidBody>(groundRigidBodyCI);
-                _ground_body->setCollisionFlags(btCollisionObject::CF_KINEMATIC_OBJECT);
-                _dynamics_world->addRigidBody(_ground_body.get());
             }
 
             ///////////////////
@@ -67,10 +54,6 @@ namespace sge
             //////////////////
             ///   Fields   ///
         private:
-
-            std::unique_ptr<btStaticPlaneShape> _ground_shape;
-            std::unique_ptr<btDefaultMotionState> _ground_motion_state;
-            std::unique_ptr<btRigidBody> _ground_body;
 
             // Physics configuration
             std::unique_ptr<btGhostPairCallback> _ghost_pair_callback;
