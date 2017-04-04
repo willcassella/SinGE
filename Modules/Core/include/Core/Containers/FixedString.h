@@ -36,6 +36,16 @@ namespace sge
             std::strncpy(_value, str, Size);
         }
 
+	    /**
+		 * \brief Compares for equality only up to the end of this string.
+		 * \param str The string to compare.
+		 * \return Whether this string is equal to the given string up to the length of this string.
+		 */
+		bool eq_up_to_size(const char* str)
+        {
+			return std::strncmp(_value, str, Size) == 0;
+        }
+
         /////////////////////
         ///   Operators   ///
     public:
