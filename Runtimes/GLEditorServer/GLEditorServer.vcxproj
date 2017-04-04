@@ -71,25 +71,25 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>bin\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>build\$(Platform)\$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Modules\Core\include\;$(SolutionDir)Modules\Resource\include\;$(SolutionDir)Modules\Engine\include\;$(SolutionDir)Systems\GLRender\include;$(SolutionDir)Systems\BulletPhysics\include;$(SolutionDir)Systems\EditorServerSystem\include\;$(SolutionDir)Systems\GLWindow\include;$(SolutionDir)packages\glfw-3.2.1\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)packages\glfw-3.2.1\bin\$(Platform)\$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -184,6 +184,9 @@
     </ProjectReference>
     <ProjectReference Include="..\..\Modules\Resource\Resource.vcxproj">
       <Project>{2254997d-f816-4644-9b73-bbab5f035212}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Systems\BulletPhysics\BulletPhysics.vcxproj">
+      <Project>{478ea17e-a118-442f-84e8-54a0f567b380}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\Systems\EditorServerSystem\EditorServerSystem.vcxproj">
       <Project>{58d117a2-a8c5-469b-acc5-e57145e74c59}</Project>

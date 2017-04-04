@@ -14,6 +14,8 @@
 #include <Engine/UpdatePipeline.h>
 #include <GLRender/GLRenderSystem.h>
 #include <GLRender/Config.h>
+#include <BulletPhysics/BulletPhysicsSystem.h>
+#include <BulletPhysics/Config.h>
 #include <GLWindow/GLEventWindow.h>
 #include <EditorServerSystem/EditorServerSystem.h>
 
@@ -89,6 +91,11 @@ int main(int argc, char* argv[])
 	sge::gl_render::GLRenderSystem render_system{ render_config };
 	render_system.pipeline_register(pipeline);
 	render_system.initialize_subscriptions(scene);
+
+	sge::bullet_physics::Config physics_config;
+	sge::bullet_physics::BulletPhysicsSystem physics_system{ physics_config };
+	physics_system.register_pipeline(pipeline);
+	physics_system.initialize_subscriptions(scene);
 
 	// Create an editor server
 	sge::EditorServerSystem editorServer{ 1995 };
