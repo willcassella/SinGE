@@ -61,6 +61,9 @@ namespace sge
 			EventChannel* _new_capsule_collider_channel;
 			EventChannel* _modified_capsule_collider_channel;
 			EventChannel* _destroyed_capsule_collider_channel;
+			EventChannel* _new_static_mesh_collider_channel;
+			EventChannel* _modified_static_mesh_collider_channel;
+			EventChannel* _destroyed_static_mesh_collider_channel;
 			EventChannel* _new_character_controller_channel;
 			EventChannel* _modified_character_controller_channel;
 			EventChannel* _character_controller_jump_event_channel;
@@ -80,6 +83,9 @@ namespace sge
 			EventChannel::SubscriberId _new_capsule_collider_sid;
 			EventChannel::SubscriberId _modified_capsule_collider_sid;
 			EventChannel::SubscriberId _destroyed_capsule_collider_sid;
+			EventChannel::SubscriberId _new_static_mesh_collider_sid;
+			EventChannel::SubscriberId _modified_static_mesh_collider_sid;
+			EventChannel::SubscriberId _destroyed_static_mesh_collider_sid;
 			EventChannel::SubscriberId _new_character_controller_sid;
 			EventChannel::SubscriberId _modified_character_controller_sid;
 			EventChannel::SubscriberId _character_controller_jump_sid;

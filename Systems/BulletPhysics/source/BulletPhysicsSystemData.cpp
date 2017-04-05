@@ -1,13 +1,37 @@
 // BulletPhysicsSystemData.cpp
 
+#include <Resource/Resources/StaticMesh.h>
 #include "../private/BulletPhysicsSystemData.h"
 #include "../private/PhysicsEntity.h"
 #include "../private/Util.h"
+#include "../private/Colliders.h"
 
 namespace sge
 {
     namespace bullet_physics
 	{
+		static std::unique_ptr<StaticMeshCollider> create_static_mesh_collider_mesh(std::string path, const StaticMesh& mesh)
+		{
+			const auto num_verts = mesh.num_verts();
+			const auto* const vert_positions = mesh.vertex_positions();
+			const auto* const triangle_elements = mesh.triangle_elements();
+
+			// Build the mesh
+			auto bt_mesh = std::make_unique<StaticMeshCollider>();
+			bt_mesh->path = std::move(path);
+			bt_mesh->mesh.preallocateVertices((int)mesh.num_verts());
+			for (std::size_t i = 0; i < num_verts; i += 3)
+			{
+				bt_mesh->mesh.addTriangle(
+					to_bullet(vert_positions[triangle_elements[i + 0]]),
+					to_bullet(vert_positions[triangle_elements[i + 1]]),
+					to_bullet(vert_positions[triangle_elements[i + 2]]));
+			}
+			bt_mesh->init_shape();
+
+			return bt_mesh;
+		}
+
         PhysicsEntity& BulletPhysicsSystem::Data::get_or_create_physics_entity(NodeId node_id, const Node& node)
         {
             // Search for the entity
@@ -26,6 +50,7 @@ namespace sge
 			// Set the transform
 			phys_entity_ptr->transform.setOrigin(to_bullet(node.get_local_position()));
 			phys_entity_ptr->transform.setRotation(to_bullet(node.get_local_rotation()));
+			phys_entity_ptr->collider.setLocalScaling(to_bullet(node.get_local_scale()));
 
 			return *phys_entity_ptr;
         }
@@ -103,5 +128,45 @@ namespace sge
                 physics_entities.erase(iter);
             }
         }
+
+	    StaticMeshCollider* BulletPhysicsSystem::Data::get_static_mesh_collider(const std::string& path)
+	    {
+			const auto iter = static_mesh_colliders.find(path);
+			if (iter != static_mesh_colliders.end())
+			{
+				auto* const ptr = iter->second.get();
+				ptr->num_uses += 1;
+				return ptr;
+			}
+
+			// Load the mesh
+			StaticMesh mesh;
+			if (!mesh.from_file(path.c_str()))
+			{
+				return nullptr;
+			}
+
+			// Create the collider
+			auto collider = create_static_mesh_collider_mesh(path, mesh);
+			auto* const ptr = collider.get();
+
+			// Insert it into the table
+			static_mesh_colliders.insert(std::make_pair(path, std::move(collider)));
+			ptr->num_uses += 1;
+			return ptr;
+	    }
+
+	    void BulletPhysicsSystem::Data::release_static_mesh_collider(StaticMeshCollider& collider)
+	    {
+			collider.num_uses -= 1;
+			if (collider.num_uses > 0)
+			{
+				return;
+			}
+
+			// Remove it from the table
+			const auto path = collider.path;
+			static_mesh_colliders.erase(path);
+	    }
     }
 }

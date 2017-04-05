@@ -41,10 +41,11 @@ namespace sge
 			_data->frame_transformed_node_transforms.push_back(trans);
         }
 
-        void PhysicsEntity::extern_set_transform(const btTransform& trans)
+        void PhysicsEntity::extern_set_transform(const btTransform& trans, const btVector3& scale)
         {
             // Set the main transform
             transform = trans;
+			collider.setLocalScaling(scale);
 
 			if (collision_object)
 			{

@@ -5,6 +5,7 @@
 #include <Engine/Components/Physics/CSphereCollider.h>
 #include <Engine/Components/Physics/CBoxCollider.h>
 #include <Engine/Components/Physics/CCapsuleCollider.h>
+#include <Engine/Components/Physics/CStaticMeshCollider.h>
 #include <Engine/Components/Physics/CRigidBody.h>
 #include <Engine/Components/Gameplay/CCharacterController.h>
 #include <Engine/SystemFrame.h>
@@ -44,12 +45,13 @@ namespace sge
 					}
 
 					// Create the transform for the entity
-					const btVector3 pos = to_bullet(events[i].node->get_local_position());
-					const btQuaternion rot = to_bullet(events[i].node->get_local_rotation());
 					btTransform trans;
+					const btVector3 pos = to_bullet(events[i].node->get_local_position());
+					const btVector3 scale = to_bullet(events[i].node->get_local_scale());
+					const btQuaternion rot = to_bullet(events[i].node->get_local_rotation());
 					trans.setOrigin(pos);
 					trans.setRotation(rot);
-					phys_ent->extern_set_transform(trans);
+					phys_ent->extern_set_transform(trans, scale);
 				}
 			}
 		}
@@ -80,7 +82,10 @@ namespace sge
 			_new_capsule_collider_channel(nullptr),
 			_modified_capsule_collider_channel(nullptr),
 			_destroyed_capsule_collider_channel(nullptr),
-			_new_character_controller_channel(nullptr),
+			_new_static_mesh_collider_channel(nullptr),
+			_modified_static_mesh_collider_channel(nullptr),
+			_destroyed_static_mesh_collider_channel(nullptr),
+    		_new_character_controller_channel(nullptr),
 			_modified_character_controller_channel(nullptr),
 			_character_controller_jump_event_channel(nullptr),
 			_character_controller_turn_event_channel(nullptr),
@@ -99,6 +104,9 @@ namespace sge
 			_new_capsule_collider_sid(EventChannel::INVALID_SID),
     		_modified_capsule_collider_sid(EventChannel::INVALID_SID),
 			_destroyed_capsule_collider_sid(EventChannel::INVALID_SID),
+			_new_static_mesh_collider_sid(EventChannel::INVALID_SID),
+			_modified_static_mesh_collider_sid(EventChannel::INVALID_SID),
+			_destroyed_static_mesh_collider_sid(EventChannel::INVALID_SID),
 			_new_character_controller_sid(EventChannel::INVALID_SID),
 			_modified_character_controller_sid(EventChannel::INVALID_SID),
     		_character_controller_jump_sid(EventChannel::INVALID_SID),
@@ -163,6 +171,14 @@ namespace sge
 			_modified_capsule_collider_sid = _modified_capsule_collider_channel->subscribe();
 			_destroyed_capsule_collider_sid = _destroyed_capsule_collider_channel->subscribe();
 
+			// Static mesh collider event subscriptions
+			_new_static_mesh_collider_channel = scene.get_event_channel(CStaticMeshCollider::type_info, "new");
+			_modified_static_mesh_collider_channel = scene.get_event_channel(CStaticMeshCollider::type_info, "prop_mod");
+			_destroyed_static_mesh_collider_channel = scene.get_event_channel(CStaticMeshCollider::type_info, "destroy");
+			_new_static_mesh_collider_sid = _new_static_mesh_collider_channel->subscribe();
+			_modified_static_mesh_collider_sid = _modified_static_mesh_collider_sid = _modified_static_mesh_collider_channel->subscribe();
+			_destroyed_static_mesh_collider_sid = _destroyed_static_mesh_collider_channel->subscribe();
+
 			// Character controller event subscriptions
 			_new_character_controller_channel = scene.get_event_channel(CCharacterController::type_info, "new");
 			_modified_character_controller_channel = scene.get_event_channel(CCharacterController::type_info, "prop_mod");
@@ -197,6 +213,11 @@ namespace sge
 			on_capsule_collider_new(*_new_capsule_collider_channel, _new_capsule_collider_sid, *_data, scene);
 			on_capsule_collider_modified(*_modified_capsule_collider_channel, _modified_box_collider_sid, *_data);
 			on_capsule_collider_destroyed(*_destroyed_capsule_collider_channel, _destroyed_capsule_collider_sid, *_data);
+
+			// Consume static mesh collider events
+			on_static_mesh_collider_new(*_new_static_mesh_collider_channel, _new_static_mesh_collider_sid, *_data, scene);
+			on_static_mesh_collider_modified(*_modified_static_mesh_collider_channel, _modified_static_mesh_collider_sid, *_data, scene);
+			on_static_mesh_collider_destroyed(*_destroyed_static_mesh_collider_channel, _destroyed_static_mesh_collider_sid, *_data);
 
 			// Consume rigid body events
 			on_rigid_body_new(scene, *_new_rigid_body_channel, _new_rigid_body_sid, *_data);

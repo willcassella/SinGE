@@ -35,7 +35,7 @@ namespace sge
 
             void add_to_modified();
 
-            void extern_set_transform(const btTransform& transform);
+            void extern_set_transform(const btTransform& transform, const btVector3& scale);
 
             //////////////////
             ///   Fields   ///
@@ -50,6 +50,7 @@ namespace sge
         	std::unique_ptr<btSphereShape> sphere_collider;
             std::unique_ptr<btBoxShape> box_collider;
             std::unique_ptr<btCapsuleShape> capsule_collider;
+			std::unique_ptr<btScaledBvhTriangleMeshShape> static_mesh_collider;
 
 			std::unique_ptr<btCollisionObject> collision_object;
         	std::unique_ptr<btPairCachingGhostObject> ghost_object;

@@ -17,6 +17,7 @@ namespace sge
     {
         class PhysicsEntity;
         class CharacterController;
+		struct StaticMeshCollider;
 
 		struct PhysTransformedNode
 		{
@@ -38,14 +39,20 @@ namespace sge
 
             void post_remove_physics_entity_element(PhysicsEntity& phys_entity);
 
+			StaticMeshCollider* get_static_mesh_collider(const std::string& path);
+
+			void release_static_mesh_collider(StaticMeshCollider& collider);
+
             //////////////////
             ///   Fields   ///
         public:
 
             std::map<NodeId, std::unique_ptr<PhysicsEntity>> physics_entities;
 
-			std::vector<NodeId> frame_transformed_nodes;
+        	// Nodes that were transformed this frame (by the pysics system), and how they were transformed
+        	std::vector<NodeId> frame_transformed_nodes;
 			std::vector<PhysTransformedNode> frame_transformed_node_transforms;
+			std::map<std::string, std::unique_ptr<StaticMeshCollider>> static_mesh_colliders;
 
             /* NOTE: This must appear last, so that it is destroyed first. */
             PhysicsWorld phys_world;
