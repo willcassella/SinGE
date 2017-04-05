@@ -422,7 +422,7 @@ namespace sge
 						phys_entity->collider.removeChildShape(phys_entity->static_mesh_collider.get());
 						auto* const current_base_collider = (StaticMeshCollider*)phys_entity->static_mesh_collider->getUserPointer();
 						phys_entity->static_mesh_collider = nullptr;
-						phys_data.release_static_mesh_collider(*base_collider);
+						phys_data.release_static_mesh_collider(*current_base_collider);
 
 						// Evaluate what to do with the physics entity
 						phys_data.post_remove_physics_entity_element(*phys_entity);
