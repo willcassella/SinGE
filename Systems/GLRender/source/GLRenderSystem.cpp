@@ -20,7 +20,11 @@ namespace sge
 {
 	namespace gl_render
 	{
-		static void insert_static_mesh_instance(GLRenderSystem::State& state, std::map<GLuint, std::size_t>& material_indices, Node& node, CStaticMesh& static_mesh)
+		static void insert_static_mesh_instance(
+			GLRenderSystem::State& state,
+			std::map<GLuint, std::size_t>& material_indices,
+			Node& node,
+			CStaticMesh& static_mesh)
 		{
 			// Get the mesh resource for this mesh
 			const auto& gl_mesh = state.get_static_mesh_resource(static_mesh.mesh());
@@ -255,7 +259,7 @@ namespace sge
             _state->missing_material = _state->get_material_resource(config.missing_material);
 
             // Initialize OpenGL
-            glLineWidth(1);
+            glLineWidth(3);
             glClearColor(0, 0, 0, 1);
             glClearDepth(1.f);
             glEnable(GL_DEPTH_TEST);
