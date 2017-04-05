@@ -113,6 +113,9 @@
     <ClInclude Include="include\Engine\Util\DebugDraw.h">
       <Filter>include\Util</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\Components\Physics\CStaticMeshCollider.h">
+      <Filter>include\Components\Physics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Scene.cpp">
@@ -170,6 +173,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\Components\Physics\CSphereCollider.cpp">
+      <Filter>source\Components\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Physics\CStaticMeshCollider.cpp">
       <Filter>source\Components\Physics</Filter>
     </ClCompile>
   </ItemGroup>
