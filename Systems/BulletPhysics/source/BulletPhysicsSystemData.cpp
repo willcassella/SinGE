@@ -13,19 +13,20 @@ namespace sge
 		static std::unique_ptr<StaticMeshCollider> create_static_mesh_collider_mesh(std::string path, const StaticMesh& mesh)
 		{
 			const auto num_verts = mesh.num_verts();
+			const auto num_triangles = mesh.num_triangles();
 			const auto* const vert_positions = mesh.vertex_positions();
 			const auto* const triangle_elements = mesh.triangle_elements();
 
 			// Build the mesh
 			auto bt_mesh = std::make_unique<StaticMeshCollider>();
 			bt_mesh->path = std::move(path);
-			bt_mesh->mesh.preallocateVertices((int)mesh.num_verts());
-			for (std::size_t i = 0; i < num_verts; i += 3)
+			bt_mesh->mesh.preallocateVertices((int)num_verts);
+			for (std::size_t i = 0; i < num_triangles; ++i)
 			{
 				bt_mesh->mesh.addTriangle(
-					to_bullet(vert_positions[triangle_elements[i + 0]]),
-					to_bullet(vert_positions[triangle_elements[i + 1]]),
-					to_bullet(vert_positions[triangle_elements[i + 2]]));
+					to_bullet(vert_positions[triangle_elements[i * 3 + 0]]),
+					to_bullet(vert_positions[triangle_elements[i * 3 + 1]]),
+					to_bullet(vert_positions[triangle_elements[i * 3 + 2]]));
 			}
 			bt_mesh->init_shape();
 
