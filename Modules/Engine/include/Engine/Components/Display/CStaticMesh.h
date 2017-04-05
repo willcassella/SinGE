@@ -6,7 +6,7 @@
 
 namespace sge
 {
-	/* Component applied to entities that should render a static mesh. */
+	/* Component applied to nodes that should render a static mesh. */
 	class SGE_ENGINE_API CStaticMesh final
 	{
 	public:

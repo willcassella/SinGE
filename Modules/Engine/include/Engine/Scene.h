@@ -61,7 +61,7 @@ namespace sge
 		EventChannel* get_debug_draw_line_channel();
 
 		/**
-		 * \brief Resets entity/component data. Essentially creates a new scene without unregistering component types.
+		 * \brief Resets node/component data. Essentially creates a new scene without unregistering component types.
 		 */
 		void reset_scene();
 

@@ -80,7 +80,7 @@ namespace sge
 					return;
 				}
 
-				// Allocate space for the entity
+				// Allocate space for the node
 				auto* const buff = this->_instance_buffer.alloc(sizeof(ComponentT));
 				auto* const instance = new(buff) ComponentT(node, _shared_data);
 
