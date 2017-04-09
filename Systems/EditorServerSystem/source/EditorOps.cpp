@@ -799,7 +799,7 @@ namespace sge
 					light.intensity = scene_lightmap.light_intensity;
 
                 // Compute direct lighting for all objects
-                std::cout << "Computing direction lighting..." << std::endl;
+                std::cout << "Computing direct lighting..." << std::endl;
                 const auto gen_direct_start = std::chrono::high_resolution_clock::now();
                 for (std::size_t i = 0; i < lightmap_objects.size(); ++i)
                 {
@@ -847,7 +847,7 @@ namespace sge
 				int32 num_accumulation_steps = 1;
 				reader.object_member("num_indirect_sample_sets", num_sample_sets);
 				reader.object_member("num_accumulation_steps", num_accumulation_steps);
-                std::cout << "Computing indirect lighting (" << num_sample_sets << " sample sets, " << num_accumulation_steps << " accumulation steps).." << std::endl;
+                std::cout << "Computing indirect lighting (" << num_sample_sets << " sample sets, " << num_accumulation_steps << " accumulation steps)..." << std::endl;
                 const auto gen_indirect_start = std::chrono::high_resolution_clock::now();
                 const int num_threads = std::thread::hardware_concurrency();
                 for (std::size_t pass_i = 0; pass_i < num_accumulation_steps; ++pass_i)
