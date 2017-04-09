@@ -67,9 +67,12 @@ class SinGEDProps(PropertyGroup):
     sge_realtime_update_delay = FloatProperty(default=0.033, precision=3, unit='TIME')
     sge_scene_path = StringProperty(name='Path', default='')
     sge_lightmap_light_dir = FloatVectorProperty(name="Light direction", subtype='XYZ', size=3, default=[0.0, -0.5, -0.5])
-    sge_lightmap_light_intensity = FloatVectorProperty(name="Light intensity", subtype='COLOR', size=3, default=[0.5, 0.5, 0.5])
+    sge_lightmap_light_color = FloatVectorProperty(name="Light Color", subtype='COLOR', size=3, default=[0.5, 0.5, 0.5])
+    sge_lightmap_light_intensity = FloatProperty(name="Light intensity", default=1.0)
     sge_lightmap_num_indirect_sample_sets = IntProperty(name="Indirect sample sets", subtype='UNSIGNED', default=16)
-    sge_lightmap_num_post_steps = IntProperty(name="Post processing steps", subtype='UNSIGNED', default=4)
+    sge_lightmap_num_accumulation_steps = IntProperty(name="Accumulation steps", subtype='UNSIGNED', default=1)
+    sge_lightmap_num_post_steps = IntProperty(name="Post processing steps", subtype='UNSIGNED', default=2)
+    sge_lightmap_path = StringProperty(name="Lightmap path")
     sge_session = None
     sge_typedb = None
     sge_scene = None

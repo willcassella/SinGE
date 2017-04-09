@@ -166,6 +166,10 @@ class ComponentInstance(object):
             self.changed_props[prop_name] = None
             self.type.changed_instances.add(self)
 
+            # Run the modified callback
+            if self.type.update_instance_callback is not None:
+                self.type.update_instance_callback(self)
+
     def set_sub_property_immediate(self, prop_path, value):
         if not self.is_loaded:
             return False
@@ -183,6 +187,10 @@ class ComponentInstance(object):
         if modified:
             self.changed_props[outer_prop_name] = None
             self.type.changed_instances.add(self)
+
+            # Run the update callback
+            if self.type.update_instance_callback is not None:
+                self.type.update_instance_callback(self)
         return True
 
 
@@ -933,12 +941,14 @@ class SceneManager(object):
     def save_scene(self, path):
         self._save_scene_path = path
 
-    def generate_lightmaps(self, light_dir, light_intensity, num_indirect_sample_sets, num_post_steps):
+    def generate_lightmaps(self, light_dir, light_intensity, num_indirect_sample_sets, num_accumulation_steps, num_post_steps, lightmap_path):
         self._generate_lightmaps_query = {
             'light_direction': light_dir,
             'light_intensity': light_intensity,
             'num_indirect_sample_sets': num_indirect_sample_sets,
-            'post_process_steps': num_post_steps
+            'num_accumulation_steps': num_accumulation_steps,
+            'post_process_steps': num_post_steps,
+            'lightmap_path': lightmap_path
         }
 
     def request_new_node(self, user_data):

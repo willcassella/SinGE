@@ -2,7 +2,7 @@
 
 import bpy
 from bpy.types import Operator
-from bpy.props import IntProperty, StringProperty, FloatVectorProperty
+from bpy.props import IntProperty, FloatProperty, StringProperty, FloatVectorProperty
 from . import types
 
 
@@ -76,27 +76,46 @@ class SinGEDGenerateLightmaps(Operator):
         subtype='XYZ',
         size=3)
 
-    light_intensity = FloatVectorProperty(
-        name="Light intensity",
+    light_color = FloatVectorProperty(
+        name="Light Color",
         subtype='COLOR',
         size=3)
+
+    light_intensity = FloatProperty(
+        name="Light Intensity",
+        default=1.0)
 
     num_indirect_sample_sets = IntProperty(
         name="Indirect sample sets",
         subtype='UNSIGNED',
         default=16)
 
+    num_accumulation_steps = IntProperty(
+        name="Accumulation steps",
+        subtype='UNSIGNED',
+        default=1)
+
     num_post_steps = IntProperty(
         name="Post-processing steps",
-        default=4)
+        subtype='UNSIGNED',
+        default=2)
+
+    lightmap_path = StringProperty(
+        name="Lightmap path")
 
     def execute(self, context):
         # Unused arguments
         del context
 
+        if len(self.lightmap_path) == 0:
+            self.report(type={'ERROR'}, message="No lightmap path was specified")
+            return {'CANCELLED'}
+
         types.SinGEDProps.sge_scene.generate_lightmaps(
             [self.light_dir[0], self.light_dir[1], self.light_dir[2]],
-            [self.light_intensity[0], self.light_intensity[1], self.light_intensity[2]],
+            [self.light_color[0] * self.light_intensity, self.light_color[1] * self.light_intensity, self.light_color[2] * self.light_intensity],
             self.num_indirect_sample_sets,
-            self.num_post_steps)
+            self.num_accumulation_steps,
+            self.num_post_steps,
+            self.lightmap_path)
         return {'FINISHED'}

@@ -634,11 +634,17 @@ class SinGEDConnectPanel(Panel):
             # Draw generate lightmaps button
             box = layout.box()
             box.prop(context.scene.singed, 'sge_lightmap_light_dir')
+            box.prop(context.scene.singed, 'sge_lightmap_light_color')
             box.prop(context.scene.singed, 'sge_lightmap_light_intensity')
             box.prop(context.scene.singed, 'sge_lightmap_num_indirect_sample_sets')
+            box.prop(context.scene.singed, 'sge_lightmap_num_accumulation_steps')
             box.prop(context.scene.singed, 'sge_lightmap_num_post_steps')
+            box.prop(context.scene.singed, 'sge_lightmap_path')
             gen_lightmaps = box.operator(operators.SinGEDGenerateLightmaps.bl_idname, text='Generate Lightmaps')
             gen_lightmaps.light_dir = context.scene.singed.sge_lightmap_light_dir
+            gen_lightmaps.light_color = context.scene.singed.sge_lightmap_light_color
             gen_lightmaps.light_intensity = context.scene.singed.sge_lightmap_light_intensity
             gen_lightmaps.num_indirect_sample_sets = context.scene.singed.sge_lightmap_num_indirect_sample_sets
+            gen_lightmaps.num_accumulation_steps = context.scene.singed.sge_lightmap_num_accumulation_steps
             gen_lightmaps.num_post_steps = context.scene.singed.sge_lightmap_num_post_steps
+            gen_lightmaps.lightmap_path = context.scene.singed.sge_lightmap_path
