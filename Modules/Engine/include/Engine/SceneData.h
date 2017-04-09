@@ -7,6 +7,7 @@
 #include "Component.h"
 #include "Node.h"
 #include "SceneMod.h"
+#include "Lightmap.h"
 
 namespace sge
 {
@@ -57,5 +58,8 @@ namespace sge
 		EventChannel node_local_transform_changed_channel;
 		EventChannel node_world_transform_changed_channel;
 		EventChannel node_root_changed_channel;
+
+		/* Lightmap data */
+		std::string lightmap_data_path;
 	};
 }

@@ -181,6 +181,7 @@ namespace sge
 		_scene_data.node_local_transform_changed_channel.clear();
 		_scene_data.node_world_transform_changed_channel.clear();
 		_scene_data.node_root_changed_channel.clear();
+		_scene_data.lightmap_data_path.clear();
 
 		for (auto& component_type : _scene_data.components)
 		{
@@ -202,6 +203,9 @@ namespace sge
 	{
 		// Serialize next node id (so later nodes don't overlap)
 		writer.object_member("next_node_id", _scene_data.next_node_id);
+
+		// Serialize lightmap data
+		writer.object_member("lightmap_data_path", _scene_data.lightmap_data_path);
 
 		// Serialize nodes
 		writer.push_object_member("nodes");
@@ -239,6 +243,9 @@ namespace sge
 	void Scene::from_archive(ArchiveReader& reader)
 	{
 		reset_scene();
+
+		// Deserialize lightmap path
+		reader.object_member("lightmap_data_path", _scene_data.lightmap_data_path);
 
 		// Deserialize nodes
 		reader.object_member("next_node_id", _scene_data.next_node_id);

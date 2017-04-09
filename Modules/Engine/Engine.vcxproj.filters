@@ -116,6 +116,9 @@
     <ClInclude Include="include\Engine\Components\Physics\CStaticMeshCollider.h">
       <Filter>include\Components\Physics</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\Lightmap.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Scene.cpp">
@@ -177,6 +180,9 @@
     </ClCompile>
     <ClCompile Include="source\Components\Physics\CStaticMeshCollider.cpp">
       <Filter>source\Components\Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Lightmap.cpp">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
