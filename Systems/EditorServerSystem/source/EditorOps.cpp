@@ -11,14 +11,12 @@
 #include <Core/Reflection/TypeDB.h>
 #include <Core/Reflection/PropertyInfo.h>
 #include <Core/Interfaces/IToString.h>
-#include <Core/Interfaces/IFromString.h>
 #include <Resource/Interfaces/IFromFile.h>
 #include <Resource/Archives/JsonArchive.h>
+#include <Resource/Archives/BinaryArchive.h>
 #include <Resource/Resources/StaticMesh.h>
-#include <Resource/Resources/Image.h>
 #include <Lightmapper/Lightmapper.h>
 #include <Engine/Scene.h>
-#include <Engine/SystemFrame.h>
 #include <Engine/Components/Display/CStaticMesh.h>
 
 namespace sge
@@ -621,13 +619,21 @@ namespace sge
 
             struct Lightmap
 			{
-                std::string path;
+				NodeId node;
+
+				/* Data shared with SceneLightmap::LightmapElement */
                 int32 width = 0;
                 int32 height = 0;
+				byte* direct_mask = nullptr;
+				color::RGBF32* basis_x_radiance = nullptr;
+				color::RGBF32* basis_y_radiance = nullptr;
+				color::RGBF32* basis_z_radiance = nullptr;
+
+				/* Owned data */
                 LightmapTexel* lightmap_texels = nullptr;
                 byte* lightmap_texel_mask = nullptr;
-                color::RGBAF32* lightmap_pixels = nullptr;
-                color::RGBAF32* irradiance_pixels = nullptr;
+                color::RGBF32* irradiance_front = nullptr;
+				color::RGBF32* irradiance_back = nullptr;
             };
 
             void generate_lightmaps(Scene& scene, ArchiveReader& reader)
@@ -637,6 +643,11 @@ namespace sge
                 std::vector<LightmapOccluder> occluders;
                 std::vector<LightmapObject> lightmap_objects;
                 std::vector<Lightmap> lightmap_object_lightmaps;
+
+				// Load the light from the scene lightmap
+            	SceneLightmap scene_lightmap;
+				reader.object_member("light_direction", scene_lightmap.light_direction);
+				reader.object_member("light_intensity", scene_lightmap.light_intensity);
 
                 // Gather occluders and targets
                 std::cout << "Gather scene data..." << std::endl;
@@ -648,7 +659,6 @@ namespace sge
 				CStaticMesh* mesh_instances[8];
 				std::size_t start_index = 0;
 				std::size_t num_nodes = 0;
-
 				while (static_mesh_container->get_instance_nodes(start_index, 8, &num_nodes, instance_node_ids))
 				{
 					start_index += 8;
@@ -657,17 +667,17 @@ namespace sge
 
 					for (std::size_t i = 0; i < num_nodes; ++i)
 					{
-						auto* const node = instance_nodes[i];
-						auto* const mesh = mesh_instances[i];
+						const auto node_id = instance_node_ids[i];
+						const auto* const node = instance_nodes[i];
+						const auto* const mesh = mesh_instances[i];
 
 						if (!mesh->uses_lightmap())
 						{
 							continue;
 						}
 
-						StaticMesh* static_mesh = nullptr;
-
 						// Try to load the mesh
+						StaticMesh* static_mesh;
 						{
 							const auto mesh_iter = meshes.find(mesh->mesh());
 							if (mesh_iter == meshes.end())
@@ -683,9 +693,8 @@ namespace sge
 							}
 						}
 
-						Material* material = nullptr;
-
 						// Try to load the material
+						Material* material;
 						{
 							const auto mat_iter = materials.find(mesh->material());
 							if (mat_iter == materials.end())
@@ -701,10 +710,18 @@ namespace sge
 							}
 						}
 
+						// Create the LightmapElement object for this node
+						SceneLightmap::LightmapElement lightmap_element;
+						lightmap_element.width = mesh->lightmap_width();
+						lightmap_element.height = mesh->lightmap_height();
+						lightmap_element.basis_x_radiance.assign(lightmap_element.width * lightmap_element.height, color::RGBF32::black());
+						lightmap_element.basis_y_radiance.assign(lightmap_element.width * lightmap_element.height, color::RGBF32::black());
+						lightmap_element.basis_z_radiance.assign(lightmap_element.width * lightmap_element.height, color::RGBF32::black());
+						lightmap_element.direct_mask.assign(lightmap_element.width * lightmap_element.height, 0);
+
 						// Add the object to the list of occluders
 						LightmapOccluder occluder;
 						occluder.mesh = static_mesh;
-						occluder.base_color = material->base_reflectivity();
 						occluder.world_transform = node->get_world_matrix();
 						occluders.push_back(occluder);
 
@@ -712,28 +729,28 @@ namespace sge
 						LightmapObject object;
 						object.mesh = static_mesh;
 						object.world_transform = occluder.world_transform;
+						object.base_color = material->base_reflectivity();
 						lightmap_objects.push_back(object);
-
-						// Get the path for the lightmap
-						auto lightmap_path = mesh->lightmap();
-						if (lightmap_path.empty())
-						{
-							lightmap_path = "Content/Lightmaps/" + node->get_name() + ".exr";
-							mesh->lightmap(lightmap_path);
-						}
 
 						// Create a lightmap object for this object
 						Lightmap lightmap;
-						lightmap.path = std::move(lightmap_path);
-						lightmap.width = mesh->lightmap_width();
-						lightmap.height = mesh->lightmap_height();
+						lightmap.node = node_id;
+						lightmap.width = lightmap_element.width;
+						lightmap.height = lightmap_element.height;
+						lightmap.direct_mask = lightmap_element.direct_mask.data();
+						lightmap.basis_x_radiance = lightmap_element.basis_x_radiance.data();
+						lightmap.basis_y_radiance = lightmap_element.basis_y_radiance.data();
+						lightmap.basis_z_radiance = lightmap_element.basis_z_radiance.data();
 						lightmap.lightmap_texels = (LightmapTexel*)std::calloc(lightmap.width * lightmap.height, sizeof(LightmapTexel));
 						lightmap.lightmap_texel_mask = (byte*)std::calloc(lightmap.width * lightmap.height, 1);
-						lightmap.irradiance_pixels = (color::RGBAF32*)std::calloc(lightmap.width * lightmap.height, sizeof(color::RGBAF32));
-						lightmap.lightmap_pixels = (color::RGBAF32*)std::calloc(lightmap.width * lightmap.height, sizeof(color::RGBAF32));
+						lightmap.irradiance_front = (color::RGBF32*)std::calloc(lightmap.width * lightmap.height, sizeof(color::RGBF32));
+						lightmap.irradiance_back = (color::RGBF32*)std::calloc(lightmap.width * lightmap.height, sizeof(color::RGBF32));
 
 						// Add the lightmap to the list of lightmaps
 						lightmap_object_lightmaps.push_back(std::move(lightmap));
+
+						// Add the lightmap element to the scene lightmap datastructure
+						scene_lightmap.lightmap_elements.insert(std::make_pair(node_id, std::move(lightmap_element)));
 					}
 				}
                 const auto gather_end = std::chrono::high_resolution_clock::now();
@@ -778,10 +795,8 @@ namespace sge
 
                 // Create a light
                 sge::LightmapLight light;
-                light.direction = sge::Vec3{ 0, -0.5f, -0.5f }.normalized();
-                light.intensity = sge::color::RGBF32{ 0.5f, 0.5f, 0.5f };
-				reader.object_member("light_direction", light.direction);
-				reader.object_member("light_intensity", light.intensity);
+				light.direction = scene_lightmap.light_direction;
+					light.intensity = scene_lightmap.light_intensity;
 
                 // Compute direct lighting for all objects
                 std::cout << "Computing direction lighting..." << std::endl;
@@ -797,22 +812,28 @@ namespace sge
                         lightmap.height,
                         lightmap.lightmap_texels,
                         lightmap.lightmap_texel_mask,
-                        lightmap.irradiance_pixels);
+                        lightmap.irradiance_back);
 
-                    // Copy alpha component to lightmap
-                    auto* const lightmap_pixels = lightmap.lightmap_pixels;
-                    const auto* const irradiance_pixels = lightmap.irradiance_pixels;
-                    const auto lightmap_size = lightmap.width * lightmap.height;
-                    for (std::size_t pix_i = 0; pix_i < lightmap_size; ++pix_i)
-                    {
-                        const float alpha = irradiance_pixels[pix_i].alpha();
-                        lightmap_pixels[pix_i].alpha(std::ceil(alpha));
-                    }
+                    auto* const irradiance_front = lightmap.irradiance_front;
+					auto* const irradiance_back = lightmap.irradiance_back;
+					auto* const direct_mask = lightmap.direct_mask;
+                	const auto lightmap_size = lightmap.width * lightmap.height;
+					for (std::size_t pix_i = 0; pix_i < lightmap_size; ++pix_i)
+					{
+						const auto irradiance_value = irradiance_back[pix_i];
 
-                    // Set pixel data to the occluder
+						// Copy irradiance to front buffer
+						irradiance_front[pix_i] = irradiance_value;
+
+						// Compute mask value
+						const auto mask = irradiance_value.red() != 0.f || irradiance_value.green() != 0.f || irradiance_value.blue() != 0.f;
+						direct_mask[pix_i] = mask ? 0xFF : 0x0;
+					}
+
+                    // Set irradiance on the occluder
                     occluder.irradiance_width = lightmap.width;
                     occluder.irradiance_height = lightmap.height;
-                    occluder.irradiance = irradiance_pixels;
+                    occluder.irradiance = irradiance_front;
                 }
                 const auto gen_direct_end = std::chrono::high_resolution_clock::now();
 
@@ -823,11 +844,13 @@ namespace sge
 
                 // Compute indirect lighting for all objects
 				int32 num_sample_sets = 16;
+				int32 num_accumulation_steps = 1;
 				reader.object_member("num_indirect_sample_sets", num_sample_sets);
-                std::cout << "Computing indirect lighting..." << std::endl;
+				reader.object_member("num_accumulation_steps", num_accumulation_steps);
+                std::cout << "Computing indirect lighting (" << num_sample_sets << " sample sets, " << num_accumulation_steps << " accumulation steps).." << std::endl;
                 const auto gen_indirect_start = std::chrono::high_resolution_clock::now();
                 const int num_threads = std::thread::hardware_concurrency();
-                for (std::size_t pass_i = 0; pass_i < 1; ++pass_i)
+                for (std::size_t pass_i = 0; pass_i < num_accumulation_steps; ++pass_i)
                 {
                     for (std::size_t i = 0; i < lightmap_objects.size(); ++i)
                     {
@@ -838,35 +861,45 @@ namespace sge
                         std::vector<std::future<void>> jobs;
                         for (int job_i = 0; job_i < num_threads - 1; ++job_i)
                         {
-                            jobs.push_back(std::async(std::launch::async, sge::compute_indirect_irradiance,
+							const auto job_lightmap_offset = job_i * job_split * lightmap.width;
+                            jobs.push_back(std::async(std::launch::async, sge::compute_indirect_radiance,
                                 lm_scene,
                                 num_sample_sets,
+								num_accumulation_steps,
                                 lightmap.width,
                                 job_split,
-                                lightmap.lightmap_texels + job_i * job_split * lightmap.width,
-                                lightmap.lightmap_texel_mask + job_i * job_split * lightmap.width,
-                                lightmap.lightmap_pixels + job_i * job_split * lightmap.width));
+                                lightmap.lightmap_texels + job_lightmap_offset,
+                                lightmap.lightmap_texel_mask + job_lightmap_offset,
+                                lightmap.basis_x_radiance + job_lightmap_offset,
+								lightmap.basis_y_radiance + job_lightmap_offset,
+								lightmap.basis_z_radiance + job_lightmap_offset,
+								lightmap.irradiance_back + job_lightmap_offset));
                         }
 
                         // Compute final slice
-                        sge::compute_indirect_irradiance(
+						const auto final_lightmap_offset = (num_threads - 1) * job_split * lightmap.width;
+                        sge::compute_indirect_radiance(
                             lm_scene,
                             num_sample_sets,
+							num_accumulation_steps,
                             lightmap.width,
                             lightmap.height - (num_threads - 1) * job_split,
-                            lightmap.lightmap_texels + (num_threads - 1) * job_split * lightmap.width,
-                            lightmap.lightmap_texel_mask + (num_threads - 1) * job_split * lightmap.width,
-                            lightmap.lightmap_pixels + (num_threads - 1) * job_split * lightmap.width);
-                        }
+                            lightmap.lightmap_texels + final_lightmap_offset,
+                            lightmap.lightmap_texel_mask + final_lightmap_offset,
+                            lightmap.basis_x_radiance + final_lightmap_offset,
+							lightmap.basis_y_radiance + final_lightmap_offset,
+							lightmap.basis_z_radiance + final_lightmap_offset,
+							lightmap.irradiance_back + final_lightmap_offset);
+                    }
 
-                    // Copy to irradiance
+                    // Copy irradiance back buffer to front buffer
                     for (std::size_t i = 0; i < lightmap_objects.size(); ++i)
                     {
                         auto& lightmap = lightmap_object_lightmaps[i];
                         std::memcpy(
-                            lightmap.irradiance_pixels,
-                            lightmap.lightmap_pixels,
-                            lightmap.width * lightmap.height * sizeof(color::RGBAF32));
+                            lightmap.irradiance_front,
+                            lightmap.irradiance_back,
+                            lightmap.width * lightmap.height * sizeof(color::RGBF32));
                     }
                 }
                 const auto gen_indirect_end = std::chrono::high_resolution_clock::now();
@@ -876,21 +909,24 @@ namespace sge
                 std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(gen_indirect_end - gen_indirect_start).count();
                 std::cout << " milliseconds." << std::endl;
 
-                // Post-process and save all lightmap
+                // Post-process lightmaps
+				int32 num_post_steps = 4;
+				reader.object_member("post_process_steps", num_post_steps);
                 std::cout << "Post-processing..." << std::endl;
-                const auto post_start = std::chrono::high_resolution_clock::now();
+            	const auto post_start = std::chrono::high_resolution_clock::now();
+
                 for (auto& lightmap : lightmap_object_lightmaps)
                 {
-					int32 num_post_steps = 4;
-					reader.object_member("post_process_steps", num_post_steps);
-                    sge::postprocess_irradiance(lightmap.width, lightmap.height, num_post_steps, lightmap.lightmap_pixels);
-                    Image::save_rgbf(lightmap.lightmap_pixels->vec(), lightmap.width, lightmap.height, 4, lightmap.path.c_str());
+					// Run post-processing
+                    sge::lightmap_postprocess(lightmap.width, lightmap.height, num_post_steps, lightmap.basis_x_radiance);
+					sge::lightmap_postprocess(lightmap.width, lightmap.height, num_post_steps, lightmap.basis_y_radiance);
+					sge::lightmap_postprocess(lightmap.width, lightmap.height, num_post_steps, lightmap.basis_z_radiance);
 
-                    // Free data
-                    std::free(lightmap.lightmap_pixels);
-                    std::free(lightmap.irradiance_pixels);
+                    // Free owned data
                     std::free(lightmap.lightmap_texels);
                     std::free(lightmap.lightmap_texel_mask);
+					std::free(lightmap.irradiance_front);
+					std::free(lightmap.irradiance_back);
                 }
                 const auto post_end = std::chrono::high_resolution_clock::now();
 
@@ -901,6 +937,20 @@ namespace sge
 
                 // Clean up scene
                 free_lightmap_scene(lm_scene);
+
+				// Save lightmap to archive
+				BinaryArchive lightmap_out;
+				auto* lightmap_writer = lightmap_out.write_root();
+				scene_lightmap.to_archive(*lightmap_writer);
+				lightmap_writer->pop();
+
+				// Save archive to file
+            	std::string lightmap_path;
+				reader.object_member("lightmap_path", lightmap_path);
+				lightmap_out.to_file(lightmap_path.c_str());
+
+				// Assign lightmap to scene
+				scene.get_raw_scene_data().lightmap_data_path = std::move(lightmap_path);
 			}
 		}
 	}
