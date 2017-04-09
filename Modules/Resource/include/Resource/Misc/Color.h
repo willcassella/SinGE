@@ -209,10 +209,18 @@ namespace sge
             {
                 return rhs * lhs;
             }
+			friend RGBF32 operator*(const RGBF32& lhs, const RGBF32& rhs)
+			{
+				return RGBF32{ lhs.red() * rhs.red(), lhs.green() * rhs.green(), lhs.blue() * rhs.blue() };
+			}
             friend RGBF32 operator/(const RGBF32& lhs, float rhs)
             {
                 return RGBF32{ lhs.red() / rhs, lhs.green() / rhs, lhs.blue() / rhs };
             }
+			friend RGBF32 operator/(const RGBF32& lhs, const RGBF32& rhs)
+			{
+				return RGBF32{ lhs.red() / rhs.red(), lhs.green() / rhs.green(), lhs.blue() / rhs.blue() };
+			}
             friend RGBF32 operator+(const RGBF32& lhs, const RGBF32& rhs)
             {
                 return RGBF32{ lhs.red() + rhs.red(), lhs.green() + rhs.green(), lhs.blue() + rhs.blue() };
@@ -226,11 +234,21 @@ namespace sge
                 lhs = lhs * rhs;
                 return lhs;
             }
+			friend RGBF32& operator*=(RGBF32& lhs, const RGBF32& rhs)
+			{
+				lhs = lhs * rhs;
+				return lhs;
+			}
             friend RGBF32& operator/=(RGBF32& lhs, float rhs)
             {
                 lhs = lhs / rhs;
                 return lhs;
             }
+			friend RGBF32& operator/=(RGBF32& lhs, const RGBF32& rhs)
+			{
+				lhs = lhs / rhs;
+				return lhs;
+			}
             friend RGBF32& operator+=(RGBF32& lhs, const RGBF32& rhs)
             {
                 lhs = lhs + rhs;
@@ -361,10 +379,18 @@ namespace sge
             {
                 return rhs * lhs;
             }
+			friend RGBAF32 operator*(const RGBAF32& lhs, const RGBAF32& rhs)
+			{
+				return RGBAF32{ lhs.red() * rhs.red(), lhs.green() * rhs.green(), lhs.blue() * rhs.blue(), lhs.alpha() * rhs.alpha() };
+			}
             friend RGBAF32 operator/(const RGBAF32& lhs, float rhs)
             {
                 return RGBAF32{ lhs.red() / rhs, lhs.green() / rhs, lhs.blue() / rhs, lhs.alpha() / rhs };
             }
+			friend RGBAF32 operator/(const RGBAF32& lhs, const RGBAF32& rhs)
+			{
+				return RGBAF32{ lhs.red() / rhs.red(), lhs.green() / rhs.green(), lhs.blue() / rhs.blue(), lhs.alpha() / rhs.alpha() };
+			}
             friend RGBAF32 operator+(const RGBAF32& lhs, const RGBAF32& rhs)
             {
                 return RGBAF32{ lhs.red() + rhs.red(), lhs.green() + rhs.green(), lhs.blue() + rhs.blue(), lhs.alpha() + rhs.alpha() };
@@ -378,11 +404,21 @@ namespace sge
                 lhs = lhs * rhs;
                 return lhs;
             }
+			friend RGBAF32& operator*=(RGBAF32& lhs, const RGBAF32& rhs)
+			{
+				lhs = lhs * rhs;
+				return lhs;
+			}
             friend RGBAF32& operator/=(RGBAF32& lhs, float rhs)
             {
                 lhs = lhs / rhs;
                 return lhs;
             }
+			friend RGBAF32& operator/=(RGBAF32& lhs, const RGBAF32& rhs)
+			{
+				lhs = lhs / rhs;
+				return lhs;
+			}
             friend RGBAF32& operator+=(RGBAF32& lhs, const RGBAF32& rhs)
             {
                 lhs = lhs + rhs;
