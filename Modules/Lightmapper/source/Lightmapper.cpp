@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 #include <Core/Math/Mat4.h>
 #include <Core/Memory/Functions.h>
-#include <Resource/Resources/Image.h>
+#include <Resource/Misc/ImageOps.h>
 #include "../include/Lightmapper/Lightmapper.h"
 
 namespace sge
@@ -246,6 +246,8 @@ namespace sge
                     vert_btans[vert_i] = Vec3::cross(vert_norms[vert_i], vert_tans[vert_i]) * triangle_bitangent_signs[vert_indices[vert_i]];
                 }
 
+				const auto base_color = objects[mesh_i].base_color;
+
                 // Iterate from min to max
                 for (int32 y = min_y; y < max_y; ++y)
                 {
@@ -278,6 +280,7 @@ namespace sge
                         const std::size_t index = x + y * width;
                         out_texels[index].world_pos = Vec4{ pixel_pos, 0.f };
                         out_texels[index].TBN = TBN;
+						out_texels[index].base_color = base_color;
 
                         // Set the mask for this texel
                         out_texel_mask[index] = 0xFF;
@@ -294,7 +297,7 @@ namespace sge
         int32 height,
         const LightmapTexel* texels,
         const byte* texel_mask,
-        color::RGBAF32* out_irradiance)
+        color::RGBF32* out_irradiance)
     {
         // Get the scene
         auto* const rtc_scene = scene->rtc_scene;
@@ -318,9 +321,10 @@ namespace sge
                     continue;
                 }
 
-                // Get the texel position and normal
+                // Get the texel position and normal, and color
                 const auto texel_pos = texels[index].world_pos;
                 const auto texel_norm = Vec3{ texels[index].TBN[2][0], texels[index].TBN[2][1], texels[index].TBN[2][2] };
+				const auto texel_base_color = texels[index].base_color;
 
                 // Create the ray
                 RTCRay light_ray;
@@ -340,32 +344,39 @@ namespace sge
                 if (light_ray.geomID)
                 {
                     const auto dot = std::max(Vec3::dot(texel_norm, ray_dir), 0.f);
-                    const auto color_intensity = light.intensity * dot;
-                    out_irradiance[index] = color::RGBAF32{ color_intensity.red(), color_intensity.green(), color_intensity.blue(), dot };
+                    out_irradiance[index] = light.intensity * texel_base_color * dot;
                 }
             }
         }
     }
 
-    void compute_indirect_irradiance(
+    void compute_indirect_radiance(
         const LightmapScene* scene,
         int32 num_sample_sets,
+		int32 num_accumulations,
         int32 width,
         int32 height,
         const LightmapTexel* texels,
         const byte* texel_mask,
-        color::RGBAF32* out_irradiance)
+        color::RGBF32* SGE_RESTRICT out_x_basis_radiance,
+		color::RGBF32* SGE_RESTRICT out_y_basis_radiance,
+		color::RGBF32* SGE_RESTRICT out_z_basis_radiance,
+		color::RGBF32* SGE_RESTRICT out_normal_irradiance)
     {
         // Get the scene
         auto* const rtc_scene = scene->rtc_scene;
         const auto* const occluders = scene->occluders;
-        const float normalization_factor = 1.f / (static_cast<float>(num_sample_sets) * RAY_SET_SIZE) * 2 * 3.1415926539f;
+        const float normalization_factor = 1.f / (static_cast<float>(num_sample_sets * num_accumulations) * RAY_SET_SIZE) * 2 * 3.1415926539f;
 
 		// Create the ray valid mask
 		alignas(32) std::array<uint32, RAY_SET_SIZE> valid_mask;
 		valid_mask.fill(0xFFFFFFFF);
-
 		std::array<Vec3, RAY_SET_SIZE> ray_dirs;
+
+		// Get basis vectors
+		const auto basis_x = get_lightmap_x_basis_vector();
+		const auto basis_y = get_lightmap_y_basis_vector();
+		const auto basis_z = get_lightmap_z_basis_vector();
 
         // Iterate from min to max
         for (int32 y = 0; y < height; ++y)
@@ -381,10 +392,16 @@ namespace sge
                     continue;
                 }
 
-                // Get the texel position, TBN matrix, and normal vector
+                // Get the texel position, TBN matrix, normal vector, and base color
                 const auto texel_pos = texels[texel_index].world_pos;
                 const auto texel_TBN = texels[texel_index].TBN;
                 const auto texel_norm = Vec3{ texel_TBN[2][0], texel_TBN[2][1], texel_TBN[2][2] };
+				const auto texel_base_color = texels[texel_index].base_color;
+
+				// Compute tangent-space basis vectors
+				const auto tang_basis_x = texel_TBN * basis_x;
+				const auto tang_basis_y = texel_TBN * basis_y;
+				const auto tang_basis_z = texel_TBN * basis_z;
 
                 // For each raycasting iteration
                 for (int iter_i = 0; iter_i < num_sample_sets; ++iter_i)
@@ -420,7 +437,10 @@ namespace sge
                     rtcIntersect8(valid_mask.data(), rtc_scene, indirect_rays);
 
                     // Test rays
-                    auto result = color::RGBAF32::zero();
+					auto result_x = color::RGBF32::black();
+					auto result_y = color::RGBF32::black();
+					auto result_z = color::RGBF32::black();
+					auto result_norm = color::RGBF32::black();
                     for (int i = 0; i < RAY_SET_SIZE; ++i)
                     {
                         // If the ray didn't hit anything
@@ -471,9 +491,6 @@ namespace sge
                         const auto hit_bary = Vec3{ 1.f - hit_u - hit_v, hit_u, hit_v };
                         const auto hit_lm_uv = bary_interpolate(hit_bary, hit_tri_lm_uvs);
 
-                        // Get the hit color
-                        const auto hit_color = hit_mesh.base_color;
-
                         // Calculate the hit irradiance uv coordinates
                         auto hit_irradiance_uv = IVec2<int32>{
                             static_cast<int32>(hit_lm_uv.norm_f32_x() * hit_mesh.irradiance_width),
@@ -484,38 +501,48 @@ namespace sge
                         hit_irradiance_uv.y(std::max(std::min(hit_mesh.irradiance_height, hit_irradiance_uv.y()), 0));
 
                         // Sample the irradiance at the hit location
-                        const color::RGBAF32 hit_irradiance = hit_mesh.irradiance[hit_irradiance_uv.x() + hit_irradiance_uv.y() * hit_mesh.irradiance_width];
+                        const auto hit_irradiance = hit_mesh.irradiance[hit_irradiance_uv.x() + hit_irradiance_uv.y() * hit_mesh.irradiance_width];
 
                         // Calculate the influence from this point
                         const auto dir = Vec3{ indirect_rays.dirx[i], indirect_rays.diry[i], indirect_rays.dirz[i] };
-                        const auto dot = Vec3::dot(texel_norm, dir);
+						const auto dot_x = std::max(Vec3::dot(dir, tang_basis_x), 0.f);
+						const auto dot_y = std::max(Vec3::dot(dir, tang_basis_y), 0.f);
+						const auto dot_z = std::max(Vec3::dot(dir, tang_basis_z), 0.f);
+                    	const auto dot_norm = std::max(Vec3::dot(dir, texel_norm), 0.f);
 
-                        // Write out the irradiance
-                        result.red(result.red() + dot * hit_irradiance.red() * hit_color.red());
-                        result.green(result.green() + dot * hit_irradiance.green() * hit_color.green());
-                        result.blue(result.blue() + dot * hit_irradiance.blue() * hit_color.blue());
+                        // Calculate resulting radiance
+						result_x += hit_irradiance * dot_x;
+						result_y += hit_irradiance * dot_y;
+						result_z += hit_irradiance * dot_z;
+						result_norm += hit_irradiance * dot_norm;
                     }
 
-                    // Divide by number of samples and probability (Monte carlo integration)
-                    result = result * normalization_factor;
+                    // Write results, dividing by normalization factor (Monte Carlo integration)
+					out_x_basis_radiance[texel_index] += result_x * normalization_factor;
+					out_y_basis_radiance[texel_index] += result_y * normalization_factor;
+					out_z_basis_radiance[texel_index] += result_z * normalization_factor;
 
-                    // Write out irradiance (ignore alpha component)
-                    out_irradiance[texel_index] += result;
+					// Write normal irradiance, dividing by normalization factor (Monte Carlo integration), and factoring in base color
+					out_normal_irradiance[texel_index] += result_norm * texel_base_color * normalization_factor;
                 }
             }
         }
     }
 
-    void postprocess_irradiance(int32 width, int32 height, int32 num_steps, color::RGBAF32* irradiance)
+    void lightmap_postprocess(
+		int32 width,
+		int32 height,
+		int32 num_steps,
+		color::RGBF32* lightmap)
     {
         // Create a copy of the image
-        std::vector<color::RGBAF32> temp;
-        temp.assign(width * height, color::RGBAF32::black());
+        std::vector<color::RGBF32> temp;
+        temp.assign(width * height, color::RGBF32::black());
 
         for (int32 i = 0; i < num_steps; ++i)
         {
-            Image::dilate_rgbf(irradiance->vec(), width, height, 4, temp.data()->vec());
-            Image::smooth_rgbf(temp.data()->vec(), width, height, 4, irradiance->vec());
+            image_ops::dilate_rgbf(lightmap->vec(), width, height, 3, temp.data()->vec());
+            image_ops::smooth_rgbf(temp.data()->vec(), width, height, 3, lightmap->vec());
         }
     }
 }

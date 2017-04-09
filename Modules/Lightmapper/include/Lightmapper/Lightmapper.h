@@ -18,6 +18,11 @@ namespace sge
          * \brief The world position of the surface represented by this texel.
          */
         Vec4 world_pos;
+
+		/*
+		 * \breif The base color of the material represented by this texel.
+		 */
+		color::RGBF32 base_color;
     };
 
     struct LightmapObject
@@ -31,6 +36,11 @@ namespace sge
          * \brief The world transform of this object.
          */
         Mat4 world_transform;
+
+	    /**
+		 * \brief The base color of the material represented by this texel.
+		 */
+		color::RGBF32 base_color;
     };
 
     struct LightmapOccluder
@@ -46,11 +56,6 @@ namespace sge
         Mat4 world_transform;
 
         /**
-         * \brief Base color of this object, used for irradiance transmission.
-         */
-        color::RGBF32 base_color;
-
-        /**
          * \brief Width (in pixels) of the irradiance map for this object.
          */
         int32 irradiance_width = 0;
@@ -61,9 +66,9 @@ namespace sge
         int32 irradiance_height = 0;
 
         /**
-         * \brief The irradiance of this object.
+         * \brief A texture that describes the irradiance of this object.
          */
-        const color::RGBAF32* irradiance = nullptr;
+        const color::RGBF32* irradiance = nullptr;
     };
 
     struct LightmapLight
@@ -80,6 +85,30 @@ namespace sge
     };
 
     struct LightmapScene;
+
+	/**
+	 * \brief Returns the tangent-space x basis vector for lightmapping.
+	 */
+	inline Vec3 get_lightmap_x_basis_vector()
+	{
+		return Vec3{ std::sqrtf(2.f / 3.f), 0.f, std::sqrtf(1.f / 3.f) };
+	}
+
+	/**
+	 * \brief Returns the tangent-space y basis vector for lightmapping.
+	 */
+	inline Vec3 get_lightmap_y_basis_vector()
+	{
+		return Vec3{ -std::sqrtf(1.f / 6.f), std::sqrtf(1.f / 2.f), std::sqrtf(1.f / 3.f) };
+	}
+
+	/**
+	 * \brief Returns the tangent-space z basis vector for lightmapping.
+	 */
+	inline Vec3 get_lightmap_z_basis_vector()
+	{
+		return Vec3{ -std::sqrtf(1.f / 6.f), -std::sqrtf(1.f / 2.f), std::sqrtf(1.f / 3.f) };
+	}
 
     /**
      * \brief Generates lightmap texel information for the given lightmap objects.
@@ -117,14 +146,14 @@ namespace sge
         LightmapScene* sene);
 
     /**
-     * \brief Computes direct irradiance due to the given light source.
+     * \brief Computes irradiance due to direct lighting from the given light source.
      * \param light The light source to compute direct irradiance with.
      * \param scene The scene to calculate occlusion against.
      * \param width The width (in pixels) of the light map.
      * \param height The height (in pixels) of the light map.
      * \param texels The array of texels in the light map (must be width * height in size).
      * \param texel_mask The array of texel masks in the light map (must be width * height in size).
-     * \param out_irradiance The pixels to assign the direct irradiance to (must be width * height in size).
+     * \param out_irradiance The pixels to assign the direct radiance to (must be width * height in size).
      */
     SGE_LIGHTMAPPER_API void compute_direct_irradiance(
         const LightmapScene* scene,
@@ -133,37 +162,45 @@ namespace sge
         int32 height,
         const LightmapTexel* texels,
         const byte* texel_mask,
-        color::RGBAF32* out_irradiance);
+        color::RGBF32* out_irradiance);
 
     /**
-     * \brief Computes indirect irradiance due to the given occluders.
+     * \brief Computes indirect radiance due to the given occluders.
      * \param scene The scene to calculate occlusion and irradiance against.
      * \param num_sample_sets The number of samples sets (8 samples) to gather.
+     * \param num_accumulations The total number of accumulation passes that will be performed.
      * \param width The width (in pixels) of the light map.
      * \param height The height (in pixels) of the light map.
      * \param texels The array of texels in the light map (must be width * height in size).
      * \param texel_mask The array of texel masks in the light map (must be width * height in size).
-     * \param out_irradiance The pixels to assign the direct irradiance to (must be width * height in size).
+     * \param out_x_basis_radiance Output for RGB radiance parallel to the x basis vector.
+     * \param out_y_basis_radiance Output for RGB radiance parallel to the y basis vector.
+     * \param out_z_basis_radiance Output for RGB radiance parallel to the z basis vector.
+     * \param out_normal_irradiance Output for RGB irradiance parallel to the normal vector.
      */
-    SGE_LIGHTMAPPER_API void compute_indirect_irradiance(
+    SGE_LIGHTMAPPER_API void compute_indirect_radiance(
         const LightmapScene* scene,
         int32 num_sample_sets,
+		int32 num_accumulations,
         int32 width,
         int32 height,
         const LightmapTexel* texels,
         const byte* texel_mask,
-        color::RGBAF32* out_irradiance);
+        color::RGBF32* SGE_RESTRICT out_x_basis_radiance,
+		color::RGBF32* SGE_RESTRICT out_y_basis_radiance,
+		color::RGBF32* SGE_RESTRICT out_z_basis_radiance,
+		color::RGBF32* SGE_RESTRICT out_normal_irradiance);
 
     /**
-     * \brief Post-processes the lightmap to reduce noise.
+     * \brief Post-processes the given lightmap to reduce noise.
      * \param width The width of the lightmap.
      * \param height The height of the lightmap.
      * \param num_steps The number of post-processing iterations to perform.
-     * \param irradiance Irradiance map to post-process.
+     * \param lightmap Lightmap to post-process.
      */
-    SGE_LIGHTMAPPER_API void postprocess_irradiance(
+    SGE_LIGHTMAPPER_API void lightmap_postprocess(
         int32 width,
         int32 height,
         int32 num_steps,
-        color::RGBAF32* irradiance);
+        color::RGBF32* lightmap);
 }
