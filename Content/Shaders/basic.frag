@@ -1,12 +1,20 @@
 // basic.frag
 #version 430 core
 
+const vec3 lm_x_basis_vec = vec3(0.81649, 0, 0.57735);
+const vec3 lm_y_basis_vec = vec3(-0.40824, 0.707106, 0.57735);
+const vec3 lm_z_basis_vec = vec3(-0.48024, -0.707106, 0.57735);
+
+uniform sampler2D lightmap_x_basis;
+uniform sampler2D lightmap_y_basis;
+uniform sampler2D lightmap_z_basis;
+uniform sampler2D lightmap_direct_mask;
 uniform sampler2D albedo;
-uniform sampler2D lightmap;
 uniform sampler2D roughness_map;
 uniform sampler2D metallic_map;
 uniform float roughness_constant = 0.5;
 uniform float metallic_constant = 0;
+uniform bool use_lightmap = false;
 uniform bool use_roughness_map = false;
 uniform bool use_metallic_map = false;
 uniform vec2 base_mat_uv_scale = vec2(1, 1);
@@ -33,10 +41,22 @@ void main()
     out_normal = normalize(fs_in.cam_normal);
 
     // Output albedo
-    out_albedo = texture(albedo, fs_in.mat_tex_coords * base_mat_uv_scale * inst_mat_uv_scale);
+    const vec4 albedo = texture(albedo, fs_in.mat_tex_coords * base_mat_uv_scale * inst_mat_uv_scale);
+    out_albedo = albedo;
 
     // Output irradiance
-    out_irradiance = texture(lightmap, fs_in.lm_tex_coords);
+    if (use_lightmap)
+    {
+        vec3 irradiance = vec3(0.f);
+        irradiance += texture(lightmap_x_basis, fs_in.lm_tex_coords).rgb * dot(lm_x_basis_vec, vec3(0, 0, 1));
+        irradiance += texture(lightmap_y_basis, fs_in.lm_tex_coords).rgb * dot(lm_y_basis_vec, vec3(0, 0, 1));
+        irradiance += texture(lightmap_z_basis, fs_in.lm_tex_coords).rgb * dot(lm_z_basis_vec, vec3(0, 0, 1));
+        out_irradiance = vec4(irradiance * albedo.rgb, texture(lightmap_direct_mask, fs_in.lm_tex_coords).r);
+    }
+    else
+    {
+        out_irradiance = vec4(0, 0, 0, 1);
+    }
 
     // Output roughness
     if (use_roughness_map)

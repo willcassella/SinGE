@@ -12,6 +12,8 @@ uniform sampler2D normal_buffer;
 uniform sampler2D albedo_buffer;
 uniform sampler2D irradiance_buffer;
 uniform sampler2D roughness_metallic_buffer;
+uniform vec3 light_dir;
+uniform vec3 light_intensity;
 
 in vec2 f_texcoord;
 
@@ -99,12 +101,11 @@ void main()
     vec4 irradiance = texture(irradiance_buffer, f_texcoord);
 
     // For each light
-        vec3 light_color = vec3(23.47f, 21.31f, 20.79f);
         float attenutation = 1.0f;
-        vec3 radiance = light_color * attenutation * irradiance.a;
+        vec3 radiance = light_intensity * attenutation * irradiance.a;
 
         // Calculate light vector
-        vec3 light = normalize((normal_to_view * vec4(0, 0.5f, 0.5f, 0.0f)).xyz);
+        vec3 light = normalize((normal_to_view * -vec4(light_dir, 0.f)).xyz);
 
         // Calculate the halfway vector
         vec3 half_vec = normalize(view + light);
@@ -123,8 +124,7 @@ void main()
         Lo += (kD * albedo / PI + brdf) * radiance * n_dot_l;
     // end for
 
-    vec3 ambient = irradiance.rgb * albedo / 2;
-    vec3 color = ambient + Lo;
+    vec3 color = Lo + irradiance.rgb;
 
     // Output final scene color
     out_color = vec4(color, 1.0f);
