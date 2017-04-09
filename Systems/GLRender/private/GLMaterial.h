@@ -28,7 +28,11 @@ namespace sge
 			constexpr const char* PROJ_MATRIX_UNIFORM_NAME = "projection";
             constexpr const char* BASE_MAT_UV_SCALE_UNIFORM_NAME = "base_mat_uv_scale";
 			constexpr const char* INST_MAT_UV_SCALE_UNIFORM_NAME = "inst_mat_uv_scale";
-            constexpr const char* PREC_LIGHTMAP_UNIFORM_NAME = "lightmap";
+			constexpr const char* LIGHTMAP_X_BASIS_UNIFORM_NAME = "lightmap_x_basis";
+			constexpr const char* LIGHTMAP_Y_BASIS_UNIFORM_NAME = "lightmap_y_basis";
+			constexpr const char* LIGHTMAP_Z_BASIS_UNIFORM_NAME = "lightmap_z_basis";
+			constexpr const char* LIGHTMAP_DIRECT_MASK_UNIFORM_NAME = "lightmap_direct_mask";
+			constexpr const char* USE_LIGHTMAP_UNIFORM_NAME = "use_lightmap";
 
             /**
             * \brief Material parameters.
@@ -53,7 +57,11 @@ namespace sge
                 GLint proj_matrix_uniform = -1;
                 GLint base_mat_uv_scale_uniform = -1;
 				GLint inst_mat_uv_scale_uniform = -1;
-                GLint prec_lightmap_uniform = -1;
+                GLint lightmap_x_basis_uniform = -1;
+				GLint lightmap_y_basis_uniform = -1;
+				GLint lightmap_z_basis_uniform = -1;
+				GLint lightmap_direct_mask_uniform = -1;
+				GLint use_lightmap_uniform = -1;
             };
 
 		    /**

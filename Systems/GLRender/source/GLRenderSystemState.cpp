@@ -40,8 +40,12 @@ namespace sge
                 // Get standard uniforms for the material program
                 gl_material::get_material_standard_uniforms(gl_mat.program_id, &gl_mat.uniforms);
 
-				// Set base uv scale
+				// Set constant uniform parameters
 				glUseProgram(gl_mat.program_id);
+				glUniform1i(gl_mat.uniforms.lightmap_x_basis_uniform, 0);
+				glUniform1i(gl_mat.uniforms.lightmap_y_basis_uniform, 1);
+				glUniform1i(gl_mat.uniforms.lightmap_z_basis_uniform, 2);
+				glUniform1i(gl_mat.uniforms.lightmap_direct_mask_uniform, 3);
 				glUniform2fv(gl_mat.uniforms.base_mat_uv_scale_uniform, 1, material.base_uv_scale().vec());
 				glUseProgram(0);
 

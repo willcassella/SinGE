@@ -3,6 +3,7 @@
 #include <iostream>
 #include <Core/Reflection/ReflectionBuilder.h>
 #include <Resource/Archives/JsonArchive.h>
+#include <Resource/Archives/BinaryArchive.h>
 #include <Engine/Components/Display/CStaticMesh.h>
 #include <Engine/Components/Display/CCamera.h>
 #include <Engine/Scene.h>
@@ -39,14 +40,17 @@ namespace sge
 			instance.world_transform = node.get_world_matrix();
 
 			// Decide whether to use a lightmap
-			if (static_mesh.uses_lightmap() && !static_mesh.lightmap().empty())
+			if (static_mesh.uses_lightmap())
 			{
 				// Get the lightmap
-				instance.lightmap = state.get_texture_2d_resource(static_mesh.lightmap(), true);
-			}
-			else
-			{
-				instance.lightmap = 0;
+				const auto lightmap_iter = state.lightmap_textures.find(instance.node_id);
+				if (lightmap_iter != state.lightmap_textures.end())
+				{
+					instance.lightmap_x_basis = lightmap_iter->second.x_basis_tex;
+					instance.lightmap_y_basis = lightmap_iter->second.y_basis_tex;
+					instance.lightmap_z_basis = lightmap_iter->second.z_basis_tex;
+					instance.lightmap_direct_mask = lightmap_iter->second.direct_mask_tex;
+				}
 			}
 
 			// Search for where to put this mesh
@@ -154,6 +158,31 @@ namespace sge
 
         static void build_render_scene(GLRenderSystem::State& state, Scene& scene)
         {
+			// Load the lightmap object
+			if (!scene.get_raw_scene_data().lightmap_data_path.empty())
+			{
+				BinaryArchive lightmap_archive;
+				lightmap_archive.from_file(scene.get_raw_scene_data().lightmap_data_path.c_str());
+
+				SceneLightmap scene_lightmap;
+				lightmap_archive.deserialize_root(scene_lightmap);
+
+				// Get the light direction and color
+				state.light_dir = scene_lightmap.light_direction;
+				state.light_intensity = scene_lightmap.light_intensity;
+
+				// Load all lightmap components into textures
+				for (const auto& element : scene_lightmap.lightmap_elements)
+				{
+					LightmapTexture tex;
+					tex.x_basis_tex = create_texture(element.second.width, element.second.height, element.second.basis_x_radiance.data(), GL_RGB32F, GL_RGB, GL_FLOAT);
+					tex.y_basis_tex = create_texture(element.second.width, element.second.height, element.second.basis_y_radiance.data(), GL_RGB32F, GL_RGB, GL_FLOAT);
+					tex.z_basis_tex = create_texture(element.second.width, element.second.height, element.second.basis_z_radiance.data(), GL_RGB32F, GL_RGB, GL_FLOAT);
+					tex.direct_mask_tex = create_texture(element.second.width, element.second.height, element.second.direct_mask.data(), GL_R8, GL_RED, GL_UNSIGNED_BYTE);
+					state.lightmap_textures.insert(std::make_pair(element.first, tex));
+				}
+			}
+
             std::map<GLuint, std::size_t> material_indices;
 			auto* static_mesh_component = scene.get_component_container(CStaticMesh::type_info);
 
@@ -416,6 +445,8 @@ namespace sge
 		    // Create the scene shader program
             _state->scene_shader_program = create_viewport_program(viewport_v_shader, scene_f_shader);
             _state->scene_program_view_uniform = glGetUniformLocation(_state->scene_shader_program, "view");
+			_state->scene_program_light_dir_uniform = glGetUniformLocation(_state->scene_shader_program, "light_dir");
+			_state->scene_program_light_intensity_uniform = glGetUniformLocation(_state->scene_shader_program, "light_intensity");
 
             // Create the post-processing shader program
             _state->post_shader_program = create_viewport_program(viewport_v_shader, post_f_shader);

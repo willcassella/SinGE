@@ -47,7 +47,11 @@ namespace sge
                 out_uniforms->proj_matrix_uniform = glGetUniformLocation(mat_id, PROJ_MATRIX_UNIFORM_NAME);
 				out_uniforms->base_mat_uv_scale_uniform = glGetUniformLocation(mat_id, BASE_MAT_UV_SCALE_UNIFORM_NAME);
 				out_uniforms->inst_mat_uv_scale_uniform = glGetUniformLocation(mat_id, INST_MAT_UV_SCALE_UNIFORM_NAME);
-                out_uniforms->prec_lightmap_uniform = glGetUniformLocation(mat_id, PREC_LIGHTMAP_UNIFORM_NAME);
+                out_uniforms->lightmap_x_basis_uniform = glGetUniformLocation(mat_id, LIGHTMAP_X_BASIS_UNIFORM_NAME);
+				out_uniforms->lightmap_y_basis_uniform = glGetUniformLocation(mat_id, LIGHTMAP_Y_BASIS_UNIFORM_NAME);
+				out_uniforms->lightmap_z_basis_uniform = glGetUniformLocation(mat_id, LIGHTMAP_Z_BASIS_UNIFORM_NAME);
+				out_uniforms->lightmap_direct_mask_uniform = glGetUniformLocation(mat_id, LIGHTMAP_DIRECT_MASK_UNIFORM_NAME);
+				out_uniforms->use_lightmap_uniform = glGetUniformLocation(mat_id, USE_LIGHTMAP_UNIFORM_NAME);
             }
 
             GLint get_uniform_location(GLuint mat_id, const char* name, GLDebugOutputMode out_mode)

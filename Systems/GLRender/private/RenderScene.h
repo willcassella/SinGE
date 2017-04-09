@@ -16,7 +16,10 @@ namespace sge
             Mat4 world_transform;
             Vec2 mat_uv_scale;
 			NodeId node_id;
-            GLuint lightmap = 0;
+            GLuint lightmap_x_basis = 0;
+			GLuint lightmap_y_basis = 0;
+			GLuint lightmap_z_basis = 0;
+			GLuint lightmap_direct_mask = 0;
         };
 
         /**
@@ -38,7 +41,10 @@ namespace sge
             Mat4 world_transform;
             Vec2 mat_uv_scale;
 			NodeId node_id;
-            GLuint lightmap = 0;
+			GLuint lightmap_x_basis = 0;
+			GLuint lightmap_y_basis = 0;
+			GLuint lightmap_z_basis = 0;
+			GLuint lightmap_direct_mask = 0;
             gl_material::MaterialParams override_params;
         };
 

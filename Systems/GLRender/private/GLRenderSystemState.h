@@ -61,6 +61,14 @@ namespace sge
         static constexpr GLenum POST_BUFFER_HDR_UPLOAD_FORMAT = GL_RGB;
         static constexpr GLenum POST_BUFFER_HDR_UPLOAD_TYPE = GL_FLOAT;
 
+		struct LightmapTexture
+		{
+			GLuint x_basis_tex = 0;
+			GLuint y_basis_tex = 0;
+			GLuint z_basis_tex = 0;
+			GLuint direct_mask_tex = 0;
+		};
+
 		struct GLRenderSystem::State
 		{
 			///////////////////
@@ -93,6 +101,11 @@ namespace sge
 			std::unordered_map<std::string, gl_static_mesh::StaticMesh> static_mesh_resources;
 			std::unordered_map<std::string, GLuint> texture_2d_resources;
 
+			/* Lightmap data */
+			std::map<NodeId, LightmapTexture> lightmap_textures;
+			Vec3 light_dir;
+			color::RGBF32 light_intensity;
+
 			// The default framebuffer
 			GLint default_framebuffer;
 
@@ -112,6 +125,8 @@ namespace sge
 			GLuint scene_shader_program;
             GLuint post_shader_program;
             GLint scene_program_view_uniform;
+			GLint scene_program_light_dir_uniform;
+			GLint scene_program_light_intensity_uniform;
 
             // Debug draw line buffer
             GLuint debug_line_vao;

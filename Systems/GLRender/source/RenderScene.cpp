@@ -39,16 +39,12 @@ namespace sge
             {
                 // Bind the material
                 glUseProgram(mat_instance.material.program_id);
-                glUniform1i(mat_instance.material.uniforms.prec_lightmap_uniform, 0);
-                GLenum next_active_texture = GL_TEXTURE1; // Texture 0 is reserved for precomputed irradiance
+                GLenum next_active_texture = GL_TEXTURE4; // Textures 0-3 are reserved for lightmapping
                 gl_material::set_bound_material_params(&next_active_texture, mat_instance.material.params);
 
                 // Upload view and projection matrices
                 glUniformMatrix4fv(mat_instance.material.uniforms.view_matrix_uniform, 1, GL_FALSE, view.vec());
                 glUniformMatrix4fv(mat_instance.material.uniforms.proj_matrix_uniform, 1, GL_FALSE, proj.vec());
-
-                // Bind the precomputed irradiance texture slot
-                glActiveTexture(GL_TEXTURE0);
 
                 // Render each instance of the material that does not override parameters
                 for (const auto& mesh_instance : mat_instance.mesh_instances)
@@ -59,8 +55,16 @@ namespace sge
                     // For each instance of this mesh
                     for (const auto& instance : mesh_instance.instances)
                     {
-                        // Set the precomputed lightmap texture
-                        glBindTexture(GL_TEXTURE_2D, instance.lightmap);
+                        // Set lightmap parameters
+						glActiveTexture(GL_TEXTURE0);
+                        glBindTexture(GL_TEXTURE_2D, instance.lightmap_x_basis);
+						glActiveTexture(GL_TEXTURE1);
+						glBindTexture(GL_TEXTURE_2D, instance.lightmap_y_basis);
+						glActiveTexture(GL_TEXTURE2);
+						glBindTexture(GL_TEXTURE_2D, instance.lightmap_z_basis);
+						glActiveTexture(GL_TEXTURE3);
+						glBindTexture(GL_TEXTURE_2D, instance.lightmap_direct_mask);
+						glUniform1i(mat_instance.material.uniforms.use_lightmap_uniform, instance.lightmap_x_basis == 0 ? 0 : 1);
 
                         // Set the model matrix
                         glUniformMatrix4fv(
@@ -103,9 +107,16 @@ namespace sge
                         // Bind the instance parameters
                         gl_material::set_bound_material_params(&next_active_texture, instance.override_params);
 
-                        // Set the precomputed irradiance texture
-                        glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, instance.lightmap);
+						// Set lightmap parameters
+						glActiveTexture(GL_TEXTURE0);
+						glBindTexture(GL_TEXTURE_2D, instance.lightmap_x_basis);
+						glActiveTexture(GL_TEXTURE1);
+						glBindTexture(GL_TEXTURE_2D, instance.lightmap_y_basis);
+						glActiveTexture(GL_TEXTURE2);
+						glBindTexture(GL_TEXTURE_2D, instance.lightmap_z_basis);
+						glActiveTexture(GL_TEXTURE3);
+						glBindTexture(GL_TEXTURE_2D, instance.lightmap_direct_mask);
+						glUniform1i(mat_instance.material.uniforms.use_lightmap_uniform, instance.lightmap_x_basis == 0 ? 0 : 1);
 
                         // Set the uv scale
                         glUniform2fv(mat_instance.material.uniforms.inst_mat_uv_scale_uniform, 1, instance.mat_uv_scale.vec());
@@ -286,6 +297,10 @@ namespace sge
 
             // Upload view matrix
             glUniformMatrix4fv(render_state.scene_program_view_uniform, 1, GL_FALSE, view.vec());
+
+			// Upload light uniforms
+			glUniform3fv(render_state.scene_program_light_dir_uniform, 1, render_state.light_dir.vec());
+			glUniform3fv(render_state.scene_program_light_intensity_uniform, 1, render_state.light_intensity.vec());
 
             // Draw the screen quad
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
