@@ -42,10 +42,6 @@ namespace sge
 
         void set_uses_lightmap(bool value);
 
-        const std::string& lightmap() const;
-
-        void lightmap(std::string lightmap);
-
         int32 lightmap_width() const;
 
         void lightmap_width(int32 width);
@@ -69,7 +65,6 @@ namespace sge
 		NodeId _node;
         std::string _mesh;
         std::string _material;
-        std::string _lightmap;
 		Vec2 _uv_scale = { 1.f, 1.f };
         IVec2<int32> _lightmap_size = { 512, 512 };
         bool _use_lightmap = false;

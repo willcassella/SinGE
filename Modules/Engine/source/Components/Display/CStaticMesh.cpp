@@ -39,7 +39,6 @@ namespace sge
         writer.object_member("mesh", _mesh);
         writer.object_member("material", _material);
         writer.object_member("uselm", _use_lightmap);
-        writer.object_member("lm", _lightmap);
         writer.object_member("lms", _lightmap_size);
 		writer.object_member("uvs", _uv_scale);
     }
@@ -49,7 +48,6 @@ namespace sge
         reader.object_member("mesh", _mesh);
         reader.object_member("material", _material);
         reader.object_member("uselm", _use_lightmap);
-        reader.object_member("lm", _lightmap);
         reader.object_member("lms", _lightmap_size);
 		reader.object_member("uvs", _uv_scale);
     }
@@ -94,20 +92,6 @@ namespace sge
 			_use_lightmap = value;
 			set_modified("use_lightmap");
 		}
-    }
-
-    const std::string& CStaticMesh::lightmap() const
-    {
-        return _lightmap;
-    }
-
-    void CStaticMesh::lightmap(std::string lightmap)
-    {
-        if (_lightmap != lightmap)
-        {
-			_lightmap = std::move(lightmap);
-			set_modified("lightmap");
-        }
     }
 
     int32 CStaticMesh::lightmap_width() const
