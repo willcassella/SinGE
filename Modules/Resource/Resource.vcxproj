@@ -201,6 +201,7 @@ PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packag
     <ClInclude Include="include\Resource\build.h" />
     <ClInclude Include="include\Resource\Interfaces\IFromFile.h" />
     <ClInclude Include="include\Resource\Misc\Color.h" />
+    <ClInclude Include="include\Resource\Misc\ImageOps.h" />
     <ClInclude Include="include\Resource\ResourceInfo.h" />
     <ClInclude Include="include\Resource\ResourcePackage.h" />
     <ClInclude Include="include\Resource\ResourceCallbackQueue.h" />
@@ -223,6 +224,7 @@ PowerShell.exe -executionpolicy remotesigned -file "$(SolutionDir)Scripts/packag
     <ClCompile Include="source\Archives\JsonArchive.cpp" />
     <ClCompile Include="source\Interfaces\IFromFile.cpp" />
     <ClCompile Include="source\Misc\Color.cpp" />
+    <ClCompile Include="source\Misc\ImageOps.cpp" />
     <ClCompile Include="source\ResourceManager.cpp" />
     <ClCompile Include="source\Resources\HDRImage.cpp" />
     <ClCompile Include="source\Resources\Image.cpp" />

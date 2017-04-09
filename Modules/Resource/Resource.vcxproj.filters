@@ -101,6 +101,9 @@
     <ClInclude Include="include\Resource\Resources\HDRImage.h">
       <Filter>include\Resources</Filter>
     </ClInclude>
+    <ClInclude Include="include\Resource\Misc\ImageOps.h">
+      <Filter>include\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Archives\JsonArchive.cpp">
@@ -135,6 +138,9 @@
     </ClCompile>
     <ClCompile Include="source\Resources\HDRImage.cpp">
       <Filter>source\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Misc\ImageOps.cpp">
+      <Filter>source\Misc</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

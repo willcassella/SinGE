@@ -14,7 +14,6 @@ namespace sge
 	{
 		SGE_REFLECTED_TYPE;
 
-
 		////////////////////////
 		///   Constructors   ///
 	public:
@@ -28,12 +27,6 @@ namespace sge
 		///////////////////
 		///   Methods   ///
 	public:
-
-        static void save_rgbf(const float* image, int32 width, int32 height, byte num_channels, const char* path);
-
-        static void dilate_rgbf(const float* image, int32 width, int32 height, byte num_channels, float* out);
-
-        static void smooth_rgbf(const float* image, int32 width, int32 height, byte num_channels, float* out);
 
 		bool from_file(const char* path);
 
