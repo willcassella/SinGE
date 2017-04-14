@@ -45,8 +45,14 @@ namespace sge
 		private:
 
 			std::unique_ptr<State> _state;
-			EventChannel* _debug_draw_line_channel = nullptr;
+			EventChannel* _new_static_mesh_channel = nullptr;
+			EventChannel* _modified_static_mesh_channel = nullptr;
+			EventChannel* _destroyed_static_mesh_channel = nullptr;
 			EventChannel* _modified_node_transform_channel = nullptr;
+			EventChannel* _debug_draw_line_channel = nullptr;
+			EventChannel::SubscriberId _new_static_mesh_sid = EventChannel::INVALID_SID;
+			EventChannel::SubscriberId _modified_static_mesh_sid = EventChannel::INVALID_SID;
+			EventChannel::SubscriberId _destroyed_static_mesh_sid = EventChannel::INVALID_SID;
 			EventChannel::SubscriberId _modified_node_transform_sid = EventChannel::INVALID_SID;
 			EventChannel::SubscriberId _debug_draw_line_sid = EventChannel::INVALID_SID;
 		};

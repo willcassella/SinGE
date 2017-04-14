@@ -526,8 +526,14 @@ namespace sge
 
 		void GLRenderSystem::initialize_subscriptions(Scene& scene)
 		{
+			_new_static_mesh_channel = scene.get_event_channel(CStaticMesh::type_info, "new");
+			_modified_static_mesh_channel = scene.get_event_channel(CStaticMesh::type_info, "prop_mod");
+			_destroyed_static_mesh_channel = scene.get_event_channel(CStaticMesh::type_info, "destroy");
 			_debug_draw_line_channel = scene.get_debug_draw_line_channel();
 			_modified_node_transform_channel = scene.get_node_world_transform_changed_channel();
+			_new_static_mesh_sid = _new_static_mesh_channel->subscribe();
+			_modified_static_mesh_sid = _modified_static_mesh_channel->subscribe();
+			_destroyed_static_mesh_sid = _destroyed_static_mesh_channel->subscribe();
 			_debug_draw_line_sid = _debug_draw_line_channel->subscribe();
 			_modified_node_transform_sid = _modified_node_transform_channel->subscribe();
 		}
