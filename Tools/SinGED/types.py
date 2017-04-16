@@ -33,16 +33,21 @@ def construct_property_path(property_path_str, prop_name):
 
 
 def property_getter(component_type_name, property_path, default):
-    # Get the active node and component instance
-    sge_scene = SinGEDProps.sge_scene
-    node_id = bpy.context.active_object.sge_node_id
-    node = sge_scene.get_node(node_id)
-    component_type = sge_scene.get_component_type(component_type_name)
-    component_instance = component_type.get_instance(node)
+    try:
+        # Get the active node and component instance
+        sge_scene = SinGEDProps.sge_scene
+        node_id = bpy.context.active_object.sge_node_id
+        node = sge_scene.get_node(node_id)
+        component_type = sge_scene.get_component_type(component_type_name)
+        component_instance = component_type.get_instance(node)
 
-    # Get the property value
-    return component_instance.get_sub_property_immediate(property_path, default)
-
+        # Get the property value
+        return component_instance.get_sub_property_immediate(property_path, default)
+    except Exception:
+        path = [component_type_name]
+        path.extend(property_path)
+        print("ERROR RETREIVING PROPERTY: {}".format(path))
+        return default
 
 def property_setter(component_type_name, property_path, value):
     # Get the active node and component instance
@@ -157,6 +162,16 @@ class SGEString(SGEPrimitiveBase):
             set=lambda outer, value: property_setter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), value))
 
 
+class SGEAngle(SGEPrimitiveBase):
+    @staticmethod
+    def sge_create_property(name):
+        return FloatProperty(
+            name=construct_property_display_name(name),
+            subtype='ANGLE',
+            get=lambda outer: property_getter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), 0),
+            set=lambda outer, value: property_setter(outer.sge_component_type-Name, construct_property_path(outer.sge_property_path, name), value))
+
+
 class SGEColorRGBA8(SGEPrimitiveBase):
     @staticmethod
     def sge_get(outer, prop_name):
@@ -185,6 +200,17 @@ class SGEColorRGBA8(SGEPrimitiveBase):
             max=1.0,
             get=lambda outer: SGEColorRGBA8.sge_get(outer, name),
             set=lambda outer, value: SGEColorRGBA8.sge_set(outer, name, value))
+
+
+class SGEColorRGBF32(SGEPrimitiveBase):
+    @staticmethod
+    def sge_create_property(name):
+        return FloatVectorProperty(
+            name=construct_property_display_name(name),
+            subtype='COLOR',
+            size=3,
+            get=lambda outer: property_getter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), [0.0, 0.0, 0.0]),
+            set=lambda outer, value: property_setter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), value))
 
 
 class SGEVec2(SGEPrimitiveBase):

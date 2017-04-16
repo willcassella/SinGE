@@ -75,7 +75,7 @@ class TypeDB(object):
             self.pending.add(type_name)
             return False
 
-        # Try to construct all types this type is waiitng on
+        # Try to construct all types this type is waiting on
         dependent = self.waiting[type_name][1]
 
         # For each type this type is waiting on to be constructed

@@ -508,9 +508,11 @@ def open_active_session(host, port):
     self.sge_typedb.insert_type('float', types.SGEFloat)
     self.sge_typedb.insert_type('double', types.SGEFloat)
     self.sge_typedb.insert_type('sge::String', types.SGEString)
+    self.sge_typedb.insert_type('sge::Angle', types.SGEAngle)
     self.sge_typedb.insert_type('sge::color::RGBA8', types.SGEColorRGBA8)
-    self.sge_typedb.insert_type('sge::Vec3', types.SGEVec3)
+    self.sge_typedb.insert_type('sge::color::RGBF32', types.SGEColorRGBF32)
     self.sge_typedb.insert_type('sge::Vec2', types.SGEVec2)
+    self.sge_typedb.insert_type('sge::Vec3', types.SGEVec3)
 
     # Add the typedb to the session object
     self.sge_typedb.register_handlers(self.sge_session)

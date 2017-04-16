@@ -131,7 +131,12 @@ def initialize_blender_component_properties_path(obj, component_type_name, path_
         if issubclass(prop_type, types.SGETypeBase):
             # Initialize it
             prop = getattr(obj, attr_name)
-            initialize_blender_component_properties_path(prop, component_type_name, "{}.{}".format(path_str, prop_name))
+            if len(path_str) == 0:
+                prop_path = prop_name
+            else:
+                prop_path = "{}.{}".format(path_str, prop_name)
+
+            initialize_blender_component_properties_path(prop, component_type_name, prop_path)
 
 
 def create_blender_component(typedb, type_name, blender_type):

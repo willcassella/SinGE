@@ -71,6 +71,10 @@ class ComponentType(object):
         instance = ComponentInstance(node, self)
         self.instances[node] = instance
         self.new_instances.add(instance)
+
+        if self.new_instance_callback is not None:
+            self.new_instance_callback(instance)
+
         return instance
 
     def request_destroy_instance(self, node):
