@@ -6,7 +6,7 @@
 
 namespace sge
 {
-	struct NativePropertyInfo final : PropertyInfo
+	struct SGE_CORE_API NativePropertyInfo final : PropertyInfo
 	{
 		struct Data
 		{

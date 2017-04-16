@@ -5,7 +5,7 @@
 #include <string>
 #include <typeinfo>
 #include "../Functional/FunctionView.h"
-#include "../env.h"
+#include "../config.h"
 
 namespace sge
 {
@@ -47,10 +47,9 @@ namespace sge
          * \brief This type represents a container.
          */
         TF_CONTAINER = (1 << 4),
-
     };
 
-    struct TypeInfo
+    struct SGE_CORE_API TypeInfo
     {
         using ConstructorEnumeratorFn = void(std::size_t argc, const ConstructorInfo& ctor);
         using NamedConstructorEnumeratorFn = void(const char* name, const ConstructorInfo& ctor);

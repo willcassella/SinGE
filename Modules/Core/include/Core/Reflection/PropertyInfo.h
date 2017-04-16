@@ -33,7 +33,7 @@ namespace sge
 		PF_EDITOR_DEFAULT_COLLAPSED = (1 << 2)
 	};
 
-	struct PropertyInfo
+	struct SGE_CORE_API PropertyInfo
 	{
 		using GetterOutFn = FunctionView<void(Any<> value)>;
 		using MutatorFn = FunctionView<void(AnyMut<> value)>;

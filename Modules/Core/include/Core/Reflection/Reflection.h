@@ -5,6 +5,7 @@
 #include "../STDE/TypeTraits.h"
 #include "NativeTypeInfo.h"
 #include "InterfaceInfo.h"
+#include "EnumTypeInfo.h"
 
 namespace sge
 {
@@ -220,11 +221,15 @@ namespace sge
 //////////////////
 ///   Macros   ///
 
-/* Use the macro inside the definition of a type in order for it to be recognized by the reflection system. */
-#define SGE_REFLECTED_TYPE			static const ::sge::NativeTypeInfo type_info; const ::sge::NativeTypeInfo& get_type() const { return type_info; }
+/* Use this macro inside the definition of a type in order for it to be recognized by the reflection system. */
+#define SGE_REFLECTED_TYPE	static const ::sge::NativeTypeInfo type_info; const ::sge::NativeTypeInfo& get_type() const { return type_info; }
+
+/* Use this macro inside the header for a type in order for it to be recognized by the reflection system. */
+#define SGE_REFLECTED_ENUM(API, E) namespace sge { namespace specialized { template<> struct API GetType < E > { \
+	static const EnumTypeInfo type_info; static const EnumTypeInfo& get_type(...) { return type_info; }  }; } }
 
 /* Use this macro in the definition of an interface, in order for it to be recorgnized by the reflection system. */
-#define SGE_REFLECTED_INTERFACE		static const ::sge::InterfaceInfo interface_info;
+#define SGE_REFLECTED_INTERFACE	static const ::sge::InterfaceInfo interface_info;
 
 /* Internal macro used by SGE_INTERFACE macros. */
 #define SGE_INTERFACE_0(INTERF, ...)				\

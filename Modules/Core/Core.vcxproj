@@ -191,7 +191,9 @@
     <ClInclude Include="include\Core\Reflection\Any.h" />
     <ClInclude Include="include\Core\Reflection\ArgAny.h" />
     <ClInclude Include="include\Core\Reflection\ConstructorInfo.h" />
+    <ClInclude Include="include\Core\Reflection\EnumTypeInfo.h" />
     <ClInclude Include="include\Core\Reflection\FieldInfo.h" />
+    <ClInclude Include="include\Core\Reflection\FunctionInfo.h" />
     <ClInclude Include="include\Core\Reflection\InterfaceInfo.h" />
     <ClInclude Include="include\Core\Reflection\NativeConstructorInfo.h" />
     <ClInclude Include="include\Core\Reflection\NativePropertyInfo.h" />
@@ -222,6 +224,7 @@
     <ClCompile Include="source\Math\Vec4.cpp" />
     <ClCompile Include="source\Memory\Buffers\MultiStackBuffer.cpp" />
     <ClCompile Include="source\Memory\Functions.cpp" />
+    <ClCompile Include="source\Reflection\EnumTypeInfo.cpp" />
     <ClCompile Include="source\Reflection\Reflection.cpp" />
     <ClCompile Include="source\Reflection\TypeDB.cpp" />
   </ItemGroup>

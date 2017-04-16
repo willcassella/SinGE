@@ -6,7 +6,7 @@
 
 namespace sge
 {
-	struct NativeConstructorInfo final : ConstructorInfo
+	struct SGE_CORE_API NativeConstructorInfo final : ConstructorInfo
 	{
 		struct Data
 		{

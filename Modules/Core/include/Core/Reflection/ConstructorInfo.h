@@ -8,7 +8,7 @@ namespace sge
 	struct TypeInfo;
 	struct ArgAny;
 
-	struct ConstructorInfo
+	struct SGE_CORE_API ConstructorInfo
 	{
 		struct Data
 		{

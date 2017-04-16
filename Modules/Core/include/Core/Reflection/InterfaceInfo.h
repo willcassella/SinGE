@@ -11,7 +11,7 @@ namespace sge
 	template <class I>
 	struct InterfaceInfoBuilder;
 
-	struct InterfaceInfo
+	struct SGE_CORE_API InterfaceInfo
 	{
 		struct Data
 		{

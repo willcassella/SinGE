@@ -188,6 +188,12 @@
     <ClInclude Include="include\Core\Memory\Buffers\MultiStackBuffer.h">
       <Filter>include\Memory\Buffers</Filter>
     </ClInclude>
+    <ClInclude Include="include\Core\Reflection\FunctionInfo.h">
+      <Filter>include\Reflection</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Core\Reflection\EnumTypeInfo.h">
+      <Filter>include\Reflection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Math\Vec2.cpp">
@@ -231,6 +237,9 @@
     </ClCompile>
     <ClCompile Include="source\Memory\Buffers\MultiStackBuffer.cpp">
       <Filter>source\Memory\Buffers</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Reflection\EnumTypeInfo.cpp">
+      <Filter>source\Reflection</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

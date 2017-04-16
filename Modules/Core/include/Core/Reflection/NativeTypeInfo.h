@@ -14,7 +14,7 @@ namespace sge
 	template <typename T>
 	struct NativeTypeInfoBuilder;
 
-	struct NativeTypeInfo final : TypeInfo
+	struct SGE_CORE_API NativeTypeInfo final : TypeInfo
 	{
 		using InitFn = void(void* addr);
 		using CopyInitFn = void(void* addr, const void* copy);

@@ -532,6 +532,64 @@ namespace sge
 			return std::move(*this);
 		}
 	};
+
+	template <class E>
+	struct EnumInfoBuilder final
+	{
+		static_assert(std::is_same<int, std::underlying_type_t<E>>::value, "Only integer enums may be reflected.");
+
+		////////////////////////
+		///   Constructors   ///
+	public:
+
+		EnumInfoBuilder(std::string name)
+			: base_type_data(std::move(name))
+		{
+			base_type_data.flags = TF_NATIVE;
+			base_type_data.size = sizeof(int);
+			base_type_data.alignment = alignof(int);
+			base_type_data.base = nullptr;
+			base_type_data.native_type_info = &typeid(E);
+			base_type_data.is_empty = false;
+		}
+
+		///////////////////
+		///   Methods   ///
+	public:
+
+		EnumInfoBuilder&& is_bit_flag()
+		{
+			_is_bit_flag = true;
+			return std::move(*this);
+		}
+
+		EnumInfoBuilder&& value(const char* name, E value, PropertyFlags_t flags = PF_NONE)
+		{
+			PropertyInfo::Data base_prop_data;
+			base_prop_data.flags = flags;
+			base_prop_data.index = (uint32)enum_data.values.size();
+			base_prop_data.type = &sge::get_type<bool>();
+
+			EnumPropertyInfo::Data prop_data;
+			prop_data.value = static_cast<int>(value);
+			prop_data.is_bit_flag = _is_bit_flag;
+
+			enum_data.values.insert(std::make_pair(name, EnumPropertyInfo{ std::move(base_prop_data), std::move(prop_data) }));
+
+			return std::move(*this);
+		}
+
+		//////////////////
+		///   Fields   ///
+	public:
+
+		TypeInfo::Data base_type_data;
+		EnumTypeInfo::Data enum_data;
+
+	private:
+
+		bool _is_bit_flag = false;
+	};
 }
 
 //////////////////
@@ -539,6 +597,9 @@ namespace sge
 
 /* Use this macro in the source file for a type to define its reflection data. */
 #define SGE_REFLECT_TYPE(TYPE)		const ::sge::NativeTypeInfo TYPE::type_info = ::sge::NativeTypeInfoBuilder<TYPE>(#TYPE)
+
+/* Use this macro in the source file for an enum type to define its reflection data. */
+#define SGE_REFLECT_ENUM(E)		const ::sge::EnumTypeInfo sge::specialized::GetType<E>::type_info = ::sge::EnumInfoBuilder<E>(#E)
 
 /* Use this macro in the source file for an interface to define its reflection data. */
 #define SGE_REFLECT_INTERFACE(INTERF)	const ::sge::InterfaceInfo INTERF::interface_info = ::sge::InterfaceInfoBuilder<INTERF>(#INTERF)
