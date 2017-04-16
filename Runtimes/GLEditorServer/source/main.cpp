@@ -5,13 +5,14 @@
 #include <Core/Reflection/TypeDB.h>
 #include <Core/Math/Quat.h>
 #include <Core/Math/Vec3.h>
-#include <Core/Interfaces/IFromArchive.h>
 #include <Resource/Archives/JsonArchive.h>
 #include <Resource/Resources/StaticMesh.h>
 #include <Resource/Resources/Material.h>
 #include <Resource/Resources/Texture.h>
 #include <Engine/Scene.h>
 #include <Engine/UpdatePipeline.h>
+#include <Engine/Components/Display/CStaticMesh.h>
+#include <Engine/Components/Display/CSpotlight.h>
 #include <GLRender/GLRenderSystem.h>
 #include <GLRender/Config.h>
 #include <BulletPhysics/BulletPhysicsSystem.h>
@@ -67,6 +68,9 @@ int main(int argc, char* argv[])
 	type_db.new_type<sge::StaticMesh>();
 	type_db.new_type<sge::Material>();
 	type_db.new_type<sge::Texture>();
+	type_db.new_type<sge::CStaticMesh::LightmaskMode>();
+	type_db.new_type<sge::CSpotlight::Shape>();
+	type_db.new_type<sge::color::RGBF32>();
 
 	// Create a scene
 	sge::Scene scene{ type_db };
