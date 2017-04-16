@@ -11,6 +11,24 @@ namespace sge
 	{
 	public:
 
+		enum class LightmaskMode
+		{
+			/**
+			 * \brief This mesh instance does not participate in lightmask rendering.
+			 */
+			NONE,
+
+			/**
+			 * \brief This mesh is treated as a lightmask occluder (shadow-caster).
+			 */
+			OCCLUDER,
+
+			/**
+			 * \brief This mesh is treated as a lightmask receiver.
+			 */
+			RECEIVER
+		};
+
 		SGE_REFLECTED_TYPE;
 		struct SharedData;
 
@@ -37,6 +55,14 @@ namespace sge
 		const std::string& material() const;
 
 		void material(std::string material);
+
+		LightmaskMode lightmask_mode() const;
+
+		void lightmask_mode(LightmaskMode value);
+
+		uint32 lightmask_group() const;
+
+		void lightmask_group(uint32 value);
 
         bool uses_lightmap() const;
 
@@ -65,9 +91,13 @@ namespace sge
 		NodeId _node;
         std::string _mesh;
         std::string _material;
+		LightmaskMode _lightmask_mode = LightmaskMode::NONE;
+		uint32 _lightmask_group = 0;
+        bool _use_lightmap = false;
 		Vec2 _uv_scale = { 1.f, 1.f };
         IVec2<int32> _lightmap_size = { 512, 512 };
-        bool _use_lightmap = false;
 		SharedData* _shared_data;
 	};
 }
+
+SGE_REFLECTED_ENUM(SGE_ENGINE_API, sge::CStaticMesh::LightmaskMode);

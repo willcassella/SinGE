@@ -13,9 +13,16 @@ SGE_REFLECT_TYPE(sge::CStaticMesh)
 .property("mesh", &CStaticMesh::mesh, &CStaticMesh::mesh)
 .property("material", &CStaticMesh::material, &CStaticMesh::material)
 .property("uv_scale", &CStaticMesh::uv_scale, &CStaticMesh::uv_scale)
+.property("lightmask_mode", &CStaticMesh::lightmask_mode, &CStaticMesh::lightmask_mode)
+.property("lightmask_group", &CStaticMesh::lightmask_group, &CStaticMesh::lightmask_group)
 .property("use_lightmap", &CStaticMesh::uses_lightmap, &CStaticMesh::set_uses_lightmap)
 .property("lightmap_width", &CStaticMesh::lightmap_width, &CStaticMesh::lightmap_width)
 .property("lightmap_height", &CStaticMesh::lightmap_height, &CStaticMesh::lightmap_height);
+
+SGE_REFLECT_ENUM(sge::CStaticMesh::LightmaskMode)
+.value("NONE", CStaticMesh::LightmaskMode::NONE)
+.value("OCCLUDER", CStaticMesh::LightmaskMode::OCCLUDER)
+.value("RECEIVER", CStaticMesh::LightmaskMode::RECEIVER);
 
 namespace sge
 {
@@ -38,6 +45,8 @@ namespace sge
     {
         writer.object_member("mesh", _mesh);
         writer.object_member("material", _material);
+		writer.object_member("lmm", (int)_lightmask_mode);
+		writer.object_member("lmg", _lightmask_group);
         writer.object_member("uselm", _use_lightmap);
         writer.object_member("lms", _lightmap_size);
 		writer.object_member("uvs", _uv_scale);
@@ -47,9 +56,14 @@ namespace sge
     {
         reader.object_member("mesh", _mesh);
         reader.object_member("material", _material);
+		reader.object_member("lmg", _lightmask_group);
         reader.object_member("uselm", _use_lightmap);
         reader.object_member("lms", _lightmap_size);
 		reader.object_member("uvs", _uv_scale);
+
+		int lightmask_mode = (int)LightmaskMode::NONE;
+		reader.object_member("lmm", lightmask_mode);
+		_lightmask_mode = (LightmaskMode)lightmask_mode;
     }
 
 	const std::string& CStaticMesh::mesh() const
@@ -78,6 +92,34 @@ namespace sge
 		    _material = std::move(material);
             set_modified("material");
         }
+	}
+
+	CStaticMesh::LightmaskMode CStaticMesh::lightmask_mode() const
+	{
+		return _lightmask_mode;
+	}
+
+	void CStaticMesh::lightmask_mode(LightmaskMode value)
+	{
+		if (_lightmask_mode != value)
+		{
+			_lightmask_mode = value;
+			set_modified("lightmask_mode");
+		}
+	}
+
+	uint32 CStaticMesh::lightmask_group() const
+	{
+		return _lightmask_group;
+	}
+
+	void CStaticMesh::lightmask_group(uint32 value)
+	{
+		if (_lightmask_group != value)
+		{
+			_lightmask_group = value;
+			set_modified("lightmask_group");
+		}
 	}
 
     bool CStaticMesh::uses_lightmap() const

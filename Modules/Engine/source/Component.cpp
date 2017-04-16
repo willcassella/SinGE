@@ -4,9 +4,6 @@
 #include "../include/Engine/Components/Display/CCamera.h"
 #include "../include/Engine/Components/Display/CStaticMesh.h"
 #include "../include/Engine/Components/Display/CSpotlight.h"
-#include "../include/Engine/Components/Display/CLightMaskReceiver.h"
-#include "../include/Engine/Components/Display/CLightMaskObstructor.h"
-#include "../include/Engine/Components/Display/CLightMaskVolume.h"
 #include "../include/Engine/Components/Gameplay/CInput.h"
 #include "../include/Engine/Components/Physics/CSphereCollider.h"
 #include "../include/Engine/Components/Physics/CBoxCollider.h"
@@ -23,9 +20,6 @@ namespace sge
 		CStaticMesh::register_type(scene);
 		CPerspectiveCamera::register_type(scene);
 		CSpotlight::register_type(scene);
-        CLightMaskReceiver::register_type(scene);
-        CLightMaskObstructor::register_type(scene);
-        CLightMaskVolume::register_type(scene);
         CInput::register_type(scene);
 		CSphereCollider::register_type(scene);
         CBoxCollider::register_type(scene);

@@ -86,17 +86,8 @@
     <ClInclude Include="include\Engine\Components\Gameplay\CInput.h">
       <Filter>include\Components\Gameplay</Filter>
     </ClInclude>
-    <ClInclude Include="include\Engine\Components\Display\CLightMaskObstructor.h">
-      <Filter>include\Components\Display</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\Components\Display\CLightMaskReceiver.h">
-      <Filter>include\Components\Display</Filter>
-    </ClInclude>
     <ClInclude Include="include\Engine\SystemInfo.h">
       <Filter>include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Engine\Components\Display\CLightMaskVolume.h">
-      <Filter>include\Components\Display</Filter>
     </ClInclude>
     <ClInclude Include="include\Engine\Node.h">
       <Filter>include</Filter>
@@ -159,15 +150,6 @@
     </ClCompile>
     <ClCompile Include="source\Components\Gameplay\CInput.cpp">
       <Filter>source\Components\Gameplay</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Components\Display\CLightMaskReceiver.cpp">
-      <Filter>source\Components\Display</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Components\Display\CLightMaskObstructor.cpp">
-      <Filter>source\Components\Display</Filter>
-    </ClCompile>
-    <ClCompile Include="source\Components\Display\CLightMaskVolume.cpp">
-      <Filter>source\Components\Display</Filter>
     </ClCompile>
     <ClCompile Include="source\Node.cpp">
       <Filter>source</Filter>

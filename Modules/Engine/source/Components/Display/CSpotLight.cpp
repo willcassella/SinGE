@@ -7,9 +7,19 @@
 #include "../../../include/Engine/Util/CSharedData.h"
 
 SGE_REFLECT_TYPE(sge::CSpotlight)
-.property("cone_radius", &CSpotlight::cone_radius, &CSpotlight::cone_radius)
-.property("frustum_width", &CSpotlight::frustum_width, &CSpotlight::frustum_width)
-.property("frustum_height", &CSpotlight::frustum_height, &CSpotlight::frustum_height);
+.property("shape", &CSpotlight::shape, &CSpotlight::shape)
+.property("cone_angle", &CSpotlight::cone_angle, &CSpotlight::cone_angle)
+.property("frustum_horiz_angle", &CSpotlight::frustum_horiz_angle, &CSpotlight::frustum_horiz_angle)
+.property("frustum_vert_angle", &CSpotlight::frustum_vert_angle, &CSpotlight::frustum_vert_angle)
+.property("near_clipping_plane", &CSpotlight::near_clipping_plane, &CSpotlight::near_clipping_plane)
+.property("far_clipping_plane", &CSpotlight::far_clipping_plane, &CSpotlight::far_clipping_plane)
+.property("intensity", &CSpotlight::intensity, &CSpotlight::intensity)
+.property("lightmask_volume", &CSpotlight::is_lightmask_volume, &CSpotlight::is_lightmask_volume)
+.property("lightmask_group", &CSpotlight::lightmask_group, &CSpotlight::lightmask_group);
+
+SGE_REFLECT_ENUM(sge::CSpotlight::Shape)
+.value("CONE", CSpotlight::Shape::CONE)
+.value("FRUSTUM", CSpotlight::Shape::FRUSTUM);
 
 namespace sge
 {
@@ -32,20 +42,21 @@ namespace sge
 	{
 		if (_shape == Shape::CONE)
 		{
-			writer.push_object_member("cone");
-			writer.object_member("radius", _cone_radius);
-			writer.pop();
+			writer.object_member("cone", _cone_angle);
 		}
 		else if (_shape == Shape::FRUSTUM)
 		{
 			writer.push_object_member("frustum");
-			writer.object_member("width", _frustum_width);
-			writer.object_member("height", _frustum_height);
+			writer.object_member("horiz", _frustum_horiz_angle);
+			writer.object_member("vert", _frustum_vert_angle);
 			writer.pop();
 		}
 
-		writer.object_member("distance", _distance);
-		writer.object_member("intensity", _intensity);
+		writer.object_member("near", _near_clipping_plane);
+		writer.object_member("far", _far_clipping_plane);
+		writer.object_member("int", _intensity);
+		writer.object_member("lmv", _lightmask_volume);
+		writer.object_member("lmg", _lightmask_group);
 	}
 
 	void CSpotlight::from_archive(ArchiveReader& reader)
@@ -53,16 +64,22 @@ namespace sge
 		if (reader.pull_object_member("cone"))
 		{
 			_shape = Shape::CONE;
-			reader.object_member("radius", _cone_radius);
+			_cone_angle.from_archive(reader);
 			reader.pop();
 		}
 		else if (reader.pull_object_member("frustum"))
 		{
 			_shape = Shape::FRUSTUM;
-			reader.object_member("width", _frustum_width);
-			reader.object_member("height", _frustum_height);
+			reader.object_member("horiz", _frustum_horiz_angle);
+			reader.object_member("vert", _frustum_vert_angle);
 			reader.pop();
 		}
+
+		reader.object_member("near", _near_clipping_plane);
+		reader.object_member("far", _far_clipping_plane);
+		reader.object_member("int", _intensity);
+		reader.object_member("lmv", _lightmask_volume);
+		reader.object_member("lmg", _lightmask_group);
 	}
 
 	NodeId CSpotlight::node() const
@@ -70,7 +87,7 @@ namespace sge
 		return _node;
 	}
 
-    CSpotlight::Shape CSpotlight::shape() const
+	CSpotlight::Shape CSpotlight::shape() const
 	{
 		return _shape;
 	}
@@ -84,39 +101,105 @@ namespace sge
 		}
 	}
 
-	void CSpotlight::set_cone(float radius)
+	void CSpotlight::set_cone(Angle angle)
 	{
 		shape(Shape::CONE);
-		cone_radius(radius);
+		cone_angle(angle);
 	}
 
-	void CSpotlight::set_frustum(float width, float height)
+	void CSpotlight::set_frustum(Angle horiz_angle, Angle vert_angle)
 	{
 		shape(Shape::FRUSTUM);
-		frustum_width(width);
-		frustum_height(height);
+		frustum_horiz_angle(horiz_angle);
+		frustum_vert_angle(vert_angle);
 	}
 
-	float CSpotlight::distance() const
+	Angle CSpotlight::cone_angle() const
 	{
-		return _distance;
+		return _cone_angle;
 	}
 
-	void CSpotlight::distance(float value)
+	void CSpotlight::cone_angle(Angle value)
 	{
-		if (_distance != value)
+		if (value != _cone_angle)
 		{
-			_distance = value;
-			set_modified("distance");
+			_cone_angle = value;
+			set_modified("cone_angle");
 		}
 	}
 
-	float CSpotlight::intensity() const
+	Angle CSpotlight::frustum_horiz_angle() const
+	{
+		return _frustum_horiz_angle;
+	}
+
+	void CSpotlight::frustum_horiz_angle(Angle value)
+	{
+		if (value != _frustum_horiz_angle)
+		{
+			_frustum_horiz_angle = value;
+			set_modified("frustum_horiz_angle");
+		}
+	}
+
+	Angle CSpotlight::frustum_vert_angle() const
+	{
+		return _frustum_vert_angle;
+	}
+
+	void CSpotlight::frustum_vert_angle(Angle value)
+	{
+		if (value != _frustum_vert_angle)
+		{
+			_frustum_vert_angle = value;
+			set_modified("frustum_vert_angle");
+		}
+	}
+
+	float CSpotlight::near_clipping_plane() const
+	{
+		return _near_clipping_plane;
+	}
+
+	void CSpotlight::near_clipping_plane(float value)
+	{
+		if (value > _far_clipping_plane)
+		{
+			return;
+		}
+
+		if (value != _near_clipping_plane)
+		{
+			_near_clipping_plane = value;
+			set_modified("near_clipping_plane");
+		}
+	}
+
+	float CSpotlight::far_clipping_plane() const
+	{
+		return _far_clipping_plane;
+	}
+
+	void CSpotlight::far_clipping_plane(float value)
+	{
+		if (value < _near_clipping_plane)
+		{
+			return;
+		}
+
+		if (value != _far_clipping_plane)
+		{
+			_far_clipping_plane = value;
+			set_modified("far_clipping_plane");
+		}
+	}
+
+	color::RGBF32 CSpotlight::intensity() const
 	{
 		return _intensity;
 	}
 
-	void CSpotlight::intensity(float value)
+	void CSpotlight::intensity(color::RGBF32 value)
 	{
 		if (_intensity != value)
 		{
@@ -125,44 +208,31 @@ namespace sge
 		}
 	}
 
-	float CSpotlight::cone_radius() const
+	bool CSpotlight::is_lightmask_volume() const
 	{
-		return _cone_radius;
+		return _lightmask_volume;
 	}
 
-	void CSpotlight::cone_radius(float value)
+	void CSpotlight::is_lightmask_volume(bool value)
 	{
-		if (_cone_radius != value)
+		if (value != _lightmask_volume)
 		{
-			_cone_radius = value;
-			set_modified("cone_radius");
+			_lightmask_volume = value;
+			set_modified("lightmask_volume");
 		}
 	}
 
-	float CSpotlight::frustum_width() const
+	uint32 CSpotlight::lightmask_group() const
 	{
-		return _frustum_width;
+		return _lightmask_group;
 	}
 
-	void CSpotlight::frustum_width(float value)
+	void CSpotlight::lightmask_group(uint32 value)
 	{
-		if (_frustum_width != value)
+		if (value != _lightmask_group)
 		{
-			_frustum_width = value;
-			set_modified("frustum_width");
-		}
-	}
-
-	float CSpotlight::frustum_height() const
-	{
-		return _frustum_height;
-	}
-
-	void CSpotlight::frustum_height(float value)
-	{
-		if (_frustum_height != value)
-		{
-			set_modified("frustum_height");
+			_lightmask_group = value;
+			set_modified("lightmask_group");
 		}
 	}
 

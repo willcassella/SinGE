@@ -1,6 +1,7 @@
 // CSpotlight.h
 #pragma once
 
+#include <Resource/Misc/Color.h>
 #include "../../Component.h"
 
 namespace sge
@@ -45,29 +46,41 @@ namespace sge
 
 		void shape(Shape shape);
 
-		void set_cone(float radius);
+		void set_cone(Angle angle);
 
-		void set_frustum(float width, float height);
+		void set_frustum(Angle horiz_angle, Angle vert_angle);
 
-		float distance() const;
+		Angle cone_angle() const;
 
-		void distance(float value);
+		void cone_angle(Angle value);
 
-		float intensity() const;
+		Angle frustum_horiz_angle() const;
 
-		void intensity(float value);
+		void frustum_horiz_angle(Angle value);
 
-		float cone_radius() const;
+		Angle frustum_vert_angle() const;
 
-		void cone_radius(float value);
+		void frustum_vert_angle(Angle value);
 
-		float frustum_width() const;
+		float near_clipping_plane() const;
 
-		void frustum_width(float value);
+		void near_clipping_plane(float value);
 
-		float frustum_height() const;
+		float far_clipping_plane() const;
 
-		void frustum_height(float value);
+		void far_clipping_plane(float value);
+
+		color::RGBF32 intensity() const;
+
+		void intensity(color::RGBF32 value);
+
+		bool is_lightmask_volume() const;
+
+		void is_lightmask_volume(bool value);
+
+		uint32 lightmask_group() const;
+
+		void lightmask_group(uint32 value);
 
 	private:
 
@@ -78,12 +91,17 @@ namespace sge
 	private:
 
 		Shape _shape = Shape::CONE;
-		float _cone_radius = 1.f;
-		float _frustum_width = 1.f;
-		float _frustum_height = 1.f;
-		float _distance = 1.f;
-		float _intensity = 1.f;
+		Angle _cone_angle = degrees(30.f);
+		Angle _frustum_horiz_angle = degrees(30.f);
+		Angle _frustum_vert_angle = degrees(30.f);
+		float _near_clipping_plane = 0.1f;
+		float _far_clipping_plane = 1.0f;
+		color::RGBF32 _intensity = color::RGBF32::white();
+		bool _lightmask_volume = false;
+		uint32 _lightmask_group = 0;
 		NodeId _node;
 		SharedData* _shared_data = nullptr;
 	};
 }
+
+SGE_REFLECTED_ENUM(SGE_ENGINE_API, sge::CSpotlight::Shape);

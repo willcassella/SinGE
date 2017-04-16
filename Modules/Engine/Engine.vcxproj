@@ -172,11 +172,8 @@
     <ClInclude Include="include\Engine\EventChannel.h" />
     <ClInclude Include="include\Engine\Component.h" />
     <ClInclude Include="include\Engine\Components\Display\CCamera.h" />
-    <ClInclude Include="include\Engine\Components\Display\CLightMaskObstructor.h" />
-    <ClInclude Include="include\Engine\Components\Display\CLightMaskReceiver.h" />
     <ClInclude Include="include\Engine\Components\Display\CSpotlight.h" />
     <ClInclude Include="include\Engine\Components\Display\CStaticMesh.h" />
-    <ClInclude Include="include\Engine\Components\Display\CLightMaskVolume.h" />
     <ClInclude Include="include\Engine\Components\Gameplay\CCharacterController.h" />
     <ClInclude Include="include\Engine\Components\Gameplay\CInput.h" />
     <ClInclude Include="include\Engine\Components\Physics\CBoxCollider.h" />
@@ -198,9 +195,6 @@
   <ItemGroup>
     <ClCompile Include="source\Component.cpp" />
     <ClCompile Include="source\Components\Display\CCamera.cpp" />
-    <ClCompile Include="source\Components\Display\CLightMaskObstructor.cpp" />
-    <ClCompile Include="source\Components\Display\CLightMaskReceiver.cpp" />
-    <ClCompile Include="source\Components\Display\CLightMaskVolume.cpp" />
     <ClCompile Include="source\Components\Display\CSpotLight.cpp" />
     <ClCompile Include="source\Components\Display\CStaticMesh.cpp" />
     <ClCompile Include="source\Components\Gameplay\CCharacterController.cpp" />
