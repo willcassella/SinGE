@@ -259,6 +259,18 @@ namespace sge
                 lhs = lhs - rhs;
                 return lhs;
             }
+			friend bool operator==(const RGBF32& lhs, const RGBF32& rhs)
+			{
+				bool equal = true;
+				equal &= lhs._rgb[0] == rhs._rgb[0];
+				equal &= lhs._rgb[1] == rhs._rgb[1];
+				equal &= lhs._rgb[2] == rhs._rgb[2];
+				return equal;
+			}
+			friend bool operator!=(const RGBF32& lhs, const RGBF32& rhs)
+			{
+				return !(lhs == rhs);
+			}
 
             //////////////////
             ///   Fields   ///
@@ -429,6 +441,20 @@ namespace sge
                 lhs = lhs - rhs;
                 return lhs;
             }
+			friend bool operator==(const RGBAF32& lhs, const RGBAF32& rhs)
+			{
+				bool equal = true;
+				equal &= lhs._rgba[0] == rhs._rgba[0];
+				equal &= lhs._rgba[1] == rhs._rgba[1];
+				equal &= lhs._rgba[2] == rhs._rgba[2];
+				equal &= lhs._rgba[3] == rhs._rgba[3];
+				return equal;
+			}
+
+			friend bool operator!=(const RGBAF32& lhs, const RGBAF32& rhs)
+			{
+				return !(lhs == rhs);
+			}
 
             //////////////////
             ///   Fields   ///
