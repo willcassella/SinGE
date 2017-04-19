@@ -7,9 +7,9 @@
 namespace sge
 {
 	/* Component applied to nodes that should render a static mesh. */
-	class SGE_ENGINE_API CStaticMesh final
+	struct SGE_ENGINE_API CStaticMesh
 	{
-	public:
+		SGE_REFLECTED_TYPE;
 
 		enum class LightmaskMode
 		{
@@ -29,7 +29,6 @@ namespace sge
 			RECEIVER
 		};
 
-		SGE_REFLECTED_TYPE;
 		struct SharedData;
 
 		////////////////////////
