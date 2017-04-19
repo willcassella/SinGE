@@ -87,14 +87,16 @@ namespace sge
         template <typename FnT>
         UFunction(FnT&& fn)
         {
-            UFunction::assign(std::forward<FnT>(fn));
+            using ValueFnT = std::remove_reference_t<FnT>;
+            UFunction::assign<ValueFnT>(std::forward<FnT>(fn), 0);
         }
 
         template <typename FnT>
         UFunction& operator=(FnT&& fn)
         {
+            using ValueFnT = std::remove_reference_t<FnT>;
             destroy();
-            UFunction::assign(std::forward<FnT>(fn));
+            UFunction::assign<ValueFnT>(std::forward<FnT>(fn), 0);
             return *this;
         }
 
@@ -135,25 +137,24 @@ namespace sge
             }
         }
 
-        template <typename FnObjectT>
-        void assign(FnObjectT&& fn)
-        {
-            using ValueFnT = std::remove_reference_t<FnObjectT>;
+	    template <typename ValueFnT, typename FnObjectT>
+	    auto assign(FnObjectT&& fn, int) -> std::enable_if_t<
+		    sizeof(ValueFnT) <= LOCAL_BUFFER_SIZE && 
+		    alignof(ValueFnT) <= alignof(Data) &&
+		    std::is_trivially_destructible<ValueFnT>::value>
+	    {
+		    new (_data.erased_local_fobj) ValueFnT(std::forward<FnObjectT>(fn));
+		    _invoker = &invoke_erased_local_fobj<ValueFnT>;
+		    _destructor = nullptr;
+	    }
 
-            // If the type fits in the local buffer with no alignment issues, AND is trivially destructible
-            if (sizeof(ValueFnT) <= LOCAL_BUFFER_SIZE && alignof(ValueFnT) <= alignof(Data) && std::is_trivially_destructible<ValueFnT>::value)
-            {
-                new (_data.erased_local_fobj) ValueFnT(std::forward<FnObjectT>(fn));
-                _invoker = &invoke_erased_local_fobj<ValueFnT>;
-                _destructor = nullptr;
-            }
-            else
-            {
-                _data.erased_heap_fobj = sge::malloc(sizeof(ValueFnT));
-                new (_data.erased_heap_fobj) ValueFnT(std::forward<FnObjectT>(fn));
-                _invoker = &invoke_erased_heap_fobj<ValueFnT>;
-                _destructor = &destroy_erased_heap_fobj<ValueFnT>;
-            }
+        template <typename ValueFnT, typename FnObjectT>
+        void assign(FnObjectT&& fn, char)
+        {
+            _data.erased_heap_fobj = sge::malloc(sizeof(ValueFnT));
+            new (_data.erased_heap_fobj) ValueFnT(std::forward<FnObjectT>(fn));
+            _invoker = &invoke_erased_heap_fobj<ValueFnT>;
+            _destructor = &destroy_erased_heap_fobj<ValueFnT>;
         }
 
         template <typename RetT2, typename ... ArgT2s>
