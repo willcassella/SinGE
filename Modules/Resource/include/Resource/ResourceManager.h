@@ -95,7 +95,7 @@ namespace sge
 
 		template <typename T, typename WriteFnT>
 		NewResourceResult async_new_resource(
-			//const ResourceId<T>& id,
+			const ResourceId<T>& id,
 			AsyncToken token,
 			WriteFnT writeFn)
 		{
@@ -135,7 +135,7 @@ namespace sge
 			AsyncToken token,
 			MutateFnT mutateFn)
 		{
-			this->async_mutate_resource(id.uri(), sge::get_type<T>(), token,
+			return this->async_mutate_resource(id.uri(), sge::get_type<T>(), token,
 				[fn = std::move(mutateFn)](void* resource) -> MutateCallbackResult {
 				return fn(*static_cast<T*>(resource));
 			});
@@ -153,7 +153,7 @@ namespace sge
 			AsyncToken token,
 			ReadFnT readFn)
 		{
-			this->async_read_resource(id.uri(), sge::get_type<T>(), token,
+			return this->async_read_resource(id.uri(), sge::get_type<T>(), token,
 				[fn = std::move(readFn)](const void* resource) {
 				fn(*static_cast<const T*>(resource));
 			});
@@ -171,7 +171,7 @@ namespace sge
 			AsyncToken token,
 			ReadFnT readFn)
 		{
-			this->async_watch_resource(id.uri(), sge::get_type<T>(), token,
+			return this->async_watch_resource(id.uri(), sge::get_type<T>(), token,
 				[fn = std::move(readFn)](const void* resource) -> void {
 				fn(*static_cast<const T*>(resource));
 			});

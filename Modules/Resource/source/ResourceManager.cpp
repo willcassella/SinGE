@@ -106,8 +106,8 @@ namespace sge
 	auto ResourceManager::async_new_resource(
 		const std::string& uri,
 		const TypeInfo& type,
-		CallbackQueue& cbQueue,
-		std::function<WriteCallbackFn> writeFn) -> NewResourceResult
+		CallbackQueue& /*cbQueue*/,
+		std::function<WriteCallbackFn> /*writeFn*/) -> NewResourceResult
 	{
 		// Lock the resource map, and look up the resource
 		_resources_lock.lock();

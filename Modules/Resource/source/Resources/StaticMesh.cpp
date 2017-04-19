@@ -133,7 +133,7 @@ namespace sge
                 // Get vertex positions array size
                 std::size_t size = 0;
                 const auto got_size = reader.array_size(size);
-                assert(got_size && num_verts == 0 || num_verts == size / 3);
+                assert((got_size && num_verts == 0) || num_verts == size / 3);
                 num_verts = size / 3;
 
                 // Get vertex positions array
@@ -146,7 +146,7 @@ namespace sge
                 // Get vertex normals array size
                 std::size_t size = 0;
                 const auto got_size = reader.array_size(size);
-                assert(got_size && num_verts == 0 || num_verts == size / 3);
+                assert((got_size && num_verts == 0) || num_verts == size / 3);
                 num_verts = size / 3;
 
                 // Get vertex normals array
@@ -159,7 +159,7 @@ namespace sge
                 // Get vertex tangents array size
                 std::size_t size = 0;
                 const auto got_size = reader.array_size(size);
-                assert(got_size && num_verts == 0 || size == num_verts * 3);
+                assert((got_size && num_verts == 0) || size == num_verts * 3);
                 num_verts = size / 3;
 
                 // Get vertex tangents
@@ -172,7 +172,7 @@ namespace sge
                 // Get vertex bitangent signs array size
                 std::size_t size = 0;
                 const bool got_size = reader.array_size(size);
-                assert(got_size && num_verts == 0 || size == num_verts);
+                assert((got_size && num_verts == 0) || size == num_verts);
                 num_verts = size;
 
                 // Get vertex bitangent signs
@@ -185,7 +185,7 @@ namespace sge
                 // Get uv array size
                 std::size_t size = 0;
                 const auto got_size = reader.array_size(size);
-                assert(got_size && num_verts == 0 || size == num_verts * 2);
+                assert((got_size && num_verts == 0) || size == num_verts * 2);
                 num_verts = size / 2;
 
                 // Get uvs
@@ -198,7 +198,7 @@ namespace sge
                 // Get uv array size
                 std::size_t size = 0;
                 const auto got_size = reader.array_size(size);
-                assert(got_size && num_verts == 0 || size == num_verts * 2);
+                assert((got_size && num_verts == 0) || size == num_verts * 2);
                 num_verts = size / 2;
 
                 // Get uvs
