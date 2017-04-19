@@ -22,6 +22,7 @@ endif()
 add_subdirectory(Modules/Core)
 add_subdirectory(Modules/Resource)
 add_subdirectory(Modules/Engine)
+add_subdirectory(Modules/Lightmapper)
 
 # Add Systems
 add_subdirectory(Systems/GLRender)
