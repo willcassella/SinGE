@@ -818,7 +818,7 @@ namespace sge
 					auto* const irradiance_back = lightmap.irradiance_back;
 					auto* const direct_mask = lightmap.direct_mask;
                 	const auto lightmap_size = lightmap.width * lightmap.height;
-					for (std::size_t pix_i = 0; pix_i < lightmap_size; ++pix_i)
+					for (int32 pix_i = 0; pix_i < lightmap_size; ++pix_i)
 					{
 						const auto irradiance_value = irradiance_back[pix_i];
 
@@ -850,7 +850,7 @@ namespace sge
                 std::cout << "Computing indirect lighting (" << num_sample_sets << " sample sets, " << num_accumulation_steps << " accumulation steps)..." << std::endl;
                 const auto gen_indirect_start = std::chrono::high_resolution_clock::now();
                 const int num_threads = std::thread::hardware_concurrency();
-                for (std::size_t pass_i = 0; pass_i < num_accumulation_steps; ++pass_i)
+                for (int32 pass_i = 0; pass_i < num_accumulation_steps; ++pass_i)
                 {
                     for (std::size_t i = 0; i < lightmap_objects.size(); ++i)
                     {
