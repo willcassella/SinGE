@@ -1,309 +1,288 @@
 // RenderScene.cpp
 
+#include <Engine/Components/Display/CStaticMesh.h>
 #include "../private/RenderScene.h"
-#include "../private/GLRenderSystemState.h"
+#include "../private/RenderResource.h"
 
 namespace sge
 {
-    namespace gl_render
-    {
-        void render_scene_prepare_gbuffer(GLuint gbuffer)
-        {
-            constexpr GLenum GBUFFER_DRAW_BUFFERS[] = {
-                GBUFFER_POSITION_ATTACHMENT,
-                GBUFFER_NORMAL_ATTACHMENT,
-                GBUFFER_ALBEDO_ATTACHMENT,
-                GBUFFER_ROUGHNESS_METALLIC_ATTACHMENT,
-                GBUFFER_IRRADIANCE_ATTACHMENT };
-            constexpr GLsizei NUM_GBUFFER_DRAW_BUFFERS = sizeof(GBUFFER_DRAW_BUFFERS) / sizeof(GLenum);
+	namespace gl_render
+	{
+		void RenderScene_render(
+			const RenderScene_Commands& commands,
+			const Mat4& view_matrix,
+			const Mat4& proj_matrix)
+		{
+			// Render standard material instances
+			for (const auto& material_instance : commands.standard_path_material_instances)
+			{
+				// Bind the material
+				RenderCommand_bind_material(
+					material_instance.material.program_id,
+					material_instance.material.uniforms,
+					material_instance.material.params,
+					view_matrix,
+					proj_matrix);
 
-            // Bind the GBuffer and its sub-buffers for drawing
-            glBindFramebuffer(GL_FRAMEBUFFER, gbuffer);
-            glDrawBuffers(NUM_GBUFFER_DRAW_BUFFERS, GBUFFER_DRAW_BUFFERS);
+				// Bind uniforms
+				GLenum next_active_texture = gl_material::FIRST_USER_TEXTURE_SLOT;
+				gl_material::set_bound_material_params(&next_active_texture, material_instance.material.params);
 
-            // Clear the GBuffer
-            glEnable(GL_STENCIL_TEST);
-            glEnable(GL_DEPTH_TEST);
-            glEnable(GL_CULL_FACE);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-            glDepthFunc(GL_LEQUAL);
-        }
+				for (const auto& mesh : material_instance.mesh_instances)
+				{
+					RenderCommand_render_meshes(
+						material_instance.material.uniforms,
+						mesh.mesh_command,
+						mesh.instance_commands.data(),
+						mesh.instance_commands.size());
+				}
+			}
+		}
 
-        void render_scene_fill_bound_gbuffer(
-            const RenderScene& scene,
-            Mat4 view,
-            Mat4 proj)
-        {
-            // For each material
-            for (const auto& mat_instance : scene.standard_material_instances)
-            {
-                // Bind the material
-                glUseProgram(mat_instance.material.program_id);
-                GLenum next_active_texture = GL_TEXTURE4; // Textures 0-3 are reserved for lightmapping
-                gl_material::set_bound_material_params(&next_active_texture, mat_instance.material.params);
+		void RenderScene_update_matrices(
+			RenderScene_Commands& commands,
+			const NodeId* const node_ids,
+			const Mat4* const matrices,
+			const std::size_t num_nodes)
+		{
+			for (auto& material_instance : commands.standard_path_material_instances)
+			{
+				for (auto& mesh : material_instance.mesh_instances)
+				{
+					const auto num_instances = mesh.node_ids.size();
+					const auto* const mesh_node_ids = mesh.node_ids.data();
+					auto* const mesh_instances = mesh.instance_commands.data();
 
-                // Upload view and projection matrices
-                glUniformMatrix4fv(mat_instance.material.uniforms.view_matrix_uniform, 1, GL_FALSE, view.vec());
-                glUniformMatrix4fv(mat_instance.material.uniforms.proj_matrix_uniform, 1, GL_FALSE, proj.vec());
+					for (std::size_t i = 0; i < num_instances; ++i)
+					{
+						for (std::size_t search_i = 0; search_i < num_nodes; ++search_i)
+						{
+							if (mesh_node_ids[i] != node_ids[search_i])
+							{
+								continue;
+							}
 
-                // Render each instance of the material that does not override parameters
-                for (const auto& mesh_instance : mat_instance.mesh_instances)
-                {
-                    // Bind the mesh
-                    glBindVertexArray(mesh_instance.vao);
+							mesh_instances[i].world_transform = matrices[search_i];
+						}
+					}
+				}
+			}
 
-                    // For each instance of this mesh
-                    for (const auto& instance : mesh_instance.instances)
-                    {
-                        // Set lightmap parameters
-						glActiveTexture(GL_TEXTURE0);
-                        glBindTexture(GL_TEXTURE_2D, instance.lightmap_x_basis);
-						glActiveTexture(GL_TEXTURE1);
-						glBindTexture(GL_TEXTURE_2D, instance.lightmap_y_basis);
-						glActiveTexture(GL_TEXTURE2);
-						glBindTexture(GL_TEXTURE_2D, instance.lightmap_z_basis);
-						glActiveTexture(GL_TEXTURE3);
-						glBindTexture(GL_TEXTURE_2D, instance.lightmap_direct_mask);
-						glUniform1i(mat_instance.material.uniforms.use_lightmap_uniform, instance.lightmap_x_basis == 0 ? 0 : 1);
+			for (auto& material_instance : commands.lightmask_volume_path_material_instances)
+			{
+				for (auto& mesh : material_instance.mesh_instances)
+				{
+					const auto num_instances = mesh.node_ids.size();
+					const auto* const volume_node_ids = mesh.node_ids.data();
+					auto* const mesh_instances = mesh.instance_commands.data();
 
-                        // Set the model matrix
-                        glUniformMatrix4fv(
-                            mat_instance.material.uniforms.model_matrix_uniform,
-                            1,
-                            GL_FALSE,
-                            instance.world_transform.vec());
+					for (std::size_t i = 0; i < num_instances; ++i)
+					{
+						for (std::size_t search_i = 0; search_i < num_nodes; ++search_i)
+						{
+							if (node_ids[search_i] != volume_node_ids[i])
+							{
+								continue;
+							}
 
-                        // Set the uv scale
-                        glUniform2fv(
-                            mat_instance.material.uniforms.inst_mat_uv_scale_uniform,
-                            1,
-                            instance.mat_uv_scale.vec());
+							mesh_instances[i].world_transform = matrices[search_i];
+						}
+					}
+				}
+			}
+		}
 
-                        // Draw the mesh
-                        glDrawRangeElements(
-                            GL_TRIANGLES,
-                            mesh_instance.start_element_index,
-                            mesh_instance.start_element_index + mesh_instance.num_element_indices,
-                            mesh_instance.num_element_indices,
-                            GL_UNSIGNED_INT,
-                            nullptr);
-                    }
-                }
+		static void remove_mesh_commands(
+			RenderScene_Mesh& mesh_command_set,
+			const NodeId* SGE_RESTRICT target_node_ids,
+			std::size_t num_target_node_ids)
+		{
+			std::size_t num_mesh_commands = mesh_command_set.instance_commands.size();
+			auto* const mesh_commands = mesh_command_set.instance_commands.data();
+			auto* const node_ids = mesh_command_set.node_ids.data();
 
-                // Render each instace of the material that overrides parameters
-                for (const auto& mesh_instance : mat_instance.param_override_instances)
-                {
-                    // Bind the mesh
-                    glBindVertexArray(mesh_instance.vao);
+			// For each mesh command
+			for (std::size_t command_i = 0; command_i < num_mesh_commands;)
+			{
+				const NodeId node_id = node_ids[command_i];
 
-                    // For each instance of this mesh
-                    for (const auto& instance : mesh_instance.instances)
-                    {
-                        next_active_texture = GL_TEXTURE1;
+				// See if the node associated with this mesh command appears in the list to be deleted
+				std::size_t search_i = 0;
+				for (; search_i < num_target_node_ids; ++search_i)
+				{
+					if (node_id == target_node_ids[search_i])
+					{
+						break;
+					}
+				}
 
-                        // Rebind the material defaults
-                        gl_material::set_bound_material_params(&next_active_texture, mat_instance.material.params);
+				// If this command is not to be removed, jump to next command
+				if (search_i == num_target_node_ids)
+				{
+					command_i += 1;
+					continue;
+				}
 
-                        // Bind the instance parameters
-                        gl_material::set_bound_material_params(&next_active_texture, instance.override_params);
+				// Remove this instance
+				num_mesh_commands -= 1;
+				if (command_i == num_mesh_commands)
+				{
+					break;
+				}
 
-						// Set lightmap parameters
-						glActiveTexture(GL_TEXTURE0);
-						glBindTexture(GL_TEXTURE_2D, instance.lightmap_x_basis);
-						glActiveTexture(GL_TEXTURE1);
-						glBindTexture(GL_TEXTURE_2D, instance.lightmap_y_basis);
-						glActiveTexture(GL_TEXTURE2);
-						glBindTexture(GL_TEXTURE_2D, instance.lightmap_z_basis);
-						glActiveTexture(GL_TEXTURE3);
-						glBindTexture(GL_TEXTURE_2D, instance.lightmap_direct_mask);
-						glUniform1i(mat_instance.material.uniforms.use_lightmap_uniform, instance.lightmap_x_basis == 0 ? 0 : 1);
+				// Copy the last command into this position (don't increment iterator)
+				mesh_commands[command_i] = mesh_commands[num_mesh_commands];
+				node_ids[command_i] = node_ids[num_mesh_commands];
+			}
 
-                        // Set the uv scale
-                        glUniform2fv(mat_instance.material.uniforms.inst_mat_uv_scale_uniform, 1, instance.mat_uv_scale.vec());
+			// Fix up command size
+			mesh_command_set.instance_commands.resize(num_mesh_commands);
+			mesh_command_set.node_ids.resize(num_mesh_commands);
+		}
 
-                        // Draw the mesh
-                        glDrawRangeElements(
-                            GL_TRIANGLES,
-                            mesh_instance.start_element_index,
-                            mesh_instance.start_element_index + mesh_instance.num_element_indices,
-                            mesh_instance.num_element_indices,
-                            GL_UNSIGNED_INT,
-                            nullptr);
-                    }
-                }
-            }
-        }
+		void RenderScene_remove_commands(
+			RenderScene_Commands& commands,
+			const NodeId* target_node_ids,
+			std::size_t num_target_node_ids)
+		{
+			for (auto& material_instance : commands.standard_path_material_instances)
+			{
+				for (auto& mesh : material_instance.mesh_instances)
+				{
+					remove_mesh_commands(mesh, target_node_ids, num_target_node_ids);
+				}
+			}
 
-        static void render_lightmask_object(
-            const LightmaskObjectInstance& instance,
-            Mat4 view,
-            Mat4 proj)
-        {
-            // Bind the material
-            glUseProgram(instance.material.program_id);
-            GLenum next_active_texture = GL_TEXTURE1;
-            gl_material::set_bound_material_params(&next_active_texture, instance.material.params);
+			for (auto& material_instance : commands.lightmask_volume_path_material_instances)
+			{
+				for (auto& mesh_command_set : material_instance.mesh_instances)
+				{
+					remove_mesh_commands(mesh_command_set, target_node_ids, num_target_node_ids);
+				}
+			}
+		}
 
-            // Bind standard uniforms
-            glUniform2fv(instance.material.uniforms.inst_mat_uv_scale_uniform, 1, instance.mat_uv_scale.vec());
-            glUniformMatrix4fv(instance.material.uniforms.model_matrix_uniform, 1, GL_FALSE, instance.world_transform.vec());
-            glUniformMatrix4fv(instance.material.uniforms.view_matrix_uniform, 1, GL_FALSE, view.vec());
-            glUniformMatrix4fv(instance.material.uniforms.proj_matrix_uniform, 1, GL_FALSE, proj.vec());
+		RenderScene_Lightmap get_lightmap(
+			const RenderScene_Commands& commands,
+			const NodeId node_id)
+		{
+			const auto lightmap_iter = commands.node_lightmaps.find(node_id);
+			return lightmap_iter != commands.node_lightmaps.end() ? lightmap_iter->second : RenderScene_Lightmap{};
+		}
 
-            // Bind the mesh
-            glBindVertexArray(instance.vao);
+		void RenderScene_insert_static_mesh_commands(
+			RenderScene_Commands& commands,
+			RenderResource& resources,
+			const Node* const* const nodes,
+			const CStaticMesh* const* const static_meshes,
+			const std::size_t num_nodes)
+		{
+			for (std::size_t i = 0; i < num_nodes; ++i)
+			{
+				const Node* const node = nodes[i];
+				const CStaticMesh* const static_mesh = static_meshes[i];
 
-            // Draw the mesh
-            glDrawElements(GL_TRIANGLES, instance.num_element_indices, GL_UNSIGNED_INT, nullptr);
-        }
+				// Don't handle non-standard rendering paths yet
+				if (static_mesh->lightmask_mode() != CStaticMesh::LightmaskMode::NONE)
+				{
+					continue;
+				}
 
-        void render_scene_render_lightmasks(
-            const RenderScene& scene,
-            Mat4 view,
-            Mat4 proj)
-        {
-            // Enable stencil testing
-            glEnable(GL_STENCIL_TEST);
+				// Get the static mesh resource for this instance
+				const auto& mesh_resource = RenderResource_get_static_mesh_resource(
+					resources,
+					static_mesh->mesh().c_str());
 
-            /*--- DRAW FRONTFACES OF LIGHTMASK RECEIVERS ---*/
+				// Get the material resource for this instance
+				const auto& material_resource = RenderResource_get_material_resource(
+					resources,
+					static_mesh->material().c_str());
 
-            // Disable color and depth output
-            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-            glDepthMask(GL_FALSE);
+				// Get the lightmap for this instance
+				const auto lightmap = get_lightmap(commands, node->get_id());
 
-            // Set stencil
-            glStencilFunc(GL_ALWAYS, 1, 0xFF);
-            glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+				// Search for the material
+				const auto material_iter = commands.standard_path_material_indices.find(material_resource.program_id);
+				if (material_iter == commands.standard_path_material_indices.end())
+				{
+					commands.standard_path_material_indices.insert(std::make_pair(
+						material_resource.program_id,
+						commands.standard_path_material_instances.size()));
 
-            for (const auto& receiver : scene.lightmask_receivers)
-            {
-                render_lightmask_object(receiver, view, proj);
-            }
+					// Create the Material object
+					RenderScene_Material mat_instance;
+					mat_instance.material = material_resource;
 
-            /*--- DRAW BACKFACES OF LIGHTMASK RECEIVERS ---*/
+					// Create the mesh command set object
+					RenderScene_Mesh mesh_command_set;
+					mesh_command_set.mesh_command.vao = mesh_resource.vao;
+					mesh_command_set.mesh_command.start_element_index = 0;
+					mesh_command_set.mesh_command.num_element_indices = mesh_resource.num_total_elements;
+					mesh_command_set.mesh_command.base_vertex = 0;
 
-            // Draw back faces only
-            glCullFace(GL_FRONT);
+					// Create the mesh instance object
+					RenderCommand_MeshInstance instance;
+					instance.world_transform = node->get_world_matrix();
+					instance.mat_uv_scale = static_mesh->uv_scale();
+					instance.lightmap_x_basis = lightmap.x_basis_tex;
+					instance.lightmap_y_basis = lightmap.y_basis_tex;
+					instance.lightmap_z_basis = lightmap.z_basis_tex;
+					instance.lightmap_direct_mask = lightmap.direct_mask_tex;
 
-            // Enable depth output
-            glDepthMask(GL_TRUE);
+					// Insert it into the command set
+					mesh_command_set.instance_commands.push_back(instance);
+					mesh_command_set.node_ids.push_back(node->get_id());
+					mat_instance.mesh_instances.push_back(std::move(mesh_command_set));
+					mat_instance.mesh_indices.insert(std::make_pair(mesh_resource.vao, 0));
+					commands.standard_path_material_instances.push_back(std::move(mat_instance));
+					continue;
+				}
 
-            // Reset iterators
-            for (const auto& receiver : scene.lightmask_receivers)
-            {
-                render_lightmask_object(receiver, view, proj);
-            }
+				// Search for the mesh in the material
+				const auto material_index = material_iter->second;
+				auto& material = commands.standard_path_material_instances[material_index];
+				auto mesh_iter = material.mesh_indices.find(mesh_resource.vao);
+				if (mesh_iter == material.mesh_indices.end())
+				{
+					material.mesh_indices.insert(std::make_pair(
+						mesh_resource.vao,
+						material.mesh_instances.size()));
 
-            /*--- DRAW BACKFACE OF LIGHTMASK OBSTRUCTORS ---*/
+					// Create the mesh command set object
+					RenderScene_Mesh mesh_command_set;
+					mesh_command_set.mesh_command.vao = mesh_resource.vao;
+					mesh_command_set.mesh_command.start_element_index = 0;
+					mesh_command_set.mesh_command.num_element_indices = mesh_resource.num_total_elements;
+					mesh_command_set.mesh_command.base_vertex = 0;
 
-            // Enable color output
-            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+					// Create the mesh instance object
+					RenderCommand_MeshInstance instance;
+					instance.world_transform = node->get_world_matrix();
+					instance.mat_uv_scale = static_mesh->uv_scale();
+					instance.lightmap_x_basis = lightmap.x_basis_tex;
+					instance.lightmap_y_basis = lightmap.y_basis_tex;
+					instance.lightmap_z_basis = lightmap.z_basis_tex;
+					instance.lightmap_direct_mask = lightmap.direct_mask_tex;
 
-            // Set to replace stencil buffer with '3' wherever drawn (within backface)
-            glStencilFunc(GL_EQUAL, 0x03, 0x01);
-            glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
+					// Insert it into the command set
+					mesh_command_set.instance_commands.push_back(instance);
+					mesh_command_set.node_ids.push_back(node->get_id());
+					material.mesh_instances.push_back(std::move(mesh_command_set));
+					continue;
+				}
 
-            // Reset iterators
-            for (const auto& obstructor : scene.lightmask_obstructors)
-            {
-                render_lightmask_object(obstructor, view, proj);
-            }
+				// Creat the mesh instance object
+				RenderCommand_MeshInstance instance;
+				instance.world_transform = node->get_world_matrix();
+				instance.mat_uv_scale = static_mesh->uv_scale();
+				instance.lightmap_x_basis = lightmap.x_basis_tex;
+				instance.lightmap_y_basis = lightmap.y_basis_tex;
+				instance.lightmap_z_basis = lightmap.z_basis_tex;
+				instance.lightmap_direct_mask = lightmap.direct_mask_tex;
 
-            /*--- OVERWRITE DEPTH WITH FRONT FACES OF LIGHTMASK RECEIVERS ---*/
-
-            // Draw front faces only
-            glCullFace(GL_BACK);
-
-            // Set stencil to always pass within backface area, allow drawing where depth fails
-            glStencilFunc(GL_LEQUAL, 1, 0xFF);
-            glStencilOp(GL_KEEP, GL_REPLACE, GL_KEEP);
-
-            // Disable color output
-            glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-
-            // Reset iterators
-            for (const auto& receiver : scene.lightmask_receivers)
-            {
-                render_lightmask_object(receiver, view, proj);
-            }
-
-            /*--- DRAW FRONT FACES OF LIGHTMASK OBSTRUCTORS ---*/
-
-            // Set to allow drawing where depth test fails
-            glStencilFunc(GL_LEQUAL, 1, 0xFF);
-            glStencilOp(GL_KEEP, GL_REPLACE, GL_KEEP);
-
-            // Reset iterators
-            for (const auto& obstructor : scene.lightmask_obstructors)
-            {
-                render_lightmask_object(obstructor, view, proj);
-            }
-
-            /*--- DRAW FRONT FACES OF LIGTHMASK RECEIVERS ---*/
-
-            // Set depth function to always pass
-            glDepthFunc(GL_ALWAYS);
-
-            // Set stencil to always pass within backface area
-            glStencilFunc(GL_EQUAL, 1, 0xFF);
-            glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-
-            // Enable color output
-            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-
-            // Reset iterators
-            for (const auto& receiver : scene.lightmask_receivers)
-            {
-                render_lightmask_object(receiver, view, proj);
-            }
-        }
-
-        void render_scene_shade_hdr(
-            GLuint framebuffer,
-            const GLRenderSystem::State& render_state,
-            Mat4 view)
-        {
-            /*-----------------------*/
-            /*---   PBR SHADING   ---*/
-
-            glDisable(GL_CULL_FACE);
-            glDisable(GL_DEPTH_TEST);
-            glDisable(GL_STENCIL_TEST);
-
-            // Bind the screen quad for rasterization (in use for remainder of rendering)
-            glBindVertexArray(render_state.sprite_vao);
-
-            // Bind the GBuffer's sub-buffers as textures for reading (in use for remainder of rendering)
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, render_state.gbuffer_layers[GBufferLayer::DEPTH_STENCIL]);
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, render_state.gbuffer_layers[GBufferLayer::POSITION]);
-            glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, render_state.gbuffer_layers[GBufferLayer::NORMAL]);
-            glActiveTexture(GL_TEXTURE3);
-            glBindTexture(GL_TEXTURE_2D, render_state.gbuffer_layers[GBufferLayer::ALBEDO]);
-            glActiveTexture(GL_TEXTURE4);
-            glBindTexture(GL_TEXTURE_2D, render_state.gbuffer_layers[GBufferLayer::ROUGHNESS_METALLIC]);
-            glActiveTexture(GL_TEXTURE5);
-            glBindTexture(GL_TEXTURE_2D, render_state.gbuffer_layers[GBufferLayer::IRRADIANCE]);
-
-            // Bind the given framebuffer for drawing
-            const GLenum draw_buffer = GL_COLOR_ATTACHMENT0;
-            glBindFramebuffer(GL_FRAMEBUFFER, render_state.post_framebuffer);
-            glDrawBuffers(1, &draw_buffer);
-
-            // Bind the scene shading program
-            glUseProgram(render_state.scene_shader_program);
-
-            // Upload view matrix
-            glUniformMatrix4fv(render_state.scene_program_view_uniform, 1, GL_FALSE, view.vec());
-
-			// Upload light uniforms
-			glUniform3fv(render_state.scene_program_light_dir_uniform, 1, render_state.light_dir.vec());
-			glUniform3fv(render_state.scene_program_light_intensity_uniform, 1, render_state.light_intensity.vec());
-
-            // Draw the screen quad
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-        }
-    }
+				// Insert it into the command set
+				material.mesh_instances[mesh_iter->second].instance_commands.push_back(instance);
+			}
+		}
+	}
 }

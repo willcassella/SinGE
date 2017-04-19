@@ -8,37 +8,15 @@ namespace sge
 {
 	namespace gl_render
 	{
-		struct GLShader
-		{
-			using Id = GLuint;
+		GLuint load_shader(
+			GLuint type,
+			const char* path);
 
-			////////////////////////
-			///   Constructors   ///
-		public:
+		GLuint create_shader(
+			GLenum type,
+			const char* source);
 
-			GLShader(GLenum type, const std::string& path);
-
-			GLShader(const VertexShader& shader);
-
-			GLShader(const PixelShader& shader);
-
-			GLShader(GLShader&& move);
-			~GLShader();
-
-			///////////////////
-			///   Methods   ///
-		public:
-
-			Id id() const
-			{
-				return _id;
-			}
-
-			//////////////////
-			///   Fields   ///
-		private:
-
-			Id _id;
-		};
+		void free_shader(
+			GLuint id);
 	}
 }

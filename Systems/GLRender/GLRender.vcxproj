@@ -193,6 +193,9 @@
     <ClInclude Include="private\GLShader.h" />
     <ClInclude Include="private\GLStaticMesh.h" />
     <ClInclude Include="private\GLTexture2D.h" />
+    <ClInclude Include="private\LightmaskVolume.h" />
+    <ClInclude Include="private\RenderCommands.h" />
+    <ClInclude Include="private\RenderResource.h" />
     <ClInclude Include="private\RenderScene.h" />
     <ClInclude Include="private\Util.h" />
   </ItemGroup>
@@ -215,6 +218,9 @@
     <ClCompile Include="source\GLShader.cpp" />
     <ClCompile Include="source\GLStaticMesh.cpp" />
     <ClCompile Include="source\GLTexture2D.cpp" />
+    <ClCompile Include="source\LightmaskVolume.cpp" />
+    <ClCompile Include="source\RenderCommands.cpp" />
+    <ClCompile Include="source\RenderResource.cpp" />
     <ClCompile Include="source\RenderScene.cpp" />
     <ClCompile Include="source\Util.cpp" />
   </ItemGroup>

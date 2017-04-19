@@ -1,4 +1,4 @@
-// GLShader.cpp - Copyright 2013-2016 Will Cassella, All Rights Reserved
+// GLShader.cpp
 
 #include <fstream>
 #include <iostream>
@@ -9,19 +9,23 @@ namespace sge
 {
 	namespace gl_render
 	{
-		static void compile_shader(GLuint id, const char* source)
+		GLuint create_shader(
+			GLenum type,
+			const char* source)
 		{
+			const auto id = glCreateShader(type);
 			glShaderSource(id, 1, &source, nullptr);
 			glCompileShader(id);
 
 			// Make sure the shader compiled succesfully
             debug_shader_status(id, GLDebugOutputMode::ONLY_ERROR);
+			return id;
 		}
 
-		GLShader::GLShader(GLenum type, const std::string& path)
+		GLuint load_shader(
+			GLenum type,
+			const char* path)
 		{
-			_id = glCreateShader(type);
-
 			// Open a file containing the shader source code
 			std::ifstream file{ path };
 
@@ -35,30 +39,13 @@ namespace sge
 			file.read(&source[0], len);
 
 			// Compile the shader
-			compile_shader(_id, source.c_str());
+			return create_shader(type, source.c_str());
 		}
 
-		GLShader::GLShader(const VertexShader& shader)
+		void free_shader(
+			GLuint id)
 		{
-			_id = glCreateShader(GL_VERTEX_SHADER);
-			compile_shader(_id, shader.source().c_str());
-		}
-
-		GLShader::GLShader(const PixelShader& shader)
-		{
-			_id = glCreateShader(GL_FRAGMENT_SHADER);
-			compile_shader(_id, shader.source().c_str());
-		}
-
-		GLShader::GLShader(GLShader&& move)
-			: _id(move._id)
-		{
-			move._id = 0;
-		}
-
-		GLShader::~GLShader()
-		{
-			glDeleteShader(_id);
+			glDeleteShader(id);
 		}
 	}
 }

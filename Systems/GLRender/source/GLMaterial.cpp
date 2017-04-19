@@ -9,7 +9,9 @@ namespace sge
 	{
         namespace gl_material
         {
-            GLuint new_standard_material_program(GLuint v_shader, GLuint f_shader)
+            GLuint new_standard_material_program(
+				GLuint v_shader,
+				GLuint f_shader)
             {
                 const auto mat_id = glCreateProgram();
 
@@ -35,12 +37,15 @@ namespace sge
                 return mat_id;
             }
 
-            void free_standard_material_program(GLuint mat_id)
+            void free_standard_material_program(
+				GLuint mat_id)
             {
                 glDeleteProgram(mat_id);
             }
 
-            void get_material_standard_uniforms(GLuint mat_id, MaterialStandardUniforms* out_uniforms)
+            void get_material_standard_uniforms(
+				GLuint mat_id,
+				MaterialStandardUniforms* out_uniforms)
             {
                 out_uniforms->model_matrix_uniform = glGetUniformLocation(mat_id, MODEL_MATRIX_UNIFORM_NAME);
                 out_uniforms->view_matrix_uniform = glGetUniformLocation(mat_id, VIEW_MATRIX_UNIFORM_NAME);
@@ -54,7 +59,10 @@ namespace sge
 				out_uniforms->use_lightmap_uniform = glGetUniformLocation(mat_id, USE_LIGHTMAP_UNIFORM_NAME);
             }
 
-            GLint get_uniform_location(GLuint mat_id, const char* name, GLDebugOutputMode out_mode)
+            GLint get_uniform_location(
+				GLuint mat_id,
+				const char* name,
+				GLDebugOutputMode out_mode)
             {
                 const auto location = glGetUniformLocation(mat_id, name);
 
@@ -70,6 +78,15 @@ namespace sge
                 }
 
                 return location;
+            }
+
+            void init_bound_material_lightmap_params(
+                const MaterialStandardUniforms uniforms)
+            {
+                glUniform1i(uniforms.lightmap_x_basis_uniform, LIGHTMAP_X_BASIS_TEXTURE_SLOT - GL_TEXTURE0);
+                glUniform1i(uniforms.lightmap_y_basis_uniform, LIGHTMAP_Y_BASIS_TEXTURE_SLOT - GL_TEXTURE0);
+                glUniform1i(uniforms.lightmap_z_basis_uniform, LIGHTMAP_Z_BASIS_TEXTURE_SLOT - GL_TEXTURE0);
+                glUniform1i(uniforms.lightmap_direct_mask_uniform, LIGHTMAP_DIRECT_MASK_TEXTURE_SLOT - GL_TEXTURE0);
             }
 
             void set_bound_material_params(GLenum* next_active_texture, const MaterialParams& params)
