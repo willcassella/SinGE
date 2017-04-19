@@ -14,24 +14,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="private\glew.h">
-      <Filter>private</Filter>
-    </ClInclude>
-    <ClInclude Include="private\GLRenderSystemState.h">
-      <Filter>private</Filter>
-    </ClInclude>
-    <ClInclude Include="private\GLMaterial.h">
-      <Filter>private</Filter>
-    </ClInclude>
-    <ClInclude Include="private\GLShader.h">
-      <Filter>private</Filter>
-    </ClInclude>
-    <ClInclude Include="private\GLStaticMesh.h">
-      <Filter>private</Filter>
-    </ClInclude>
-    <ClInclude Include="private\GLTexture2D.h">
-      <Filter>private</Filter>
-    </ClInclude>
     <ClInclude Include="include\GLRender\build.h">
       <Filter>include</Filter>
     </ClInclude>
@@ -44,6 +26,33 @@
     <ClInclude Include="private\DebugLine.h">
       <Filter>private</Filter>
     </ClInclude>
+    <ClInclude Include="private\glew.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\GLMaterial.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\GLRenderSystemState.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\GLShader.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\GLStaticMesh.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\GLTexture2D.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\LightmaskVolume.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\RenderCommands.h">
+      <Filter>private</Filter>
+    </ClInclude>
+    <ClInclude Include="private\RenderResource.h">
+      <Filter>private</Filter>
+    </ClInclude>
     <ClInclude Include="private\RenderScene.h">
       <Filter>private</Filter>
     </ClInclude>
@@ -52,10 +61,16 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="source\Config.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
     <ClCompile Include="source\GLMaterial.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\GLRenderSystem.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\GLRenderSystemState.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\GLShader.cpp">
@@ -67,10 +82,13 @@
     <ClCompile Include="source\GLTexture2D.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="source\GLRenderSystemState.cpp">
+    <ClCompile Include="source\LightmaskVolume.cpp">
       <Filter>source</Filter>
     </ClCompile>
-    <ClCompile Include="source\Config.cpp">
+    <ClCompile Include="source\RenderCommands.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\RenderResource.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\RenderScene.cpp">

@@ -5,6 +5,7 @@
 #include <Resource/Archives/JsonArchive.h>
 #include <Resource/Archives/BinaryArchive.h>
 #include <Engine/Components/Display/CStaticMesh.h>
+#include <Engine/Components/Display/CSpotlight.h>
 #include <Engine/Components/Display/CCamera.h>
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
@@ -21,121 +22,10 @@ namespace sge
 {
 	namespace gl_render
 	{
-		static void insert_static_mesh_instance(
-			GLRenderSystem::State& state,
-			std::map<GLuint, std::size_t>& material_indices,
-			Node& node,
-			CStaticMesh& static_mesh)
-		{
-			// Get the mesh resource for this mesh
-			const auto& gl_mesh = state.get_static_mesh_resource(static_mesh.mesh());
-
-			// Get the material for this mesh
-			const auto& gl_mat = state.get_material_resource(static_mesh.material());
-
-			// Create a mesh instance object
-			MeshInstance instance;
-			instance.node_id = node.get_id();
-			instance.mat_uv_scale = static_mesh.uv_scale();
-			instance.world_transform = node.get_world_matrix();
-
-			// Decide whether to use a lightmap
-			if (static_mesh.uses_lightmap())
-			{
-				// Get the lightmap
-				const auto lightmap_iter = state.lightmap_textures.find(instance.node_id);
-				if (lightmap_iter != state.lightmap_textures.end())
-				{
-					instance.lightmap_x_basis = lightmap_iter->second.x_basis_tex;
-					instance.lightmap_y_basis = lightmap_iter->second.y_basis_tex;
-					instance.lightmap_z_basis = lightmap_iter->second.z_basis_tex;
-					instance.lightmap_direct_mask = lightmap_iter->second.direct_mask_tex;
-				}
-			}
-
-			// Search for where to put this mesh
-			for (auto& mat_instance : state.render_scene.standard_material_instances)
-			{
-				if (mat_instance.material.program_id == gl_mat.program_id)
-				{
-					for (auto& mesh_instance : mat_instance.mesh_instances)
-					{
-						if (mesh_instance.vao == gl_mesh.vao)
-						{
-							mesh_instance.instances.push_back(instance);
-							return;
-						}
-					}
-
-					// Create a new mesh instance set
-					MeshInstanceSet mesh_set;
-					mesh_set.vao = gl_mesh.vao;
-					mesh_set.start_element_index = 0;
-					mesh_set.num_element_indices = gl_mesh.num_total_elements;
-					mesh_set.instances.push_back(instance);
-					mat_instance.mesh_instances.push_back(std::move(mesh_set));
-					return;
-				}
-			}
-
-			// Create a material instance
-			MaterialInstance mat_instance;
-			mat_instance.material = gl_mat;
-
-			// Create a mesh set
-			MeshInstanceSet mesh_set;
-			mesh_set.vao = gl_mesh.vao;
-			mesh_set.start_element_index = 0;
-			mesh_set.num_element_indices = gl_mesh.num_total_elements;
-			mesh_set.instances.push_back(instance);
-			mat_instance.mesh_instances.push_back(std::move(mesh_set));
-			state.render_scene.standard_material_instances.push_back(std::move(mat_instance));
-		}
-
-		static void update_render_scene_transforms(RenderScene& render_scene, const NodeId* nodes, const Mat4* world_transforms, std::size_t num_nodes)
-		{
-			for (auto& mat : render_scene.standard_material_instances)
-			{
-				// Search through normal mesh instances
-				for (auto& mesh : mat.mesh_instances)
-				{
-					for (auto& instance : mesh.instances)
-					{
-						// Search for a matching node id
-						for (std::size_t i = 0; i < num_nodes; ++i)
-						{
-							if (nodes[i] == instance.node_id)
-							{
-								instance.world_transform = world_transforms[i];
-								break;
-							}
-						}
-					}
-				}
-
-				// Search through override instances
-				for (auto& override_param_mesh : mat.param_override_instances)
-				{
-					for (auto& instance : override_param_mesh.instances)
-					{
-						// Search for a matching node id
-						for (std::size_t i = 0; i < num_nodes; ++i)
-						{
-							if (nodes[i] == instance.node_id)
-							{
-								instance.world_transform = world_transforms[i];
-								break;
-							}
-						}
-					}
-				}
-			}
-		}
-
 		static void on_node_transform_update(
 			EventChannel& node_transform_update_channel,
 			EventChannel::SubscriberId subscriber_id,
-			RenderScene& render_scene)
+			RenderScene_Commands& commands)
 		{
 			// Get events
 			ENodeTransformChanged events[16];
@@ -143,20 +33,60 @@ namespace sge
 			while (node_transform_update_channel.consume(subscriber_id, events, &num_events))
 			{
 				// Get ids and transforms
-				NodeId nodes[16];
+				NodeId nodes_ids[16];
 				Mat4 world_transforms[16];
 				for (int32 i = 0; i < num_events; ++i)
 				{
-					nodes[i] = events[i].node->get_id();
+					nodes_ids[i] = events[i].node->get_id();
 					world_transforms[i] = events[i].node->get_world_matrix();
 				}
 
 				// Update render scene
-				update_render_scene_transforms(render_scene, nodes, world_transforms, num_events);
+				RenderScene_update_matrices(
+					commands,
+					nodes_ids,
+					world_transforms,
+					num_events);
 			}
 		}
 
-        static void build_render_scene(GLRenderSystem::State& state, Scene& scene)
+		static void on_static_mesh_new(
+			Scene& scene,
+			EventChannel& new_static_mesh_channel,
+			EventChannel::SubscriberId subscriber_id,
+			RenderResource& resources,
+			RenderScene_Commands& commands)
+		{
+			// Get events
+			ENewComponent events[8];
+			int32 num_events;
+			while (new_static_mesh_channel.consume(subscriber_id, events, &num_events))
+			{
+				NodeId node_ids[8];
+				const CStaticMesh* components[8];
+				for (int32 i = 0; i < num_events; ++i)
+				{
+					node_ids[i] = events[i].node;
+					components[i] = (const CStaticMesh*)events[i].instance;
+				}
+
+				// Get nodes
+				const Node* nodes[8];
+				scene.get_nodes(node_ids, num_events, nodes);
+
+				// Update render scene
+				RenderScene_insert_static_mesh_commands(
+					commands,
+					resources,
+					nodes,
+					components,
+					num_events);
+			}
+		}
+
+        static void initialize_render_scene(
+			RenderScene_Commands& render_scene,
+			Scene& scene)
         {
 			// Load the lightmap object
 			if (!scene.get_raw_scene_data().lightmap_data_path.empty())
@@ -168,41 +98,42 @@ namespace sge
 				lightmap_archive.deserialize_root(scene_lightmap);
 
 				// Get the light direction and color
-				state.light_dir = scene_lightmap.light_direction;
-				state.light_intensity = scene_lightmap.light_intensity;
+				render_scene.light_dir = scene_lightmap.light_direction;
+				render_scene.light_intensity = scene_lightmap.light_intensity;
 
 				// Load all lightmap components into textures
 				for (const auto& element : scene_lightmap.lightmap_elements)
 				{
-					LightmapTexture tex;
-					tex.x_basis_tex = create_texture(element.second.width, element.second.height, element.second.basis_x_radiance.data(), GL_RGB32F, GL_RGB, GL_FLOAT);
-					tex.y_basis_tex = create_texture(element.second.width, element.second.height, element.second.basis_y_radiance.data(), GL_RGB32F, GL_RGB, GL_FLOAT);
-					tex.z_basis_tex = create_texture(element.second.width, element.second.height, element.second.basis_z_radiance.data(), GL_RGB32F, GL_RGB, GL_FLOAT);
-					tex.direct_mask_tex = create_texture(element.second.width, element.second.height, element.second.direct_mask.data(), GL_R8, GL_RED, GL_UNSIGNED_BYTE);
-					state.lightmap_textures.insert(std::make_pair(element.first, tex));
-				}
-			}
-
-            std::map<GLuint, std::size_t> material_indices;
-			auto* static_mesh_component = scene.get_component_container(CStaticMesh::type_info);
-
-            // Get the nodes with static mesh components
-			NodeId static_mesh_nodes[32];
-			std::size_t sm_nodes_start_index = 0;
-			std::size_t sm_nodes_num_nodes;
-			while (static_mesh_component->get_instance_nodes(sm_nodes_start_index, 32, &sm_nodes_num_nodes, static_mesh_nodes))
-			{
-				sm_nodes_start_index += 32;
-
-				// Get the data for each node
-				Node* node_instances[32];
-				CStaticMesh* sm_instances[32];
-				static_mesh_component->get_instances(static_mesh_nodes, sm_nodes_num_nodes, sm_instances);
-				scene.get_nodes(static_mesh_nodes, sm_nodes_num_nodes, node_instances);
-
-				for (std::size_t i = 0; i < sm_nodes_num_nodes; ++i)
-				{
-					insert_static_mesh_instance(state, material_indices, *node_instances[i], *sm_instances[i]);
+					RenderScene_Lightmap lightmap;
+					lightmap.x_basis_tex = create_texture(
+						element.second.width,
+						element.second.height,
+						element.second.basis_x_radiance.data(),
+						GL_RGB32F,
+						GL_RGB,
+						GL_FLOAT);
+					lightmap.y_basis_tex = create_texture(
+						element.second.width,
+						element.second.height,
+						element.second.basis_y_radiance.data(),
+						GL_RGB32F,
+						GL_RGB,
+						GL_FLOAT);
+					lightmap.z_basis_tex = create_texture(
+						element.second.width,
+						element.second.height,
+						element.second.basis_z_radiance.data(),
+						GL_RGB32F,
+						GL_RGB,
+						GL_FLOAT);
+					lightmap.direct_mask_tex = create_texture(
+						element.second.width,
+						element.second.height,
+						element.second.direct_mask.data(),
+						GL_R8,
+						GL_RED,
+						GL_UNSIGNED_BYTE);
+					render_scene.node_lightmaps.insert(std::make_pair(element.first, lightmap));
 				}
 			}
         }
@@ -232,12 +163,14 @@ namespace sge
 			glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_2D, layer, 0);
 		}
 
-        static GLuint create_viewport_program(const GLShader& v_shader, const GLShader& f_shader)
+        static GLuint create_viewport_program(
+			GLuint v_shader,
+			GLuint f_shader)
         {
             // Create the program and attach shaders
             const auto program = glCreateProgram();
-            glAttachShader(program, v_shader.id());
-            glAttachShader(program, f_shader.id());
+            glAttachShader(program, v_shader);
+            glAttachShader(program, f_shader);
 
             // Bind vertex attributes
             glBindAttribLocation(program, gl_material::POSITION_ATTRIB_LOCATION, gl_material::POSITION_ATTRIB_NAME);
@@ -245,8 +178,8 @@ namespace sge
 
             // Link the program and detach shaders
             glLinkProgram(program);
-            glDetachShader(program, v_shader.id());
-            glDetachShader(program, f_shader.id());
+            glDetachShader(program, v_shader);
+            glDetachShader(program, f_shader);
 
             // Make sure the program compiled linked
             debug_program_status(program, GLDebugOutputMode::ONLY_ERROR);
@@ -282,10 +215,14 @@ namespace sge
             glGetError(); // Sometimes GLEW initialization generates an error, pop it off the stack.
 
             // Create default mesh resource
-            _state->missing_mesh = _state->get_static_mesh_resource(config.missing_mesh);
+			_state->resources.missing_mesh = RenderResource_get_static_mesh_resource(
+				_state->resources,
+				config.missing_mesh.c_str());
 
             // Create the default material resource
-            _state->missing_material = _state->get_material_resource(config.missing_material);
+			_state->resources.missing_material = RenderResource_get_material_resource(
+				_state->resources,
+				config.missing_material.c_str());
 
             // Initialize OpenGL
             glLineWidth(3);
@@ -438,9 +375,9 @@ namespace sge
 			glVertexAttribPointer(gl_material::MATERIAL_TEXCOORD_ATTRIB_LOCATION, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)(sizeof(float) * 2));
 
 			// Create screen shaders
-			GLShader viewport_v_shader{ GL_VERTEX_SHADER, config.viewport_vert_shader };
-			GLShader scene_f_shader{ GL_FRAGMENT_SHADER, config.scene_shader };
-            GLShader post_f_shader{ GL_FRAGMENT_SHADER, config.post_shader };
+			const GLuint viewport_v_shader = load_shader(GL_VERTEX_SHADER, config.viewport_vert_shader.c_str());
+			const GLuint scene_f_shader = load_shader(GL_FRAGMENT_SHADER, config.scene_shader.c_str());
+			const GLuint post_f_shader = load_shader(GL_FRAGMENT_SHADER, config.post_shader.c_str());
 
 		    // Create the scene shader program
             _state->scene_shader_program = create_viewport_program(viewport_v_shader, scene_f_shader);
@@ -479,11 +416,11 @@ namespace sge
                 (void*)offsetof(DebugLineVert, color_rgb));
 
             // Create debug line program
-            GLShader debug_line_v_shader{ GL_VERTEX_SHADER, config.debug_line_vert_shader };
-            GLShader debug_line_f_shader{ GL_FRAGMENT_SHADER, config.debug_line_frag_shader };
-            _state->debug_line_program = glCreateProgram();
-            glAttachShader(_state->debug_line_program, debug_line_v_shader.id());
-            glAttachShader(_state->debug_line_program, debug_line_f_shader.id());
+			const GLuint debug_line_v_shader = load_shader(GL_VERTEX_SHADER, config.debug_line_vert_shader.c_str());
+			const GLuint debug_line_f_shader = load_shader(GL_FRAGMENT_SHADER, config.debug_line_frag_shader.c_str());
+			_state->debug_line_program = glCreateProgram();
+			glAttachShader(_state->debug_line_program, debug_line_v_shader);
+            glAttachShader(_state->debug_line_program, debug_line_f_shader);
 
             // Bind vertex attributes
             glBindAttribLocation(_state->debug_line_program, DEBUG_LINE_POSITION_ATTRIB_LOCATION, DEBUG_LINE_POSITION_ATTRIB_NAME);
@@ -491,8 +428,8 @@ namespace sge
 
             // Link the program and detach shaders
             glLinkProgram(_state->debug_line_program);
-            glDetachShader(_state->debug_line_program, debug_line_v_shader.id());
-            glDetachShader(_state->debug_line_program, debug_line_f_shader.id());
+            glDetachShader(_state->debug_line_program, debug_line_v_shader);
+            glDetachShader(_state->debug_line_program, debug_line_f_shader);
 
             // Make sure the program linked sucessfully
             debug_program_status(_state->debug_line_program, GLDebugOutputMode::ONLY_ERROR);
@@ -612,28 +549,27 @@ namespace sge
             // Initialize the render scene data structure, if we haven't already
             if (!_state->initialized_render_scene)
             {
-                build_render_scene(*_state, scene);
+                initialize_render_scene(_state->render_scene, scene);
                 _state->initialized_render_scene = true;
             }
 
 			_state->gather_debug_lines(*_debug_draw_line_channel, _debug_draw_line_sid);
 
 			// Consume events
+			on_static_mesh_new(scene, *_new_static_mesh_channel, _new_static_mesh_sid, _state->resources, _state->render_scene);
 			on_node_transform_update(*_modified_node_transform_channel, _modified_node_transform_sid, _state->render_scene);
 
 			// Create camera matrices
-			Mat4 view;
-			Mat4 proj;
 			NodeId cam_node;
 			CPerspectiveCamera* cam_instance;
 			Node* cam_node_instance;
-			std::size_t unused;
+			std::size_t num_cameras;
 
 			auto* cam_component = scene.get_component_container(CPerspectiveCamera::type_info);
-			cam_component->get_instance_nodes(0, 1, &unused, &cam_node);
+			cam_component->get_instance_nodes(0, 1, &num_cameras, &cam_node);
 
 			// If no camera was found, return
-			if (cam_node.is_null())
+			if (num_cameras == 0)
 			{
 				return;
 			}
@@ -641,13 +577,12 @@ namespace sge
 			// Access the camera
 			cam_component->get_instances(&cam_node, 1, &cam_instance);
 			scene.get_nodes(&cam_node, 1, &cam_node_instance);
-			view = cam_node_instance->get_world_matrix().inverse();
-			proj = cam_instance->get_projection_matrix((float)this->_state->width / this->_state->height);
+			const Mat4 view = cam_node_instance->get_world_matrix().inverse();
+			const Mat4 proj = cam_instance->get_projection_matrix((float)this->_state->width / this->_state->height);
 
             // Render the scene
-            render_scene_prepare_gbuffer(_state->gbuffer_framebuffer);
-            render_scene_fill_bound_gbuffer(_state->render_scene, view, proj);
-            //render_scene_render_lightmasks(_state->render_scene, view, proj);
+			render_scene_prepare_gbuffer(_state->gbuffer_framebuffer);
+			RenderScene_render(_state->render_scene, view, proj);
 
             // Draw debug lines
             if (!_state->frame_debug_lines.empty())

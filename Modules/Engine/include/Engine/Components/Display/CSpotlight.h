@@ -10,7 +10,6 @@ namespace sge
 	{
 		SGE_REFLECTED_TYPE;
 
-		struct SharedData;
 		enum class Shape
 		{
 			/**
@@ -23,6 +22,8 @@ namespace sge
 			*/
 			FRUSTUM
 		};
+
+		struct SharedData;
 
 		////////////////////////
 		///   Constructors   ///

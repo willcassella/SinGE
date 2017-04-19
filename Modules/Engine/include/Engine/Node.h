@@ -1,6 +1,7 @@
 // Node.h
 #pragma once
 
+#include <cinttypes>
 #include <vector>
 #include <Core/Math/Mat4.h>
 #include "EventChannel.h"
@@ -51,7 +52,7 @@ namespace sge
 
 		std::size_t to_string(char* out_str, std::size_t size) const
 		{
-			return (std::size_t)std::snprintf(out_str, size, "%llu", to_u64());
+			return (std::size_t)std::snprintf(out_str, size, "%" PRIu64, to_u64());
 		}
 
 		void from_string(const char* str)

@@ -7,6 +7,7 @@
 #include "GLTexture2D.h"
 #include "DebugLine.h"
 #include "RenderScene.h"
+#include "RenderResource.h"
 
 namespace sge
 {
@@ -61,27 +62,11 @@ namespace sge
         static constexpr GLenum POST_BUFFER_HDR_UPLOAD_FORMAT = GL_RGB;
         static constexpr GLenum POST_BUFFER_HDR_UPLOAD_TYPE = GL_FLOAT;
 
-		struct LightmapTexture
-		{
-			GLuint x_basis_tex = 0;
-			GLuint y_basis_tex = 0;
-			GLuint z_basis_tex = 0;
-			GLuint direct_mask_tex = 0;
-		};
-
 		struct GLRenderSystem::State
 		{
 			///////////////////
 			///   Methods   ///
 		public:
-
-			const gl_material::Material& get_material_resource(const std::string& path);
-
-			const gl_static_mesh::StaticMesh& get_static_mesh_resource(const std::string& path);
-
-			GLShader::Id get_shader_resource(const std::string& path);
-
-			GLuint get_texture_2d_resource(const std::string& path, bool hdr);
 
 			void gather_debug_lines(EventChannel& debug_line_channel, EventChannel::SubscriberId subscriber_id);
 
@@ -92,19 +77,6 @@ namespace sge
 			// Config
 			GLint width;
 			GLint height;
-			gl_static_mesh::StaticMesh missing_mesh;
-            gl_material::Material missing_material;
-
-			// Resources
-			std::unordered_map<std::string, GLShader> shader_resources;
-			std::unordered_map<std::string, gl_material::Material> material_resources;
-			std::unordered_map<std::string, gl_static_mesh::StaticMesh> static_mesh_resources;
-			std::unordered_map<std::string, GLuint> texture_2d_resources;
-
-			/* Lightmap data */
-			std::map<NodeId, LightmapTexture> lightmap_textures;
-			Vec3 light_dir;
-			color::RGBF32 light_intensity;
 
 			// The default framebuffer
 			GLint default_framebuffer;
@@ -140,9 +112,13 @@ namespace sge
             // Debug line buffer
             std::vector<DebugLineVert> frame_debug_lines;
 
+			// Lightmask volume data
+			GLuint frustum_volume_ebo;
+
             // Scene data
-            bool initialized_render_scene = false;
-            RenderScene render_scene;
+			bool initialized_render_scene = false;
+            RenderScene_Commands render_scene;
+			RenderResource resources;
 		};
 	}
 }

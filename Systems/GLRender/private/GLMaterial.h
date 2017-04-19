@@ -33,6 +33,11 @@ namespace sge
 			constexpr const char* LIGHTMAP_Z_BASIS_UNIFORM_NAME = "lightmap_z_basis";
 			constexpr const char* LIGHTMAP_DIRECT_MASK_UNIFORM_NAME = "lightmap_direct_mask";
 			constexpr const char* USE_LIGHTMAP_UNIFORM_NAME = "use_lightmap";
+            constexpr GLenum LIGHTMAP_X_BASIS_TEXTURE_SLOT = GL_TEXTURE0;
+            constexpr GLenum LIGHTMAP_Y_BASIS_TEXTURE_SLOT = GL_TEXTURE1;
+            constexpr GLenum LIGHTMAP_Z_BASIS_TEXTURE_SLOT = GL_TEXTURE2;
+            constexpr GLenum LIGHTMAP_DIRECT_MASK_TEXTURE_SLOT = GL_TEXTURE3;
+            constexpr GLenum FIRST_USER_TEXTURE_SLOT = GL_TEXTURE4;
 
             /**
             * \brief Material parameters.
@@ -81,20 +86,25 @@ namespace sge
              * \param f_shader The fragment shader for this material
              * \return The id of the newly created shader program. The user is responsible for checking program link status.
              */
-            GLuint new_standard_material_program(GLuint v_shader, GLuint f_shader);
+            GLuint new_standard_material_program(
+				GLuint v_shader,
+				GLuint f_shader);
 
 		    /**
              * \brief Frees resources associated with the given standard material.
              * \param mat_id The material to free.
              */
-            void free_standard_material_program(GLuint mat_id);
+            void free_standard_material_program(
+				GLuint mat_id);
 
 		    /**
              * \brief Gets the uniform locations for the given material.
              * \param mat_id The id of the material to get the uniform locations for.
              * \param out_uniforms Structure to assign the uniform locations to.
              */
-            void get_material_standard_uniforms(GLuint mat_id, MaterialStandardUniforms* out_uniforms);
+            void get_material_standard_uniforms(
+				GLuint mat_id,
+				MaterialStandardUniforms* out_uniforms);
 
 		    /**
              * \brief Gets the uniform location for the given material, optionally outputting an error.
@@ -103,14 +113,26 @@ namespace sge
              * \param out_mode Error output options.
              * \return The uniform location.
              */
-            GLint get_uniform_location(GLuint mat_id, const char* name, GLDebugOutputMode out_mode = GLDebugOutputMode::ONLY_ERROR);
+            GLint get_uniform_location(
+				GLuint mat_id,
+				const char* name,
+				GLDebugOutputMode out_mode = GLDebugOutputMode::ONLY_ERROR);
 
-		    /**
+			/**
+             * \brief Initializes the lightmap parameters of the currently bound material to the standard values (specified above). You only need to call this once per material.
+             * \param uniforms Uniform locations for the currently bound material.
+             */
+            void init_bound_material_lightmap_params(
+                const MaterialStandardUniforms uniforms);
+
+			/**
              * \brief Sets the given material parameters for the currently bound material.
              * \param next_active_texture The next texture slot to use for texture parameters.
              * \param params The parameters for the material.
              */
-            void set_bound_material_params(GLenum* next_active_texture, const MaterialParams& params);
+            void set_bound_material_params(
+				GLenum* next_active_texture,
+				const MaterialParams& params);
 		}
 	}
 }

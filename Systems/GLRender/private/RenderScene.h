@@ -1,120 +1,94 @@
 // RenderScene.h
 #pragma once
 
-#include "GLMaterial.h"
-#include "../include/GLRender/GLRenderSystem.h"
+#include "RenderCommands.h"
 
 namespace sge
 {
-    namespace gl_render
-    {
-        /**
-         * \brief Contains per-instance data for meshes that do not override material properties.
-         */
-        struct MeshInstance
-        {
-            Mat4 world_transform;
-            Vec2 mat_uv_scale;
-			NodeId node_id;
-            GLuint lightmap_x_basis = 0;
-			GLuint lightmap_y_basis = 0;
-			GLuint lightmap_z_basis = 0;
-			GLuint lightmap_direct_mask = 0;
-        };
+	struct CStaticMesh;
 
-        /**
-         * \brief Contains per-mesh data for meshes that do not override material properties.
-         */
-        struct MeshInstanceSet
-        {
-            GLuint vao = 0;
-            GLuint start_element_index = 0;
-            GLuint num_element_indices = 0;
-            std::vector<MeshInstance> instances;
-        };
+	namespace gl_render
+	{
+		struct RenderResource;
 
-        /**
-         * \brief Per-instance data for meshes that override their material parameters.
-         */
-        struct MaterialOverrideMeshInstance
-        {
-            Mat4 world_transform;
-            Vec2 mat_uv_scale;
-			NodeId node_id;
-			GLuint lightmap_x_basis = 0;
-			GLuint lightmap_y_basis = 0;
-			GLuint lightmap_z_basis = 0;
-			GLuint lightmap_direct_mask = 0;
-            gl_material::MaterialParams override_params;
-        };
+		struct RenderScene_Lightmap
+		{
+			GLuint x_basis_tex = 0;
+			GLuint y_basis_tex = 0;
+			GLuint z_basis_tex = 0;
+			GLuint direct_mask_tex = 0;
+		};
 
-        /**
-         * \brief Contains per-mesh data for meshes that override their material parameters.
-         */
-        struct MeshInstanceMaterialOverrideSet
-        {
-            GLuint vao = 0;
-            GLuint start_element_index = 0;
-            GLuint num_element_indices = 0;
-            std::vector<MaterialOverrideMeshInstance> instances;
-        };
+		struct RenderScene_Mesh
+		{
+			/**
+			 * \brief Command object for the mesh to render.
+			 */
+			RenderCommand_Mesh mesh_command;
 
-        struct MaterialInstance
-        {
-            gl_material::Material material;
-            std::vector<MeshInstanceSet> mesh_instances;
-            std::vector<MeshInstanceMaterialOverrideSet> param_override_instances;
-        };
+			/**
+			 * \brief Command objects for each instance to be rendered.
+			 */
+			std::vector<RenderCommand_MeshInstance> instance_commands;
 
-        /**
-         * \brief Per-instance data for lightmask objects (receivers and obstructors).
-         */
-        struct LightmaskObjectInstance
-        {
-            gl_material::Material material;
-            GLuint vao;
-            GLuint num_element_indices;
-            Mat4 world_transform;
-            Vec2 mat_uv_scale;
-        };
+			/**
+			 * \brief Array symmetrical with 'instance_commands', stores the ids for each node.
+			 */
+			std::vector<NodeId> node_ids;
+		};
 
-        struct RenderScene
-        {
-            /**
-             * \brief Instances of standard materials active in this scene.
-             */
-            std::vector<MaterialInstance> standard_material_instances;
+		struct RenderScene_Material
+		{
+			gl_material::Material material;
+			std::vector<RenderScene_Mesh> mesh_instances;
+			std::map<GLuint, std::size_t> mesh_indices;
+		};
 
-            /**
-             * \brief All lightmask receiver objects in the scene.
-             */
-            std::vector<LightmaskObjectInstance> lightmask_receivers;
+		struct RenderScene_Commands
+		{
+			/**
+			 * \brief Rendering commands for all standard path objects.
+			 */
+			std::vector<RenderScene_Material> standard_path_material_instances;
 
-            /**
-             * \brief All lightmask obstructor objects in the scene.
-             */
-            std::vector<LightmaskObjectInstance> lightmask_obstructors;
-        };
+			std::map<GLuint, std::size_t> standard_path_material_indices;
 
-        /**
-         * \brief Sets up and clears the given GBuffer for rendering.
-         */
-        void render_scene_prepare_gbuffer(
-            GLuint gbuffer);
+			/**
+			 * \brief Rendering commands for all lightmask volume objects.
+			 */
+			std::vector<RenderScene_Material> lightmask_volume_path_material_instances;
 
-        void render_scene_fill_bound_gbuffer(
-            const RenderScene& scene,
-            Mat4 view,
-            Mat4 proj);
+			/**
+			 * \brief Mapping between objects and their lightmaps.
+			 */
+			std::map<NodeId, RenderScene_Lightmap> node_lightmaps;
 
-        void render_scene_render_lightmasks(
-            const RenderScene& scene,
-            Mat4 view,
-            Mat4 proj);
+			/* Lightmap data */
+			Vec3 light_dir;
+			color::RGBF32 light_intensity;
+		};
 
-        void render_scene_shade_hdr(
-            GLuint framebuffer,
-            const GLRenderSystem::State& render_scene,
-            Mat4 view);
-    }
+		void RenderScene_render(
+			const RenderScene_Commands& commands,
+			const Mat4& view_matrix,
+			const Mat4& proj_matrix);
+
+		void RenderScene_update_matrices(
+			RenderScene_Commands& commands,
+			const NodeId* const nodes_ids,
+			const Mat4* const matrices,
+			const std::size_t num_nodes);
+
+		void RenderScene_remove_commands(
+			RenderScene_Commands& commands,
+			const NodeId* node_ids,
+			std::size_t num_nodes);
+
+		void RenderScene_insert_static_mesh_commands(
+			RenderScene_Commands& commands,
+			RenderResource& resources,
+			const Node* const* const nodes,
+			const CStaticMesh* const* const static_meshes,
+			const std::size_t num_static_meshes);
+	}
 }
