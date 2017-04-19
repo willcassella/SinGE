@@ -1,6 +1,7 @@
 // EventChannel.cpp
 
 #include <algorithm>
+#include <cstring>
 #include "../include/Engine/EventChannel.h"
 
 namespace sge
@@ -31,7 +32,7 @@ namespace sge
             if (!_subscribers_active[id])
             {
                 _subscribers_active[id] = 0xFF;
-                _subscriber_indices[id] = _end_index;
+                _subscriber_indices[id] = end_index;
                 return id;
             }
         }

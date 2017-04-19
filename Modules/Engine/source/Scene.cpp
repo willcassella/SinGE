@@ -1,5 +1,6 @@
 // Scene.cpp
 
+#include <algorithm>
 #include <iostream>
 #include <Core/Reflection/TypeDB.h>
 #include <Core/Reflection/ReflectionBuilder.h>
