@@ -68,8 +68,7 @@ static void action_input_response(
 static void axis_input_response(
 	sge::EventChannel& axis_event,
 	sge::EventChannel::SubscriberId subscriber_id,
-	sge::Scene& scene,
-	sge::ComponentContainer& character_components)
+	sge::Scene& scene)
 {
 	sge::CInput::EAxis events[8];
 	sge::int32 num_events;
@@ -199,7 +198,7 @@ int main(int argc, char* argv[])
 	pipeline.register_system_fn("input_response", [=](sge::Scene& scene, sge::SystemFrame& /*frame*/)
 	{
 		action_input_response(*action_channel, action_subscriber, *character_component);
-		axis_input_response(*axis_channel, axis_subscriber, scene, *character_component);
+		axis_input_response(*axis_channel, axis_subscriber, scene);
 	});
 
     // Load the pipeline config
