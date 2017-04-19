@@ -1,5 +1,6 @@
 // Lightmapper.cpp
 
+#include <cmath>
 #include <array>
 #include <algorithm>
 #include <embree2/rtcore.h>

@@ -1,6 +1,7 @@
 // Lightmapper.h
 #pragma once
 
+#include <cmath>
 #include <Core/Math/Mat4.h>
 #include <Resource/Resources/StaticMesh.h>
 #include "build.h"
@@ -91,7 +92,7 @@ namespace sge
 	 */
 	inline Vec3 get_lightmap_x_basis_vector()
 	{
-		return Vec3{ std::sqrtf(2.f / 3.f), 0.f, std::sqrtf(1.f / 3.f) };
+		return Vec3{ sqrtf(2.f / 3.f), 0.f, sqrtf(1.f / 3.f) };
 	}
 
 	/**
@@ -99,7 +100,7 @@ namespace sge
 	 */
 	inline Vec3 get_lightmap_y_basis_vector()
 	{
-		return Vec3{ -std::sqrtf(1.f / 6.f), std::sqrtf(1.f / 2.f), std::sqrtf(1.f / 3.f) };
+		return Vec3{ -sqrtf(1.f / 6.f), sqrtf(1.f / 2.f), sqrtf(1.f / 3.f) };
 	}
 
 	/**
@@ -107,7 +108,7 @@ namespace sge
 	 */
 	inline Vec3 get_lightmap_z_basis_vector()
 	{
-		return Vec3{ -std::sqrtf(1.f / 6.f), -std::sqrtf(1.f / 2.f), std::sqrtf(1.f / 3.f) };
+		return Vec3{ -sqrtf(1.f / 6.f), -sqrtf(1.f / 2.f), sqrtf(1.f / 3.f) };
 	}
 
     /**
