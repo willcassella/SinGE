@@ -141,7 +141,7 @@ namespace sge
         event_window->_has_focus = (has_focus == GLFW_TRUE);
     }
 
-    void GLEventWindow::glfw_key_callback(GLFWwindow* window, int key, int scancode, int state, int mods)
+    void GLEventWindow::glfw_key_callback(GLFWwindow* window, int key, int /*scancode*/, int state, int /*mods*/)
     {
         auto* event_window = static_cast<GLEventWindow*>(glfwGetWindowUserPointer(window));
 
@@ -165,7 +165,7 @@ namespace sge
         }
     }
 
-    void GLEventWindow::glfw_mouse_button_callback(GLFWwindow* window, int key, int state, int mods)
+    void GLEventWindow::glfw_mouse_button_callback(GLFWwindow* window, int key, int state, int /*mods*/)
     {
         auto* event_window = static_cast<GLEventWindow*>(glfwGetWindowUserPointer(window));
 
@@ -202,7 +202,7 @@ namespace sge
         event_window->_mouse_y = y;
     }
 
-    void GLEventWindow::process_input(Scene& scene, SystemFrame& frame)
+    void GLEventWindow::process_input(Scene& scene, SystemFrame& /*frame*/)
     {
         if (!_has_focus)
         {
