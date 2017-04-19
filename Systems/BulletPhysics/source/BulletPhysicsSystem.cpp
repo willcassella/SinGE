@@ -68,7 +68,7 @@ namespace sge
 			}
 		}
 
-        BulletPhysicsSystem::BulletPhysicsSystem(const Config& config)
+        BulletPhysicsSystem::BulletPhysicsSystem(const Config& /*config*/)
             : _node_world_transform_changed_channel(nullptr),
 			_new_rigid_body_channel(nullptr),
 			_modified_rigid_body_channel(nullptr),
@@ -176,7 +176,7 @@ namespace sge
 			_modified_static_mesh_collider_channel = scene.get_event_channel(CStaticMeshCollider::type_info, "prop_mod");
 			_destroyed_static_mesh_collider_channel = scene.get_event_channel(CStaticMeshCollider::type_info, "destroy");
 			_new_static_mesh_collider_sid = _new_static_mesh_collider_channel->subscribe();
-			_modified_static_mesh_collider_sid = _modified_static_mesh_collider_sid = _modified_static_mesh_collider_channel->subscribe();
+			_modified_static_mesh_collider_sid = _modified_static_mesh_collider_channel->subscribe();
 			_destroyed_static_mesh_collider_sid = _destroyed_static_mesh_collider_channel->subscribe();
 
 			// Character controller event subscriptions
@@ -256,9 +256,9 @@ namespace sge
 			_data->frame_transformed_node_transforms.clear();
         }
 
-        void BulletPhysicsSystem::debug_draw(Scene& scene, SystemFrame& frame)
+        void BulletPhysicsSystem::debug_draw(Scene& scene, SystemFrame& /*frame*/)
         {
-			consume_events(scene);
+	    consume_events(scene);
 
             // Draw the world
             DebugDrawer drawer;
@@ -267,7 +267,7 @@ namespace sge
             _data->phys_world.dynamics_world().setDebugDrawer(nullptr);
 
             // Add events to the channel
-			scene.get_debug_draw_line_channel()->append(drawer.lines.data(), (int32)drawer.lines.size());
+	    scene.get_debug_draw_line_channel()->append(drawer.lines.data(), (int32)drawer.lines.size());
         }
     }
 }

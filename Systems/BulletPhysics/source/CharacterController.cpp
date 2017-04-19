@@ -155,7 +155,6 @@ namespace sge
 			{
 				for (int32 i = 0; i < num_events; ++i)
 				{
-					const auto node = events[i].node;
 					const auto* const component = (const CCharacterController*)events[i].instance;
 
 					auto* const phys_entity = phys_data.get_physics_entity(events[i].node);
