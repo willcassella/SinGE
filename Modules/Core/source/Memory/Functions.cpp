@@ -29,7 +29,7 @@ void sge::aligned_free(void* buffer)
 
 void* sge::aligned_alloc(std::size_t size, std::size_t alignment)
 {
-	return std::aligned_alloc(size, alignment);
+	return aligned_alloc(size, alignment);
 }
 
 void sge::aligned_free(void* buffer)

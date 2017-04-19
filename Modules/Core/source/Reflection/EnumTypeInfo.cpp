@@ -147,7 +147,7 @@ namespace sge
 		return nullptr;
 	}
 
-	void EnumTypeInfo::enumerate_constructors(FunctionView<ConstructorEnumeratorFn> enumerator /*enumerator*/) const
+	void EnumTypeInfo::enumerate_constructors(FunctionView<ConstructorEnumeratorFn> /*enumerator*/) const
 	{
 	}
 
@@ -194,7 +194,7 @@ namespace sge
 		return nullptr;
 	}
 
-	void EnumTypeInfo::enumerate_fields(FunctionView<FieldEnumeratorFn> enumerator) const
+	void EnumTypeInfo::enumerate_fields(FunctionView<FieldEnumeratorFn> /*enumerator*/) const
 	{
 	}
 

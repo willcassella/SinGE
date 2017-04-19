@@ -1,5 +1,6 @@
 // MultiStackBuffer.cpp
 
+#include <cstdlib>
 #include "../../../include/Core/Memory/Buffers/MultiStackBuffer.h"
 
 namespace sge
