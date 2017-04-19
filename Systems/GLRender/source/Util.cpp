@@ -14,7 +14,7 @@ namespace sge
             glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
 
             // If the shader failed to compile and the user did not ask to suppress output, or the user wants output anyway
-            if (!compiled && out_mode != GLDebugOutputMode::NONE || out_mode == GLDebugOutputMode::ANYTHING)
+            if ((!compiled && out_mode != GLDebugOutputMode::NONE) || out_mode == GLDebugOutputMode::ANYTHING)
             {
                 GLsizei log_length = 0;
                 glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
@@ -33,7 +33,7 @@ namespace sge
             glGetProgramiv(program, GL_LINK_STATUS, &linked);
 
             // If the program failed to link and the user did not ask to suppress output, or the user wants output anyway
-            if (!linked && out_mode != GLDebugOutputMode::NONE || out_mode == GLDebugOutputMode::ANYTHING)
+            if ((!linked && out_mode != GLDebugOutputMode::NONE) || out_mode == GLDebugOutputMode::ANYTHING)
             {
                 // Get the log length
                 GLsizei log_length = 0;
