@@ -1,5 +1,6 @@
 // RenderScene.cpp
 
+#include <Resource/Misc/LightmaskVolume.h>
 #include <Engine/Components/Display/CStaticMesh.h>
 #include "../private/RenderScene.h"
 #include "../private/RenderResource.h"
@@ -8,11 +9,65 @@ namespace sge
 {
 	namespace gl_render
 	{
-		void RenderScene_render(
+		static void render_lightmask_volumes(
+			const RenderScene_Commands& commands,
+			const RenderResource& resources,
+			const Mat4& view_matrix,
+			const Mat4& proj_matrix)
+		{
+			RenderCommand_bind_material(
+				resources.lightmask_volume_material.program_id,
+				resources.lightmask_volume_material.uniforms,
+				resources.lightmask_volume_material.params,
+				view_matrix,
+				proj_matrix);
+
+			for (const auto& lightmask_volume : commands.lightmask_volume_mesh_instances)
+			{
+				RenderCommand_render_meshes(
+					resources.lightmask_volume_material.uniforms,
+					lightmask_volume.volume_mesh,
+					&lightmask_volume.mesh_instance,
+					1);
+			}
+		}
+
+		static void render_lightmask_receivers(
 			const RenderScene_Commands& commands,
 			const Mat4& view_matrix,
 			const Mat4& proj_matrix)
 		{
+			for (const auto& lightmask_receiver : commands.lightmask_receiver_mesh_instances)
+			{
+				RenderCommand_bind_material(
+					lightmask_receiver.material.program_id,
+					lightmask_receiver.material.uniforms,
+					lightmask_receiver.material.params,
+					view_matrix,
+					proj_matrix);
+
+				RenderCommand_render_meshes(
+					lightmask_receiver.material.uniforms,
+					lightmask_receiver.mesh,
+					&lightmask_receiver.mesh_instance,
+					1);
+			}
+		}
+
+		void RenderScene_render(
+			const RenderScene_Commands& commands,
+			const RenderResource& resources,
+			const Mat4& view_matrix,
+			const Mat4& proj_matrix)
+		{
+			// Set standard rendering parameters
+			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			glDepthMask(GL_TRUE);
+			glStencilFunc(GL_ALWAYS, 0, 0);
+			glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+			glCullFace(GL_BACK);
+			glDepthFunc(GL_LEQUAL);
+
 			// Render standard material instances
 			for (const auto& material_instance : commands.standard_path_material_instances)
 			{
@@ -24,10 +79,6 @@ namespace sge
 					view_matrix,
 					proj_matrix);
 
-				// Bind uniforms
-				GLenum next_active_texture = gl_material::FIRST_USER_TEXTURE_SLOT;
-				gl_material::set_bound_material_params(&next_active_texture, material_instance.material.params);
-
 				for (const auto& mesh : material_instance.mesh_instances)
 				{
 					RenderCommand_render_meshes(
@@ -37,6 +88,47 @@ namespace sge
 						mesh.instance_commands.size());
 				}
 			}
+
+			/*--- DRAW BACKFACES OF LIGHTMASK VOLUMES ---*/
+
+			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+			glDepthMask(GL_TRUE);
+			glStencilFunc(GL_ALWAYS, 1, 0xFF); // Write '1' to stencil where drawn (handles when viewer is inside volume)
+			glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
+			glCullFace(GL_FRONT);
+
+			render_lightmask_volumes(commands, resources, view_matrix, proj_matrix);
+
+			/*-- DRAW FRONTFACES OF LIGHTMASK VOLUMES ---*/
+
+			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+			glDepthMask(GL_FALSE);
+			glStencilFunc(GL_ALWAYS, 0, 0xFF);
+			glStencilOp(GL_KEEP, GL_REPLACE, GL_KEEP);
+			glCullFace(GL_BACK);
+
+			render_lightmask_volumes(commands, resources, view_matrix, proj_matrix);
+
+			/*--- DRAW FRONTFACES OF LIGHTMASK RECEIVERS ---*/
+
+			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			glDepthMask(GL_TRUE);
+			glStencilFunc(GL_EQUAL, 1, 0xFF);
+			glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+			glCullFace(GL_BACK);
+
+			render_lightmask_receivers(commands, view_matrix, proj_matrix);
+
+			/*--- DRAW FRONTFACES OF LIGHTMASK VOLUMES ---*/
+
+			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			glDepthMask(GL_TRUE);
+			glStencilFunc(GL_EQUAL, 2, 0xFF);
+			glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+			glCullFace(GL_BACK);
+			glDepthFunc(GL_GEQUAL);
+
+			render_lightmask_volumes(commands, resources, view_matrix, proj_matrix);
 		}
 
 		void RenderScene_update_matrices(
@@ -57,36 +149,36 @@ namespace sge
 					{
 						for (std::size_t search_i = 0; search_i < num_nodes; ++search_i)
 						{
-							if (mesh_node_ids[i] != node_ids[search_i])
+							if (mesh_node_ids[i] == node_ids[search_i])
 							{
-								continue;
+								mesh_instances[i].world_transform = matrices[search_i];
+								break;
 							}
-
-							mesh_instances[i].world_transform = matrices[search_i];
 						}
 					}
 				}
 			}
 
-			for (auto& material_instance : commands.lightmask_volume_path_material_instances)
+			for (auto& volume_instance : commands.lightmask_volume_mesh_instances)
 			{
-				for (auto& mesh : material_instance.mesh_instances)
+				for (size_t search_i = 0; search_i < num_nodes; ++search_i)
 				{
-					const auto num_instances = mesh.node_ids.size();
-					const auto* const volume_node_ids = mesh.node_ids.data();
-					auto* const mesh_instances = mesh.instance_commands.data();
-
-					for (std::size_t i = 0; i < num_instances; ++i)
+					if (node_ids[search_i] == volume_instance.node_id)
 					{
-						for (std::size_t search_i = 0; search_i < num_nodes; ++search_i)
-						{
-							if (node_ids[search_i] != volume_node_ids[i])
-							{
-								continue;
-							}
+						volume_instance.mesh_instance.world_transform = matrices[search_i];
+						break;
+					}
+				}
+			}
 
-							mesh_instances[i].world_transform = matrices[search_i];
-						}
+			for (auto& receiver_instance : commands.lightmask_receiver_mesh_instances)
+			{
+				for (std::size_t search_i = 0; search_i < num_nodes; ++search_i)
+				{
+					if (node_ids[search_i] == receiver_instance.node_id)
+					{
+						receiver_instance.mesh_instance.world_transform = matrices[search_i];
+						break;
 					}
 				}
 			}
@@ -95,19 +187,19 @@ namespace sge
 		static void remove_mesh_commands(
 			RenderScene_Mesh& mesh_command_set,
 			const NodeId* SGE_RESTRICT target_node_ids,
-			std::size_t num_target_node_ids)
+			size_t num_target_node_ids)
 		{
-			std::size_t num_mesh_commands = mesh_command_set.instance_commands.size();
+			size_t num_mesh_commands = mesh_command_set.instance_commands.size();
 			auto* const mesh_commands = mesh_command_set.instance_commands.data();
 			auto* const node_ids = mesh_command_set.node_ids.data();
 
 			// For each mesh command
-			for (std::size_t command_i = 0; command_i < num_mesh_commands;)
+			for (size_t command_i = 0; command_i < num_mesh_commands;)
 			{
 				const NodeId node_id = node_ids[command_i];
 
 				// See if the node associated with this mesh command appears in the list to be deleted
-				std::size_t search_i = 0;
+				size_t search_i = 0;
 				for (; search_i < num_target_node_ids; ++search_i)
 				{
 					if (node_id == target_node_ids[search_i])
@@ -140,28 +232,6 @@ namespace sge
 			mesh_command_set.node_ids.resize(num_mesh_commands);
 		}
 
-		void RenderScene_remove_commands(
-			RenderScene_Commands& commands,
-			const NodeId* target_node_ids,
-			std::size_t num_target_node_ids)
-		{
-			for (auto& material_instance : commands.standard_path_material_instances)
-			{
-				for (auto& mesh : material_instance.mesh_instances)
-				{
-					remove_mesh_commands(mesh, target_node_ids, num_target_node_ids);
-				}
-			}
-
-			for (auto& material_instance : commands.lightmask_volume_path_material_instances)
-			{
-				for (auto& mesh_command_set : material_instance.mesh_instances)
-				{
-					remove_mesh_commands(mesh_command_set, target_node_ids, num_target_node_ids);
-				}
-			}
-		}
-
 		RenderScene_Lightmap get_lightmap(
 			const RenderScene_Commands& commands,
 			const NodeId node_id)
@@ -175,18 +245,12 @@ namespace sge
 			RenderResource& resources,
 			const Node* const* const nodes,
 			const CStaticMesh* const* const static_meshes,
-			const std::size_t num_nodes)
+			const size_t num_nodes)
 		{
-			for (std::size_t i = 0; i < num_nodes; ++i)
+			for (size_t i = 0; i < num_nodes; ++i)
 			{
 				const Node* const node = nodes[i];
 				const CStaticMesh* const static_mesh = static_meshes[i];
-
-				// Don't handle non-standard rendering paths yet
-				if (static_mesh->lightmask_mode() != CStaticMesh::LightmaskMode::NONE)
-				{
-					continue;
-				}
 
 				// Get the static mesh resource for this instance
 				const auto& mesh_resource = RenderResource_get_static_mesh_resource(
@@ -200,6 +264,28 @@ namespace sge
 
 				// Get the lightmap for this instance
 				const auto lightmap = get_lightmap(commands, node->get_id());
+
+				// If it's a lightmask receiver, add it to the path for that
+				if (static_mesh->lightmask_mode() == CStaticMesh::LightmaskMode::RECEIVER)
+				{
+					// Create the command
+					RenderScene_LightmaskReceiver command;
+					command.node_id = node->get_id();
+					command.material = material_resource;
+					command.mesh.vao = mesh_resource.vao;
+					command.mesh.start_element_index = 0;
+					command.mesh.num_element_indices = mesh_resource.num_total_elements;
+					command.mesh.base_vertex = 0;
+					command.mesh_instance.world_transform = node->get_world_matrix();
+					command.mesh_instance.mat_uv_scale = static_mesh->uv_scale();
+					command.mesh_instance.lightmap_x_basis = lightmap.x_basis_tex;
+					command.mesh_instance.lightmap_y_basis = lightmap.y_basis_tex;
+					command.mesh_instance.lightmap_z_basis = lightmap.z_basis_tex;
+					command.mesh_instance.lightmap_direct_mask = lightmap.direct_mask_tex;
+
+					commands.lightmask_receiver_mesh_instances.push_back(std::move(command));
+					continue;
+				}
 
 				// Search for the material
 				const auto material_iter = commands.standard_path_material_indices.find(material_resource.program_id);
@@ -283,6 +369,237 @@ namespace sge
 				// Insert it into the command set
 				material.mesh_instances[mesh_iter->second].instance_commands.push_back(instance);
 			}
+		}
+
+		void RenderScene_remove_static_mesh_commands(
+			RenderScene_Commands& commands,
+			const NodeId* target_node_ids,
+			size_t num_target_node_ids)
+		{
+			// Check standard path instances
+			for (auto& material_instance : commands.standard_path_material_instances)
+			{
+				for (auto& mesh : material_instance.mesh_instances)
+				{
+					remove_mesh_commands(mesh, target_node_ids, num_target_node_ids);
+				}
+			}
+
+			// Check lightmask receiver instances
+			size_t num_lightmask_receivers = commands.lightmask_receiver_mesh_instances.size();
+			auto* const lightmask_receivers = commands.lightmask_receiver_mesh_instances.data();
+			for (size_t i = 0; i < num_lightmask_receivers;)
+			{
+				int incr = 1;
+				for (size_t search_i = 0; search_i < num_target_node_ids; ++search_i)
+				{
+					if (target_node_ids[search_i] == lightmask_receivers[i].node_id)
+					{
+						num_lightmask_receivers -= 1;
+						lightmask_receivers[search_i] = std::move(lightmask_receivers[num_lightmask_receivers]);
+						incr = 0;
+						break;
+					}
+				}
+
+				i += incr;
+			}
+
+			commands.lightmask_receiver_mesh_instances.resize(num_lightmask_receivers);
+		}
+
+		void RenderScene_insert_spotlight_commands(
+			RenderScene_Commands& commands,
+			RenderResource& resources,
+			const Node* const* const nodes,
+			const CSpotlight* const* const spotlights,
+			const size_t num_spotlights)
+		{
+			for (size_t i = 0; i < num_spotlights; ++i)
+			{
+				if (!spotlights[i]->is_lightmask_volume() || spotlights[i]->shape() != CSpotlight::Shape::FRUSTUM)
+				{
+					continue;
+				}
+
+				// Create the VAO for this volume
+				GLuint volume_vao;
+				glGenVertexArrays(1, &volume_vao);
+				glBindVertexArray(volume_vao);
+
+				// Bind the EBO for this mesh
+				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, resources.frustum_ebo);
+
+				// Create the frustum for this volume
+				Vec3 frustum_vert_positions[NUM_FRUSTUM_VERTS];
+				Vec3 frustum_vert_normals[NUM_FRUSTUM_VERTS];
+				Vec2 frustum_vert_texcoords[NUM_FRUSTUM_VERTS];
+				create_lightmask_volume_frustum_positions(
+					spotlights[i]->near_clipping_plane(),
+					spotlights[i]->far_clipping_plane(),
+					spotlights[i]->frustum_horiz_angle().radians(),
+					spotlights[i]->frustum_vert_angle().radians(),
+					frustum_vert_positions);
+				create_lightmask_volume_frustum_normals(
+					spotlights[i]->frustum_horiz_angle().radians(),
+					spotlights[i]->frustum_vert_angle().radians(),
+					frustum_vert_normals);
+				create_lightmask_volume_frustum_texcoords(
+					spotlights[i]->near_clipping_plane(),
+					spotlights[i]->far_clipping_plane(),
+					spotlights[i]->frustum_horiz_angle().radians(),
+					spotlights[i]->frustum_vert_angle().radians(),
+					frustum_vert_texcoords);
+
+				// Upload data and set vertex position attribute
+				GLuint volume_pos_buffer;
+				glGenBuffers(1, &volume_pos_buffer);
+				glBindBuffer(GL_ARRAY_BUFFER, volume_pos_buffer);
+				glBufferData(GL_ARRAY_BUFFER, sizeof(frustum_vert_positions), frustum_vert_positions, GL_DYNAMIC_DRAW);
+				glEnableVertexArrayAttrib(volume_vao, gl_material::POSITION_ATTRIB_LOCATION);
+				glVertexAttribPointer(gl_material::POSITION_ATTRIB_LOCATION, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3), nullptr);
+
+				// Upload data and set vertex normal attribute
+				GLuint volume_normal_buffer;
+				glGenBuffers(1, &volume_normal_buffer);
+				glBindBuffer(GL_ARRAY_BUFFER, volume_normal_buffer);
+				glBufferData(GL_ARRAY_BUFFER, sizeof(frustum_vert_normals), frustum_vert_normals, GL_DYNAMIC_DRAW);
+				glEnableVertexArrayAttrib(volume_vao, gl_material::NORMAL_ATTRIB_LOCATION);
+				glVertexAttribPointer(gl_material::NORMAL_ATTRIB_LOCATION, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3), nullptr);
+
+				// Upload data and set vertex texcoord attribute
+				GLuint volume_texcoord_buffer;
+				glGenBuffers(1, &volume_texcoord_buffer);
+				glBindBuffer(GL_ARRAY_BUFFER, volume_texcoord_buffer);
+				glBufferData(GL_ARRAY_BUFFER, sizeof(frustum_vert_texcoords), frustum_vert_texcoords, GL_DYNAMIC_DRAW);
+				glEnableVertexArrayAttrib(volume_vao, gl_material::MATERIAL_TEXCOORD_ATTRIB_LOCATION);
+				glVertexAttribPointer(gl_material::MATERIAL_TEXCOORD_ATTRIB_LOCATION, 2, GL_FLOAT, GL_FALSE, sizeof(Vec2), nullptr);
+
+				// Create a LightmaskVolume command
+				RenderScene_LightmaskVolume volume_command;
+				volume_command.node_id = nodes[i]->get_id();
+				volume_command.pos_buffer = volume_pos_buffer;
+				volume_command.texcoord_buffer = volume_texcoord_buffer;
+				volume_command.volume_mesh.vao = volume_vao;
+				volume_command.volume_mesh.start_element_index = 0;
+				volume_command.volume_mesh.num_element_indices = NUM_FRUSTUM_ELEMS;
+				volume_command.volume_mesh.base_vertex = 0;
+				volume_command.mesh_instance.world_transform = nodes[i]->get_world_matrix();
+				volume_command.mesh_instance.mat_uv_scale = Vec2{ 1.f, 1.f };
+				volume_command.mesh_instance.lightmap_x_basis = 0;
+				volume_command.mesh_instance.lightmap_y_basis = 0;
+				volume_command.mesh_instance.lightmap_z_basis = 0;
+				volume_command.mesh_instance.lightmap_direct_mask = 0;
+
+				// Add it to the command buffer
+				commands.lightmask_volume_mesh_instances.push_back(volume_command);
+				glBindVertexArray(0);
+			}
+		}
+
+		void RenderScene_update_spotlight_commands(
+			RenderScene_Commands& commands,
+			RenderResource& resources,
+			const Node* const* const nodes,
+			const CSpotlight* const* const spotlights,
+			const size_t num_spotlights)
+		{
+			for (size_t i = 0; i < num_spotlights; ++i)
+			{
+				const auto num_lightmasks = commands.lightmask_volume_mesh_instances.size();
+				auto* const lightmasks = commands.lightmask_volume_mesh_instances.data();
+
+				// Search for the spotlight in the array
+				bool found = false;
+				for (size_t lightmask_i = 0; lightmask_i < num_lightmasks; ++lightmask_i)
+				{
+					if (lightmasks[lightmask_i].node_id != spotlights[i]->node())
+					{
+						continue;
+					}
+
+					found = true;
+
+					// Check if they've disabled lightmasking on this spotlight
+					if (!spotlights[i]->is_lightmask_volume() || spotlights[i]->shape() != CSpotlight::Shape::FRUSTUM)
+					{
+						// Remove it
+						lightmasks[lightmask_i] = lightmasks[num_lightmasks - 1];
+						commands.lightmask_volume_mesh_instances.resize(num_lightmasks - 1);
+						break;
+					}
+
+					// Update shape of this lightmask
+					Vec3 frustum_positions[NUM_FRUSTUM_VERTS];
+					Vec3 frustum_normals[NUM_FRUSTUM_VERTS];
+					Vec2 frustum_texcoords[NUM_FRUSTUM_VERTS];
+					create_lightmask_volume_frustum_positions(
+						spotlights[i]->near_clipping_plane(),
+						spotlights[i]->far_clipping_plane(),
+						spotlights[i]->frustum_horiz_angle().radians(),
+						spotlights[i]->frustum_vert_angle().radians(),
+						frustum_positions);
+					create_lightmask_volume_frustum_normals(
+						spotlights[i]->frustum_horiz_angle().radians(),
+						spotlights[i]->frustum_vert_angle().radians(),
+						frustum_normals);
+					create_lightmask_volume_frustum_texcoords(
+						spotlights[i]->near_clipping_plane(),
+						spotlights[i]->far_clipping_plane(),
+						spotlights[i]->frustum_horiz_angle().radians(),
+						spotlights[i]->frustum_vert_angle().radians(),
+						frustum_texcoords);
+
+					// Upload data
+					glBindBuffer(GL_ARRAY_BUFFER, lightmasks[lightmask_i].pos_buffer);
+					glBufferData(GL_ARRAY_BUFFER, sizeof(frustum_positions), frustum_positions, GL_DYNAMIC_DRAW);
+					glBindBuffer(GL_ARRAY_BUFFER, lightmasks[lightmask_i].normal_buffer);
+					glBufferData(GL_ARRAY_BUFFER, sizeof(frustum_normals), frustum_normals, GL_DYNAMIC_DRAW);
+					glBindBuffer(GL_ARRAY_BUFFER, lightmasks[lightmask_i].texcoord_buffer);
+					glBufferData(GL_ARRAY_BUFFER, sizeof(frustum_texcoords), frustum_texcoords, GL_DYNAMIC_DRAW);
+					break;
+				}
+
+				// If this spotlight wasn't already a lightmask and lightmasking was enabled, add it to the array
+				if (!found)
+				{
+					RenderScene_insert_spotlight_commands(commands, resources, nodes + i, spotlights + i, 1);
+				}
+			}
+		}
+
+		void RenderScene_remove_spotlight_commands(
+			RenderScene_Commands& commands,
+			NodeId* const node_ids,
+			size_t num_nodes)
+		{
+			size_t num_lightmasks = commands.lightmask_volume_mesh_instances.size();
+			auto* const lightmasks = commands.lightmask_volume_mesh_instances.data();
+
+			for (size_t i = 0; i < num_lightmasks;)
+			{
+				int incr = 1;
+
+				for (size_t search_i = 0; search_i < num_nodes; ++search_i)
+				{
+					if (lightmasks[i].node_id != node_ids[search_i])
+					{
+						continue;
+					}
+
+					// Remove the spotlight command, and the node id
+					num_lightmasks -= 1;
+					num_nodes -= 1;
+					lightmasks[i] = lightmasks[num_lightmasks];
+					node_ids[search_i] = node_ids[num_nodes];
+					incr = 0;
+					break;
+				}
+
+				i += incr;
+			}
+
+			commands.lightmask_volume_mesh_instances.resize(num_lightmasks);
 		}
 	}
 }

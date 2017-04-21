@@ -21,6 +21,10 @@ namespace sge
 			/* Default resources. */
 			gl_material::Material missing_material;
 			gl_static_mesh::StaticMesh missing_mesh;
+
+			/* Lightmask volume resources */
+			gl_material::Material lightmask_volume_material;
+			GLuint frustum_ebo;
 		};
 
 		const gl_material::Material& RenderResource_get_material_resource(

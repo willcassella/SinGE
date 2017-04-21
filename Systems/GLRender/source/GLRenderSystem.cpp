@@ -4,6 +4,7 @@
 #include <Core/Reflection/ReflectionBuilder.h>
 #include <Resource/Archives/JsonArchive.h>
 #include <Resource/Archives/BinaryArchive.h>
+#include <Resource/Misc/LightmaskVolume.h>
 #include <Engine/Components/Display/CStaticMesh.h>
 #include <Engine/Components/Display/CSpotlight.h>
 #include <Engine/Components/Display/CCamera.h>
@@ -80,6 +81,122 @@ namespace sge
 					resources,
 					nodes,
 					components,
+					num_events);
+			}
+		}
+
+		static void on_static_mesh_destroy(
+			EventChannel& destroyed_static_mesh_channel,
+			EventChannel::SubscriberId subscriber_id,
+			RenderScene_Commands& commands)
+		{
+			// Get events
+			EDestroyedComponent events[16];
+			int32 num_events;
+			while (destroyed_static_mesh_channel.consume(subscriber_id, events, &num_events))
+			{
+				NodeId node_ids[16];
+				for (int32 i = 0; i < num_events; ++i)
+				{
+					node_ids[i] = events[i].node;
+				}
+
+				// Update render scene
+				RenderScene_remove_static_mesh_commands(
+					commands,
+					node_ids,
+					num_events);
+			}
+		}
+
+		static void on_spotlight_new(
+			Scene& scene,
+			EventChannel& new_spotlight_channel,
+			EventChannel::SubscriberId subscriber_id,
+			RenderResource& resources,
+			RenderScene_Commands& commands)
+		{
+			// Get events
+			ENewComponent events[8];
+			int32 num_events;
+			while (new_spotlight_channel.consume(subscriber_id, events, & num_events))
+			{
+				NodeId node_ids[8];
+				const CSpotlight* components[8];
+				for (int32 i = 0; i < num_events; ++i)
+				{
+					node_ids[i] = events[i].node;
+					components[i] = (const CSpotlight*)events[i].instance;
+				}
+
+				// Get nodes
+				const Node* nodes[8];
+				scene.get_nodes(node_ids, num_events, nodes);
+
+				// Update render scene
+				RenderScene_insert_spotlight_commands(
+					commands,
+					resources,
+					nodes,
+					components,
+					num_events);
+			}
+		}
+
+		static void on_spotlight_modified(
+			Scene& scene,
+			EventChannel& modified_spotlight_event_channel,
+			EventChannel::SubscriberId subscriber_id,
+			RenderResource& resources,
+			RenderScene_Commands& commands)
+		{
+			// Get events
+			EModifiedComponent events[8];
+			int32 num_events;
+			while (modified_spotlight_event_channel.consume(subscriber_id, events, &num_events))
+			{
+				NodeId node_ids[8];
+				const CSpotlight* components[8];
+				for (int32 i = 0; i < num_events; ++i)
+				{
+					node_ids[i] = events[i].node;
+					components[i] = (const CSpotlight*)events[i].instance;
+				}
+
+				// Get nodes
+				const Node* nodes[8];
+				scene.get_nodes(node_ids, num_events, nodes);
+
+				// Update render scene
+				RenderScene_update_spotlight_commands(
+					commands,
+					resources,
+					nodes,
+					components,
+					num_events);
+			}
+		}
+
+		static void on_spotlight_destroy(
+			EventChannel& destroyed_spotlight_event_channel,
+			EventChannel::SubscriberId subscriber_id,
+			RenderScene_Commands& commands)
+		{
+			// Get events
+			EDestroyedComponent events[16];
+			int32 num_events;
+			while (destroyed_spotlight_event_channel.consume(subscriber_id, events, &num_events))
+			{
+				NodeId node_ids[16];
+				for (int32 i = 0; i < num_events; ++i)
+				{
+					node_ids[i] = events[i].node;
+				}
+
+				// Update render scene
+				RenderScene_remove_spotlight_commands(
+					commands,
+					node_ids,
 					num_events);
 			}
 		}
@@ -223,6 +340,17 @@ namespace sge
 			_state->resources.missing_material = RenderResource_get_material_resource(
 				_state->resources,
 				config.missing_material.c_str());
+
+			// Initialize lightmap volume resources
+			_state->resources.lightmask_volume_material = _state->resources.missing_material;
+
+			// Create the frustum volume EBO
+			uint32 frustum_elems[NUM_FRUSTUM_ELEMS];
+			create_lightmask_volume_frustum_elems(frustum_elems);
+			glGenBuffers(1, &_state->resources.frustum_ebo);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _state->resources.frustum_ebo);
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(frustum_elems), frustum_elems, GL_STATIC_DRAW);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
             // Initialize OpenGL
             glLineWidth(3);
@@ -466,11 +594,17 @@ namespace sge
 			_new_static_mesh_channel = scene.get_event_channel(CStaticMesh::type_info, "new");
 			_modified_static_mesh_channel = scene.get_event_channel(CStaticMesh::type_info, "prop_mod");
 			_destroyed_static_mesh_channel = scene.get_event_channel(CStaticMesh::type_info, "destroy");
+			_new_spotlight_channel = scene.get_event_channel(CSpotlight::type_info, "new");
+			_modified_spotlight_channel = scene.get_event_channel(CSpotlight::type_info, "prop_mod");
+			_destroyed_spotlight_channel = scene.get_event_channel(CSpotlight::type_info, "destroy");
 			_debug_draw_line_channel = scene.get_debug_draw_line_channel();
 			_modified_node_transform_channel = scene.get_node_world_transform_changed_channel();
 			_new_static_mesh_sid = _new_static_mesh_channel->subscribe();
 			_modified_static_mesh_sid = _modified_static_mesh_channel->subscribe();
 			_destroyed_static_mesh_sid = _destroyed_static_mesh_channel->subscribe();
+			_new_spotlight_sid = _new_spotlight_channel->subscribe();
+			_modified_spotlight_sid = _modified_spotlight_channel->subscribe();
+			_destroyed_spotlight_sid = _destroyed_spotlight_channel->subscribe();
 			_debug_draw_line_sid = _debug_draw_line_channel->subscribe();
 			_modified_node_transform_sid = _modified_node_transform_channel->subscribe();
 		}
@@ -557,6 +691,10 @@ namespace sge
 
 			// Consume events
 			on_static_mesh_new(scene, *_new_static_mesh_channel, _new_static_mesh_sid, _state->resources, _state->render_scene);
+			on_static_mesh_destroy(*_destroyed_static_mesh_channel, _destroyed_static_mesh_sid, _state->render_scene);
+			on_spotlight_new(scene, *_new_spotlight_channel, _new_spotlight_sid, _state->resources, _state->render_scene);
+			on_spotlight_modified(scene, *_modified_spotlight_channel, _modified_spotlight_sid, _state->resources, _state->render_scene);
+			on_spotlight_destroy(*_destroyed_spotlight_channel, _destroyed_spotlight_sid, _state->render_scene);
 			on_node_transform_update(*_modified_node_transform_channel, _modified_node_transform_sid, _state->render_scene);
 
 			// Create camera matrices
@@ -582,7 +720,7 @@ namespace sge
 
             // Render the scene
 			render_scene_prepare_gbuffer(_state->gbuffer_framebuffer);
-			RenderScene_render(_state->render_scene, view, proj);
+			RenderScene_render(_state->render_scene, _state->resources, view, proj);
 
             // Draw debug lines
             if (!_state->frame_debug_lines.empty())

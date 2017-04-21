@@ -1,6 +1,7 @@
 // RenderScene.h
 #pragma once
 
+#include <Engine/Components/Display/CSpotlight.h>
 #include "RenderCommands.h"
 
 namespace sge
@@ -44,6 +45,24 @@ namespace sge
 			std::map<GLuint, std::size_t> mesh_indices;
 		};
 
+		struct RenderScene_LightmaskVolume
+		{
+			NodeId node_id;
+			GLuint pos_buffer = 0;
+			GLuint normal_buffer = 0;
+			GLuint texcoord_buffer = 0;
+			RenderCommand_Mesh volume_mesh;
+			RenderCommand_MeshInstance mesh_instance;
+		};
+
+		struct RenderScene_LightmaskReceiver
+		{
+			NodeId node_id;
+			gl_material::Material material;
+			RenderCommand_Mesh mesh;
+			RenderCommand_MeshInstance mesh_instance;
+		};
+
 		struct RenderScene_Commands
 		{
 			/**
@@ -53,10 +72,9 @@ namespace sge
 
 			std::map<GLuint, std::size_t> standard_path_material_indices;
 
-			/**
-			 * \brief Rendering commands for all lightmask volume objects.
-			 */
-			std::vector<RenderScene_Material> lightmask_volume_path_material_instances;
+			std::vector<RenderScene_LightmaskVolume> lightmask_volume_mesh_instances;
+
+			std::vector<RenderScene_LightmaskReceiver> lightmask_receiver_mesh_instances;
 
 			/**
 			 * \brief Mapping between objects and their lightmaps.
@@ -70,6 +88,7 @@ namespace sge
 
 		void RenderScene_render(
 			const RenderScene_Commands& commands,
+			const RenderResource& resources,
 			const Mat4& view_matrix,
 			const Mat4& proj_matrix);
 
@@ -79,16 +98,35 @@ namespace sge
 			const Mat4* const matrices,
 			const std::size_t num_nodes);
 
-		void RenderScene_remove_commands(
-			RenderScene_Commands& commands,
-			const NodeId* node_ids,
-			std::size_t num_nodes);
-
 		void RenderScene_insert_static_mesh_commands(
 			RenderScene_Commands& commands,
 			RenderResource& resources,
 			const Node* const* const nodes,
 			const CStaticMesh* const* const static_meshes,
 			const std::size_t num_static_meshes);
+
+		void RenderScene_remove_static_mesh_commands(
+			RenderScene_Commands& commands,
+			const NodeId* node_ids,
+			std::size_t num_nodes);
+
+		void RenderScene_insert_spotlight_commands(
+			RenderScene_Commands& commands,
+			RenderResource& resources,
+			const Node* const* const nodes,
+			const CSpotlight* const* const spotlights,
+			const std::size_t num_spotlights);
+
+		void RenderScene_update_spotlight_commands(
+			RenderScene_Commands& commands,
+			RenderResource& resources,
+			const Node* const* const nodes,
+			const CSpotlight* const* const spotlights,
+			const size_t num_spotlights);
+
+		void RenderScene_remove_spotlight_commands(
+			RenderScene_Commands& commands,
+			NodeId* const node_ids,
+			size_t num_nodes);
 	}
 }
