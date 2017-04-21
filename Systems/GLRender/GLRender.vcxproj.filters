@@ -44,9 +44,6 @@
     <ClInclude Include="private\GLTexture2D.h">
       <Filter>private</Filter>
     </ClInclude>
-    <ClInclude Include="private\LightmaskVolume.h">
-      <Filter>private</Filter>
-    </ClInclude>
     <ClInclude Include="private\RenderCommands.h">
       <Filter>private</Filter>
     </ClInclude>
@@ -80,9 +77,6 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\GLTexture2D.cpp">
-      <Filter>source</Filter>
-    </ClCompile>
-    <ClCompile Include="source\LightmaskVolume.cpp">
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\RenderCommands.cpp">

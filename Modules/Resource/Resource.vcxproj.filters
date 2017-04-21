@@ -104,6 +104,9 @@
     <ClInclude Include="include\Resource\Misc\ImageOps.h">
       <Filter>include\Misc</Filter>
     </ClInclude>
+    <ClInclude Include="include\Resource\Misc\LightmaskVolume.h">
+      <Filter>include\Misc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Archives\JsonArchive.cpp">
@@ -140,6 +143,9 @@
       <Filter>source\Resources</Filter>
     </ClCompile>
     <ClCompile Include="source\Misc\ImageOps.cpp">
+      <Filter>source\Misc</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Misc\LightmaskVolume.cpp">
       <Filter>source\Misc</Filter>
     </ClCompile>
   </ItemGroup>
