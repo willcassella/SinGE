@@ -169,7 +169,7 @@ class SGEAngle(SGEPrimitiveBase):
             name=construct_property_display_name(name),
             subtype='ANGLE',
             get=lambda outer: property_getter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), 0),
-            set=lambda outer, value: property_setter(outer.sge_component_type-Name, construct_property_path(outer.sge_property_path, name), value))
+            set=lambda outer, value: property_setter(outer.sge_component_type_name, construct_property_path(outer.sge_property_path, name), value))
 
 
 class SGEColorRGBA8(SGEPrimitiveBase):
