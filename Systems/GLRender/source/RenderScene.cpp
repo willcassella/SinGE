@@ -89,67 +89,45 @@ namespace sge
 				}
 			}
 
-			/*--- DRAW BACKFACES OF LIGHTMASK VOLUMES ---*/
+			/*--- DRAW ONLY DEPTH BACKFACES, INCREMENT STENCIL WHERE DRAWN ---*/
 
 			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 			glDepthMask(GL_TRUE);
-			glStencilFunc(GL_ALWAYS, 1, 0xFF); // Write '1' to stencil where drawn (handles when viewer is inside volume)
-			glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
+			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilOp(GL_KEEP, GL_INCR, GL_INCR);
 			glCullFace(GL_FRONT);
 
 			render_lightmask_volumes(commands, resources, view_matrix, proj_matrix);
-
-			/*--- DRAW FRONTFACES OF LIGHTMASK RECEIVERS ---*/
-
-			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-			glDepthMask(GL_TRUE);
-			glStencilFunc(GL_EQUAL, 1, 0xFF);
-			glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
-			glCullFace(GL_BACK);
-
 			render_lightmask_receivers(commands, view_matrix, proj_matrix);
 
-			/*-- DRAW FRONTFACES OF LIGHTMASK VOLUMES ---*/
+			/*--- DISABLE DEPTH DRAWING, FRONTFACES, CLEAR STENCIL WHERE DEPTH FAIL ---*/
 
 			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 			glDepthMask(GL_FALSE);
 			glStencilFunc(GL_EQUAL, 2, 0xFF);
-			glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
-			glCullFace(GL_BACK);
-
-			render_lightmask_volumes(commands, resources, view_matrix, proj_matrix);
-
-			/*--- DRAW FRONTFACES OF LIGHTMASK RECEIVERS ---*/
-
-			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-			glDepthMask(GL_TRUE);
-			glStencilFunc(GL_EQUAL, 3, 0xFF);
-			glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+			glStencilOp(GL_KEEP, GL_ZERO, GL_KEEP);
 			glCullFace(GL_BACK);
 
 			render_lightmask_receivers(commands, view_matrix, proj_matrix);
+			render_lightmask_volumes(commands, resources, view_matrix, proj_matrix);
 
-			/*--- DRAW BACKFACES OF LIGHTMASK RECEIVERS ---*/
+			/*--- RESET DEPTH ---*/
 
-			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+			glDepthMask(GL_TRUE);
+			glClearDepth(0.f);
+			glClear(GL_DEPTH_BUFFER_BIT);
+
+			/*--- ENABLE COLOR AND DEPTH, GREATER DEPTH, FRONTFACES, DRAW ONLY WHERE NOT CLEARED ---*/
+
+			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 			glDepthMask(GL_TRUE);
 			glStencilFunc(GL_EQUAL, 2, 0xFF);
 			glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-			glCullFace(GL_FRONT);
+			glCullFace(GL_BACK);
 			glDepthFunc(GL_GEQUAL);
 
-			render_lightmask_receivers(commands, view_matrix, proj_matrix);
-
-			/*--- DRAW FRONTFACES OF LIGHTMASK VOLUMES ---*/
-
-			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-			glDepthMask(GL_TRUE);
-			glStencilFunc(GL_EQUAL, 2, 0xFF);
-			glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-			glCullFace(GL_BACK);
-			glDepthFunc(GL_LEQUAL);
-
 			render_lightmask_volumes(commands, resources, view_matrix, proj_matrix);
+			render_lightmask_receivers(commands, view_matrix, proj_matrix);
 		}
 
 		void RenderScene_update_matrices(
