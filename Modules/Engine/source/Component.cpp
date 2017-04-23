@@ -4,6 +4,7 @@
 #include "../include/Engine/Components/Display/CCamera.h"
 #include "../include/Engine/Components/Display/CStaticMesh.h"
 #include "../include/Engine/Components/Display/CSpotlight.h"
+#include "../include/Engine/Components/Display/CPointLight.h"
 #include "../include/Engine/Components/Gameplay/CInput.h"
 #include "../include/Engine/Components/Physics/CSphereCollider.h"
 #include "../include/Engine/Components/Physics/CBoxCollider.h"
@@ -27,6 +28,7 @@ namespace sge
         CCapsuleCollider::register_type(scene);
         CSensor::register_type(scene);
         CRigidBody::register_type(scene);
+		CPointLight::register_type(scene);
         CCharacterController::register_type(scene);
 	}
 }

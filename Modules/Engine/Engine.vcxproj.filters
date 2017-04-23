@@ -110,6 +110,9 @@
     <ClInclude Include="include\Engine\Lightmap.h">
       <Filter>include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\Components\Display\CPointLight.h">
+      <Filter>include\Components\Display</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Scene.cpp">
@@ -165,6 +168,9 @@
     </ClCompile>
     <ClCompile Include="source\Lightmap.cpp">
       <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Display\CPointLight.cpp">
+      <Filter>source\Components\Display</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

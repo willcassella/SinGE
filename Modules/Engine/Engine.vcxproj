@@ -167,6 +167,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="include\Engine\Components\Display\CPointLight.h" />
     <ClInclude Include="include\Engine\Components\Physics\CSphereCollider.h" />
     <ClInclude Include="include\Engine\Components\Physics\CStaticMeshCollider.h" />
     <ClInclude Include="include\Engine\EventChannel.h" />
@@ -195,6 +196,7 @@
   <ItemGroup>
     <ClCompile Include="source\Component.cpp" />
     <ClCompile Include="source\Components\Display\CCamera.cpp" />
+    <ClCompile Include="source\Components\Display\CPointLight.cpp" />
     <ClCompile Include="source\Components\Display\CSpotLight.cpp" />
     <ClCompile Include="source\Components\Display\CStaticMesh.cpp" />
     <ClCompile Include="source\Components\Gameplay\CCharacterController.cpp" />
