@@ -5,6 +5,10 @@
 #include "../include/Engine/Node.h"
 #include "../include/Engine/Scene.h"
 
+SGE_REFLECT_TYPE(sge::NodeId)
+.flags(TF_RECURSE_TERMINAL)
+.property("is_null", &NodeId::is_null, nullptr);
+
 SGE_REFLECT_TYPE(sge::Node);
 
 namespace sge

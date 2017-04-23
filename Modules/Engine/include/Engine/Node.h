@@ -12,8 +12,9 @@ namespace sge
 	struct NodeLocalTransformMod;
 	struct NodeRootMod;
 
-	struct NodeId
+	struct SGE_ENGINE_API NodeId
 	{
+		SGE_REFLECTED_TYPE;
 		using Version_t = uint32;
 		using Index_t = uint32;
 
