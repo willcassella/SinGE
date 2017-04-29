@@ -1,5 +1,6 @@
 // RenderResource.cpp
 
+#include <cstdio>
 #include <Resource/Resources/StaticMesh.h>
 #include <Resource/Resources/Material.h>
 #include <Resource/Resources/Texture.h>
@@ -26,6 +27,11 @@ namespace sge
 				// If the material could not be loaded, return missing material
 				if (!loaded)
 				{
+					if (strlen(path) != 0)
+					{
+						printf("WARNING: GLRenderSystem could not load material '%s'\n", path);
+					}
+
 					return resources.missing_material;
 				}
 
@@ -136,6 +142,7 @@ namespace sge
 				// If the mesh could not be loaded, return the missing mesh object
 				if (!loaded)
 				{
+					printf("WARNING: GLRenderSystem could not load mesh '%s'\n", path);
 					return resources.missing_mesh;
 				}
 
@@ -234,6 +241,10 @@ namespace sge
 					// Load the texture from the file
 					Texture texture;
 					const auto loaded = texture.from_file(path);
+					if (!loaded)
+					{
+						printf("WARNING: GLRenderSystem could not load texture '%s'\n", path);
+					}
 
 					// Figure out the color format of the image
 					GLenum format;
@@ -269,6 +280,10 @@ namespace sge
 				{
 					HDRImage image;
 					const auto loaded = image.from_file(path);
+					if (!loaded)
+					{
+						printf("WARNING: GLRenderSystem could not load texture '%s'\n", path);
+					}
 
 					// Figure out which internal and upload format to use
 					GLenum internal_format;
