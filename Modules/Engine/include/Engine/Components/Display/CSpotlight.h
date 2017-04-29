@@ -43,6 +43,8 @@ namespace sge
 
 		NodeId node() const;
 
+		uint32 update_revision() const;
+
 		Shape shape() const;
 
 		void shape(Shape shape);
@@ -75,6 +77,18 @@ namespace sge
 
 		void intensity(color::RGBF32 value);
 
+		bool casts_shadows() const;
+
+		void casts_shadows(bool value);
+
+		uint32 shadow_map_width() const;
+
+		void shadow_map_width(uint32 value);
+
+		uint32 shadow_map_height() const;
+
+		void shadow_map_height(uint32 value);
+
 		bool is_lightmask_volume() const;
 
 		void is_lightmask_volume(bool value);
@@ -91,6 +105,7 @@ namespace sge
 		///   Fields   ///
 	private:
 
+		uint32 _update_revision = 0;
 		Shape _shape = Shape::CONE;
 		Angle _cone_angle = degrees(30.f);
 		Angle _frustum_horiz_angle = degrees(30.f);
@@ -98,6 +113,9 @@ namespace sge
 		float _near_clipping_plane = 0.1f;
 		float _far_clipping_plane = 1.0f;
 		color::RGBF32 _intensity = color::RGBF32::white();
+		bool _casts_shadows = false;
+		uint32 _shadow_width = 512;
+		uint32 _shadow_height = 512;
 		bool _lightmask_volume = false;
 		uint32 _lightmask_group = 0;
 		NodeId _node;

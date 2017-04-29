@@ -7,6 +7,8 @@
 #include "../../../include/Engine/Util/CSharedData.h"
 
 SGE_REFLECT_TYPE(sge::CSpotlight)
+.property("node", &CSpotlight::node, nullptr)
+.property("update_revision", &CSpotlight::update_revision, nullptr)
 .property("shape", &CSpotlight::shape, &CSpotlight::shape)
 .property("cone_angle", &CSpotlight::cone_angle, &CSpotlight::cone_angle)
 .property("frustum_horiz_angle", &CSpotlight::frustum_horiz_angle, &CSpotlight::frustum_horiz_angle)
@@ -14,6 +16,9 @@ SGE_REFLECT_TYPE(sge::CSpotlight)
 .property("near_clipping_plane", &CSpotlight::near_clipping_plane, &CSpotlight::near_clipping_plane)
 .property("far_clipping_plane", &CSpotlight::far_clipping_plane, &CSpotlight::far_clipping_plane)
 .property("intensity", &CSpotlight::intensity, &CSpotlight::intensity)
+.property("casts_shadows", &CSpotlight::casts_shadows, &CSpotlight::casts_shadows)
+.property("shadow_map_width", &CSpotlight::shadow_map_width, &CSpotlight::shadow_map_width)
+.property("shadow_map_height", &CSpotlight::shadow_map_height, &CSpotlight::shadow_map_height)
 .property("lightmask_volume", &CSpotlight::is_lightmask_volume, &CSpotlight::is_lightmask_volume)
 .property("lightmask_group", &CSpotlight::lightmask_group, &CSpotlight::lightmask_group);
 
@@ -55,6 +60,9 @@ namespace sge
 		writer.object_member("near", _near_clipping_plane);
 		writer.object_member("far", _far_clipping_plane);
 		writer.object_member("int", _intensity);
+		writer.object_member("shdw", _casts_shadows);
+		writer.object_member("shdw_w", _shadow_width);
+		writer.object_member("shdw_h", _shadow_height);
 		writer.object_member("lmv", _lightmask_volume);
 		writer.object_member("lmg", _lightmask_group);
 	}
@@ -78,6 +86,9 @@ namespace sge
 		reader.object_member("near", _near_clipping_plane);
 		reader.object_member("far", _far_clipping_plane);
 		reader.object_member("int", _intensity);
+		reader.object_member("shdw", _casts_shadows);
+		reader.object_member("shdw_w", _shadow_width);
+		reader.object_member("shdw_h", _shadow_height);
 		reader.object_member("lmv", _lightmask_volume);
 		reader.object_member("lmg", _lightmask_group);
 	}
@@ -85,6 +96,11 @@ namespace sge
 	NodeId CSpotlight::node() const
 	{
 		return _node;
+	}
+
+	uint32 CSpotlight::update_revision() const
+	{
+		return _update_revision;
 	}
 
 	CSpotlight::Shape CSpotlight::shape() const
@@ -121,11 +137,8 @@ namespace sge
 
 	void CSpotlight::cone_angle(Angle value)
 	{
-		if (value != _cone_angle)
-		{
-			_cone_angle = value;
-			set_modified("cone_angle");
-		}
+		_cone_angle = value;
+		set_modified("cone_angle");
 	}
 
 	Angle CSpotlight::frustum_horiz_angle() const
@@ -135,11 +148,8 @@ namespace sge
 
 	void CSpotlight::frustum_horiz_angle(Angle value)
 	{
-		if (value != _frustum_horiz_angle)
-		{
-			_frustum_horiz_angle = value;
-			set_modified("frustum_horiz_angle");
-		}
+		_frustum_horiz_angle = value;
+		set_modified("frustum_horiz_angle");
 	}
 
 	Angle CSpotlight::frustum_vert_angle() const
@@ -149,11 +159,8 @@ namespace sge
 
 	void CSpotlight::frustum_vert_angle(Angle value)
 	{
-		if (value != _frustum_vert_angle)
-		{
-			_frustum_vert_angle = value;
-			set_modified("frustum_vert_angle");
-		}
+		_frustum_vert_angle = value;
+		set_modified("frustum_vert_angle");
 	}
 
 	float CSpotlight::near_clipping_plane() const
@@ -168,11 +175,8 @@ namespace sge
 			return;
 		}
 
-		if (value != _near_clipping_plane)
-		{
-			_near_clipping_plane = value;
-			set_modified("near_clipping_plane");
-		}
+		_near_clipping_plane = value;
+		set_modified("near_clipping_plane");
 	}
 
 	float CSpotlight::far_clipping_plane() const
@@ -187,11 +191,8 @@ namespace sge
 			return;
 		}
 
-		if (value != _far_clipping_plane)
-		{
-			_far_clipping_plane = value;
-			set_modified("far_clipping_plane");
-		}
+		_far_clipping_plane = value;
+		set_modified("far_clipping_plane");
 	}
 
 	color::RGBF32 CSpotlight::intensity() const
@@ -201,10 +202,49 @@ namespace sge
 
 	void CSpotlight::intensity(color::RGBF32 value)
 	{
-		if (_intensity != value)
+		_intensity = value;
+		set_modified("intensity");
+	}
+
+	bool CSpotlight::casts_shadows() const
+	{
+		return _casts_shadows;
+	}
+
+	void CSpotlight::casts_shadows(bool value)
+	{
+		if (_casts_shadows != value)
 		{
-			_intensity = value;
-			set_modified("intensity");
+			_casts_shadows = value;
+			set_modified("casts_shadows");
+		}
+	}
+
+	uint32 CSpotlight::shadow_map_width() const
+	{
+		return _shadow_width;
+	}
+
+	void CSpotlight::shadow_map_width(uint32 value)
+	{
+		if (_shadow_width != value)
+		{
+			_shadow_width = value;
+			set_modified("shadow_map_width");
+		}
+	}
+
+	uint32 CSpotlight::shadow_map_height() const
+	{
+		return _shadow_height;
+	}
+
+	void CSpotlight::shadow_map_height(uint32 value)
+	{
+		if (_shadow_height != value)
+		{
+			_shadow_height = value;
+			set_modified("shadow_map_height");
 		}
 	}
 
@@ -238,6 +278,7 @@ namespace sge
 
 	void CSpotlight::set_modified(const char* property_name)
 	{
+		_update_revision += 1;
 		_shared_data->set_modified(_node, this, property_name);
 	}
 }
