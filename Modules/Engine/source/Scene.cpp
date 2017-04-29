@@ -450,6 +450,7 @@ namespace sge
 
 		// Update time
 		_current_time += dt;
+		_frame_id += 1;
 	}
 
 	void Scene::initialize_hierarchy_depths()

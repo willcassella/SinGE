@@ -145,6 +145,7 @@ namespace sge
 
 		TypeDB* _type_db;
 		float _current_time;
+		uint64 _frame_id = 0;
         SceneData _scene_data;
 		EventChannel _debug_draw_line_channel;
 	};

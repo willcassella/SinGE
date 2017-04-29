@@ -21,6 +21,11 @@ namespace sge
 		_job_queue.clear();
 	}
 
+	uint64 SystemFrame::frame_id() const
+	{
+		return _scene->_frame_id;
+	}
+
 	float SystemFrame::current_time() const
 	{
 		return _current_time;

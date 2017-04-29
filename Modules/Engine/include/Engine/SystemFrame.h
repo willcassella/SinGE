@@ -36,6 +36,8 @@ namespace sge
 
 		void yield();
 
+		uint64 frame_id() const;
+
 		float current_time() const;
 
 		float time_delta() const;
