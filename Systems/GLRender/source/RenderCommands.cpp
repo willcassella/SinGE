@@ -9,25 +9,27 @@ namespace sge
     {
         void render_scene_prepare_gbuffer(GLuint gbuffer)
         {
-            constexpr GLenum GBUFFER_DRAW_BUFFERS[] = {
-                GBUFFER_POSITION_ATTACHMENT,
-                GBUFFER_NORMAL_ATTACHMENT,
-                GBUFFER_ALBEDO_ATTACHMENT,
-                GBUFFER_ROUGHNESS_METALLIC_ATTACHMENT,
-                GBUFFER_IRRADIANCE_ATTACHMENT };
-            constexpr GLsizei NUM_GBUFFER_DRAW_BUFFERS = sizeof(GBUFFER_DRAW_BUFFERS) / sizeof(GLenum);
-
-            // Bind the GBuffer and its sub-buffers for drawing
             glBindFramebuffer(GL_FRAMEBUFFER, gbuffer);
-            glDrawBuffers(NUM_GBUFFER_DRAW_BUFFERS, GBUFFER_DRAW_BUFFERS);
 
             // Clear the GBuffer
             glEnable(GL_STENCIL_TEST);
             glEnable(GL_DEPTH_TEST);
             glEnable(GL_CULL_FACE);
 			glClearDepth(1.f);
+			glClearColor(0.f, 0.f, 0.f, 1.f);
+			glDepthMask(GL_TRUE);
+			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         }
+
+	    void RenderCommand_bind_framebuffer(
+			const GLuint framebuffer,
+			const GLuint width,
+			const GLuint height)
+	    {
+			glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+			glViewport(0, 0, width, height);
+	    }
 
 	    void RenderCommand_bind_material(
 			const GLuint program_id,
@@ -39,10 +41,10 @@ namespace sge
 			glUseProgram(program_id);
 
 			GLenum next_active_texture = gl_material::FIRST_USER_TEXTURE_SLOT;
-			gl_material::set_bound_material_params(&next_active_texture, params);
+			gl_material::set_material_params(program_id, &next_active_texture, params);
 
-			glUniformMatrix4fv(uniforms.view_matrix_uniform, 1, GL_FALSE, view_matrix.vec());
-			glUniformMatrix4fv(uniforms.proj_matrix_uniform, 1, GL_FALSE, proj_matrix.vec());
+			glProgramUniformMatrix4fv(program_id, uniforms.view_matrix_uniform, 1, GL_FALSE, view_matrix.vec());
+			glProgramUniformMatrix4fv(program_id, uniforms.proj_matrix_uniform, 1, GL_FALSE, proj_matrix.vec());
 	    }
 
 	    void RenderCommand_render_meshes(

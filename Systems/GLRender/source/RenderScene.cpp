@@ -32,34 +32,91 @@ namespace sge
 			}
 		}
 
-		static void render_lightmask_receivers(
-			const RenderScene_Commands& commands,
+		static void render_lightmask_objects(
+			const RenderScene_LightmaskObject* lightmask_objects,
+			const size_t num_lightmask_objects,
 			const Mat4& view_matrix,
 			const Mat4& proj_matrix)
 		{
-			for (const auto& lightmask_receiver : commands.lightmask_receiver_mesh_instances)
+			for (size_t i = 0; i < num_lightmask_objects; ++i)
 			{
 				RenderCommand_bind_material(
-					lightmask_receiver.material.program_id,
-					lightmask_receiver.material.uniforms,
-					lightmask_receiver.material.params,
+					lightmask_objects[i].material.program_id,
+					lightmask_objects[i].material.uniforms,
+					lightmask_objects[i].material.params,
 					view_matrix,
 					proj_matrix);
 
 				RenderCommand_render_meshes(
-					lightmask_receiver.material.uniforms,
-					lightmask_receiver.mesh,
-					&lightmask_receiver.mesh_instance,
+					lightmask_objects[i].material.uniforms,
+					lightmask_objects[i].mesh,
+					&lightmask_objects[i].mesh_instance,
 					1);
+			}
+		}
+
+
+		static void render_spotlight_shadowmaps(
+			const RenderScene_Commands& commands)
+		{
+			glDepthMask(GL_TRUE);
+			glCullFace(GL_FRONT);
+			glStencilFunc(GL_ALWAYS, 0, 0xFF);
+			glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+			glDepthFunc(GL_LEQUAL);
+
+			// Set rendering parameters
+			for (const auto& spotlight : commands.spotlights)
+			{
+				RenderCommand_bind_framebuffer(
+					spotlight.shadow_framebuffer,
+					spotlight.shadow_width,
+					spotlight.shadow_height);
+
+				glClearDepth(1.f);
+				glClear(GL_DEPTH_BUFFER_BIT);
+
+				// Render normal material instances
+				for (const auto& material_instance : commands.standard_path_material_instances)
+				{
+					RenderCommand_bind_material(
+						material_instance.material.program_id,
+						material_instance.material.uniforms,
+						material_instance.material.params,
+						spotlight.view_matrix,
+						spotlight.proj_matrix);
+
+					for (const auto& mesh : material_instance.mesh_instances)
+					{
+						RenderCommand_render_meshes(
+							material_instance.material.uniforms,
+							mesh.mesh_command,
+							mesh.instance_commands.data(),
+							mesh.instance_commands.size());
+					}
+				}
+
+				// Render lightmask receivers
+				render_lightmask_objects(
+					commands.lightmask_receiver_mesh_instances.data(),
+					commands.lightmask_receiver_mesh_instances.size(),
+					spotlight.view_matrix,
+					spotlight.proj_matrix);
 			}
 		}
 
 		void RenderScene_render(
 			const RenderScene_Commands& commands,
 			const RenderResource& resources,
+			const GLuint gbuffer,
+			const GLuint gbuffer_width,
+			const GLuint gbuffer_height,
 			const Mat4& view_matrix,
 			const Mat4& proj_matrix)
 		{
+			// Render spotlights
+			render_spotlight_shadowmaps(commands);
+
 			// Set standard rendering parameters
 			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 			glDepthMask(GL_TRUE);
@@ -67,6 +124,10 @@ namespace sge
 			glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 			glCullFace(GL_BACK);
 			glDepthFunc(GL_LEQUAL);
+
+			// Bind the gbuffer
+			render_scene_prepare_gbuffer(gbuffer);
+			glViewport(0, 0, gbuffer_width, gbuffer_height);
 
 			// Render standard material instances
 			for (const auto& material_instance : commands.standard_path_material_instances)
@@ -93,12 +154,20 @@ namespace sge
 
 			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 			glDepthMask(GL_TRUE);
-			glStencilFunc(GL_ALWAYS, 1, 0xFF);
+			glStencilFunc(GL_ALWAYS, 0, 0xFF);
 			glStencilOp(GL_KEEP, GL_INCR, GL_INCR);
 			glCullFace(GL_FRONT);
 
-			render_lightmask_volumes(commands, resources, view_matrix, proj_matrix);
-			render_lightmask_receivers(commands, view_matrix, proj_matrix);
+			render_lightmask_volumes(
+				commands,
+				resources,
+				view_matrix,
+				proj_matrix);
+			render_lightmask_objects(
+				commands.lightmask_receiver_mesh_instances.data(),
+				commands.lightmask_receiver_mesh_instances.size(),
+				view_matrix,
+				proj_matrix);
 
 			/*--- DISABLE DEPTH DRAWING, FRONTFACES, CLEAR STENCIL WHERE DEPTH FAIL ---*/
 
@@ -108,8 +177,15 @@ namespace sge
 			glStencilOp(GL_KEEP, GL_ZERO, GL_KEEP);
 			glCullFace(GL_BACK);
 
-			render_lightmask_receivers(commands, view_matrix, proj_matrix);
-			render_lightmask_volumes(commands, resources, view_matrix, proj_matrix);
+			render_lightmask_volumes(
+				commands,
+				resources,
+				view_matrix,
+				proj_matrix);
+			render_lightmask_objects(commands.lightmask_receiver_mesh_instances.data(),
+				commands.lightmask_receiver_mesh_instances.size(),
+				view_matrix,
+				proj_matrix);
 
 			/*--- RESET DEPTH ---*/
 
@@ -121,20 +197,28 @@ namespace sge
 
 			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 			glDepthMask(GL_TRUE);
-			glStencilFunc(GL_EQUAL, 2, 0xFF);
+			glStencilFunc(GL_LEQUAL, 2, 0xFF);
 			glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 			glCullFace(GL_BACK);
 			glDepthFunc(GL_GEQUAL);
 
-			render_lightmask_volumes(commands, resources, view_matrix, proj_matrix);
-			render_lightmask_receivers(commands, view_matrix, proj_matrix);
+			render_lightmask_volumes(
+				commands,
+				resources,
+				view_matrix,
+				proj_matrix);
+			render_lightmask_objects(
+				commands.lightmask_receiver_mesh_instances.data(),
+				commands.lightmask_receiver_mesh_instances.size(),
+				view_matrix,
+				proj_matrix);
 		}
 
 		void RenderScene_update_matrices(
 			RenderScene_Commands& commands,
 			const NodeId* const node_ids,
 			const Mat4* const matrices,
-			const std::size_t num_nodes)
+			const size_t num_nodes)
 		{
 			for (auto& material_instance : commands.standard_path_material_instances)
 			{
@@ -185,8 +269,8 @@ namespace sge
 
 		static void remove_mesh_commands(
 			RenderScene_Mesh& mesh_command_set,
-			const NodeId* SGE_RESTRICT target_node_ids,
-			size_t num_target_node_ids)
+			const NodeId* const SGE_RESTRICT target_node_ids,
+			const size_t num_target_node_ids)
 		{
 			size_t num_mesh_commands = mesh_command_set.instance_commands.size();
 			auto* const mesh_commands = mesh_command_set.instance_commands.data();
@@ -264,11 +348,11 @@ namespace sge
 				// Get the lightmap for this instance
 				const auto lightmap = get_lightmap(commands, node->get_id());
 
-				// If it's a lightmask receiver, add it to the path for that
-				if (static_mesh->lightmask_mode() == CStaticMesh::LightmaskMode::RECEIVER)
+				// If it's a a lightmask object, add it to the path for that
+				if (static_mesh->lightmask_mode() != CStaticMesh::LightmaskMode::NONE)
 				{
 					// Create the command
-					RenderScene_LightmaskReceiver command;
+					RenderScene_LightmaskObject command;
 					command.node_id = node->get_id();
 					command.material = material_resource;
 					command.mesh.vao = mesh_resource.vao;
@@ -282,7 +366,14 @@ namespace sge
 					command.mesh_instance.lightmap_z_basis = lightmap.z_basis_tex;
 					command.mesh_instance.lightmap_direct_mask = lightmap.direct_mask_tex;
 
-					commands.lightmask_receiver_mesh_instances.push_back(std::move(command));
+					if (static_mesh->lightmask_mode() == CStaticMesh::LightmaskMode::OCCLUDER)
+					{
+						commands.lightmask_occluder_mesh_instances.push_back(std::move(command));
+					}
+					else
+					{
+						commands.lightmask_receiver_mesh_instances.push_back(std::move(command));
+					}
 					continue;
 				}
 
@@ -372,8 +463,8 @@ namespace sge
 
 		void RenderScene_remove_static_mesh_commands(
 			RenderScene_Commands& commands,
-			const NodeId* target_node_ids,
-			size_t num_target_node_ids)
+			const NodeId* const target_node_ids,
+			const size_t num_target_node_ids)
 		{
 			// Check standard path instances
 			for (auto& material_instance : commands.standard_path_material_instances)
@@ -416,6 +507,51 @@ namespace sge
 		{
 			for (size_t i = 0; i < num_spotlights; ++i)
 			{
+				if (spotlights[i]->casts_shadows())
+				{
+					// Create a shadow map object
+					RenderScene_Spotlight spotlight_shadow_map;
+					spotlight_shadow_map.node_id = nodes[i]->get_id();
+					spotlight_shadow_map.view_matrix = nodes[i]->get_world_matrix().inverse();
+					spotlight_shadow_map.proj_matrix = Mat4::perspective_projection(
+						spotlights[i]->frustum_horiz_angle(),
+						spotlights[i]->frustum_vert_angle(),
+						spotlights[i]->near_clipping_plane(),
+						spotlights[i]->far_clipping_plane());
+					spotlight_shadow_map.shadow_width = spotlights[i]->shadow_map_width(),
+					spotlight_shadow_map.shadow_height = spotlights[i]->shadow_map_height();
+
+					GLuint shadow_depth_map;
+					glGenTextures(1, &shadow_depth_map);
+					glBindTexture(GL_TEXTURE_2D, shadow_depth_map);
+					glTexImage2D(
+						GL_TEXTURE_2D,
+						0,
+						GL_DEPTH_COMPONENT,
+						spotlight_shadow_map.shadow_width,
+						spotlight_shadow_map.shadow_height,
+						0,
+						GL_DEPTH_COMPONENT,
+						GL_FLOAT,
+						nullptr);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+					// Create the framebuffer for the shadow map
+					GLuint shadow_framebuffer;
+					glGenFramebuffers(1, &shadow_framebuffer);
+					glBindFramebuffer(GL_FRAMEBUFFER, shadow_framebuffer);
+					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadow_depth_map, 0);
+					glDrawBuffer(GL_NONE);
+					glReadBuffer(GL_NONE);
+
+					spotlight_shadow_map.shadow_framebuffer = shadow_framebuffer;
+					spotlight_shadow_map.shadow_depthbuffer = shadow_depth_map;
+					commands.spotlights.push_back(spotlight_shadow_map);
+				}
+
 				if (!spotlights[i]->is_lightmask_volume() || spotlights[i]->shape() != CSpotlight::Shape::FRUSTUM)
 				{
 					continue;

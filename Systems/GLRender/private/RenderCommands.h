@@ -41,6 +41,11 @@ namespace sge
         void render_scene_prepare_gbuffer(
             GLuint gbuffer);
 
+		void RenderCommand_bind_framebuffer(
+			const GLuint framebuffer,
+			const GLuint width,
+			const GLuint height);
+
 	    /**
 		 * \brief Command to bind the given material for rendering.
 		 * \param program_id The id of the material to bind.

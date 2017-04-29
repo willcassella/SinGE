@@ -45,6 +45,17 @@ namespace sge
 			std::map<GLuint, std::size_t> mesh_indices;
 		};
 
+		struct RenderScene_Spotlight
+		{
+			NodeId node_id;
+			Mat4 view_matrix;
+			Mat4 proj_matrix;
+			GLuint shadow_framebuffer = 0;
+			GLuint shadow_depthbuffer = 0;
+			GLuint shadow_width = 0;
+			GLuint shadow_height = 0;
+		};
+
 		struct RenderScene_LightmaskVolume
 		{
 			NodeId node_id;
@@ -55,7 +66,7 @@ namespace sge
 			RenderCommand_MeshInstance mesh_instance;
 		};
 
-		struct RenderScene_LightmaskReceiver
+		struct RenderScene_LightmaskObject
 		{
 			NodeId node_id;
 			gl_material::Material material;
@@ -65,16 +76,20 @@ namespace sge
 
 		struct RenderScene_Commands
 		{
+			std::vector<RenderScene_Spotlight> spotlights;
+
 			/**
 			 * \brief Rendering commands for all standard path objects.
 			 */
 			std::vector<RenderScene_Material> standard_path_material_instances;
 
-			std::map<GLuint, std::size_t> standard_path_material_indices;
+			std::map<GLuint, size_t> standard_path_material_indices;
 
 			std::vector<RenderScene_LightmaskVolume> lightmask_volume_mesh_instances;
 
-			std::vector<RenderScene_LightmaskReceiver> lightmask_receiver_mesh_instances;
+			std::vector<RenderScene_LightmaskObject> lightmask_receiver_mesh_instances;
+
+			std::vector<RenderScene_LightmaskObject> lightmask_occluder_mesh_instances;
 
 			/**
 			 * \brief Mapping between objects and their lightmaps.
@@ -89,6 +104,9 @@ namespace sge
 		void RenderScene_render(
 			const RenderScene_Commands& commands,
 			const RenderResource& resources,
+			const GLuint gbuffer,
+			const GLuint gbuffer_width,
+			const GLuint gbuffer_height,
 			const Mat4& view_matrix,
 			const Mat4& proj_matrix);
 
@@ -96,26 +114,26 @@ namespace sge
 			RenderScene_Commands& commands,
 			const NodeId* const nodes_ids,
 			const Mat4* const matrices,
-			const std::size_t num_nodes);
+			const size_t num_nodes);
 
 		void RenderScene_insert_static_mesh_commands(
 			RenderScene_Commands& commands,
 			RenderResource& resources,
 			const Node* const* const nodes,
 			const CStaticMesh* const* const static_meshes,
-			const std::size_t num_static_meshes);
+			const size_t num_static_meshes);
 
 		void RenderScene_remove_static_mesh_commands(
 			RenderScene_Commands& commands,
-			const NodeId* node_ids,
-			std::size_t num_nodes);
+			const NodeId* const node_ids,
+			const size_t num_nodes);
 
 		void RenderScene_insert_spotlight_commands(
 			RenderScene_Commands& commands,
 			RenderResource& resources,
 			const Node* const* const nodes,
 			const CSpotlight* const* const spotlights,
-			const std::size_t num_spotlights);
+			const size_t num_spotlights);
 
 		void RenderScene_update_spotlight_commands(
 			RenderScene_Commands& commands,

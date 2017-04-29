@@ -450,6 +450,15 @@ namespace sge
                 _state->gbuffer_layers[GBufferLayer::IRRADIANCE],
                 GBUFFER_IRRADIANCE_ATTACHMENT);
 
+			constexpr GLenum GBUFFER_DRAW_BUFFERS[] = {
+				GBUFFER_POSITION_ATTACHMENT,
+				GBUFFER_NORMAL_ATTACHMENT,
+				GBUFFER_ALBEDO_ATTACHMENT,
+				GBUFFER_ROUGHNESS_METALLIC_ATTACHMENT,
+				GBUFFER_IRRADIANCE_ATTACHMENT };
+			constexpr GLsizei NUM_GBUFFER_DRAW_BUFFERS = sizeof(GBUFFER_DRAW_BUFFERS) / sizeof(GLenum);
+			glDrawBuffers(NUM_GBUFFER_DRAW_BUFFERS, GBUFFER_DRAW_BUFFERS);
+
 			// Make sure the GBuffer was constructed successfully
 			if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 			{
@@ -719,8 +728,14 @@ namespace sge
 			const Mat4 proj = cam_instance->get_projection_matrix((float)this->_state->width / this->_state->height);
 
             // Render the scene
-			render_scene_prepare_gbuffer(_state->gbuffer_framebuffer);
-			RenderScene_render(_state->render_scene, _state->resources, view, proj);
+			RenderScene_render(
+				_state->render_scene,
+				_state->resources,
+				_state->gbuffer_framebuffer,
+				_state->width,
+				_state->height,
+				view,
+				proj);
 
             // Draw debug lines
             if (!_state->frame_debug_lines.empty())
