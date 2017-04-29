@@ -591,7 +591,7 @@ namespace sge
 				glGenBuffers(1, &volume_pos_buffer);
 				glBindBuffer(GL_ARRAY_BUFFER, volume_pos_buffer);
 				glBufferData(GL_ARRAY_BUFFER, sizeof(frustum_vert_positions), frustum_vert_positions, GL_DYNAMIC_DRAW);
-				glEnableVertexArrayAttrib(volume_vao, gl_material::POSITION_ATTRIB_LOCATION);
+				glEnableVertexAttribArray(gl_material::POSITION_ATTRIB_LOCATION);
 				glVertexAttribPointer(gl_material::POSITION_ATTRIB_LOCATION, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3), nullptr);
 
 				// Upload data and set vertex normal attribute
@@ -599,7 +599,7 @@ namespace sge
 				glGenBuffers(1, &volume_normal_buffer);
 				glBindBuffer(GL_ARRAY_BUFFER, volume_normal_buffer);
 				glBufferData(GL_ARRAY_BUFFER, sizeof(frustum_vert_normals), frustum_vert_normals, GL_DYNAMIC_DRAW);
-				glEnableVertexArrayAttrib(volume_vao, gl_material::NORMAL_ATTRIB_LOCATION);
+				glEnableVertexAttribArray(gl_material::NORMAL_ATTRIB_LOCATION);
 				glVertexAttribPointer(gl_material::NORMAL_ATTRIB_LOCATION, 3, GL_FLOAT, GL_FALSE, sizeof(Vec3), nullptr);
 
 				// Upload data and set vertex texcoord attribute
@@ -607,7 +607,7 @@ namespace sge
 				glGenBuffers(1, &volume_texcoord_buffer);
 				glBindBuffer(GL_ARRAY_BUFFER, volume_texcoord_buffer);
 				glBufferData(GL_ARRAY_BUFFER, sizeof(frustum_vert_texcoords), frustum_vert_texcoords, GL_DYNAMIC_DRAW);
-				glEnableVertexArrayAttrib(volume_vao, gl_material::MATERIAL_TEXCOORD_ATTRIB_LOCATION);
+				glEnableVertexAttribArray(gl_material::MATERIAL_TEXCOORD_ATTRIB_LOCATION);
 				glVertexAttribPointer(gl_material::MATERIAL_TEXCOORD_ATTRIB_LOCATION, 2, GL_FLOAT, GL_FALSE, sizeof(Vec2), nullptr);
 
 				// Create a LightmaskVolume command

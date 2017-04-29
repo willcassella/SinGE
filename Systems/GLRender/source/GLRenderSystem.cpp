@@ -328,7 +328,10 @@ namespace sge
 
             // Initialize GLEW
             glewExperimental = GL_TRUE;
-            glewInit();
+            if (glewInit() != GLEW_OK)
+            {
+				printf("ERROR: GLRenderSystem: Could not initialize GLEW\n");
+            }
             glGetError(); // Sometimes GLEW initialization generates an error, pop it off the stack.
 
             // Create default mesh resource
