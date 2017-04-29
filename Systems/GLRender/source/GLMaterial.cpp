@@ -80,45 +80,49 @@ namespace sge
                 return location;
             }
 
-            void init_bound_material_lightmap_params(
+            void init_material_lightmap_params(
+				const GLuint mat_id,
                 const MaterialStandardUniforms uniforms)
             {
-                glUniform1i(uniforms.lightmap_x_basis_uniform, LIGHTMAP_X_BASIS_TEXTURE_SLOT - GL_TEXTURE0);
-                glUniform1i(uniforms.lightmap_y_basis_uniform, LIGHTMAP_Y_BASIS_TEXTURE_SLOT - GL_TEXTURE0);
-                glUniform1i(uniforms.lightmap_z_basis_uniform, LIGHTMAP_Z_BASIS_TEXTURE_SLOT - GL_TEXTURE0);
-                glUniform1i(uniforms.lightmap_direct_mask_uniform, LIGHTMAP_DIRECT_MASK_TEXTURE_SLOT - GL_TEXTURE0);
+                glProgramUniform1i(mat_id, uniforms.lightmap_x_basis_uniform, LIGHTMAP_X_BASIS_TEXTURE_SLOT - GL_TEXTURE0);
+                glProgramUniform1i(mat_id, uniforms.lightmap_y_basis_uniform, LIGHTMAP_Y_BASIS_TEXTURE_SLOT - GL_TEXTURE0);
+                glProgramUniform1i(mat_id, uniforms.lightmap_z_basis_uniform, LIGHTMAP_Z_BASIS_TEXTURE_SLOT - GL_TEXTURE0);
+                glProgramUniform1i(mat_id, uniforms.lightmap_direct_mask_uniform, LIGHTMAP_DIRECT_MASK_TEXTURE_SLOT - GL_TEXTURE0);
             }
 
-            void set_bound_material_params(GLenum* next_active_texture, const MaterialParams& params)
+            void set_material_params(
+				const GLuint mat_id,
+				GLenum* const next_active_texture,
+				const MaterialParams& params)
             {
                 // Bind int params
                 for (auto int_param : params.int_params)
                 {
-                    glUniform1i(int_param.first, int_param.second);
+                    glProgramUniform1i(mat_id, int_param.first, int_param.second);
                 }
 
                 // Bind float params
                 for (auto float_param : params.float_params)
                 {
-                    glUniform1f(float_param.first, float_param.second);
+                    glProgramUniform1f(mat_id, float_param.first, float_param.second);
                 }
 
                 // Bind vec2 params
                 for (auto vec2_param : params.vec2_params)
                 {
-                    glUniform2fv(vec2_param.first, 1, vec2_param.second.vec());
+                    glProgramUniform2fv(mat_id, vec2_param.first, 1, vec2_param.second.vec());
                 }
 
                 // Bind vec3 params
                 for (auto vec3_param : params.vec3_params)
                 {
-                    glUniform3fv(vec3_param.first, 1, vec3_param.second.vec());
+                    glProgramUniform3fv(mat_id, vec3_param.first, 1, vec3_param.second.vec());
                 }
 
                 // Bind vec4 params
                 for (auto vec4_param : params.vec4_params)
                 {
-                    glUniform4fv(vec4_param.first, 1, vec4_param.second.vec());
+                    glProgramUniform4fv(mat_id, vec4_param.first, 1, vec4_param.second.vec());
                 }
 
                 // Bind texture params
@@ -126,7 +130,7 @@ namespace sge
                 {
                     glActiveTexture(*next_active_texture);
                     glBindTexture(GL_TEXTURE_2D, tex_param.second);
-                    glUniform1i(tex_param.first, *next_active_texture - GL_TEXTURE0);
+                    glProgramUniform1i(mat_id, tex_param.first, *next_active_texture - GL_TEXTURE0);
                     *next_active_texture += 1;
                 }
             }

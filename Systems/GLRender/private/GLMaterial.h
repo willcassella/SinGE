@@ -119,19 +119,23 @@ namespace sge
 				GLDebugOutputMode out_mode = GLDebugOutputMode::ONLY_ERROR);
 
 			/**
-             * \brief Initializes the lightmap parameters of the currently bound material to the standard values (specified above). You only need to call this once per material.
-             * \param uniforms Uniform locations for the currently bound material.
+             * \brief Initializes the lightmap parameters of the given material to the standard values (specified above). You only need to call this once per material.
+			* \param mat_id The id of the material.
+			* \param uniforms Uniform locations for the currently bound material.
              */
-            void init_bound_material_lightmap_params(
+            void init_material_lightmap_params(
+				const GLuint mat_id,
                 const MaterialStandardUniforms uniforms);
 
 			/**
-             * \brief Sets the given material parameters for the currently bound material.
+             * \brief Sets the given material parameters for the given material.
+             * \param mat_id The id of the material.
              * \param next_active_texture The next texture slot to use for texture parameters.
              * \param params The parameters for the material.
              */
-            void set_bound_material_params(
-				GLenum* next_active_texture,
+            void set_material_params(
+				const GLuint mat_id,
+				GLenum* const next_active_texture,
 				const MaterialParams& params);
 		}
 	}
