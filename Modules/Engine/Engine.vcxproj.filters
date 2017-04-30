@@ -36,6 +36,12 @@
     <Filter Include="source\Components\Gameplay">
       <UniqueIdentifier>{eca2e36e-b74f-4f75-9a8e-0b9c81cd25e0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="include\Systems">
+      <UniqueIdentifier>{e8181390-ff36-4860-bb26-2b07838196da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="source\Systems">
+      <UniqueIdentifier>{945afd1d-6c4e-448f-b0c8-5d580218a612}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Engine\config.h">
@@ -113,6 +119,12 @@
     <ClInclude Include="include\Engine\Components\Display\CPointLight.h">
       <Filter>include\Components\Display</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\Components\Gameplay\CLevelPortal.h">
+      <Filter>include\Components\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Systems\ChangeLevelSystem.h">
+      <Filter>include\Systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Scene.cpp">
@@ -171,6 +183,12 @@
     </ClCompile>
     <ClCompile Include="source\Components\Display\CPointLight.cpp">
       <Filter>source\Components\Display</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Gameplay\CLevelPortal.cpp">
+      <Filter>source\Components\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Systems\ChangeLevelSystem.cpp">
+      <Filter>source\Systems</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

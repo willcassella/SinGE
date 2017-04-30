@@ -168,6 +168,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\Engine\Components\Display\CPointLight.h" />
+    <ClInclude Include="include\Engine\Components\Gameplay\CLevelPortal.h" />
     <ClInclude Include="include\Engine\Components\Physics\CSphereCollider.h" />
     <ClInclude Include="include\Engine\Components\Physics\CStaticMeshCollider.h" />
     <ClInclude Include="include\Engine\EventChannel.h" />
@@ -185,6 +186,7 @@
     <ClInclude Include="include\Engine\Lightmap.h" />
     <ClInclude Include="include\Engine\Node.h" />
     <ClInclude Include="include\Engine\SystemInfo.h" />
+    <ClInclude Include="include\Engine\Systems\ChangeLevelSystem.h" />
     <ClInclude Include="include\Engine\UpdatePipeline.h" />
     <ClInclude Include="include\Engine\Scene.h" />
     <ClInclude Include="include\Engine\SceneData.h" />
@@ -201,6 +203,7 @@
     <ClCompile Include="source\Components\Display\CStaticMesh.cpp" />
     <ClCompile Include="source\Components\Gameplay\CCharacterController.cpp" />
     <ClCompile Include="source\Components\Gameplay\CInput.cpp" />
+    <ClCompile Include="source\Components\Gameplay\CLevelPortal.cpp" />
     <ClCompile Include="source\Components\Physics\CBoxCollider.cpp" />
     <ClCompile Include="source\Components\Physics\CCapsuleCollider.cpp" />
     <ClCompile Include="source\Components\Physics\CRigidBody.cpp" />
@@ -213,6 +216,7 @@
     <ClCompile Include="source\Node.cpp" />
     <ClCompile Include="source\Scene.cpp" />
     <ClCompile Include="source\SystemFrame.cpp" />
+    <ClCompile Include="source\Systems\ChangeLevelSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.vcxproj">
