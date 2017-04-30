@@ -137,9 +137,13 @@ namespace sge
         std::memcpy((byte*)out_events + copy_1_num * event_object_size, buffer, copy_2_num * event_object_size);
 
         const auto num_copied = copy_1_num + copy_2_num;
-        *out_num_events = num_copied;
         _subscriber_indices[subscriber] = index + num_copied;
-        return num_copied;
+		if (out_num_events)
+		{
+			*out_num_events = num_copied;
+		}
+
+    	return num_copied;
     }
 
 	void EventChannel::acknowledge_unconsumed(SubscriberId subscriber)
