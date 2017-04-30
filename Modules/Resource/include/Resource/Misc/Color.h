@@ -37,6 +37,16 @@ namespace sge
 			{
 			}
 
+			static RGBA8 black()
+            {
+				return RGBA8{ 0x000000FF };
+            }
+
+			static RGBA8 white()
+            {
+				return RGBA8{ 0xFFFFFFFF };
+            }
+
 			///////////////////
 			///   Methods   ///
 		public:
