@@ -487,7 +487,11 @@ namespace sge
 		}
 	}
 
-	void Scene::execute_job_queue(SystemInfo* const* jobs, std::size_t num_jobs, UpdatePipeline& pipeline, float time_delta)
+	void Scene::execute_job_queue(
+		SystemInfo* const* jobs,
+		std::size_t num_jobs,
+		UpdatePipeline& pipeline,
+		float time_delta)
 	{
 		for (std::size_t i = 0; i < num_jobs; ++i)
 		{
@@ -501,6 +505,7 @@ namespace sge
 			// Run the job
 			jobs[i]->system_fn(*this, frame);
 
+			// Apply change the job created
 			on_end_system_frame();
 
 			// Run the job's created jobs

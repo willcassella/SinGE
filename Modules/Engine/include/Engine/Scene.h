@@ -119,7 +119,11 @@ namespace sge
 
 		void initialize_hierarchy_depths();
 
-		void execute_job_queue(SystemInfo* const* jobs, std::size_t num_jobs, UpdatePipeline& pipeline, float time_delta);
+		void execute_job_queue(
+			SystemInfo* const* jobs,
+			std::size_t num_jobs,
+			UpdatePipeline& pipeline,
+			float time_delta);
 
 		void on_end_system_frame();
 

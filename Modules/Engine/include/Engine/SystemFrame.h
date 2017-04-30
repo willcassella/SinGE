@@ -13,8 +13,6 @@ namespace sge
 
 	struct SGE_ENGINE_API SystemFrame
 	{
-	public:
-
 		SGE_REFLECTED_TYPE;
 
 		/* Only 'Scene' objects may construct SystemFrames. */
