@@ -168,8 +168,9 @@ namespace sge
 		_current_time = 0;
 		_debug_draw_line_channel.clear();
 		_scene_data.next_node_id.index = 1;
-		_scene_data.nodes.clear();
 		_scene_data.node_buffer.clear();
+		_scene_data.free_buffs.clear();
+		_scene_data.nodes.clear();
 		_scene_data.root_nodes.clear();
 		_scene_data.system_node_root_changes.clear();
 		_scene_data.system_node_local_transform_changes.clear();

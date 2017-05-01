@@ -38,8 +38,11 @@ namespace sge
 			_shared_data.reset();
             _new_instance_channel.clear();
             _destroyed_instance_channel.clear();
-            _instance_map.clear();
+			_destroyed_instances.clear();
+        	_instance_map.clear();
+			_instance_nodes.clear();
             _instance_buffer.clear();
+			_free_spots.clear();
         }
 
         void to_archive(ArchiveWriter& writer) const override
