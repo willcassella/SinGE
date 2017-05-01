@@ -10,7 +10,6 @@ SGE_REFLECT_TYPE(sge::CLevelPortal)
 .implements<IToArchive>()
 .implements<IFromArchive>()
 .property("node", &CLevelPortal::node, nullptr)
-.property("collider_shape", &CLevelPortal::collider_shape, &CLevelPortal::collider_shape)
 .property("fade_color", &CLevelPortal::fade_color, &CLevelPortal::fade_color)
 .property("fade_duration", &CLevelPortal::fade_duration, &CLevelPortal::fade_duration)
 .property("level_path", &CLevelPortal::level_path, &CLevelPortal::level_path);
@@ -69,7 +68,6 @@ namespace sge
 	void CLevelPortal::to_archive(ArchiveWriter& writer) const
 	{
 		writer.as_object();
-		writer.object_member("cs", _collider_shape);
 		writer.object_member("fc", _fade_color);
 		writer.object_member("fd", _fade_duration);
 		writer.object_member("lp", _level_path);
@@ -77,7 +75,6 @@ namespace sge
 
 	void CLevelPortal::from_archive(ArchiveReader& reader)
 	{
-		reader.object_member("cs", _collider_shape);
 		reader.object_member("fc", _fade_color);
 		reader.object_member("fd", _fade_duration);
 		reader.object_member("lp", _level_path);
@@ -86,17 +83,6 @@ namespace sge
 	NodeId CLevelPortal::node() const
 	{
 		return _node_id;
-	}
-
-	Vec3 CLevelPortal::collider_shape() const
-	{
-		return _collider_shape;
-	}
-
-	void CLevelPortal::collider_shape(Vec3 value)
-	{
-		_collider_shape = value;
-		_shared_data->set_modified(_node_id, this, "collider_shape");
 	}
 
 	color::RGBA8 CLevelPortal::fade_color() const
@@ -128,7 +114,6 @@ namespace sge
 
 	void CLevelPortal::level_path(std::string value)
 	{
-		assert(value.size() < EChangeLevel::TARGET_PATH_LEN);
 		_level_path = std::move(value);
 		_shared_data->set_modified(_node_id, this, "level_path");
 	}
@@ -136,7 +121,7 @@ namespace sge
 	void CLevelPortal::trigger() const
 	{
 		EChangeLevel event;
-		event.target_path = _level_path.c_str();
+		event.component = this;
 		_shared_data->change_level_channel.append(&event, 1);
 	}
 }

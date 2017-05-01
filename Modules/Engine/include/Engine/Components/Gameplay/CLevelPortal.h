@@ -13,8 +13,7 @@ namespace sge
 
 		struct EChangeLevel
 		{
-			static constexpr size_t TARGET_PATH_LEN = 256;
-			FixedString<TARGET_PATH_LEN> target_path;
+			const CLevelPortal* component;
 		};
 
 		/*--- Constructors ---*/
@@ -33,10 +32,6 @@ namespace sge
 
 		NodeId node() const;
 
-		Vec3 collider_shape() const;
-
-		void collider_shape(Vec3 value);
-
 		color::RGBA8 fade_color() const;
 
 		void fade_color(color::RGBA8 value);
@@ -54,7 +49,6 @@ namespace sge
 		/*--- Fields ---*/
 	private:
 
-		Vec3 _collider_shape = Vec3{ 1.f, 1.f, 1.f };
 		color::RGBA8 _fade_color = color::RGBA8::black();
 		float _fade_duration = 0.f;
 		std::string _level_path;
