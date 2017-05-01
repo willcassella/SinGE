@@ -125,6 +125,12 @@
     <ClInclude Include="include\Engine\Systems\ChangeLevelSystem.h">
       <Filter>include\Systems</Filter>
     </ClInclude>
+    <ClInclude Include="include\Engine\Components\Gameplay\CAnimation.h">
+      <Filter>include\Components\Gameplay</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Engine\Systems\AnimationSystem.h">
+      <Filter>include\Systems</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Scene.cpp">
@@ -188,6 +194,12 @@
       <Filter>source\Components\Gameplay</Filter>
     </ClCompile>
     <ClCompile Include="source\Systems\ChangeLevelSystem.cpp">
+      <Filter>source\Systems</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Components\Gameplay\CAnimation.cpp">
+      <Filter>source\Components\Gameplay</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Systems\AnimationSystem.cpp">
       <Filter>source\Systems</Filter>
     </ClCompile>
   </ItemGroup>
