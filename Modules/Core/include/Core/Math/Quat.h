@@ -126,6 +126,33 @@ namespace sge
 
 			return total;
 		}
+		friend Quat operator*(const Quat& lhs, float rhs)
+		{
+			Quat total;
+			total.w(lhs.w() * rhs);
+			total.x(lhs.x() * rhs);
+			total.y(lhs.y() * rhs);
+			total.z(lhs.z() * rhs);
+			return total;
+		}
+		friend Quat operator+(const Quat& lhs, const Quat& rhs)
+		{
+			Quat total;
+			total.w(lhs.w() + rhs.w());
+			total.x(lhs.x() + rhs.x());
+			total.y(lhs.y() + rhs.y());
+			total.z(lhs.z() + rhs.z());
+			return total;
+		}
+		friend Quat operator-(const Quat& lhs, const Quat& rhs)
+		{
+			Quat total;
+			total.w(lhs.w() - rhs.w());
+			total.x(lhs.x() - rhs.x());
+			total.y(lhs.y() - rhs.y());
+			total.z(lhs.z() - rhs.z());
+			return total;
+		}
 		friend Quat& operator*=(Quat& lhs, const Quat& rhs)
 		{
 			lhs = lhs * rhs;
