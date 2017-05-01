@@ -340,6 +340,12 @@ namespace sge
 					phys_entity.static_mesh_collider->setUserPointer(base_collider);
 					phys_entity.collider.addChildShape(btTransform::getIdentity(), phys_entity.static_mesh_collider.get());
 
+					// Add the lightmask receiver bit, if necessary
+					if (components[i]->lightmask_receiver())
+					{
+						phys_entity.set_user_index_1(phys_entity.get_user_index_1() | LIGHTMASK_RECEIVER_BIT);
+					}
+
 					// Evaluate if we need to add a collision object for this object
 					phys_data.post_add_physics_entity_element(phys_entity);
 				}
@@ -373,6 +379,9 @@ namespace sge
 					phys_entity->static_mesh_collider = nullptr;
 					phys_data.release_static_mesh_collider(*base_collider);
 
+					// Remove Lightmask Receiver bit
+					phys_entity->set_user_index_1(phys_entity->get_user_index_1() & ~LIGHTMASK_RECEIVER_BIT);
+
 					// Evaluate if we should keep the physics entity
 					phys_data.post_remove_physics_entity_element(*phys_entity);
 				}
@@ -404,6 +413,27 @@ namespace sge
 
 				for (int32 i = 0; i < num_events; ++i)
 				{
+					// If we only modified whether it was a lightmask receiver, just do that
+					if (events[i].property == "lightmask_receiver")
+					{
+						auto* const phys_entity = phys_data.get_physics_entity(node_ids[i]);
+						if (!phys_entity)
+						{
+							continue;
+						}
+
+						if (components[i]->lightmask_receiver())
+						{
+							phys_entity->set_user_index_1(phys_entity->get_user_index_1() | LIGHTMASK_RECEIVER_BIT);
+						}
+						else
+						{
+							phys_entity->set_user_index_1(phys_entity->get_user_index_1() & ~LIGHTMASK_RECEIVER_BIT);
+						}
+
+						continue;
+					}
+
 					// Get the base collider
 					auto* const base_collider = phys_data.get_static_mesh_collider(components[i]->mesh());
 					if (!base_collider)
@@ -431,6 +461,11 @@ namespace sge
 
 					// Get the physics entity (may not exist, in case previous load failed)
 					auto& phys_entity = phys_data.get_or_create_physics_entity(node_ids[i], *nodes[i]);
+
+					if (components[i]->lightmask_receiver())
+					{
+						phys_entity.set_user_index_1(phys_entity.get_user_index_1() | LIGHTMASK_RECEIVER_BIT);
+					}
 
 					// If the physics entity current has a collider, remove it
 					if (phys_entity.static_mesh_collider)

@@ -2,6 +2,7 @@
 
 #include <Core/Reflection/ReflectionBuilder.h>
 #include <Engine/UpdatePipeline.h>
+#include <Engine/Components/Display/CSPotlight.h>
 #include <Engine/Components/Physics/CSphereCollider.h>
 #include <Engine/Components/Physics/CBoxCollider.h>
 #include <Engine/Components/Physics/CCapsuleCollider.h>
@@ -19,6 +20,7 @@
 #include "../private/RigidBody.h"
 #include "../private/Colliders.h"
 #include "../private/LevelPortal.h"
+#include "../private/LightmaskVolumeCollider.h"
 #include "../private/Util.h"
 
 SGE_REFLECT_TYPE(sge::bullet_physics::BulletPhysicsSystem);
@@ -95,6 +97,8 @@ namespace sge
 			_destroyed_character_controller_channel(nullptr),
 			_new_level_portal_channel(nullptr),
 			_destroyed_level_portal_channel(nullptr),
+			_new_spotlight_channel(nullptr),
+			_destroyed_spotlight_channel(nullptr),
 			_node_world_transform_changed_sid(EventChannel::INVALID_SID),
 			_new_rigid_body_sid(EventChannel::INVALID_SID),
 			_modified_rigid_body_sid(EventChannel::INVALID_SID),
@@ -118,7 +122,9 @@ namespace sge
 			_character_controller_walk_sid(EventChannel::INVALID_SID),
 			_destroyed_character_controller_sid(EventChannel::INVALID_SID),
 			_new_level_portal_sid(EventChannel::INVALID_SID),
-			_destroyed_level_portal_sid(EventChannel::INVALID_SID)
+			_destroyed_level_portal_sid(EventChannel::INVALID_SID),
+			_new_spotlight_sid(EventChannel::INVALID_SID),
+			_destroyed_spotlight_sid(EventChannel::INVALID_SID)
         {
             _data = std::make_unique<Data>();
         }
@@ -204,6 +210,12 @@ namespace sge
 			_destroyed_level_portal_channel = scene.get_event_channel(CLevelPortal::type_info, "destroy");
 			_new_level_portal_sid = _new_level_portal_channel->subscribe();
 			_destroyed_level_portal_sid = _destroyed_level_portal_channel->subscribe();
+
+			// Spotlight subscriptions
+			_new_spotlight_channel = scene.get_event_channel(CSpotlight::type_info, "new");
+			_destroyed_spotlight_channel = scene.get_event_channel(CSpotlight::type_info, "destroy");
+			_new_spotlight_sid = _new_spotlight_channel->subscribe();
+			_destroyed_spotlight_sid = _destroyed_spotlight_channel->subscribe();
 	    }
 
 	    void BulletPhysicsSystem::reset()
@@ -277,6 +289,10 @@ namespace sge
 			// Consume level portal events
 			on_level_portal_new(*_new_level_portal_channel, _new_level_portal_sid, *_data, scene);
 			on_level_portal_destroyed(*_destroyed_level_portal_channel, _destroyed_level_portal_sid, *_data);
+
+			// Consume spotlight events
+			on_spotlight_new(*_new_spotlight_channel, _new_spotlight_sid, *_data, scene);
+			on_spotlight_destroyed(*_destroyed_spotlight_channel, _destroyed_spotlight_sid, *_data);
 	    }
 
 	    void BulletPhysicsSystem::phys_tick(Scene& scene, SystemFrame& frame)
@@ -301,7 +317,9 @@ namespace sge
 				auto* const contactManifold = _data->phys_world.dynamics_world().getDispatcher()->getManifoldByIndexInternal(i);
 				auto* const obA = contactManifold->getBody0();
 				auto* const obB = contactManifold->getBody1();
-				if (obA->getUserIndex() == 1 && obB->getUserIndex2() == 1)
+
+				// Check for collision with level portal
+				if (obA->getUserIndex() & CHARACTER_BIT && obB->getUserIndex() & LEVEL_PORTAL_BIT)
 				{
 					// Get the CLevelPortal for this node
 					const auto node_id = static_cast<const PhysicsEntity*>(obB->getUserPointer())->node;
@@ -310,7 +328,7 @@ namespace sge
 					portal_instance->trigger();
 					break;
 				}
-				if (obB->getUserIndex() == 1 && obA->getUserIndex2() == 1)
+				if (obB->getUserIndex() & CHARACTER_BIT && obA->getUserIndex() & LEVEL_PORTAL_BIT)
 				{
 					const auto node_id = static_cast<const PhysicsEntity*>(obA->getUserPointer())->node;
 					CLevelPortal* portal_instance;
@@ -319,6 +337,9 @@ namespace sge
 					break;
 				}
 			}
+
+			// Update frame id
+			_data->last_frame_id = frame.frame_id();
 
 			// Acknowledge transform events (so we don't get stuck in a feedback loop)
 			frame.yield();

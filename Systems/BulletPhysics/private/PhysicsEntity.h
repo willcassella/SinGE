@@ -4,8 +4,8 @@
 #include <memory>
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
-#include <Engine/Component.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <Engine/Component.h>
 #include "../include/BulletPhysics/BulletPhysicsSystem.h"
 
 namespace sge
@@ -13,6 +13,7 @@ namespace sge
     namespace bullet_physics
     {
         class CharacterController;
+		struct LightmaskVolumeCollider;
 
         class PhysicsEntity final : public btMotionState
         {
@@ -52,6 +53,7 @@ namespace sge
 			NodeId node;
             btTransform transform;
             btCompoundShape collider;
+            BulletPhysicsSystem::Data* phys_data;
 
 			// Not the best way to do this, but it works
 			// I think what I'd rather have is seperate sets of things that correspond to the same object
@@ -59,6 +61,7 @@ namespace sge
             std::unique_ptr<btBoxShape> box_collider;
             std::unique_ptr<btCapsuleShape> capsule_collider;
 			std::unique_ptr<btScaledBvhTriangleMeshShape> static_mesh_collider;
+			std::unique_ptr<LightmaskVolumeCollider> lightmask_volume_collider;
 
 			std::unique_ptr<btCollisionObject> collision_object;
         	std::unique_ptr<btPairCachingGhostObject> ghost_object;
@@ -69,7 +72,6 @@ namespace sge
 
 			int _user_index_1_value;
 			int _user_index_2_value;
-            BulletPhysicsSystem::Data* _data;
         };
     }
 }

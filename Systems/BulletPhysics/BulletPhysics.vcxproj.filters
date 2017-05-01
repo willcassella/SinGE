@@ -50,6 +50,9 @@
     <ClInclude Include="private\LevelPortal.h">
       <Filter>private</Filter>
     </ClInclude>
+    <ClInclude Include="private\LightmaskVolumeCollider.h">
+      <Filter>private</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Config.cpp">
@@ -77,6 +80,9 @@
       <Filter>source</Filter>
     </ClCompile>
     <ClCompile Include="source\LevelPortal.cpp">
+      <Filter>source</Filter>
+    </ClCompile>
+    <ClCompile Include="source\LightmaskVolumeCollider.cpp">
       <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>

@@ -48,7 +48,7 @@ namespace sge
 						phys_data.post_add_physics_entity_element(phys_entity);
 					}
 
-					phys_entity.set_user_index_2(1);
+					phys_entity.set_user_index_1(phys_entity.get_user_index_1() | LEVEL_PORTAL_BIT);
 				}
 			}
 		}
@@ -79,7 +79,8 @@ namespace sge
 						phys_entity->ghost_object = nullptr;
 					}
 
-					phys_entity->set_user_index_2(0);
+					phys_entity->set_user_index_1(phys_entity->get_user_index_1() & ~LEVEL_PORTAL_BIT);
+					phys_data.post_remove_physics_entity_element(*phys_entity);
 				}
 			}
 		}

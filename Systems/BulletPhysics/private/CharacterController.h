@@ -35,6 +35,10 @@ namespace sge
 
             void turn(Angle amount);
 
+			bool needsCollision(
+				const btCollisionObject* body0,
+				const btCollisionObject* body1) override;
+
             //////////////////
             ///   Fields   ///
         public:
@@ -43,6 +47,7 @@ namespace sge
 
         private:
 
+			uint64 _last_lightmask_collision_frame = 0;
             PhysicsEntity* _phys_entity;
             Angle _turn_amount;
             Vec3 _walk_dir;

@@ -73,7 +73,34 @@ namespace sge
             _turn_amount = _turn_amount + amount;
         }
 
-		void on_character_controller_new(
+	    bool CharacterController::needsCollision(
+			const btCollisionObject* body0,
+			const btCollisionObject* body1)
+	    {
+			const auto last_frame_id = _phys_entity->phys_data->last_frame_id;
+
+			// If we collided with a lightmask volume
+			if (body0->getUserIndex() & LIGHTMASK_VOLUME_BIT || body1->getUserIndex() & LIGHTMASK_VOLUME_BIT)
+			{
+				// Update the last time we collided with a lightmask, reject the collision
+				_last_lightmask_collision_frame = last_frame_id;
+				return false;
+			}
+
+			// If we collided with a lighmask receiver
+			if (body0->getUserIndex() & LIGHTMASK_RECEIVER_BIT && _last_lightmask_collision_frame < last_frame_id - 1)
+			{
+				return false;
+			}
+			if (body1->getUserIndex() & LIGHTMASK_RECEIVER_BIT && _last_lightmask_collision_frame < last_frame_id - 1)
+			{
+				return false;
+			}
+
+			return true;
+	    }
+
+	    void on_character_controller_new(
 			EventChannel& new_character_controller_channel,
 			EventChannel::SubscriberId subscriber_id,
 			BulletPhysicsSystem::Data& phys_data,
@@ -107,8 +134,8 @@ namespace sge
 					// Create the character controller
 					physics_entity.character_controller = std::make_unique<CharacterController>(physics_entity, *components[i]);
 
-					// Set the second user index on the physics entity
-					physics_entity.set_user_index_1(1);
+					// Set the character collider bit
+					physics_entity.set_user_index_1(physics_entity.get_user_index_1() | CHARACTER_BIT);
 
 					// Add the ghost object to the world
 					phys_data.phys_world.dynamics_world().addCollisionObject(&physics_entity.character_controller->ghost_object,
@@ -143,7 +170,7 @@ namespace sge
 					phys_data.phys_world.dynamics_world().removeCollisionObject(&phys_entity->character_controller->ghost_object);
 					phys_entity->character_controller = nullptr;
 
-					phys_entity->set_user_index_1(0);
+					phys_entity->set_user_index_1(phys_entity->get_user_index_1() & ~CHARACTER_BIT);
 
 					// Evaluate if we still need this physics object
 					phys_data.post_remove_physics_entity_element(*phys_entity);
@@ -198,7 +225,10 @@ namespace sge
 					}
 
 					// Make it jump
-					phys_ent->character_controller->jump(btVector3{ 0.0, 0.0, 0.0 });
+					if (phys_ent->character_controller->onGround())
+					{
+						phys_ent->character_controller->jump(btVector3{ 0.0, 0.0, 0.0 });
+					}
 				}
 			}
 		}

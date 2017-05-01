@@ -1,6 +1,7 @@
 // PhysicsEntity.cpp
 
 #include "../private/PhysicsEntity.h"
+#include "../private/LightmaskVolumeCollider.h"
 #include "../private/CharacterController.h"
 #include "../private/BulletPhysicsSystemData.h"
 #include "../private/Util.h"
@@ -12,9 +13,9 @@ namespace sge
         PhysicsEntity::PhysicsEntity(NodeId node, BulletPhysicsSystem::Data& data)
             : node(node),
             collider(false),
+            phys_data(&data),
 			_user_index_1_value(0),
-			_user_index_2_value(0),
-            _data(&data)
+			_user_index_2_value(0)
         {
         }
 
@@ -39,8 +40,8 @@ namespace sge
 			trans.world_transform = from_bullet(transform.getOrigin());
 			trans.world_rotation = from_bullet(transform.getRotation());
 
-			_data->frame_transformed_nodes.push_back(node);
-			_data->frame_transformed_node_transforms.push_back(trans);
+			phys_data->frame_transformed_nodes.push_back(node);
+			phys_data->frame_transformed_node_transforms.push_back(trans);
         }
 
         void PhysicsEntity::extern_set_transform(const btTransform& trans, const btVector3& scale)

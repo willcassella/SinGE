@@ -74,6 +74,8 @@ namespace sge
 			EventChannel* _destroyed_character_controller_channel;
 			EventChannel* _new_level_portal_channel;
 			EventChannel* _destroyed_level_portal_channel;
+			EventChannel* _new_spotlight_channel;
+			EventChannel* _destroyed_spotlight_channel;
 			EventChannel::SubscriberId _node_world_transform_changed_sid;
 			EventChannel::SubscriberId _new_rigid_body_sid;
 			EventChannel::SubscriberId _modified_rigid_body_sid;
@@ -98,6 +100,8 @@ namespace sge
 			EventChannel::SubscriberId _destroyed_character_controller_sid;
 			EventChannel::SubscriberId _new_level_portal_sid;
 			EventChannel::SubscriberId _destroyed_level_portal_sid;
+			EventChannel::SubscriberId _new_spotlight_sid;
+			EventChannel::SubscriberId _destroyed_spotlight_sid;
         };
     }
 }

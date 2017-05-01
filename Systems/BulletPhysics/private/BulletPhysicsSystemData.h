@@ -25,6 +25,12 @@ namespace sge
 			Quat world_rotation;
 		};
 
+		// Bits used for efficiently identifying collider archetypes
+		static constexpr int CHARACTER_BIT = 1;
+		static constexpr int LEVEL_PORTAL_BIT = 2;
+		static constexpr int LIGHTMASK_RECEIVER_BIT = 4;
+		static constexpr int LIGHTMASK_VOLUME_BIT = 8;
+
         struct BulletPhysicsSystem::Data
         {
             ///////////////////
@@ -46,6 +52,8 @@ namespace sge
             //////////////////
             ///   Fields   ///
         public:
+
+			uint64 last_frame_id = 0;
 
             std::map<NodeId, std::unique_ptr<PhysicsEntity>> physics_entities;
 
