@@ -242,6 +242,11 @@ int main(int argc, char* argv[])
             last_printout = std::chrono::steady_clock::now();
         }
 
+		if (event_window.quit_requested())
+		{
+			break;
+		}
+
 		if (change_level_system.requires_change_level())
 		{
 			const auto change_level_target = change_level_system.change_level_target();

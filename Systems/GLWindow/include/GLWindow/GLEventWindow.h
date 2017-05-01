@@ -55,6 +55,8 @@ namespace sge
 
         void capture_mouse(bool value);
 
+		bool quit_requested() const;
+
     private:
 
         static void glfw_window_resize_callback(GLFWwindow* window, int width, int height);
@@ -75,14 +77,15 @@ namespace sge
         ///   Fields   ///
     private:
 
+		bool _quit_requested;
         bool _has_focus;
         GLFWwindow* _window;
         std::function<ResizeCallbackFn> _resize_callback;
         InputBindings _bindings;
         std::set<const char*> _active_action_bindings;
         int _window_x;
-	int _window_y;
-	int _window_width;
+		int _window_y;
+		int _window_width;
         int _window_height;
         double _mouse_x;
         double _mouse_y;

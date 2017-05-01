@@ -18,7 +18,8 @@ namespace sge
     }
 
     GLEventWindow::GLEventWindow()
-        : _has_focus(true),
+        : _quit_requested(false),
+		_has_focus(true),
         _window(nullptr),
         _window_x(0),
         _window_y(0),
@@ -116,7 +117,12 @@ namespace sge
         }
     }
 
-    void GLEventWindow::glfw_window_resize_callback(GLFWwindow* window, int width, int height)
+	bool GLEventWindow::quit_requested() const
+	{
+		return _quit_requested;
+	}
+
+	void GLEventWindow::glfw_window_resize_callback(GLFWwindow* window, int width, int height)
     {
         auto* event_window = static_cast<GLEventWindow*>(glfwGetWindowUserPointer(window));
         event_window->_window_width = width;
@@ -151,6 +157,12 @@ namespace sge
         {
             return;
         }
+
+		if (iter->second == "QUIT")
+		{
+			event_window->_quit_requested = true;
+			return;
+		}
 
         // If the key has been pressed
         switch (state)

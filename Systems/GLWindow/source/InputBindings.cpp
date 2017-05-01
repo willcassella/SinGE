@@ -70,6 +70,10 @@ namespace sge
             {
                 key = GLFW_KEY_SPACE;
             }
+			else if (input_name == "ESC")
+			{
+				key = GLFW_KEY_ESCAPE;
+			}
             else if (input_name.length() == 1)
             {
                 // If it's a single-character name, use dierect mappping from the name to the key
