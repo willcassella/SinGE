@@ -690,7 +690,13 @@ namespace sge
                 POST_BUFFER_HDR_UPLOAD_TYPE);
 	    }
 
-	    void GLRenderSystem::render_scene(Scene& scene, SystemFrame& /*frame*/)
+		void GLRenderSystem::reset()
+		{
+			RenderScene_clear(_state->render_scene);
+			_state->initialized_render_scene = false;
+		}
+
+		void GLRenderSystem::render_scene(Scene& scene, SystemFrame& /*frame*/)
 		{
             // Initialize the render scene data structure, if we haven't already
             if (!_state->initialized_render_scene)

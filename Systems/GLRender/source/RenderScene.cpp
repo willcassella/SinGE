@@ -736,5 +736,29 @@ namespace sge
 
 			commands.lightmask_volume_mesh_instances.resize(num_lightmasks);
 		}
+
+		void RenderScene_clear(
+			RenderScene_Commands& commands)
+		{
+			commands.lightmask_occluder_mesh_instances.clear();
+			commands.lightmask_receiver_mesh_instances.clear();
+			commands.lightmask_volume_mesh_instances.clear();
+			commands.standard_path_material_indices.clear();
+			commands.standard_path_material_instances.clear();
+			commands.spotlights.clear();
+
+			for (auto node : commands.node_lightmaps)
+			{
+				GLuint textures[] = {
+					node.second.x_basis_tex,
+					node.second.y_basis_tex,
+					node.second.z_basis_tex,
+					node.second.direct_mask_tex
+				};
+				glDeleteTextures(4, textures);
+			}
+
+			commands.node_lightmaps.clear();
+		}
 	}
 }

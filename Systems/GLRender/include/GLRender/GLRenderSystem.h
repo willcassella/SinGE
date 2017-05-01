@@ -36,6 +36,8 @@ namespace sge
 
             void set_viewport(int width, int height);
 
+			void reset();
+
 		private:
 
 			void render_scene(Scene& scene, SystemFrame& frame);

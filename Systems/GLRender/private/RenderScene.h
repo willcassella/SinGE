@@ -146,5 +146,8 @@ namespace sge
 			RenderScene_Commands& commands,
 			NodeId* const node_ids,
 			size_t num_nodes);
+
+		void RenderScene_clear(
+			RenderScene_Commands& commands);
 	}
 }
