@@ -28,12 +28,17 @@ namespace sge
 		return _change_level_target;
 	}
 
+	void ChangeLevelSystem::reset()
+	{
+		_change_level_target.clear();
+	}
+
 	void ChangeLevelSystem::check_change_level(Scene& /*scene*/, SystemFrame& /*frame*/)
 	{
 		CLevelPortal::EChangeLevel event;
 		if (_change_level_target.empty() && _change_level_channel->consume(_change_level_sid, 1, &event, nullptr))
 		{
-			_change_level_target = event.target_path.c_str();
+			_change_level_target = event.component->level_path();
 		}
 	}
 }

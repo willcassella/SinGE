@@ -20,6 +20,8 @@ namespace sge
 
 		const std::string& change_level_target() const;
 
+		void reset();
+
 	private:
 
 		void check_change_level(Scene& scene, SystemFrame& frame);
