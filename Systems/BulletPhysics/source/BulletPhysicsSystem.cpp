@@ -8,6 +8,7 @@
 #include <Engine/Components/Physics/CStaticMeshCollider.h>
 #include <Engine/Components/Physics/CRigidBody.h>
 #include <Engine/Components/Gameplay/CCharacterController.h>
+#include <Engine/Components/Gameplay/CLevelPortal.h>
 #include <Engine/SystemFrame.h>
 #include <Engine/Scene.h>
 #include "../include/BulletPhysics/BulletPhysicsSystem.h"
@@ -17,6 +18,7 @@
 #include "../private/CharacterController.h"
 #include "../private/RigidBody.h"
 #include "../private/Colliders.h"
+#include "../private/LevelPortal.h"
 #include "../private/Util.h"
 
 SGE_REFLECT_TYPE(sge::bullet_physics::BulletPhysicsSystem);
@@ -91,6 +93,8 @@ namespace sge
 			_character_controller_turn_event_channel(nullptr),
 			_character_controller_walk_event_channel(nullptr),
 			_destroyed_character_controller_channel(nullptr),
+			_new_level_portal_channel(nullptr),
+			_destroyed_level_portal_channel(nullptr),
 			_node_world_transform_changed_sid(EventChannel::INVALID_SID),
 			_new_rigid_body_sid(EventChannel::INVALID_SID),
 			_modified_rigid_body_sid(EventChannel::INVALID_SID),
@@ -112,7 +116,9 @@ namespace sge
     		_character_controller_jump_sid(EventChannel::INVALID_SID),
 			_character_controller_turn_sid(EventChannel::INVALID_SID),
 			_character_controller_walk_sid(EventChannel::INVALID_SID),
-			_destroyed_character_controller_sid(EventChannel::INVALID_SID)
+			_destroyed_character_controller_sid(EventChannel::INVALID_SID),
+			_new_level_portal_sid(EventChannel::INVALID_SID),
+			_destroyed_level_portal_sid(EventChannel::INVALID_SID)
         {
             _data = std::make_unique<Data>();
         }
@@ -192,6 +198,42 @@ namespace sge
 			_character_controller_turn_sid = _character_controller_turn_event_channel->subscribe();
 			_character_controller_walk_sid = _character_controller_walk_event_channel->subscribe();
 			_destroyed_character_controller_sid = _destroyed_character_controller_channel->subscribe();
+
+			// Level portal event subscriptions
+			_new_level_portal_channel = scene.get_event_channel(CLevelPortal::type_info, "new");
+			_destroyed_level_portal_channel = scene.get_event_channel(CLevelPortal::type_info, "destroy");
+			_new_level_portal_sid = _new_level_portal_channel->subscribe();
+			_destroyed_level_portal_sid = _destroyed_level_portal_channel->subscribe();
+	    }
+
+	    void BulletPhysicsSystem::reset()
+	    {
+			auto& dynamics_world = _data->phys_world.dynamics_world();
+
+			for (auto& phys_ent : _data->physics_entities)
+			{
+				if (phys_ent.second->collision_object)
+				{
+					dynamics_world.removeCollisionObject(phys_ent.second->collision_object.get());
+				}
+				if (phys_ent.second->ghost_object)
+				{
+					dynamics_world.removeCollisionObject(phys_ent.second->ghost_object.get());
+				}
+				if (phys_ent.second->rigid_body)
+				{
+					dynamics_world.removeRigidBody(phys_ent.second->rigid_body.get());
+				}
+				if (phys_ent.second->character_controller)
+				{
+					dynamics_world.removeAction(phys_ent.second->character_controller.get());
+					dynamics_world.removeCollisionObject(&phys_ent.second->character_controller->ghost_object);
+				}
+			}
+
+			_data->physics_entities.clear();
+			_data->frame_transformed_nodes.clear();
+			_data->frame_transformed_node_transforms.clear();
 	    }
 
 	    void BulletPhysicsSystem::consume_events(Scene& scene)
@@ -231,6 +273,10 @@ namespace sge
 			on_character_controller_turn(*_character_controller_turn_event_channel, _character_controller_turn_sid, *_data);
 			on_character_controller_walk(*_character_controller_walk_event_channel, _character_controller_walk_sid, *_data);
 			on_character_controller_destroyed(*_destroyed_character_controller_channel, _destroyed_character_controller_sid, *_data);
+
+			// Consume level portal events
+			on_level_portal_new(*_new_level_portal_channel, _new_level_portal_sid, *_data, scene);
+			on_level_portal_destroyed(*_destroyed_level_portal_channel, _destroyed_level_portal_sid, *_data);
 	    }
 
 	    void BulletPhysicsSystem::phys_tick(Scene& scene, SystemFrame& frame)
@@ -246,6 +292,33 @@ namespace sge
 			scene.get_nodes(_data->frame_transformed_nodes.data(), num_transforms, scene_nodes);
 			update_scene_nodes(scene_nodes, _data->frame_transformed_node_transforms.data(), num_transforms);
 			std::free(scene_nodes);
+
+			// Handle collision with portal component
+			auto* const portal_component_container = scene.get_component_container(CLevelPortal::type_info);
+			int numManifolds = _data->phys_world.dynamics_world().getDispatcher()->getNumManifolds();
+			for (int i = 0; i < numManifolds; i++)
+			{
+				auto* const contactManifold = _data->phys_world.dynamics_world().getDispatcher()->getManifoldByIndexInternal(i);
+				auto* const obA = contactManifold->getBody0();
+				auto* const obB = contactManifold->getBody1();
+				if (obA->getUserIndex() == 1 && obB->getUserIndex2() == 1)
+				{
+					// Get the CLevelPortal for this node
+					const auto node_id = static_cast<const PhysicsEntity*>(obB->getUserPointer())->node;
+					CLevelPortal* portal_instance;
+					portal_component_container->get_instances(&node_id, 1, &portal_instance);
+					portal_instance->trigger();
+					break;
+				}
+				if (obB->getUserIndex() == 1 && obA->getUserIndex2() == 1)
+				{
+					const auto node_id = static_cast<const PhysicsEntity*>(obA->getUserPointer())->node;
+					CLevelPortal* portal_instance;
+					portal_component_container->get_instances(&node_id, 1, &portal_instance);
+					portal_instance->trigger();
+					break;
+				}
+			}
 
 			// Acknowledge transform events (so we don't get stuck in a feedback loop)
 			frame.yield();

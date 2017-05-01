@@ -200,6 +200,7 @@
     <ClInclude Include="private\CharacterController.h" />
     <ClInclude Include="private\Colliders.h" />
     <ClInclude Include="private\DebugDrawer.h" />
+    <ClInclude Include="private\LevelPortal.h" />
     <ClInclude Include="private\PhysicsEntity.h" />
     <ClInclude Include="private\PhysicsWorld.h" />
     <ClInclude Include="private\BulletPhysicsSystemData.h" />
@@ -213,6 +214,7 @@
     <ClCompile Include="source\Colliders.cpp" />
     <ClCompile Include="source\Config.cpp" />
     <ClCompile Include="source\DebugDrawer.cpp" />
+    <ClCompile Include="source\LevelPortal.cpp" />
     <ClCompile Include="source\PhysicsEntity.cpp" />
     <ClCompile Include="source\RigidBody.cpp" />
   </ItemGroup>

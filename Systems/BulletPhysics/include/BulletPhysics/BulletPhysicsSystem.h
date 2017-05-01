@@ -35,6 +35,8 @@ namespace sge
 
 			void initialize_subscriptions(Scene& scene);
 
+			void reset();
+
         private:
 
 			void consume_events(Scene& scene);
@@ -70,6 +72,8 @@ namespace sge
 			EventChannel* _character_controller_turn_event_channel;
 			EventChannel* _character_controller_walk_event_channel;
 			EventChannel* _destroyed_character_controller_channel;
+			EventChannel* _new_level_portal_channel;
+			EventChannel* _destroyed_level_portal_channel;
 			EventChannel::SubscriberId _node_world_transform_changed_sid;
 			EventChannel::SubscriberId _new_rigid_body_sid;
 			EventChannel::SubscriberId _modified_rigid_body_sid;
@@ -92,6 +96,8 @@ namespace sge
 			EventChannel::SubscriberId _character_controller_turn_sid;
 			EventChannel::SubscriberId _character_controller_walk_sid;
 			EventChannel::SubscriberId _destroyed_character_controller_sid;
+			EventChannel::SubscriberId _new_level_portal_sid;
+			EventChannel::SubscriberId _destroyed_level_portal_sid;
         };
     }
 }

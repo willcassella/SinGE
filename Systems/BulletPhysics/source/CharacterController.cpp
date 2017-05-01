@@ -31,6 +31,9 @@ namespace sge
             ghost_object.setCollisionShape(phys_entity.capsule_collider.get());
             ghost_object.setCollisionFlags(ghost_object.getCollisionFlags() | btCollisionObject::CF_CHARACTER_OBJECT);
             ghost_object.setWorldTransform(phys_entity.transform);
+			ghost_object.setUserIndex(phys_entity.get_user_index_1());
+			ghost_object.setUserIndex2(phys_entity.get_user_index_2());
+			ghost_object.setUserPointer(&phys_entity);
             m_ghostObject = &ghost_object;
         }
 
@@ -104,6 +107,9 @@ namespace sge
 					// Create the character controller
 					physics_entity.character_controller = std::make_unique<CharacterController>(physics_entity, *components[i]);
 
+					// Set the second user index on the physics entity
+					physics_entity.set_user_index_1(1);
+
 					// Add the ghost object to the world
 					phys_data.phys_world.dynamics_world().addCollisionObject(&physics_entity.character_controller->ghost_object,
 						btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
@@ -136,6 +142,8 @@ namespace sge
 					phys_data.phys_world.dynamics_world().removeAction(phys_entity->character_controller.get());
 					phys_data.phys_world.dynamics_world().removeCollisionObject(&phys_entity->character_controller->ghost_object);
 					phys_entity->character_controller = nullptr;
+
+					phys_entity->set_user_index_1(0);
 
 					// Evaluate if we still need this physics object
 					phys_data.post_remove_physics_entity_element(*phys_entity);

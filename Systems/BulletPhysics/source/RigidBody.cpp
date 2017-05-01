@@ -60,6 +60,9 @@ namespace sge
 
 				// Create the rigid body
 				physics_entity.rigid_body = std::make_unique<btRigidBody>(cinfo);
+				physics_entity.rigid_body->setUserIndex(physics_entity.get_user_index_1());
+				physics_entity.rigid_body->setUserIndex2(physics_entity.get_user_index_2());
+				physics_entity.rigid_body->setUserPointer(&physics_entity);
 
 				// Set kinematic flags
 				if (instances[i]->kinematic())

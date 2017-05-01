@@ -12,6 +12,8 @@ namespace sge
         PhysicsEntity::PhysicsEntity(NodeId node, BulletPhysicsSystem::Data& data)
             : node(node),
             collider(false),
+			_user_index_1_value(0),
+			_user_index_2_value(0),
             _data(&data)
         {
         }
@@ -68,5 +70,59 @@ namespace sge
                 character_controller->ghost_object.setInterpolationWorldTransform(trans);
             }
         }
+
+	    int PhysicsEntity::get_user_index_1() const
+	    {
+			return _user_index_1_value;
+	    }
+
+	    void PhysicsEntity::set_user_index_1(int value)
+	    {
+			_user_index_1_value = value;
+
+			if (collision_object)
+			{
+				collision_object->setUserIndex(value);
+			}
+			if (ghost_object)
+			{
+				ghost_object->setUserIndex(value);
+			}
+			if (rigid_body)
+			{
+				rigid_body->setUserIndex(value);
+			}
+			if (character_controller)
+			{
+				character_controller->ghost_object.setUserIndex(value);
+			}
+	    }
+
+		int PhysicsEntity::get_user_index_2() const
+		{
+			return _user_index_2_value;
+		}
+
+		void PhysicsEntity::set_user_index_2(int value)
+		{
+			_user_index_2_value = value;
+
+			if (collision_object)
+			{
+				collision_object->setUserIndex2(value);
+			}
+			if (ghost_object)
+			{
+				ghost_object->setUserIndex2(value);
+			}
+			if (rigid_body)
+			{
+				rigid_body->setUserIndex2(value);
+			}
+			if (character_controller)
+			{
+				character_controller->ghost_object.setUserIndex2(value);
+			}
+		}
     }
 }

@@ -37,6 +37,14 @@ namespace sge
 
             void extern_set_transform(const btTransform& transform, const btVector3& scale);
 
+			int get_user_index_1() const;
+
+			void set_user_index_1(int value);
+
+			int get_user_index_2() const;
+
+			void set_user_index_2(int value);
+
             //////////////////
             ///   Fields   ///
         public:
@@ -59,6 +67,8 @@ namespace sge
 
         private:
 
+			int _user_index_1_value;
+			int _user_index_2_value;
             BulletPhysicsSystem::Data* _data;
         };
     }

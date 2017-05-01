@@ -77,6 +77,9 @@ namespace sge
 				phys_entity.collision_object->setCollisionShape(&phys_entity.collider);
 				phys_entity.collision_object->setWorldTransform(phys_entity.transform);
 				phys_entity.collision_object->setInterpolationWorldTransform(phys_entity.transform);
+				phys_entity.collision_object->setUserIndex(phys_entity.get_user_index_1());
+				phys_entity.collision_object->setUserIndex2(phys_entity.get_user_index_2());
+				phys_entity.collision_object->setUserPointer(&phys_entity);
 
 				// Add it to the world
 				phys_world.dynamics_world().addCollisionObject(phys_entity.collision_object.get());
@@ -114,6 +117,9 @@ namespace sge
 					phys_entity.collision_object->setCollisionShape(&phys_entity.collider);
 					phys_entity.collision_object->setWorldTransform(phys_entity.transform);
 					phys_entity.collision_object->setInterpolationWorldTransform(phys_entity.transform);
+					phys_entity.collision_object->setUserIndex(phys_entity.get_user_index_1());
+					phys_entity.collision_object->setUserIndex2(phys_entity.get_user_index_2());
+					phys_entity.collision_object->setUserPointer(&phys_entity);
 					phys_world.dynamics_world().addCollisionObject(phys_entity.collision_object.get());
 					return;
 				}
