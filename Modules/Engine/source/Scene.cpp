@@ -203,6 +203,8 @@ namespace sge
 
 	void Scene::to_archive(ArchiveWriter& writer) const
 	{
+		writer.as_object();
+
 		// Serialize next node id (so later nodes don't overlap)
 		writer.object_member("next_node_id", _scene_data.next_node_id);
 
@@ -232,6 +234,7 @@ namespace sge
 
 		// Serialize all components
 		writer.push_object_member("components");
+		writer.as_object();
 		for (const auto& componentType : _scene_data.components)
 		{
 			// Add the component type name as a field
