@@ -61,5 +61,9 @@ namespace sge
 
 		/* Lightmap data */
 		std::string lightmap_data_path;
+
+		/* Fading data */
+		float scene_gamma = 2.2f;
+		float scene_brightness_boost = 0.f;
 	};
 }
