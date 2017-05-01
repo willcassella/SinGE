@@ -14,6 +14,7 @@
 #include "../include/Engine/Components/Physics/CRigidBody.h"
 #include "../include/Engine/Components/Gameplay/CCharacterController.h"
 #include "../include/Engine/Components/Gameplay/CLevelPortal.h"
+#include "../include/Engine/Components/Gameplay/CAnimation.h"
 
 namespace sge
 {
@@ -32,5 +33,6 @@ namespace sge
 		CPointLight::register_type(scene);
         CCharacterController::register_type(scene);
 		CLevelPortal::register_type(scene);
+		CAnimation::register_type(scene);
 	}
 }
