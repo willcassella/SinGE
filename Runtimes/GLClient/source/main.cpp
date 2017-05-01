@@ -6,13 +6,12 @@
 #include <Core/Math/Quat.h>
 #include <Core/Reflection/TypeDB.h>
 #include <Resource/Archives/JsonArchive.h>
-#include <Resource/Resources/StaticMesh.h>
 #include <Engine/Scene.h>
 #include <Engine/SystemFrame.h>
 #include <Engine/UpdatePipeline.h>
 #include <Engine/Components/Gameplay/CInput.h>
 #include <Engine/Components/Gameplay/CCharacterController.h>
-#include <Engine/Components/Display/CCamera.h>
+#include <Engine/Systems/ChangeLevelSystem.h>
 #include <GLRender/GLRenderSystem.h>
 #include <GLRender/Config.h>
 #include <BulletPhysics/BulletPhysicsSystem.h>
@@ -201,6 +200,11 @@ int main(int argc, char* argv[])
 		axis_input_response(*axis_channel, axis_subscriber, scene);
 	});
 
+	// Create a change level system
+	sge::ChangeLevelSystem change_level_system;
+	change_level_system.pipeline_register(pipeline);
+	change_level_system.initialize_subscriptions(scene);
+
     // Load the pipeline config
     if (config_reader->pull_object_member("update_pipeline"))
     {
@@ -237,6 +241,21 @@ int main(int argc, char* argv[])
     	    std::cout << "Scene update took " << duration << " milliseconds" << std::endl;
             last_printout = std::chrono::steady_clock::now();
         }
+
+		if (change_level_system.requires_change_level())
+		{
+			const auto change_level_target = change_level_system.change_level_target();
+
+			// Reset systems
+			physics_system.reset();
+			renderSystem.reset();
+			change_level_system.reset();
+
+			// Load new scene
+			sge::JsonArchive scene_archive;
+			scene_archive.from_file(change_level_target.c_str());
+			scene_archive.deserialize_root(scene);
+		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
