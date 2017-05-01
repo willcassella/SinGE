@@ -228,9 +228,13 @@ namespace sge
 				{
 					dynamics_world.removeCollisionObject(phys_ent.second->collision_object.get());
 				}
-				if (phys_ent.second->ghost_object)
+				if (phys_ent.second->lightmask_volume_ghost)
 				{
-					dynamics_world.removeCollisionObject(phys_ent.second->ghost_object.get());
+					dynamics_world.removeCollisionObject(phys_ent.second->lightmask_volume_ghost.get());
+				}
+				if (phys_ent.second->level_portal_ghost)
+				{
+					dynamics_world.removeCollisionObject(phys_ent.second->level_portal_ghost.get());
 				}
 				if (phys_ent.second->rigid_body)
 				{
@@ -336,6 +340,22 @@ namespace sge
 					portal_instance->trigger();
 					break;
 				}
+
+				// Check for collision with lightmask volume
+				if (obA->getUserIndex() & CHARACTER_BIT && obB->getUserIndex() & LIGHTMASK_VOLUME_BIT)
+				{
+					if (contactManifold->getNumContacts() > 0)
+					{
+						static_cast<PhysicsEntity*>(obA->getUserPointer())->character_controller->last_lightmask_collision_frame = _data->last_frame_id;
+					}
+				}
+				if (obB->getUserIndex() & CHARACTER_BIT && obA->getUserIndex() & LIGHTMASK_VOLUME_BIT)
+				{
+					if (contactManifold->getNumContacts() > 0)
+					{
+						static_cast<PhysicsEntity*>(obB->getUserPointer())->character_controller->last_lightmask_collision_frame = _data->last_frame_id;
+					}
+				}
 			}
 
 			// Update frame id
@@ -352,7 +372,7 @@ namespace sge
 
         void BulletPhysicsSystem::debug_draw(Scene& scene, SystemFrame& /*frame*/)
         {
-	    consume_events(scene);
+			consume_events(scene);
 
             // Draw the world
             DebugDrawer drawer;
@@ -361,7 +381,7 @@ namespace sge
             _data->phys_world.dynamics_world().setDebugDrawer(nullptr);
 
             // Add events to the channel
-	    scene.get_debug_draw_line_channel()->append(drawer.lines.data(), (int32)drawer.lines.size());
+			scene.get_debug_draw_line_channel()->append(drawer.lines.data(), (int32)drawer.lines.size());
         }
     }
 }

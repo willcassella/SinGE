@@ -63,8 +63,9 @@ namespace sge
 			std::unique_ptr<btScaledBvhTriangleMeshShape> static_mesh_collider;
 			std::unique_ptr<LightmaskVolumeCollider> lightmask_volume_collider;
 
+        	std::unique_ptr<btPairCachingGhostObject> lightmask_volume_ghost;
+			std::unique_ptr<btPairCachingGhostObject> level_portal_ghost;
 			std::unique_ptr<btCollisionObject> collision_object;
-        	std::unique_ptr<btPairCachingGhostObject> ghost_object;
             std::unique_ptr<btRigidBody> rigid_body;
             std::unique_ptr<CharacterController> character_controller;
 

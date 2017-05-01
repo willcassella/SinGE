@@ -34,19 +34,17 @@ namespace sge
 				for (int32 i = 0; i < num_events; ++i)
 				{
 					auto& phys_entity = phys_data.get_or_create_physics_entity(node_ids[i], *nodes[i]);
+					assert(phys_entity.level_portal_ghost == nullptr);
 
 					// Create a ghost object for it
-					if (!phys_entity.ghost_object)
-					{
-						phys_entity.ghost_object = std::make_unique<btPairCachingGhostObject>();
-						phys_entity.ghost_object->setCollisionShape(&phys_entity.collider);
-						phys_entity.ghost_object->setWorldTransform(phys_entity.transform);
-						phys_entity.ghost_object->setInterpolationWorldTransform(phys_entity.transform);
-						phys_entity.ghost_object->setUserPointer(&phys_entity);
-						phys_entity.ghost_object->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
-						phys_data.phys_world.dynamics_world().addCollisionObject(phys_entity.ghost_object.get());
-						phys_data.post_add_physics_entity_element(phys_entity);
-					}
+					phys_entity.level_portal_ghost = std::make_unique<btPairCachingGhostObject>();
+					phys_entity.level_portal_ghost->setCollisionShape(&phys_entity.collider);
+					phys_entity.level_portal_ghost->setWorldTransform(phys_entity.transform);
+					phys_entity.level_portal_ghost->setInterpolationWorldTransform(phys_entity.transform);
+					phys_entity.level_portal_ghost->setUserPointer(&phys_entity);
+					phys_entity.level_portal_ghost->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+					phys_data.phys_world.dynamics_world().addCollisionObject(phys_entity.level_portal_ghost.get());
+					phys_data.post_add_physics_entity_element(phys_entity);
 
 					phys_entity.set_user_index_1(phys_entity.get_user_index_1() | LEVEL_PORTAL_BIT);
 				}
@@ -73,10 +71,10 @@ namespace sge
 					}
 
 					// Remove the ghost object
-					if (phys_entity->ghost_object)
+					if (phys_entity->level_portal_ghost)
 					{
-						phys_data.phys_world.dynamics_world().removeCollisionObject(phys_entity->ghost_object.get());
-						phys_entity->ghost_object = nullptr;
+						phys_data.phys_world.dynamics_world().removeCollisionObject(phys_entity->level_portal_ghost.get());
+						phys_entity->level_portal_ghost = nullptr;
 					}
 
 					phys_entity->set_user_index_1(phys_entity->get_user_index_1() & ~LEVEL_PORTAL_BIT);

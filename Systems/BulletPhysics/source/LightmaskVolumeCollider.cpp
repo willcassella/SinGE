@@ -73,27 +73,27 @@ namespace sge
 					}
 
 					auto& phys_entity = phys_data.get_or_create_physics_entity(node_ids[i], *nodes[i]);
+					assert(phys_entity.lightmask_volume_ghost == nullptr);
 
-					// Create a ghost object for it
-					if (!phys_entity.ghost_object)
-					{
-						phys_entity.ghost_object = std::make_unique<btPairCachingGhostObject>();
-						phys_entity.ghost_object->setCollisionShape(&phys_entity.collider);
-						phys_entity.ghost_object->setWorldTransform(phys_entity.transform);
-						phys_entity.ghost_object->setInterpolationWorldTransform(phys_entity.transform);
-						phys_entity.ghost_object->setUserPointer(&phys_entity);
-						phys_data.phys_world.dynamics_world().addCollisionObject(phys_entity.ghost_object.get());
-						phys_data.post_add_physics_entity_element(phys_entity);
-					}
-
-					// Create the collider and add it to the mesh
+					// Create the collider
 					auto collider = build_lightmask_volume_collider(*components[i]);
 					collider->get_mesh_shape()->setLocalScaling(phys_entity.collider.getLocalScaling());
-					phys_entity.collider.addChildShape(btTransform::getIdentity(), collider->get_mesh_shape());
-					phys_entity.lightmask_volume_collider = std::move(collider);
 
-					// Enable the flag on it
-					phys_entity.set_user_index_1(phys_entity.get_user_index_1() | LIGHTMASK_VOLUME_BIT);
+					// Create the ghost object
+					phys_entity.lightmask_volume_ghost = std::make_unique<btPairCachingGhostObject>();
+					phys_entity.lightmask_volume_ghost->setWorldTransform(phys_entity.transform);
+					phys_entity.lightmask_volume_ghost->setInterpolationWorldTransform(phys_entity.transform);
+					phys_entity.lightmask_volume_ghost->setUserPointer(&phys_entity);
+					phys_entity.lightmask_volume_ghost->setCollisionShape(collider->get_mesh_shape());
+					phys_entity.lightmask_volume_ghost->setCollisionFlags(btCollisionObject::CF_NO_CONTACT_RESPONSE);
+					phys_data.phys_world.dynamics_world().addCollisionObject(phys_entity.lightmask_volume_ghost.get(),
+						btBroadphaseProxy::SensorTrigger,
+						btBroadphaseProxy::CharacterFilter);
+					phys_data.post_add_physics_entity_element(phys_entity);
+
+					// Add the collider to the object, and set the proper bit on it
+					phys_entity.lightmask_volume_collider = std::move(collider);
+					phys_entity.lightmask_volume_ghost->setUserIndex(phys_entity.lightmask_volume_ghost->getUserIndex() & LIGHTMASK_VOLUME_BIT);
 					phys_data.post_add_physics_entity_element(phys_entity);
 				}
 			}
@@ -119,12 +119,9 @@ namespace sge
 						continue;
 					}
 
-					// Remove the lightmask volume collider
-					phys_entity->collider.removeChildShape(phys_entity->lightmask_volume_collider->get_mesh_shape());
+					// Destroy the ghost object and collider
+					phys_entity->lightmask_volume_ghost = nullptr;
 					phys_entity->lightmask_volume_collider = nullptr;
-
-					// Disable the flag on it
-					phys_entity->set_user_index_1(phys_entity->get_user_index_1() & ~LIGHTMASK_VOLUME_BIT);
 
 					// Evaluate if we should keep the physics entity
 					phys_data.post_remove_physics_entity_element(*phys_entity);

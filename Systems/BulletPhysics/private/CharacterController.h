@@ -44,10 +44,10 @@ namespace sge
         public:
 
             btPairCachingGhostObject ghost_object;
+			uint64 last_lightmask_collision_frame = 0;
 
         private:
 
-			uint64 _last_lightmask_collision_frame = 0;
             PhysicsEntity* _phys_entity;
             Angle _turn_amount;
             Vec3 _walk_dir;

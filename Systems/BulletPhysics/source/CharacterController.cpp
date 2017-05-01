@@ -79,20 +79,12 @@ namespace sge
 	    {
 			const auto last_frame_id = _phys_entity->phys_data->last_frame_id;
 
-			// If we collided with a lightmask volume
-			if (body0->getUserIndex() & LIGHTMASK_VOLUME_BIT || body1->getUserIndex() & LIGHTMASK_VOLUME_BIT)
-			{
-				// Update the last time we collided with a lightmask, reject the collision
-				_last_lightmask_collision_frame = last_frame_id;
-				return false;
-			}
-
 			// If we collided with a lighmask receiver
-			if (body0->getUserIndex() & LIGHTMASK_RECEIVER_BIT && _last_lightmask_collision_frame < last_frame_id - 1)
+			if (body0->getUserIndex() & LIGHTMASK_RECEIVER_BIT && last_lightmask_collision_frame < last_frame_id - 1)
 			{
 				return false;
 			}
-			if (body1->getUserIndex() & LIGHTMASK_RECEIVER_BIT && _last_lightmask_collision_frame < last_frame_id - 1)
+			if (body1->getUserIndex() & LIGHTMASK_RECEIVER_BIT && last_lightmask_collision_frame < last_frame_id - 1)
 			{
 				return false;
 			}
@@ -139,7 +131,8 @@ namespace sge
 
 					// Add the ghost object to the world
 					phys_data.phys_world.dynamics_world().addCollisionObject(&physics_entity.character_controller->ghost_object,
-						btBroadphaseProxy::CharacterFilter, btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter);
+						btBroadphaseProxy::CharacterFilter,
+						btBroadphaseProxy::StaticFilter | btBroadphaseProxy::DefaultFilter | btBroadphaseProxy::SensorTrigger);
 
 					// Add the character controller to the world
 					phys_data.phys_world.dynamics_world().addAction(physics_entity.character_controller.get());

@@ -31,6 +31,13 @@ namespace sge
         void PhysicsEntity::setWorldTransform(const btTransform& world_trans)
         {
             transform = world_trans;
+
+			if (lightmask_volume_ghost)
+			{
+				lightmask_volume_ghost->setWorldTransform(world_trans);
+				lightmask_volume_ghost->setInterpolationWorldTransform(world_trans);
+			}
+
             add_to_modified();
         }
 
@@ -55,10 +62,15 @@ namespace sge
 				collision_object->setWorldTransform(trans);
 				collision_object->setInterpolationWorldTransform(trans);
 			}
-			if (ghost_object)
+			if (lightmask_volume_ghost)
 			{
-				ghost_object->setWorldTransform(trans);
-				ghost_object->setInterpolationWorldTransform(trans);
+				lightmask_volume_ghost->setWorldTransform(trans);
+				lightmask_volume_ghost ->setInterpolationWorldTransform(trans);
+			}
+			if (level_portal_ghost)
+			{
+				level_portal_ghost->setWorldTransform(trans);
+				level_portal_ghost->setInterpolationWorldTransform(trans);
 			}
             if (rigid_body)
             {
@@ -85,9 +97,9 @@ namespace sge
 			{
 				collision_object->setUserIndex(value);
 			}
-			if (ghost_object)
+			if (level_portal_ghost)
 			{
-				ghost_object->setUserIndex(value);
+				level_portal_ghost->setUserIndex(value);
 			}
 			if (rigid_body)
 			{
@@ -112,9 +124,9 @@ namespace sge
 			{
 				collision_object->setUserIndex2(value);
 			}
-			if (ghost_object)
+			if (level_portal_ghost)
 			{
-				ghost_object->setUserIndex2(value);
+				level_portal_ghost->setUserIndex2(value);
 			}
 			if (rigid_body)
 			{

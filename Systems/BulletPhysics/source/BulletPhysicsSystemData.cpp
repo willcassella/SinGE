@@ -65,7 +65,7 @@ namespace sge
 	    void BulletPhysicsSystem::Data::post_add_physics_entity_element(PhysicsEntity& phys_entity)
 	    {
 			// If the physics entity does not have a ghost object, rigid body, or character controller, give it a basic collision object
-			if (phys_entity.ghost_object == nullptr && phys_entity.rigid_body == nullptr && phys_entity.character_controller == nullptr)
+			if (phys_entity.lightmask_volume_ghost == nullptr && phys_entity.level_portal_ghost == nullptr && phys_entity.rigid_body == nullptr && phys_entity.character_controller == nullptr)
 			{
 				if (phys_entity.collision_object != nullptr)
 				{
@@ -101,7 +101,8 @@ namespace sge
         {
             // If the physics entity has no rigid body, no ghost object, and no character controller
             if (phys_entity.rigid_body == nullptr &&
-				phys_entity.ghost_object == nullptr &&
+				phys_entity.level_portal_ghost == nullptr &&
+				phys_entity.lightmask_volume_ghost == nullptr &&
 				phys_entity.character_controller == nullptr)
             {
 				// If it has child shapes, then we can't remove it (evaluate if we need to add a collision object)
