@@ -30,6 +30,10 @@ namespace sge
 
 		const std::string& mesh() const;
 
+		bool lightmask_receiver() const;
+
+		void lightmask_receiver(bool value);
+
 		void mesh(std::string path);
 
 		//////////////////
@@ -38,6 +42,7 @@ namespace sge
 
 		NodeId _node;
 		std::string _mesh;
+		bool _lightmask_receiver = false;
 		SharedData* _shared_data;
 	};
 }

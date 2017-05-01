@@ -9,7 +9,8 @@
 SGE_REFLECT_TYPE(sge::CStaticMeshCollider)
 .implements<IToArchive>()
 .implements<IFromArchive>()
-.property("mesh", &CStaticMeshCollider::mesh, &CStaticMeshCollider::mesh);
+.property("mesh", &CStaticMeshCollider::mesh, &CStaticMeshCollider::mesh)
+.property("lightmask_receiver", &CStaticMeshCollider::lightmask_receiver, &CStaticMeshCollider::lightmask_receiver);
 
 namespace sge
 {
@@ -32,11 +33,13 @@ namespace sge
 	{
 		writer.as_object();
 		writer.object_member("mesh", _mesh);
+		writer.object_member("lr", _lightmask_receiver);
 	}
 
 	void CStaticMeshCollider::from_archive(ArchiveReader& reader)
 	{
 		reader.object_member("mesh", _mesh);
+		reader.object_member("lr", _lightmask_receiver);
 	}
 
 	NodeId CStaticMeshCollider::node() const
@@ -47,6 +50,17 @@ namespace sge
 	const std::string& CStaticMeshCollider::mesh() const
 	{
 		return _mesh;
+	}
+
+	bool CStaticMeshCollider::lightmask_receiver() const
+	{
+		return _lightmask_receiver;
+	}
+
+	void CStaticMeshCollider::lightmask_receiver(bool value)
+	{
+		_lightmask_receiver = value;
+		_shared_data->set_modified(_node, this, "lightmask_receiver");
 	}
 
 	void CStaticMeshCollider::mesh(std::string value)
