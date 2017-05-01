@@ -365,7 +365,6 @@ namespace sge
             glEnable(GL_CULL_FACE);
             glCullFace(GL_BACK);
             glFrontFace(GL_CCW);
-            glEnable(GL_FRAMEBUFFER_SRGB);
 
             // Get the default framebuffer
             glGetIntegerv(GL_FRAMEBUFFER_BINDING, &_state->default_framebuffer);
@@ -527,7 +526,9 @@ namespace sge
 
             // Create the post-processing shader program
             _state->post_shader_program = create_viewport_program(viewport_v_shader, post_f_shader);
-            glUniform1i(glGetUniformLocation(_state->post_shader_program, "hdr_buffer"), 5);
+            glProgramUniform1i(_state->post_shader_program, glGetUniformLocation(_state->post_shader_program, "hdr_buffer"), 5);
+			_state->post_program_gamma_uniform = glGetUniformLocation(_state->post_shader_program, "gamma");
+			_state->post_program_brightness_uniform = glGetUniformLocation(_state->post_shader_program, "brightness_boost");
 
             // Create a VAO for debug lines
             glGenVertexArrays(1, &_state->debug_line_vao);
@@ -777,6 +778,10 @@ namespace sge
 
             // Bind the post-processing shader program
             glUseProgram(_state->post_shader_program);
+
+			// Upload gamma and brightness uniforms
+			glProgramUniform1f(_state->post_shader_program, _state->post_program_gamma_uniform, scene.get_raw_scene_data().scene_gamma);
+			glProgramUniform1f(_state->post_shader_program, _state->post_program_brightness_uniform, scene.get_raw_scene_data().scene_brightness_boost);
 
 			// Draw the screen quad
 			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);

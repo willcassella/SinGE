@@ -99,6 +99,8 @@ namespace sge
             GLint scene_program_view_uniform;
 			GLint scene_program_light_dir_uniform;
 			GLint scene_program_light_intensity_uniform;
+			GLint post_program_brightness_uniform;
+			GLint post_program_gamma_uniform;
 
             // Debug draw line buffer
             GLuint debug_line_vao;
