@@ -12,6 +12,7 @@
 #include <Engine/Components/Gameplay/CInput.h>
 #include <Engine/Components/Gameplay/CCharacterController.h>
 #include <Engine/Systems/ChangeLevelSystem.h>
+#include <Engine/Systems/AnimationSystem.h>
 #include <GLRender/GLRenderSystem.h>
 #include <GLRender/Config.h>
 #include <BulletPhysics/BulletPhysicsSystem.h>
@@ -204,6 +205,10 @@ int main(int argc, char* argv[])
 	sge::ChangeLevelSystem change_level_system;
 	change_level_system.pipeline_register(pipeline);
 	change_level_system.initialize_subscriptions(scene);
+
+	// Create an animation system
+	sge::AnimationSystem anim_system;
+	anim_system.register_pipeline(pipeline);
 
     // Load the pipeline config
     if (config_reader->pull_object_member("update_pipeline"))
