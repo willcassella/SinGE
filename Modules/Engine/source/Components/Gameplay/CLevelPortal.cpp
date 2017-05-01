@@ -10,7 +10,8 @@ SGE_REFLECT_TYPE(sge::CLevelPortal)
 .implements<IToArchive>()
 .implements<IFromArchive>()
 .property("node", &CLevelPortal::node, nullptr)
-.property("fade_color", &CLevelPortal::fade_color, &CLevelPortal::fade_color)
+.property("gamma_fade", &CLevelPortal::gamma_fade, &CLevelPortal::gamma_fade)
+.property("brightness_fade", &CLevelPortal::brightness_fade, &CLevelPortal::brightness_fade)
 .property("fade_duration", &CLevelPortal::fade_duration, &CLevelPortal::fade_duration)
 .property("level_path", &CLevelPortal::level_path, &CLevelPortal::level_path);
 
@@ -68,14 +69,16 @@ namespace sge
 	void CLevelPortal::to_archive(ArchiveWriter& writer) const
 	{
 		writer.as_object();
-		writer.object_member("fc", _fade_color);
+		writer.object_member("gf", _gamma_fade);
+		writer.object_member("bf", _brightness_fade);
 		writer.object_member("fd", _fade_duration);
 		writer.object_member("lp", _level_path);
 	}
 
 	void CLevelPortal::from_archive(ArchiveReader& reader)
 	{
-		reader.object_member("fc", _fade_color);
+		reader.object_member("gf", _gamma_fade);
+		reader.object_member("bf", _brightness_fade);
 		reader.object_member("fd", _fade_duration);
 		reader.object_member("lp", _level_path);
 	}
@@ -85,15 +88,26 @@ namespace sge
 		return _node_id;
 	}
 
-	color::RGBA8 CLevelPortal::fade_color() const
+	bool CLevelPortal::gamma_fade() const
 	{
-		return _fade_color;
+		return _gamma_fade;
 	}
 
-	void CLevelPortal::fade_color(color::RGBA8 value)
+	void CLevelPortal::gamma_fade(bool value)
 	{
-		_fade_color = value;
-		_shared_data->set_modified(_node_id, this, "fade_color");
+		_gamma_fade = value;
+		_shared_data->set_modified(_node_id, this, "gamma_fade");
+	}
+
+	bool CLevelPortal::brightness_fade() const
+	{
+		return _brightness_fade;
+	}
+
+	void CLevelPortal::brightness_fade(bool value)
+	{
+		_brightness_fade = value;
+		_shared_data->set_modified(_node_id, this, "brightness_fade");
 	}
 
 	float CLevelPortal::fade_duration() const

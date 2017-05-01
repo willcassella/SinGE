@@ -32,9 +32,13 @@ namespace sge
 
 		NodeId node() const;
 
-		color::RGBA8 fade_color() const;
+		bool gamma_fade() const;
 
-		void fade_color(color::RGBA8 value);
+		void gamma_fade(bool value);
+
+		bool brightness_fade() const;
+
+		void brightness_fade(bool value);
 
 		float fade_duration() const;
 
@@ -49,7 +53,8 @@ namespace sge
 		/*--- Fields ---*/
 	private:
 
-		color::RGBA8 _fade_color = color::RGBA8::black();
+		bool _gamma_fade = true;
+		bool _brightness_fade = false;
 		float _fade_duration = 0.f;
 		std::string _level_path;
 		NodeId _node_id;
