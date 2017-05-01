@@ -356,7 +356,7 @@ namespace sge
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
             // Initialize OpenGL
-            glLineWidth(3);
+            glLineWidth(1.f);
             glClearColor(0, 0, 0, 1);
             glClearDepth(1.f);
             glEnable(GL_DEPTH_TEST);
@@ -747,8 +747,18 @@ namespace sge
 				view,
 				proj);
 
-            // Draw debug lines
-            if (!_state->frame_debug_lines.empty())
+            // Draw debug lines (only allow irradiance output)
+			glDisable(GL_STENCIL_TEST);
+			glDisable(GL_DEPTH_TEST);
+			std::array<GLenum, 5> draw_buffers = {
+				GL_NONE,
+				GL_NONE,
+				GL_NONE,
+				GL_NONE,
+				GBUFFER_IRRADIANCE_ATTACHMENT };
+			glDrawBuffers((GLsizei)draw_buffers.size(), draw_buffers.data());
+
+			if (!_state->frame_debug_lines.empty())
             {
                 glBindVertexArray(_state->debug_line_vao);
                 glUseProgram(_state->debug_line_program);
@@ -763,6 +773,15 @@ namespace sge
                 glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(_state->frame_debug_lines.size()));
                 _state->frame_debug_lines.clear();
             }
+
+			// Reset output buffers
+			draw_buffers = {
+				GBUFFER_POSITION_ATTACHMENT,
+				GBUFFER_NORMAL_ATTACHMENT,
+				GBUFFER_ALBEDO_ATTACHMENT,
+				GBUFFER_ROUGHNESS_METALLIC_ATTACHMENT,
+				GBUFFER_IRRADIANCE_ATTACHMENT };
+			glDrawBuffers((GLsizei)draw_buffers.size(), draw_buffers.data());
 
 			render_scene_shade_hdr(_state->post_framebuffer, *_state, view);
 
