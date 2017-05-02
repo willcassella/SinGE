@@ -345,7 +345,7 @@ namespace sge
                 if (light_ray.geomID)
                 {
                     const auto dot = std::max(Vec3::dot(texel_norm, ray_dir), 0.f);
-                    out_irradiance[index] = light.intensity * texel_base_color * dot;
+                    out_irradiance[index] = light.intensity * texel_base_color * dot / 3.141592654f;
                 }
             }
         }
@@ -367,7 +367,7 @@ namespace sge
         // Get the scene
         auto* const rtc_scene = scene->rtc_scene;
         const auto* const occluders = scene->occluders;
-        const float normalization_factor = 1.f / (static_cast<float>(num_sample_sets * num_accumulations) * RAY_SET_SIZE) * 2 * 3.1415926539f;
+        const float normalization_factor = 1.f / (static_cast<float>(num_sample_sets * num_accumulations) * RAY_SET_SIZE) * 2;
 
 		// Create the ray valid mask
 		alignas(32) std::array<uint32, RAY_SET_SIZE> valid_mask;
