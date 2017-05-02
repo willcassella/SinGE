@@ -945,10 +945,11 @@ class SceneManager(object):
     def save_scene(self, path):
         self._save_scene_path = path
 
-    def generate_lightmaps(self, light_dir, light_intensity, num_indirect_sample_sets, num_accumulation_steps, num_post_steps, lightmap_path):
+    def generate_lightmaps(self, light_dir, light_intensity, ambient, num_indirect_sample_sets, num_accumulation_steps, num_post_steps, lightmap_path):
         self._generate_lightmaps_query = {
             'light_direction': light_dir,
             'light_intensity': light_intensity,
+            'ambient': ambient,
             'num_indirect_sample_sets': num_indirect_sample_sets,
             'num_accumulation_steps': num_accumulation_steps,
             'post_process_steps': num_post_steps,

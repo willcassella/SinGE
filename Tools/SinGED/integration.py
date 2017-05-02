@@ -638,6 +638,8 @@ class SinGEDConnectPanel(Panel):
             box.prop(context.scene.singed, 'sge_lightmap_light_dir')
             box.prop(context.scene.singed, 'sge_lightmap_light_color')
             box.prop(context.scene.singed, 'sge_lightmap_light_intensity')
+            box.prop(context.scene.singed, 'sge_lightmap_ambient_color')
+            box.prop(context.scene.singed, 'sge_lightmap_ambient_intensity')
             box.prop(context.scene.singed, 'sge_lightmap_num_indirect_sample_sets')
             box.prop(context.scene.singed, 'sge_lightmap_num_accumulation_steps')
             box.prop(context.scene.singed, 'sge_lightmap_num_post_steps')
@@ -646,6 +648,8 @@ class SinGEDConnectPanel(Panel):
             gen_lightmaps.light_dir = context.scene.singed.sge_lightmap_light_dir
             gen_lightmaps.light_color = context.scene.singed.sge_lightmap_light_color
             gen_lightmaps.light_intensity = context.scene.singed.sge_lightmap_light_intensity
+            gen_lightmaps.ambient_color = context.scene.singed.sge_lightmap_ambient_color
+            gen_lightmaps.ambient_intensity = context.scene.singed.sge_lightmap_ambient_intensity
             gen_lightmaps.num_indirect_sample_sets = context.scene.singed.sge_lightmap_num_indirect_sample_sets
             gen_lightmaps.num_accumulation_steps = context.scene.singed.sge_lightmap_num_accumulation_steps
             gen_lightmaps.num_post_steps = context.scene.singed.sge_lightmap_num_post_steps

@@ -83,7 +83,16 @@ class SinGEDGenerateLightmaps(Operator):
 
     light_intensity = FloatProperty(
         name="Light Intensity",
-        default=1.0)
+        default=8.0)
+
+    ambient_color = FloatVectorProperty(
+        name="Ambient Color",
+        subtype='COLOR',
+        size=3)
+
+    ambient_intensity = FloatProperty(
+        name="Ambient Intensity",
+        default=0.3)
 
     num_indirect_sample_sets = IntProperty(
         name="Indirect sample sets",
@@ -114,6 +123,7 @@ class SinGEDGenerateLightmaps(Operator):
         types.SinGEDProps.sge_scene.generate_lightmaps(
             [self.light_dir[0], self.light_dir[1], self.light_dir[2]],
             [self.light_color[0] * self.light_intensity, self.light_color[1] * self.light_intensity, self.light_color[2] * self.light_intensity],
+            [self.ambient_color[0] * self.ambient_intensity, self.ambient_color[1] * self.ambient_intensity, self.ambient_color[2] * self.ambient_intensity],
             self.num_indirect_sample_sets,
             self.num_accumulation_steps,
             self.num_post_steps,
