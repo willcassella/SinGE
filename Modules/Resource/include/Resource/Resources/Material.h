@@ -104,7 +104,7 @@ namespace sge
 
 		std::string _vertex_shader;
 		std::string _pixel_shader;
-        color::RGBF32 _base_reflectivity = { 1.f, 1.f, 1.f };
+        color::RGBF32 _base_reflectivity = { 0.5f, 0.5f, 0.5f };
 		Vec2 _base_uv_scale = { 1.f, 1.f };
 		ParamTable _param_table;
 	};
