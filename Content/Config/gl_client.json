@@ -1,7 +1,7 @@
 {
     "window_width": 1920,
     "window_height": 1080,
-    "scene": "Content/Scenes/node_test.json",
+    "scene": "Content/Scenes/flower.json",
     "gl_render": {
         "viewport_vert_shader": "Content/Shaders/viewport.vert",
         "scene_shader": "Content/Shaders/pbr_shading.frag",
@@ -14,8 +14,11 @@
     "update_pipeline": [
         "gl_window_input",
         "input_response",
+        "animation_update",
+        "animation_apply",
         "bullet_physics",
-        "gl_render"
+        "gl_render",
+        "check_change_level"
     ],
     "input_bindings" : {
         "forward": "W",
@@ -24,6 +27,7 @@
         "backward": "S",
         "jump": "MOUSE_L",
         "look": "MOUSE_DY",
-        "turn": "MOUSE_DX"
+        "turn": "MOUSE_DX",
+        "QUIT": "ESC"
     }
 }

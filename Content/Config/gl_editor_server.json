@@ -1,7 +1,7 @@
 {
     "window_width": 1920,
     "window_height": 1080,
-    "scene": "Content/Scenes/node_test.json",
+    "scene": "Content/Scenes/flower.json",
     "gl_render": {
         "viewport_vert_shader": "Content/Shaders/viewport.vert",
         "scene_shader": "Content/Shaders/pbr_shading.frag",
