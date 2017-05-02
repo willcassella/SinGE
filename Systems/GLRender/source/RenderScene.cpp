@@ -154,15 +154,18 @@ namespace sge
 
 			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 			glDepthMask(GL_TRUE);
-			glStencilFunc(GL_ALWAYS, 0, 0xFF);
-			glStencilOp(GL_KEEP, GL_INCR, GL_INCR);
+			glStencilFunc(GL_ALWAYS, 3, 0xFF);
+			glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
 			glCullFace(GL_FRONT);
 
+			glStencilMask(1 << 0);
 			render_lightmask_volumes(
 				commands,
 				resources,
 				view_matrix,
 				proj_matrix);
+
+			glStencilMask(1 << 1);
 			render_lightmask_objects(
 				commands.lightmask_receiver_mesh_instances.data(),
 				commands.lightmask_receiver_mesh_instances.size(),
@@ -173,9 +176,10 @@ namespace sge
 
 			glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 			glDepthMask(GL_FALSE);
-			glStencilFunc(GL_EQUAL, 2, 0xFF);
+			glStencilFunc(GL_EQUAL, 3, 0xFF);
 			glStencilOp(GL_KEEP, GL_ZERO, GL_KEEP);
 			glCullFace(GL_BACK);
+			glStencilMask(0xF);
 
 			render_lightmask_volumes(
 				commands,
@@ -197,7 +201,7 @@ namespace sge
 
 			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 			glDepthMask(GL_TRUE);
-			glStencilFunc(GL_LEQUAL, 2, 0xFF);
+			glStencilFunc(GL_LEQUAL, 3, 0xFF);
 			glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 			glCullFace(GL_BACK);
 			glDepthFunc(GL_GEQUAL);
