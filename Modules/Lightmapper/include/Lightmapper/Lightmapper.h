@@ -146,6 +146,23 @@ namespace sge
     SGE_LIGHTMAPPER_API void free_lightmap_scene(
         LightmapScene* sene);
 
+	/**
+	 * \brief Computes a fudgy ambient term. Useful for scenes where direct lighting is not the sole exterior contribution of light.
+	 * \param ambient The amount of ambient light.
+	 * \param width The width (in pixels) of the lightmap.
+	 * \param height The height (in pixels) of the lightmap.
+	 * \param texels The array of texels in the lightmap.
+	 * \param texel_mask The array of texel masks in the lightmap.
+	 * \param out_irradiance The pixels to assign the ambient radiance to.
+	 */
+	SGE_LIGHTMAPPER_API void compute_ambient_radiance(
+		color::RGBF32 ambient,
+		int32 width,
+		int32 height,
+		const LightmapTexel* texels,
+		const byte* texel_mask,
+		color::RGBF32* out_irradiance);
+
     /**
      * \brief Computes irradiance due to direct lighting from the given light source.
      * \param light The light source to compute direct irradiance with.

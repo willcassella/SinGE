@@ -840,7 +840,7 @@ namespace sge
                 // Debug time
                 std::cout << "Computed direct lighting in ";
                 std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(gen_direct_end - gen_direct_start).count();
-                std::cout << " milliseconds." << std::endl;
+                std::cout << " milliseconds.\n";
 
                 // Compute indirect lighting for all objects
 				int32 num_sample_sets = 16;
@@ -908,6 +908,43 @@ namespace sge
                 std::cout << "Computed indirect lighting in ";
                 std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(gen_indirect_end - gen_indirect_start).count();
                 std::cout << " milliseconds." << std::endl;
+
+				// Compute ambient lighting for all objects
+				auto ambient = color::RGBF32::black();
+				reader.object_member("ambient", ambient);
+				std::cout << "Computing ambient lighting...\n";
+				const auto gen_ambient_start = std::chrono::high_resolution_clock::now();
+				for (size_t i = 0; i < lightmap_objects.size(); ++i)
+				{
+					auto& lightmap = lightmap_object_lightmaps[i];
+					compute_ambient_radiance(
+						ambient,
+						lightmap.width,
+						lightmap.height,
+						lightmap.lightmap_texels,
+						lightmap.lightmap_texel_mask,
+						lightmap.basis_x_radiance);
+					compute_ambient_radiance(
+						ambient,
+						lightmap.width,
+						lightmap.height,
+						lightmap.lightmap_texels,
+						lightmap.lightmap_texel_mask,
+						lightmap.basis_y_radiance);
+					compute_ambient_radiance(
+						ambient,
+						lightmap.width,
+						lightmap.height,
+						lightmap.lightmap_texels,
+						lightmap.lightmap_texel_mask,
+						lightmap.basis_z_radiance);
+				}
+				const auto gen_ambient_end = std::chrono::high_resolution_clock::now();
+
+				// Debug time
+				std::cout << "Computed ambient lighting in ";
+				std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(gen_ambient_end - gen_ambient_start).count();
+				std::cout << " milliseconds.\n";
 
                 // Post-process lightmaps
 				int32 num_post_steps = 4;

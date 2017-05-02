@@ -154,7 +154,7 @@ namespace sge
         delete scene;
     }
 
-    void generate_lightmap_texels(
+	void generate_lightmap_texels(
         const LightmapObject* objects,
         std::size_t num_objects,
         int32 width,
@@ -290,6 +290,28 @@ namespace sge
             }
         }
     }
+
+	void compute_ambient_radiance(
+		color::RGBF32 ambient,
+		int32 width,
+		int32 height,
+		const LightmapTexel* texels,
+		const byte* texel_mask,
+		color::RGBF32* out_radiance)
+	{
+		for (int32 y = 0; y < height; ++y)
+		{
+			for (int32 x = 0; x < width; ++x)
+			{
+				if (!texel_mask[x + y * width])
+				{
+					continue;
+				}
+
+				out_radiance[x + y * width] += ambient * texels[x + y * width].base_color / 3.141592654f;
+			}
+		}
+	}
 
     void compute_direct_irradiance(
         const LightmapScene* scene,
