@@ -76,7 +76,7 @@ void main()
     }
     else
     {
-        out_irradiance = vec4(0, 0, 0, 1);
+        out_irradiance = vec4(0.01, 0.01, 0.01, 1);
     }
 
     // Output roughness
