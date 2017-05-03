@@ -151,7 +151,6 @@ namespace sge
 	 * \param ambient The amount of ambient light.
 	 * \param width The width (in pixels) of the lightmap.
 	 * \param height The height (in pixels) of the lightmap.
-	 * \param texels The array of texels in the lightmap.
 	 * \param texel_mask The array of texel masks in the lightmap.
 	 * \param out_irradiance The pixels to assign the ambient radiance to.
 	 */
@@ -159,7 +158,6 @@ namespace sge
 		color::RGBF32 ambient,
 		int32 width,
 		int32 height,
-		const LightmapTexel* texels,
 		const byte* texel_mask,
 		color::RGBF32* out_irradiance);
 

@@ -921,21 +921,18 @@ namespace sge
 						ambient,
 						lightmap.width,
 						lightmap.height,
-						lightmap.lightmap_texels,
 						lightmap.lightmap_texel_mask,
 						lightmap.basis_x_radiance);
 					compute_ambient_radiance(
 						ambient,
 						lightmap.width,
 						lightmap.height,
-						lightmap.lightmap_texels,
 						lightmap.lightmap_texel_mask,
 						lightmap.basis_y_radiance);
 					compute_ambient_radiance(
 						ambient,
 						lightmap.width,
 						lightmap.height,
-						lightmap.lightmap_texels,
 						lightmap.lightmap_texel_mask,
 						lightmap.basis_z_radiance);
 				}

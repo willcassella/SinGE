@@ -295,7 +295,6 @@ namespace sge
 		color::RGBF32 ambient,
 		int32 width,
 		int32 height,
-		const LightmapTexel* texels,
 		const byte* texel_mask,
 		color::RGBF32* out_radiance)
 	{
@@ -308,7 +307,7 @@ namespace sge
 					continue;
 				}
 
-				out_radiance[x + y * width] += ambient * texels[x + y * width].base_color / 3.141592654f;
+				out_radiance[x + y * width] += ambient / 3.141592654f;
 			}
 		}
 	}
