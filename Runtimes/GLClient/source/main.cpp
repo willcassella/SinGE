@@ -255,6 +255,10 @@ int main(int argc, char* argv[])
 		if (change_level_system.requires_change_level())
 		{
 			const auto change_level_target = change_level_system.change_level_target();
+			if (change_level_target == "EXIT")
+			{
+				break;
+			}
 
 			// Reset systems
 			physics_system.reset();
