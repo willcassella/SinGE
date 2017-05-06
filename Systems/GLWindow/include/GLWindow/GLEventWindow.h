@@ -16,9 +16,14 @@ namespace sge
      * \param title The title for the window.
      * \param width The width of the window.
      * \param height The height of the window.
+     * \param fullscreen Whether the window should be made fullscreen.
      * \return A pointer to the created window.
      */
-    GLFWwindow* create_sge_opengl_window(const char* title, int width, int height);
+    GLFWwindow* create_sge_opengl_window(
+		const char* title,
+		int width,
+		int height,
+		bool fullscreen);
 
     /**
      * \brief A wrapper around a

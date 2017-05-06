@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
 	config_reader->object_member("window_height", window_height);
 
 	// Create a windowed mode window and its OpenGL context
-    auto* window = sge::create_sge_opengl_window("SinGE Editor Server", window_width, window_height);
+    auto* window = sge::create_sge_opengl_window("SinGE Editor Server", window_width, window_height, false);
 	if (!window)
 	{
 		std::cerr << "GLEditorServer: Could not create a window." << std::endl;

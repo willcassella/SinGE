@@ -124,20 +124,22 @@ int main(int argc, char* argv[])
 	// Initialize GLFW3
 	if (!glfwInit())
 	{
-		std::cerr << "GLEditorServer: Could not initialize GLFW3." << std::endl;
+		std::cerr << "Could not initialize GLFW3." << std::endl;
 		return EXIT_FAILURE;
 	}
 
 	// Get the window width and height
 	int window_width = 1920, window_height = 1080;
+	bool fullscreen = false;
 	config_reader->object_member("window_width", window_width);
 	config_reader->object_member("window_height", window_height);
+	config_reader->object_member("fullscreen", fullscreen);
 
 	// Create a windowed mode window and its OpenGL context
-    auto* window = sge::create_sge_opengl_window("SinGE GLClient", window_width, window_height);
+    auto* window = sge::create_sge_opengl_window("SinGE GLClient", window_width, window_height, fullscreen);
 	if (!window)
 	{
-		std::cerr << "GLEditorServer: Could not create a window." << std::endl;
+		std::cerr << "Could not create a window." << std::endl;
 		glfwTerminate();
 		return EXIT_FAILURE;
 	}
