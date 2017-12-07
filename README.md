@@ -19,8 +19,8 @@ I haven't made any major contributions to this in quite a while, since I'm busy 
 - Move away from deferred rendering. It's been fun but very few of my projects have come close to justifying it and there's other things I want to try anyway.
 - Overhaul material system. I'd like to have something like Unreal's Material/Material-Instance concept, since that not only decreases loading time but also decreases artist workload.
 - Implement some nice effects like screen-space reflection, physically-based lens flare, real-time shadows (I got *this* close to finishing it for Demersi), and GPU-based particles.
-- Rewrite the lightmapper to support image-based lighting, more efficient sampling methods, multiple light source, importance volumes, previewing (progressive lightmapping), and a more efficient storage/loading mechanism. This part of the engine is a good candidate for keeping as a seperate library, so I'd like to pursue that.
-- Make rendering engine more generic, with some ideas I had for how that could be done without significant loss of performance.
+- Rewrite the lightmapper to support image-based lighting, more efficient sampling methods, multiple light sources, importance volumes, previewing (progressive lightmapping), and a more efficient storage/loading mechanism. This part of the engine is a good candidate for keeping as a seperate library, so I'd like to pursue that.
+- Make the rendering engine more generic, with some ideas I had for how that could be done without significant loss of performance.
 - Do even more research into physically based shading.
 
 ### Engine: Short-term
