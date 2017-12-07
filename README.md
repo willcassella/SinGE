@@ -1,5 +1,4 @@
-# SinGE
-## A game engine
+# SinGE - A game engine
 
 ![Demersi](http://willcassella.net/SinGE/demersi.png)
 
