@@ -2,7 +2,7 @@
 
 #include <Core/Reflection/ReflectionBuilder.h>
 #include <Engine/UpdatePipeline.h>
-#include <Engine/Components/Display/CSPotlight.h>
+#include <Engine/Components/Display/CSpotlight.h>
 #include <Engine/Components/Physics/CSphereCollider.h>
 #include <Engine/Components/Physics/CBoxCollider.h>
 #include <Engine/Components/Physics/CCapsuleCollider.h>
