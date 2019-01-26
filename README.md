@@ -1,8 +1,8 @@
-# SinGE - A game engine
+# nektonic - A game engine (formerly SinGE)
 
 ![Demersi](http://willcassella.net/SinGE/demersi.png)
 
-SinGE was largely inspired by ideas I had while developing WillowEngine and using other game engines and tools. Demersi was a game developed with SinGE and was the primary motivator of engine direction an development. Demersi may be downloaded on [my website](http://willcassella.net).
+nektonic was largely inspired by ideas I had while developing WillowEngine and using other game engines and tools. Demersi was a game developed with nektonic and was the primary motivator of engine direction an development. Demersi may be downloaded on [my website](http://willcassella.net).
 
 ## Compiling
 
