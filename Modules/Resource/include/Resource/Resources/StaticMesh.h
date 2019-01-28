@@ -9,9 +9,9 @@
 
 namespace sge
 {
-	struct SGE_RESOURCE_API StaticMesh
-	{
-		SGE_REFLECTED_TYPE;
+    struct SGE_RESOURCE_API StaticMesh
+    {
+        SGE_REFLECTED_TYPE;
 
         struct SGE_RESOURCE_API Material
         {
@@ -38,17 +38,17 @@ namespace sge
             uint32 _num_elem_indices = 0;
         };
 
-		////////////////////////
-		///   Constructors   ///
-	public:
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		StaticMesh();
+        StaticMesh();
 
-		///////////////////
-		///   Methods   ///
-	public:
+        ///////////////////
+        ///   Methods   ///
+    public:
 
-		void to_archive(ArchiveWriter& writer) const;
+        void to_archive(ArchiveWriter& writer) const;
 
         void from_archive(ArchiveReader& reader);
 
@@ -78,9 +78,9 @@ namespace sge
 
         const Material* materials() const;
 
-		//////////////////
-		///   Fields   ///
-	private:
+        //////////////////
+        ///   Fields   ///
+    private:
 
         std::vector<Vec3> _vertex_positions;
         std::vector<HalfVec3> _vertex_normals;
@@ -90,5 +90,5 @@ namespace sge
         std::vector<UHalfVec2> _lightmap_uv;
         std::vector<uint32> _triangle_elements;
         std::vector<Material> _materials;
-	};
+    };
 }

@@ -134,9 +134,8 @@ namespace sge
 
         void typed_array(const bool* arr, std::size_t size) override
         {
-            assert(
-                current_node.node_type == BAN_NULL
-            /*You may not change a node's type, or set it twice. Generic arrays are considered a different type than typed arrays.*/);
+            // You may not change a node's type, or set it twice. Generic arrays are considered a different type than typed arrays.
+            assert(current_node.node_type == BAN_NULL);
 
             // Reserve space for size, and data (on top of current size)
             buffer->reserve(buffer->size() + sizeof(BinaryArchiveSize_t) + sizeof(BinaryArchiveBool_t) * size);
@@ -232,25 +231,25 @@ namespace sge
             buffer->push_back(BAN_NULL);
         }
 
-		void as_object() override
-		{
-			assert(current_node.node_type == BAN_NULL || current_node.node_type == BAN_OBJECT);
+        void as_object() override
+        {
+            assert(current_node.node_type == BAN_NULL || current_node.node_type == BAN_OBJECT);
 
-			if (current_node.node_type == BAN_NULL)
-			{
-				(*buffer)[current_node.offset] = BAN_OBJECT;
-				current_node.node_type = BAN_OBJECT;
-				buffer_append(BinaryArchiveSize_t{ 0 });
-				buffer_append(BinaryArchiveSize_t{ 0 });
-			}
-		}
+            if (current_node.node_type == BAN_NULL)
+            {
+                (*buffer)[current_node.offset] = BAN_OBJECT;
+                current_node.node_type = BAN_OBJECT;
+                buffer_append(BinaryArchiveSize_t{ 0 });
+                buffer_append(BinaryArchiveSize_t{ 0 });
+            }
+        }
 
         void push_object_member(const char* name) override
         {
-			// Coerce this node to an object
-			as_object();
+            // Coerce this node to an object
+            as_object();
 
-        	// Increment the member count
+            // Increment the member count
             *reinterpret_cast<BinaryArchiveSize_t*>(buffer->data() + current_node.offset + 1) += 1;
 
             // Push the current node onto the stack as a parent
@@ -269,9 +268,8 @@ namespace sge
         template <typename T>
         void impl_typed_array(BinaryArchiveNode array_type, const T* arr, std::size_t size)
         {
-            assert(
-                current_node.node_type == BAN_NULL
-                /*You may not change a node's type, or set it twice. Generic arrays are considered a different type than typed arrays.*/);
+            // You may not change a node's type, or set it twice. Generic arrays are considered a different type than typed arrays.
+            assert(current_node.node_type == BAN_NULL);
 
             // Reserve space for size, and data (on top of current size)
             buffer->reserve(buffer->size() + sizeof(BinaryArchiveSize_t) + sizeof(T) * size);
@@ -296,9 +294,8 @@ namespace sge
 
         void node_set_type(BinaryArchiveNode type)
         {
-            assert(
-                current_node.node_type == BAN_NULL
-                /*Archive nodes may not may not have their value set twice.*/);
+            // Archive nodes may not may not have their value set twice.
+            assert(current_node.node_type == BAN_NULL);
 
             current_node.node_type = type;
             (*buffer)[current_node.offset] = type;

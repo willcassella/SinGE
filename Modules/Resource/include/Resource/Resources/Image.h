@@ -8,42 +8,42 @@ struct FIBITMAP;
 
 namespace sge
 {
-	class ArchiveWriter;
+    class ArchiveWriter;
 
-	struct SGE_RESOURCE_API Image
-	{
-		SGE_REFLECTED_TYPE;
+    struct SGE_RESOURCE_API Image
+    {
+        SGE_REFLECTED_TYPE;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		Image();
-		Image(const std::string& path);
-		Image(const Image& copy);
-		Image(Image&& move);
-		~Image();
+        Image();
+        Image(const std::string& path);
+        Image(const Image& copy);
+        Image(Image&& move);
+        ~Image();
 
-		///////////////////
-		///   Methods   ///
-	public:
+        ///////////////////
+        ///   Methods   ///
+    public:
 
-		bool from_file(const char* path);
+        bool from_file(const char* path);
 
-		void to_archive(ArchiveWriter& archive) const;
+        void to_archive(ArchiveWriter& archive) const;
 
-		uint32 get_width() const;
+        uint32 get_width() const;
 
-		uint32 get_height() const;
+        uint32 get_height() const;
 
-		byte* get_bitmap();
+        byte* get_bitmap();
 
-		const byte* get_bitmap() const;
+        const byte* get_bitmap() const;
 
-		//////////////////
-		///   Fields   ///
-	private:
+        //////////////////
+        ///   Fields   ///
+    private:
 
-		FIBITMAP* _bitmap;
-	};
+        FIBITMAP* _bitmap;
+    };
 }

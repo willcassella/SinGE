@@ -6,106 +6,106 @@
 
 namespace sge
 {
-	class ArchiveWriter;
-	class ArchiveReader;
+    class ArchiveWriter;
+    class ArchiveReader;
 
-	namespace color
-	{
-		/**
-		 * \brief Represents a 32-bit color in the RGBA8 format.
-		 */
-		struct SGE_RESOURCE_API RGBA8
-		{
-			using Color_t = uint32;
-			using Red_t = uint8;
-			using Green_t = uint8;
-			using Blue_t = uint8;
-			using Alpha_t = uint8;
+    namespace color
+    {
+        /**
+         * \brief Represents a 32-bit color in the RGBA8 format.
+         */
+        struct SGE_RESOURCE_API RGBA8
+        {
+            using Color_t = uint32;
+            using Red_t = uint8;
+            using Green_t = uint8;
+            using Blue_t = uint8;
+            using Alpha_t = uint8;
             SGE_REFLECTED_TYPE;
 
-			////////////////////////
-			///   Constructors   ///
-		public:
+            ////////////////////////
+            ///   Constructors   ///
+        public:
 
             RGBA8()
                 : color(0)
-		    {
-            }
-
-			RGBA8(Color_t color)
-				: color(color)
-			{
-			}
-
-			static RGBA8 black()
             {
-				return RGBA8{ 0x000000FF };
             }
 
-			static RGBA8 white()
+            RGBA8(Color_t color)
+                : color(color)
             {
-				return RGBA8{ 0xFFFFFFFF };
             }
 
-			///////////////////
-			///   Methods   ///
-		public:
+            static RGBA8 black()
+            {
+                return RGBA8{ 0x000000FF };
+            }
 
-			std::string to_string() const;
+            static RGBA8 white()
+            {
+                return RGBA8{ 0xFFFFFFFF };
+            }
 
-			std::size_t from_string(const char* str, std::size_t len);
+            ///////////////////
+            ///   Methods   ///
+        public:
 
-			void to_archive(ArchiveWriter& writer) const;
+            std::string to_string() const;
 
-			void from_archive(ArchiveReader& reader);
+            std::size_t from_string(const char* str, std::size_t len);
 
-			Red_t red() const
-			{
-				return (color >> 24) & 0x000000FF;
-			}
+            void to_archive(ArchiveWriter& writer) const;
 
-			void red(Red_t value)
-			{
-				color &= 0x00FFFFFF;
-				color |= static_cast<Color_t>(value) << 24;
-			}
+            void from_archive(ArchiveReader& reader);
 
-			Green_t green() const
-			{
-				return (color >> 16) & 0x000000FF;
-			}
+            Red_t red() const
+            {
+                return (color >> 24) & 0x000000FF;
+            }
 
-			void green(Green_t value)
-			{
-				color &= 0xFF00FFFF;
-				color |= static_cast<Color_t>(value) << 16;
-			}
+            void red(Red_t value)
+            {
+                color &= 0x00FFFFFF;
+                color |= static_cast<Color_t>(value) << 24;
+            }
 
-			Blue_t blue() const
-			{
-				return (color >> 8) & 0x000000FF;
-			}
+            Green_t green() const
+            {
+                return (color >> 16) & 0x000000FF;
+            }
 
-			void blue(Blue_t value)
-			{
-				color &= 0xFFFF00FF;
-				color |= static_cast<Color_t>(value) << 8;
-			}
+            void green(Green_t value)
+            {
+                color &= 0xFF00FFFF;
+                color |= static_cast<Color_t>(value) << 16;
+            }
 
-			Alpha_t alpha() const
-			{
-				return color & 0x000000FF;
-			}
+            Blue_t blue() const
+            {
+                return (color >> 8) & 0x000000FF;
+            }
 
-			void alpha(Alpha_t value)
-			{
-				color &= 0xFFFFFF00;
-				color |= static_cast<Color_t>(value);
-			}
+            void blue(Blue_t value)
+            {
+                color &= 0xFFFF00FF;
+                color |= static_cast<Color_t>(value) << 8;
+            }
+
+            Alpha_t alpha() const
+            {
+                return color & 0x000000FF;
+            }
+
+            void alpha(Alpha_t value)
+            {
+                color &= 0xFFFFFF00;
+                color |= static_cast<Color_t>(value);
+            }
 
             /////////////////////
             ///   Operators   ///
-		public:
+        public:
 
             friend bool operator==(const RGBA8& lhs, const RGBA8& rhs)
             {
@@ -116,12 +116,12 @@ namespace sge
                 return lhs.color != rhs.color;
             }
 
-			//////////////////
-			///   Fields   ///
-		public:
+            //////////////////
+            ///   Fields   ///
+        public:
 
-			Color_t color;
-		};
+            Color_t color;
+        };
 
         struct SGE_RESOURCE_API RGBF32
         {
@@ -219,18 +219,18 @@ namespace sge
             {
                 return rhs * lhs;
             }
-			friend RGBF32 operator*(const RGBF32& lhs, const RGBF32& rhs)
-			{
-				return RGBF32{ lhs.red() * rhs.red(), lhs.green() * rhs.green(), lhs.blue() * rhs.blue() };
-			}
+            friend RGBF32 operator*(const RGBF32& lhs, const RGBF32& rhs)
+            {
+                return RGBF32{ lhs.red() * rhs.red(), lhs.green() * rhs.green(), lhs.blue() * rhs.blue() };
+            }
             friend RGBF32 operator/(const RGBF32& lhs, float rhs)
             {
                 return RGBF32{ lhs.red() / rhs, lhs.green() / rhs, lhs.blue() / rhs };
             }
-			friend RGBF32 operator/(const RGBF32& lhs, const RGBF32& rhs)
-			{
-				return RGBF32{ lhs.red() / rhs.red(), lhs.green() / rhs.green(), lhs.blue() / rhs.blue() };
-			}
+            friend RGBF32 operator/(const RGBF32& lhs, const RGBF32& rhs)
+            {
+                return RGBF32{ lhs.red() / rhs.red(), lhs.green() / rhs.green(), lhs.blue() / rhs.blue() };
+            }
             friend RGBF32 operator+(const RGBF32& lhs, const RGBF32& rhs)
             {
                 return RGBF32{ lhs.red() + rhs.red(), lhs.green() + rhs.green(), lhs.blue() + rhs.blue() };
@@ -244,21 +244,21 @@ namespace sge
                 lhs = lhs * rhs;
                 return lhs;
             }
-			friend RGBF32& operator*=(RGBF32& lhs, const RGBF32& rhs)
-			{
-				lhs = lhs * rhs;
-				return lhs;
-			}
+            friend RGBF32& operator*=(RGBF32& lhs, const RGBF32& rhs)
+            {
+                lhs = lhs * rhs;
+                return lhs;
+            }
             friend RGBF32& operator/=(RGBF32& lhs, float rhs)
             {
                 lhs = lhs / rhs;
                 return lhs;
             }
-			friend RGBF32& operator/=(RGBF32& lhs, const RGBF32& rhs)
-			{
-				lhs = lhs / rhs;
-				return lhs;
-			}
+            friend RGBF32& operator/=(RGBF32& lhs, const RGBF32& rhs)
+            {
+                lhs = lhs / rhs;
+                return lhs;
+            }
             friend RGBF32& operator+=(RGBF32& lhs, const RGBF32& rhs)
             {
                 lhs = lhs + rhs;
@@ -269,18 +269,18 @@ namespace sge
                 lhs = lhs - rhs;
                 return lhs;
             }
-			friend bool operator==(const RGBF32& lhs, const RGBF32& rhs)
-			{
-				bool equal = true;
-				equal &= lhs._rgb[0] == rhs._rgb[0];
-				equal &= lhs._rgb[1] == rhs._rgb[1];
-				equal &= lhs._rgb[2] == rhs._rgb[2];
-				return equal;
-			}
-			friend bool operator!=(const RGBF32& lhs, const RGBF32& rhs)
-			{
-				return !(lhs == rhs);
-			}
+            friend bool operator==(const RGBF32& lhs, const RGBF32& rhs)
+            {
+                bool equal = true;
+                equal &= lhs._rgb[0] == rhs._rgb[0];
+                equal &= lhs._rgb[1] == rhs._rgb[1];
+                equal &= lhs._rgb[2] == rhs._rgb[2];
+                return equal;
+            }
+            friend bool operator!=(const RGBF32& lhs, const RGBF32& rhs)
+            {
+                return !(lhs == rhs);
+            }
 
             //////////////////
             ///   Fields   ///
@@ -401,18 +401,18 @@ namespace sge
             {
                 return rhs * lhs;
             }
-			friend RGBAF32 operator*(const RGBAF32& lhs, const RGBAF32& rhs)
-			{
-				return RGBAF32{ lhs.red() * rhs.red(), lhs.green() * rhs.green(), lhs.blue() * rhs.blue(), lhs.alpha() * rhs.alpha() };
-			}
+            friend RGBAF32 operator*(const RGBAF32& lhs, const RGBAF32& rhs)
+            {
+                return RGBAF32{ lhs.red() * rhs.red(), lhs.green() * rhs.green(), lhs.blue() * rhs.blue(), lhs.alpha() * rhs.alpha() };
+            }
             friend RGBAF32 operator/(const RGBAF32& lhs, float rhs)
             {
                 return RGBAF32{ lhs.red() / rhs, lhs.green() / rhs, lhs.blue() / rhs, lhs.alpha() / rhs };
             }
-			friend RGBAF32 operator/(const RGBAF32& lhs, const RGBAF32& rhs)
-			{
-				return RGBAF32{ lhs.red() / rhs.red(), lhs.green() / rhs.green(), lhs.blue() / rhs.blue(), lhs.alpha() / rhs.alpha() };
-			}
+            friend RGBAF32 operator/(const RGBAF32& lhs, const RGBAF32& rhs)
+            {
+                return RGBAF32{ lhs.red() / rhs.red(), lhs.green() / rhs.green(), lhs.blue() / rhs.blue(), lhs.alpha() / rhs.alpha() };
+            }
             friend RGBAF32 operator+(const RGBAF32& lhs, const RGBAF32& rhs)
             {
                 return RGBAF32{ lhs.red() + rhs.red(), lhs.green() + rhs.green(), lhs.blue() + rhs.blue(), lhs.alpha() + rhs.alpha() };
@@ -426,21 +426,21 @@ namespace sge
                 lhs = lhs * rhs;
                 return lhs;
             }
-			friend RGBAF32& operator*=(RGBAF32& lhs, const RGBAF32& rhs)
-			{
-				lhs = lhs * rhs;
-				return lhs;
-			}
+            friend RGBAF32& operator*=(RGBAF32& lhs, const RGBAF32& rhs)
+            {
+                lhs = lhs * rhs;
+                return lhs;
+            }
             friend RGBAF32& operator/=(RGBAF32& lhs, float rhs)
             {
                 lhs = lhs / rhs;
                 return lhs;
             }
-			friend RGBAF32& operator/=(RGBAF32& lhs, const RGBAF32& rhs)
-			{
-				lhs = lhs / rhs;
-				return lhs;
-			}
+            friend RGBAF32& operator/=(RGBAF32& lhs, const RGBAF32& rhs)
+            {
+                lhs = lhs / rhs;
+                return lhs;
+            }
             friend RGBAF32& operator+=(RGBAF32& lhs, const RGBAF32& rhs)
             {
                 lhs = lhs + rhs;
@@ -451,20 +451,20 @@ namespace sge
                 lhs = lhs - rhs;
                 return lhs;
             }
-			friend bool operator==(const RGBAF32& lhs, const RGBAF32& rhs)
-			{
-				bool equal = true;
-				equal &= lhs._rgba[0] == rhs._rgba[0];
-				equal &= lhs._rgba[1] == rhs._rgba[1];
-				equal &= lhs._rgba[2] == rhs._rgba[2];
-				equal &= lhs._rgba[3] == rhs._rgba[3];
-				return equal;
-			}
+            friend bool operator==(const RGBAF32& lhs, const RGBAF32& rhs)
+            {
+                bool equal = true;
+                equal &= lhs._rgba[0] == rhs._rgba[0];
+                equal &= lhs._rgba[1] == rhs._rgba[1];
+                equal &= lhs._rgba[2] == rhs._rgba[2];
+                equal &= lhs._rgba[3] == rhs._rgba[3];
+                return equal;
+            }
 
-			friend bool operator!=(const RGBAF32& lhs, const RGBAF32& rhs)
-			{
-				return !(lhs == rhs);
-			}
+            friend bool operator!=(const RGBAF32& lhs, const RGBAF32& rhs)
+            {
+                return !(lhs == rhs);
+            }
 
             //////////////////
             ///   Fields   ///
@@ -472,5 +472,5 @@ namespace sge
 
             float _rgba[4];
         };
-	}
+    }
 }

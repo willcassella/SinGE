@@ -8,38 +8,38 @@
 
 namespace sge
 {
-	class SGE_RESOURCE_API JsonArchive final : public Archive
-	{
-		struct Data;
-		SGE_REFLECTED_TYPE;
+    class SGE_RESOURCE_API JsonArchive final : public Archive
+    {
+        struct Data;
+        SGE_REFLECTED_TYPE;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		JsonArchive();
-		~JsonArchive();
+        JsonArchive();
+        ~JsonArchive();
 
-		///////////////////
-		///   Methods   ///
-	public:
+        ///////////////////
+        ///   Methods   ///
+    public:
 
-		ArchiveWriter* write_root() override;
+        ArchiveWriter* write_root() override;
 
-		ArchiveReader* read_root() const override;
+        ArchiveReader* read_root() const override;
 
-		bool to_file(const char* path) const override;
+        bool to_file(const char* path) const override;
 
-		bool from_file(const char* path) override;
+        bool from_file(const char* path) override;
 
-		std::string to_string() const;
+        std::string to_string() const;
 
-		void from_string(const char* str);
+        void from_string(const char* str);
 
-		//////////////////
-		///   Fields   ///
-	private:
+        //////////////////
+        ///   Fields   ///
+    private:
 
-		std::unique_ptr<Data> _data;
-	};
+        std::unique_ptr<Data> _data;
+    };
 }

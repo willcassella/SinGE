@@ -5,9 +5,9 @@
 
 namespace sge
 {
-	struct SGE_RESOURCE_API Texture
-	{
-		SGE_REFLECTED_TYPE;
+    struct SGE_RESOURCE_API Texture
+    {
+        SGE_REFLECTED_TYPE;
 
         enum class ColorSpace
         {
@@ -22,39 +22,39 @@ namespace sge
             RGB,
         };
 
-		////////////////////////
-		///   Constructors   ///
-	public:
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		Texture();
-		Texture(const std::string& path);
+        Texture();
+        Texture(const std::string& path);
 
-		///////////////////
-		///   Methods   ///
-	public:
+        ///////////////////
+        ///   Methods   ///
+    public:
 
-		bool from_file(const char* path);
+        bool from_file(const char* path);
 
-		void to_archive(ArchiveWriter& writer) const;
+        void to_archive(ArchiveWriter& writer) const;
 
         ColorSpace color_space() const
-	    {
+        {
             return _color_space;
-		}
+        }
 
         void color_space(ColorSpace value)
-		{
+        {
             _color_space = value;
-		}
+        }
 
-		//////////////////
-		///   Fields   ///
-	public:
+        //////////////////
+        ///   Fields   ///
+    public:
 
-		Image image;
+        Image image;
 
-	private:
+    private:
 
         ColorSpace _color_space;
-	};
+    };
 }
