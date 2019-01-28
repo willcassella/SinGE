@@ -99,7 +99,7 @@ namespace sge
 
 		bool number(float& out) const override
 		{
-			return impl_value<float, &rapidjson::Value::IsFloat, &rapidjson::Value::GetFloat>(out);
+			return impl_value<double, &rapidjson::Value::IsDouble, &rapidjson::Value::GetDouble>(out);
 		}
 
 		bool number(double& out) const override
@@ -148,7 +148,7 @@ namespace sge
 				return false;
 			}
 
-			out = _head->GetArray().Size();
+			out = _head->Size();
 			return true;
 		}
 
@@ -199,7 +199,7 @@ namespace sge
 
 		std::size_t typed_array(float* out, std::size_t size) const override
 		{
-			return impl_typed_array<float, &rapidjson::Value::IsFloat, &rapidjson::Value::GetFloat>(out, size);
+			return impl_typed_array<double, &rapidjson::Value::IsDouble, &rapidjson::Value::GetDouble>(out, size);
 		}
 
 		std::size_t typed_array(double* out, std::size_t size) const override
@@ -234,12 +234,13 @@ namespace sge
 			_parents.push(_head);
 
 			// For each member of the object
-			for (const auto& member : _head->GetObject())
+			auto const end = _head->MemberEnd();
+			for (auto iter = _head->MemberBegin(); iter != end; ++iter)
 			{
-				_head = &member.value;
+				_head = &iter->value;
 
 				// Call the enumerator with the name of the member
-				enumerator(member.name.GetString());
+				enumerator(iter->name.GetString());
 			}
 
 			// Pop the head off the stack
@@ -255,12 +256,9 @@ namespace sge
 				return false;
 			}
 
-			// Get the node as an object
-			const auto& object = _head->GetObject();
-
 			// Try to get the member
-			auto iter = object.FindMember(name);
-			if (iter == object.MemberEnd())
+			auto iter = _head->FindMember(name);
+			if (iter == _head->MemberEnd())
 			{
 				return false;
 			}
@@ -283,14 +281,15 @@ namespace sge
 			_parents.push(_head);
 
 			// For each element of the array
-			std::size_t i = 0;
-			for (const auto& element : _head->GetArray())
+			std::size_t index = 0;
+			auto const end = _head->End();
+			for (auto iter = _head->Begin(); iter != end; ++iter)
 			{
-				_head = &element;
+				_head = &*iter;
 
 				// Call the enumerator with the index
-				enumerator(i);
-				i += 1;
+				enumerator(index);
+				index += 1;
 			}
 
 			// Pop the head off the stack
@@ -298,25 +297,16 @@ namespace sge
 			_parents.pop();
 		}
 
-		bool pull_array_element(std::size_t i) override
+		bool pull_array_element(std::size_t const i) override
 		{
-			if (!_head->IsArray())
-			{
-				return false;
-			}
-
-			// Get the node as an array
-			const auto& array = _head->GetArray();
-
-			// Make sure the array contains the element
-			if (array.Size() <= i)
+			if (!_head->IsArray() || _head->Size() <= i)
 			{
 				return false;
 			}
 
 			// Push the head onto the stack
 			_parents.push(_head);
-			_head = &array[static_cast<rapidjson::SizeType>(i)];
+			_head = &(*_head)[static_cast<rapidjson::SizeType>(i)];
 
 			return true;
 		}
@@ -336,26 +326,27 @@ namespace sge
 		}
 
 		template <typename RetT, bool(rapidjson::Value::*CheckerFn)() const, RetT(rapidjson::Value::*GetterFn)() const, typename T>
-		std::size_t impl_typed_array(T* out, std::size_t size) const
+		std::size_t impl_typed_array(T* const out, std::size_t const size) const
 		{
 			if (!_head->IsArray())
 			{
 				return 0;
 			}
 
-			auto array = _head->GetArray();
-			rapidjson::SizeType i = 0;
-			for (; i < size && i < array.Size(); ++i)
+			auto const end = _head->End();
+			std::size_t index = 0;
+			for (auto iter = _head->Begin(); iter != end && index < size; ++iter)
 			{
-				if (!(array[i].*CheckerFn)())
+				if (!((*iter).*CheckerFn)())
 				{
 					break;
 				}
 
-				out[i] = static_cast<T>((array[i].*GetterFn)());
+				out[index] = static_cast<T>(((*iter).*GetterFn)());
+				index += 1;
 			}
 
-			return i;
+			return index;
 		}
 
 		//////////////////

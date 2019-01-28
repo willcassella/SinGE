@@ -90,7 +90,7 @@ namespace sge
 
 		void number(float value) override
 		{
-			_head->SetFloat(value);
+			_head->SetDouble(value);
 		}
 
 		void number(double value) override
@@ -183,7 +183,7 @@ namespace sge
 			_head->AddMember(memberName, memberNode, *_allocator);
 
 			// Get the member node out of the object
-			_head = &_head->GetObject()[name];
+			_head = &(*_head)[name];
 		}
 
 		void push_array_element() override
@@ -202,7 +202,7 @@ namespace sge
 			_head->PushBack(element, *_allocator);
 
 			// Get the element node
-			_head = &_head->GetArray()[_head->Size() - 1];
+			_head = &(*_head)[_head->Size() - 1];
 		}
 
 	private:
@@ -211,11 +211,11 @@ namespace sge
 		void impl_typed_array(const T* array, std::size_t size)
 		{
 			_head->SetArray();
-			_head->GetArray().Reserve(static_cast<rapidjson::SizeType>(size), *_allocator);
+			_head->Reserve(static_cast<rapidjson::SizeType>(size), *_allocator);
 
 			for (std::size_t i = 0; i < size; ++i)
 			{
-				_head->GetArray().PushBack(array[i], *_allocator);
+				_head->PushBack(array[i], *_allocator);
 			}
 		}
 
