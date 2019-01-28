@@ -1,5 +1,4 @@
-bin/
-build/
+out/
 packages/
 .vscode/
 .vs/
