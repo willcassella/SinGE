@@ -13,8 +13,18 @@ if (${UNIX})
 	find_package(PkgConfig REQUIRED)
 endif()
 
-# Supress buggy warnings on Clang
+# Set GCC options
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    # Force color output
+	add_compile_options(-fdiagnostics-color=always)
+endif()
+
+# Set Clang options
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    # Force color output
+    add_compile_options(-fcolor-diagnostics)
+
+	# Supress buggy warnings
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-missing-braces")
 endif()
 
@@ -22,14 +32,14 @@ endif()
 add_subdirectory(Modules/Core)
 add_subdirectory(Modules/Resource)
 add_subdirectory(Modules/Engine)
-add_subdirectory(Modules/Lightmapper)
+#add_subdirectory(Modules/Lightmapper)
 
 # Add Systems
 add_subdirectory(Systems/GLRender)
 add_subdirectory(Systems/BulletPhysics)
 add_subdirectory(Systems/GLWindow)
-add_subdirectory(Systems/EditorServerSystem)
+#add_subdirectory(Systems/EditorServerSystem)
 
 # Add Runtimes
 add_subdirectory(Runtimes/GLClient)
-add_subdirectory(Runtimes/GLEditorServer)
+#add_subdirectory(Runtimes/GLEditorServer)
