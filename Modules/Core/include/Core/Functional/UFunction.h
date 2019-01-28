@@ -137,16 +137,16 @@ namespace sge
             }
         }
 
-	    template <typename ValueFnT, typename FnObjectT>
-	    auto assign(FnObjectT&& fn, int) -> std::enable_if_t<
-		    sizeof(ValueFnT) <= LOCAL_BUFFER_SIZE && 
-		    alignof(ValueFnT) <= alignof(Data) &&
-		    std::is_trivially_destructible<ValueFnT>::value>
-	    {
-		    new (_data.erased_local_fobj) ValueFnT(std::forward<FnObjectT>(fn));
-		    _invoker = &invoke_erased_local_fobj<ValueFnT>;
-		    _destructor = nullptr;
-	    }
+        template <typename ValueFnT, typename FnObjectT>
+        auto assign(FnObjectT&& fn, int) -> std::enable_if_t<
+            sizeof(ValueFnT) <= LOCAL_BUFFER_SIZE && 
+            alignof(ValueFnT) <= alignof(Data) &&
+            std::is_trivially_destructible<ValueFnT>::value>
+        {
+            new (_data.erased_local_fobj) ValueFnT(std::forward<FnObjectT>(fn));
+            _invoker = &invoke_erased_local_fobj<ValueFnT>;
+            _destructor = nullptr;
+        }
 
         template <typename ValueFnT, typename FnObjectT>
         void assign(FnObjectT&& fn, char)

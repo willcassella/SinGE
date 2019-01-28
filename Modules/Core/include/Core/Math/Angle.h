@@ -7,37 +7,37 @@
 
 namespace sge
 {
-	/** An arithmetic value representing an angle (internally stored as radians). */
-	struct SGE_CORE_API Angle
-	{
+    /** An arithmetic value representing an angle (internally stored as radians). */
+    struct SGE_CORE_API Angle
+    {
         SGE_REFLECTED_TYPE;
 
-		/////////////////////
-		///   Constants   ///
-	public:
+        /////////////////////
+        ///   Constants   ///
+    public:
 
-		/** Multiplication factor for converting degrees to radians. */
-		static constexpr Scalar DEGREES_TO_RADIANS = 0.0174533f;
+        /** Multiplication factor for converting degrees to radians. */
+        static constexpr Scalar DEGREES_TO_RADIANS = 0.0174533f;
 
-		/** Multiplication factor for converting radians to degrees. */
-		static constexpr Scalar RADIANS_TO_DEGREES = 57.2958f;
+        /** Multiplication factor for converting radians to degrees. */
+        static constexpr Scalar RADIANS_TO_DEGREES = 57.2958f;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		constexpr Angle()
-			: _radians{ 0 }
-		{
-		}
-		constexpr Angle(Scalar radians)
-			: _radians{ radians }
-		{
-		}
+        constexpr Angle()
+            : _radians{ 0 }
+        {
+        }
+        constexpr Angle(Scalar radians)
+            : _radians{ radians }
+        {
+        }
 
-		///////////////////
-		///   Methods   ///
-	public:
+        ///////////////////
+        ///   Methods   ///
+    public:
 
         void to_archive(ArchiveWriter& writer) const
         {
@@ -49,59 +49,59 @@ namespace sge
             reader.number(_radians);
         }
 
-		/** Returns the current value in radians. */
-		Scalar radians() const
-		{
-			return _radians;
-		}
+        /** Returns the current value in radians. */
+        Scalar radians() const
+        {
+            return _radians;
+        }
 
-		/** Sets the current value in radians. */
-		void radians(Scalar value)
-		{
-			_radians = value;
-		}
+        /** Sets the current value in radians. */
+        void radians(Scalar value)
+        {
+            _radians = value;
+        }
 
-		/** Returns the current value in degrees. */
-		Scalar degrees() const
-		{
-			return _radians * RADIANS_TO_DEGREES;
-		}
+        /** Returns the current value in degrees. */
+        Scalar degrees() const
+        {
+            return _radians * RADIANS_TO_DEGREES;
+        }
 
-		/** Sets the current value in degrees. */
-		void degrees(Scalar value)
-		{
-			_radians = value * DEGREES_TO_RADIANS;
-		}
+        /** Sets the current value in degrees. */
+        void degrees(Scalar value)
+        {
+            _radians = value * DEGREES_TO_RADIANS;
+        }
 
-		/////////////////////
-		///   Operators   ///
-	public:
+        /////////////////////
+        ///   Operators   ///
+    public:
 
-		/** Converts this object to the underlying type. */
-		operator Scalar() const
-		{
-			return _radians;
-		}
+        /** Converts this object to the underlying type. */
+        operator Scalar() const
+        {
+            return _radians;
+        }
 
-		//////////////////
-		///   Fields   ///
-	private:
+        //////////////////
+        ///   Fields   ///
+    private:
 
-		Scalar _radians;
-	};
+        Scalar _radians;
+    };
 
-	/////////////////////
-	///   Functions   ///
+    /////////////////////
+    ///   Functions   ///
 
-	/** Constructs an angle in radians. */
-	constexpr Angle radians(Scalar value)
-	{
-		return{ value };
-	}
+    /** Constructs an angle in radians. */
+    constexpr Angle radians(Scalar value)
+    {
+        return{ value };
+    }
 
-	/** Constructs an angle in degrees. */
-	constexpr Angle degrees(Scalar value)
-	{
-		return{ value * Angle::DEGREES_TO_RADIANS };
-	}
+    /** Constructs an angle in degrees. */
+    constexpr Angle degrees(Scalar value)
+    {
+        return{ value * Angle::DEGREES_TO_RADIANS };
+    }
 }
