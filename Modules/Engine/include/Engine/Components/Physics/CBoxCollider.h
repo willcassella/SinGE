@@ -6,30 +6,30 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CBoxCollider
-	{
-		SGE_REFLECTED_TYPE;
-		struct SharedData;
+    struct SGE_ENGINE_API CBoxCollider
+    {
+        SGE_REFLECTED_TYPE;
+        struct SharedData;
 
-		/////////////////////////
-		///   Constructors    ///
-	public:
+        /////////////////////////
+        ///   Constructors    ///
+    public:
 
-		explicit CBoxCollider(NodeId node, SharedData& shared_data);
+        explicit CBoxCollider(NodeId node, SharedData& shared_data);
 
-		////////////////////
-		////   Methods   ///
-	public:
+        ////////////////////
+        ////   Methods   ///
+    public:
 
         static void register_type(Scene& scene);
 
-		void to_archive(ArchiveWriter& writer) const;
+        void to_archive(ArchiveWriter& writer) const;
 
-		void from_archive(ArchiveReader& reader);
+        void from_archive(ArchiveReader& reader);
 
-		NodeId node() const;
+        NodeId node() const;
 
-		float width() const;
+        float width() const;
 
         void width(float value);
 
@@ -45,16 +45,16 @@ namespace sge
 
         void shape(const Vec3& shape);
 
-	private:
+    private:
 
-		void set_modified();
+        void set_modified();
 
-		//////////////////
-		///   Fields   ///
-	private:
+        //////////////////
+        ///   Fields   ///
+    private:
 
-		Vec3 _shape = { 1.f, 1.f, 1.f };
-		NodeId _node;
-		SharedData* _shared_data = nullptr;
-	};
+        Vec3 _shape = { 1.f, 1.f, 1.f };
+        NodeId _node;
+        SharedData* _shared_data = nullptr;
+    };
 }

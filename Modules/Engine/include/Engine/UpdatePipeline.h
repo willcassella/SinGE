@@ -9,7 +9,7 @@
 
 namespace sge
 {
-	class ArchiveReader;
+    class ArchiveReader;
     struct Scene;
     struct SceneData;
     struct SystemFrame;
@@ -41,31 +41,31 @@ namespace sge
 
         const Pipeline& get_pipeline() const;
 
-		void register_system_fn(
-			std::string name,
-			UFunction<SystemFn> system_fn);
+        void register_system_fn(
+            std::string name,
+            UFunction<SystemFn> system_fn);
 
-		template <class ObjT, typename SystemFnT>
-		void register_system_fn(
-			std::string name,
-			ObjT* obj,
-			SystemFnT system_fn)
-		{
-			auto wrapper = [obj, fn = std::move(system_fn)](Scene& scene, SystemFrame& frame)
-			{
-				(obj->*fn)(scene, frame);
-			};
+        template <class ObjT, typename SystemFnT>
+        void register_system_fn(
+            std::string name,
+            ObjT* obj,
+            SystemFnT system_fn)
+        {
+            auto wrapper = [obj, fn = std::move(system_fn)](Scene& scene, SystemFrame& frame)
+            {
+                (obj->*fn)(scene, frame);
+            };
 
-			register_system_fn(std::move(name), std::move(wrapper));
-		}
+            register_system_fn(std::move(name), std::move(wrapper));
+        }
 
-		SystemInfo* find_system(const char* name);
+        SystemInfo* find_system(const char* name);
 
         //////////////////
         ///   Fields   ///
     private:
 
-		/* Frame update pipeline. */
+        /* Frame update pipeline. */
         Pipeline _pipeline;
 
         /* System functions */

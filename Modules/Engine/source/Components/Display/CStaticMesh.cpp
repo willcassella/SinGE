@@ -26,101 +26,101 @@ SGE_REFLECT_ENUM(sge::CStaticMesh::LightmaskMode)
 
 namespace sge
 {
-	struct CStaticMesh::SharedData : CSharedData<CStaticMesh>
-	{
-	};
+    struct CStaticMesh::SharedData : CSharedData<CStaticMesh>
+    {
+    };
 
-	CStaticMesh::CStaticMesh(NodeId node, SharedData& shared_data)
-		: _node(node),
-		_shared_data(&shared_data)
-	{
-	}
+    CStaticMesh::CStaticMesh(NodeId node, SharedData& shared_data)
+        : _node(node),
+        _shared_data(&shared_data)
+    {
+    }
 
-	void CStaticMesh::register_type(Scene& scene)
-	{
-		scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CStaticMesh, SharedData>>());
-	}
+    void CStaticMesh::register_type(Scene& scene)
+    {
+        scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CStaticMesh, SharedData>>());
+    }
 
     void CStaticMesh::to_archive(ArchiveWriter& writer) const
     {
         writer.object_member("mesh", _mesh);
         writer.object_member("material", _material);
-		writer.object_member("lmm", (int)_lightmask_mode);
-		writer.object_member("lmg", _lightmask_group);
+        writer.object_member("lmm", (int)_lightmask_mode);
+        writer.object_member("lmg", _lightmask_group);
         writer.object_member("uselm", _use_lightmap);
         writer.object_member("lms", _lightmap_size);
-		writer.object_member("uvs", _uv_scale);
+        writer.object_member("uvs", _uv_scale);
     }
 
     void CStaticMesh::from_archive(ArchiveReader & reader)
     {
         reader.object_member("mesh", _mesh);
         reader.object_member("material", _material);
-		reader.object_member("lmg", _lightmask_group);
+        reader.object_member("lmg", _lightmask_group);
         reader.object_member("uselm", _use_lightmap);
         reader.object_member("lms", _lightmap_size);
-		reader.object_member("uvs", _uv_scale);
+        reader.object_member("uvs", _uv_scale);
 
-		int lightmask_mode = (int)LightmaskMode::NONE;
-		reader.object_member("lmm", lightmask_mode);
-		_lightmask_mode = (LightmaskMode)lightmask_mode;
+        int lightmask_mode = (int)LightmaskMode::NONE;
+        reader.object_member("lmm", lightmask_mode);
+        _lightmask_mode = (LightmaskMode)lightmask_mode;
     }
 
-	const std::string& CStaticMesh::mesh() const
-	{
-		return _mesh;
-	}
+    const std::string& CStaticMesh::mesh() const
+    {
+        return _mesh;
+    }
 
-	void CStaticMesh::mesh(std::string mesh)
-	{
+    void CStaticMesh::mesh(std::string mesh)
+    {
         if (mesh != _mesh)
         {
-		    _mesh = std::move(mesh);
-			set_modified("mesh");
+            _mesh = std::move(mesh);
+            set_modified("mesh");
         }
-	}
+    }
 
-	const std::string& CStaticMesh::material() const
-	{
-		return _material;
-	}
+    const std::string& CStaticMesh::material() const
+    {
+        return _material;
+    }
 
-	void CStaticMesh::material(std::string material)
-	{
+    void CStaticMesh::material(std::string material)
+    {
         if (material != _material)
         {
-		    _material = std::move(material);
+            _material = std::move(material);
             set_modified("material");
         }
-	}
+    }
 
-	CStaticMesh::LightmaskMode CStaticMesh::lightmask_mode() const
-	{
-		return _lightmask_mode;
-	}
+    CStaticMesh::LightmaskMode CStaticMesh::lightmask_mode() const
+    {
+        return _lightmask_mode;
+    }
 
-	void CStaticMesh::lightmask_mode(LightmaskMode value)
-	{
-		if (_lightmask_mode != value)
-		{
-			_lightmask_mode = value;
-			set_modified("lightmask_mode");
-		}
-	}
+    void CStaticMesh::lightmask_mode(LightmaskMode value)
+    {
+        if (_lightmask_mode != value)
+        {
+            _lightmask_mode = value;
+            set_modified("lightmask_mode");
+        }
+    }
 
-	uint32 CStaticMesh::lightmask_group() const
-	{
-		return _lightmask_group;
-	}
+    uint32 CStaticMesh::lightmask_group() const
+    {
+        return _lightmask_group;
+    }
 
-	void CStaticMesh::lightmask_group(uint32 value)
-	{
-		if (_lightmask_group != value)
-		{
-			_lightmask_group = value;
-			set_modified("lightmask_group");
-		}
-	}
+    void CStaticMesh::lightmask_group(uint32 value)
+    {
+        if (_lightmask_group != value)
+        {
+            _lightmask_group = value;
+            set_modified("lightmask_group");
+        }
+    }
 
     bool CStaticMesh::uses_lightmap() const
     {
@@ -129,11 +129,11 @@ namespace sge
 
     void CStaticMesh::set_uses_lightmap(bool value)
     {
-		if (_use_lightmap != value)
-		{
-			_use_lightmap = value;
-			set_modified("use_lightmap");
-		}
+        if (_use_lightmap != value)
+        {
+            _use_lightmap = value;
+            set_modified("use_lightmap");
+        }
     }
 
     int32 CStaticMesh::lightmap_width() const
@@ -145,41 +145,41 @@ namespace sge
     {
         if (lightmap_width() != width)
         {
-			_lightmap_size.x(width);
-			set_modified("lightmap_width");
+            _lightmap_size.x(width);
+            set_modified("lightmap_width");
         }
     }
 
-	int32 CStaticMesh::lightmap_height() const
-	{
-		return _lightmap_size.y();
-	}
+    int32 CStaticMesh::lightmap_height() const
+    {
+        return _lightmap_size.y();
+    }
 
     void CStaticMesh::lightmap_height(int32 height)
     {
         if (lightmap_height() != height)
         {
-			_lightmap_size.y(height);
-			set_modified("lightmap_height");
+            _lightmap_size.y(height);
+            set_modified("lightmap_height");
         }
     }
 
-	Vec2 CStaticMesh::uv_scale() const
-	{
-		return _uv_scale;
-	}
+    Vec2 CStaticMesh::uv_scale() const
+    {
+        return _uv_scale;
+    }
 
-	void CStaticMesh::uv_scale(Vec2 value)
-	{
-		if (_uv_scale != value)
-		{
-			_uv_scale = value;
-			set_modified("uv_scale");
-		}
-	}
+    void CStaticMesh::uv_scale(Vec2 value)
+    {
+        if (_uv_scale != value)
+        {
+            _uv_scale = value;
+            set_modified("uv_scale");
+        }
+    }
 
-	void CStaticMesh::set_modified(const char* property_name)
-	{
-		_shared_data->set_modified(_node, this, property_name);
-	}
+    void CStaticMesh::set_modified(const char* property_name)
+    {
+        _shared_data->set_modified(_node, this, property_name);
+    }
 }

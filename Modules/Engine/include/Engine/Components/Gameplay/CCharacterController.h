@@ -14,27 +14,27 @@ namespace sge
 
         struct EJump
         {
-			NodeId node;
+            NodeId node;
         };
 
         struct EWalk
         {
-			NodeId node;
+            NodeId node;
             Vec2 direction;
         };
 
         struct ETurn
         {
             /* Amount to turn clockwise. */
-			NodeId node;
+            NodeId node;
             Angle amount;
         };
 
-		////////////////////////
-		///   Constructors   ///
-	public:
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		explicit CCharacterController(NodeId node, SharedData& shared_data);
+        explicit CCharacterController(NodeId node, SharedData& shared_data);
 
         ///////////////////
         ///   Methods   ///
@@ -42,11 +42,11 @@ namespace sge
 
         static void register_type(Scene& scene);
 
-		void to_archive(ArchiveWriter& writer) const;
+        void to_archive(ArchiveWriter& writer) const;
 
-		void from_archive(ArchiveReader& reader);
+        void from_archive(ArchiveReader& reader);
 
-		NodeId node() const;
+        NodeId node() const;
 
         bool on_ground() const;
 
@@ -76,18 +76,18 @@ namespace sge
 
     private:
 
-		void set_modified(const char* property_name);
+        void set_modified(const char* property_name);
 
         ////////////////
         ///   Data   ///
     private:
 
-		float _step_height = 0.1f;
-		Angle _max_slope = degrees(30);
-		float _jump_speed = 10.f;
-		float _fall_speed = 55.f;
-		bool _on_ground = true;
-		NodeId _node;
-		SharedData* _shared_data = nullptr;
+        float _step_height = 0.1f;
+        Angle _max_slope = degrees(30);
+        float _jump_speed = 10.f;
+        float _fall_speed = 55.f;
+        bool _on_ground = true;
+        NodeId _node;
+        SharedData* _shared_data = nullptr;
     };
 }

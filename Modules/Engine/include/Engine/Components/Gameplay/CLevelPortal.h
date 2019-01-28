@@ -6,58 +6,58 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CLevelPortal
-	{
-		SGE_REFLECTED_TYPE;
-		struct SharedData;
+    struct SGE_ENGINE_API CLevelPortal
+    {
+        SGE_REFLECTED_TYPE;
+        struct SharedData;
 
-		struct EChangeLevel
-		{
-			const CLevelPortal* component;
-		};
+        struct EChangeLevel
+        {
+            const CLevelPortal* component;
+        };
 
-		/*--- Constructors ---*/
-	public:
+        /*--- Constructors ---*/
+    public:
 
-		CLevelPortal(NodeId node_id, SharedData& shared_data);
+        CLevelPortal(NodeId node_id, SharedData& shared_data);
 
-		/*--- Methods ---*/
-	public:
+        /*--- Methods ---*/
+    public:
 
-		static void register_type(Scene& scene);
+        static void register_type(Scene& scene);
 
-		void to_archive(ArchiveWriter& writer) const;
+        void to_archive(ArchiveWriter& writer) const;
 
-		void from_archive(ArchiveReader& reader);
+        void from_archive(ArchiveReader& reader);
 
-		NodeId node() const;
+        NodeId node() const;
 
-		bool gamma_fade() const;
+        bool gamma_fade() const;
 
-		void gamma_fade(bool value);
+        void gamma_fade(bool value);
 
-		bool brightness_fade() const;
+        bool brightness_fade() const;
 
-		void brightness_fade(bool value);
+        void brightness_fade(bool value);
 
-		float fade_duration() const;
+        float fade_duration() const;
 
-		void fade_duration(float value);
+        void fade_duration(float value);
 
-		const std::string& level_path() const;
+        const std::string& level_path() const;
 
-		void level_path(std::string value);
+        void level_path(std::string value);
 
-		void trigger() const;
+        void trigger() const;
 
-		/*--- Fields ---*/
-	private:
+        /*--- Fields ---*/
+    private:
 
-		bool _gamma_fade = true;
-		bool _brightness_fade = false;
-		float _fade_duration = 0.f;
-		std::string _level_path;
-		NodeId _node_id;
-		SharedData* _shared_data;
-	};
+        bool _gamma_fade = true;
+        bool _brightness_fade = false;
+        float _fade_duration = 0.f;
+        std::string _level_path;
+        NodeId _node_id;
+        SharedData* _shared_data;
+    };
 }

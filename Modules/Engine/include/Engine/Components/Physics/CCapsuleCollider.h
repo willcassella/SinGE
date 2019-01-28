@@ -10,11 +10,11 @@ namespace sge
         SGE_REFLECTED_TYPE;
         struct SharedData;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		explicit CCapsuleCollider(NodeId node, SharedData& shared_data);
+        explicit CCapsuleCollider(NodeId node, SharedData& shared_data);
 
         ///////////////////
         ///   Methods   ///
@@ -22,11 +22,11 @@ namespace sge
 
         static void register_type(Scene& scene);
 
-		void to_archive(ArchiveWriter& writer) const;
+        void to_archive(ArchiveWriter& writer) const;
 
-		void from_archive(ArchiveReader& reader);
+        void from_archive(ArchiveReader& reader);
 
-		NodeId node() const;
+        NodeId node() const;
 
         float radius() const;
 
@@ -36,16 +36,16 @@ namespace sge
 
         void height(float value);
 
-	private:
+    private:
 
-		void set_modified(const char* property_name);
+        void set_modified(const char* property_name);
 
         //////////////////
         ///   Fields   ///
     private:
 
-		Vec2 _shape = { 1.f, 1.f };
-		NodeId _node;
+        Vec2 _shape = { 1.f, 1.f };
+        NodeId _node;
         SharedData* _shared_data = nullptr;
     };
 }

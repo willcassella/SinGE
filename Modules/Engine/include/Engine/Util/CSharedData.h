@@ -7,71 +7,71 @@
 
 namespace sge
 {
-	template <class ComponentT>
-	struct CSharedData
-	{
-		////////////////////////
-		///   Constructors   ///
-	public:
+    template <class ComponentT>
+    struct CSharedData
+    {
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		CSharedData()
-			: modified_instance_channel(sizeof(EModifiedComponent), 8)
-		{
-		}
+        CSharedData()
+            : modified_instance_channel(sizeof(EModifiedComponent), 8)
+        {
+        }
 
-		///////////////////
-		///   Methods   ///
-	public:
+        ///////////////////
+        ///   Methods   ///
+    public:
 
-		void reset()
-		{
-			modified_instances.clear();
-			modified_instance_channel.clear();
-		}
+        void reset()
+        {
+            modified_instances.clear();
+            modified_instance_channel.clear();
+        }
 
-		void on_end_system_frame()
-		{
-			// Add events to the channel
-			modified_instance_channel.append(
-				modified_instances.data(),
-				sizeof(EModifiedComponent),
-				(int32)modified_instances.size());
+        void on_end_system_frame()
+        {
+            // Add events to the channel
+            modified_instance_channel.append(
+                modified_instances.data(),
+                sizeof(EModifiedComponent),
+                (int32)modified_instances.size());
 
-			modified_instances.clear();
-		}
+            modified_instances.clear();
+        }
 
-		void on_end_update_frame()
-		{
-			modified_instance_channel.clear();
-		}
+        void on_end_update_frame()
+        {
+            modified_instance_channel.clear();
+        }
 
-		EventChannel* get_event_channel(const char* name)
-		{
-			if (std::strcmp(name, "prop_mod") == 0)
-			{
-				return &modified_instance_channel;
-			}
-			else
-			{
-				return nullptr;
-			}
-		}
+        EventChannel* get_event_channel(const char* name)
+        {
+            if (std::strcmp(name, "prop_mod") == 0)
+            {
+                return &modified_instance_channel;
+            }
+            else
+            {
+                return nullptr;
+            }
+        }
 
-		void set_modified(NodeId node, ComponentT* instance, const char* prop_name)
-		{
-			EModifiedComponent event;
-			event.node = node;
-			event.instance = instance;
-			event.property = prop_name;
+        void set_modified(NodeId node, ComponentT* instance, const char* prop_name)
+        {
+            EModifiedComponent event;
+            event.node = node;
+            event.instance = instance;
+            event.property = prop_name;
 
-			modified_instances.push_back(event);
-		}
+            modified_instances.push_back(event);
+        }
 
-		//////////////////
-		///   Fields   ///
-	public:
+        //////////////////
+        ///   Fields   ///
+    public:
 
-		std::vector<EModifiedComponent> modified_instances;
-		EventChannel modified_instance_channel;
-	};
+        std::vector<EModifiedComponent> modified_instances;
+        EventChannel modified_instance_channel;
+    };
 }

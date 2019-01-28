@@ -8,13 +8,13 @@ namespace sge
     struct SGE_ENGINE_API CRigidBody
     {
         SGE_REFLECTED_TYPE;
-		struct SharedData;
+        struct SharedData;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		explicit CRigidBody(NodeId node, SharedData& shared_data);
+        explicit CRigidBody(NodeId node, SharedData& shared_data);
 
         ///////////////////
         ///   Methods   ///
@@ -22,11 +22,11 @@ namespace sge
 
         static void register_type(Scene& scene);
 
-		void to_archive(ArchiveWriter& writer) const;
+        void to_archive(ArchiveWriter& writer) const;
 
-		void from_archive(ArchiveReader& reader);
+        void from_archive(ArchiveReader& reader);
 
-		NodeId node() const;
+        NodeId node() const;
 
         bool kinematic() const;
 
@@ -62,20 +62,20 @@ namespace sge
 
         void prop_set_kinematic(bool value);
 
-		void set_modified(const char* property_name);
+        void set_modified(const char* property_name);
 
         //////////////////
         ///   Fields   ///
     private:
 
-		bool _kinematic = false;
-		float _mass = 1.f;
-		float _friction = 0.5f;
-		float _rolling_friction = 0.f;
-		float _spinning_friction = 0.f;
-		float _linear_damping = 0.f;
-		float _angular_damping = 0.f;
-		NodeId _node;
+        bool _kinematic = false;
+        float _mass = 1.f;
+        float _friction = 0.5f;
+        float _rolling_friction = 0.f;
+        float _spinning_friction = 0.f;
+        float _linear_damping = 0.f;
+        float _angular_damping = 0.f;
+        NodeId _node;
         SharedData* _shared_data = nullptr;
     };
 }

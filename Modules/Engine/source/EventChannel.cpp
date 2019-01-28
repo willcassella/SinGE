@@ -43,7 +43,7 @@ namespace sge
 
     void EventChannel::unsubscribe(SubscriberId subscriber)
     {
-		assert(subscriber < MAX_SUBSCRIBERS);
+        assert(subscriber < MAX_SUBSCRIBERS);
         _subscribers_active[subscriber] = 0;
         _subscriber_indices[subscriber] = 0xFFFFFFFF;
     }
@@ -65,8 +65,8 @@ namespace sge
         // Check start index
         if (start_index == std::numeric_limits<int32>::max())
         {
-			// In the case of no subscribers, we don't have to do anything (new subscribers don't see old events)
-			return;
+            // In the case of no subscribers, we don't have to do anything (new subscribers don't see old events)
+            return;
         }
 
         // Compute size
@@ -120,7 +120,7 @@ namespace sge
 
     int32 EventChannel::consume(SubscriberId subscriber, std::size_t event_object_size, int32 max_events, void* out_events, int32* out_num_events)
     {
-		assert(subscriber < MAX_SUBSCRIBERS);
+        assert(subscriber < MAX_SUBSCRIBERS);
         const auto buffer = _buffer;
         const auto capacity = _capacity;
         const auto end_index = _end_index;
@@ -138,20 +138,20 @@ namespace sge
 
         const auto num_copied = copy_1_num + copy_2_num;
         _subscriber_indices[subscriber] = index + num_copied;
-		if (out_num_events)
-		{
-			*out_num_events = num_copied;
-		}
+        if (out_num_events)
+        {
+            *out_num_events = num_copied;
+        }
 
-    	return num_copied;
+        return num_copied;
     }
 
-	void EventChannel::acknowledge_unconsumed(SubscriberId subscriber)
-	{
-		_subscriber_indices[subscriber] = _end_index;
-	}
+    void EventChannel::acknowledge_unconsumed(SubscriberId subscriber)
+    {
+        _subscriber_indices[subscriber] = _end_index;
+    }
 
-	void EventChannel::clear()
+    void EventChannel::clear()
     {
         _end_index = 0;
 

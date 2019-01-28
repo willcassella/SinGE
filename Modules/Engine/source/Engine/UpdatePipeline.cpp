@@ -10,18 +10,18 @@ SGE_REFLECT_TYPE(sge::UpdatePipeline);
 
 namespace sge
 {
-	UpdatePipeline::UpdatePipeline()
-	{
-	}
+    UpdatePipeline::UpdatePipeline()
+    {
+    }
 
     UpdatePipeline::~UpdatePipeline()
     {
     }
 
-	const UpdatePipeline::Pipeline& UpdatePipeline::get_pipeline() const
-	{
-		return _pipeline;
-	}
+    const UpdatePipeline::Pipeline& UpdatePipeline::get_pipeline() const
+    {
+        return _pipeline;
+    }
 
     void UpdatePipeline::configure_pipeline(ArchiveReader& reader)
     {
@@ -29,25 +29,25 @@ namespace sge
 
         reader.enumerate_array_elements([this, &reader](std::size_t /*i*/)
         {
-			// Get the name of the system
-			std::string system_fn_name;
-			sge::from_archive(system_fn_name, reader);
+            // Get the name of the system
+            std::string system_fn_name;
+            sge::from_archive(system_fn_name, reader);
 
-			// Search for the system
-			auto iter = this->_systems.find(system_fn_name);
-			if (iter == this->_systems.end())
-			{
-				if (system_fn_name.empty())
-				{
-					std::cout << "WARNING: Empty pipeline system function name." << std::endl;
-				}
-				else
-				{
-					std::cout << "WARNING: Invalid pipeline system function name: '" << system_fn_name << "'" << std::endl;
-				}
+            // Search for the system
+            auto iter = this->_systems.find(system_fn_name);
+            if (iter == this->_systems.end())
+            {
+                if (system_fn_name.empty())
+                {
+                    std::cout << "WARNING: Empty pipeline system function name." << std::endl;
+                }
+                else
+                {
+                    std::cout << "WARNING: Invalid pipeline system function name: '" << system_fn_name << "'" << std::endl;
+                }
 
-				return;
-			}
+                return;
+            }
 
             this->_pipeline.push_back(iter->second.get());
         });
@@ -68,12 +68,12 @@ namespace sge
         info->system_fn = std::move(system_fn);
 
         // Register the system
-		_systems.insert(std::make_pair(std::move(name), std::move(info)));
+        _systems.insert(std::make_pair(std::move(name), std::move(info)));
     }
 
-	SystemInfo* UpdatePipeline::find_system(const char* name)
-	{
-		const auto iter = _systems.find(name);
-		return iter != _systems.end() ? iter->second.get() : nullptr;
-	}
+    SystemInfo* UpdatePipeline::find_system(const char* name)
+    {
+        const auto iter = _systems.find(name);
+        return iter != _systems.end() ? iter->second.get() : nullptr;
+    }
 }

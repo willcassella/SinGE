@@ -5,44 +5,44 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CStaticMeshCollider
-	{
-		struct SharedData;
-		SGE_REFLECTED_TYPE;
+    struct SGE_ENGINE_API CStaticMeshCollider
+    {
+        struct SharedData;
+        SGE_REFLECTED_TYPE;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		CStaticMeshCollider(NodeId node, SharedData& shared_data);
+        CStaticMeshCollider(NodeId node, SharedData& shared_data);
 
-		///////////////////
-		///   Methods   ///
-	public:
+        ///////////////////
+        ///   Methods   ///
+    public:
 
-		static void register_type(Scene& scene);
+        static void register_type(Scene& scene);
 
-		void to_archive(ArchiveWriter& writer) const;
+        void to_archive(ArchiveWriter& writer) const;
 
-		void from_archive(ArchiveReader& reader);
+        void from_archive(ArchiveReader& reader);
 
-		NodeId node() const;
+        NodeId node() const;
 
-		const std::string& mesh() const;
+        const std::string& mesh() const;
 
-		bool lightmask_receiver() const;
+        bool lightmask_receiver() const;
 
-		void lightmask_receiver(bool value);
+        void lightmask_receiver(bool value);
 
-		void mesh(std::string path);
+        void mesh(std::string path);
 
-		//////////////////
-		///   Fields   ///
-	private:
+        //////////////////
+        ///   Fields   ///
+    private:
 
-		NodeId _node;
-		std::string _mesh;
-		bool _lightmask_receiver = false;
-		SharedData* _shared_data;
-	};
+        NodeId _node;
+        std::string _mesh;
+        bool _lightmask_receiver = false;
+        SharedData* _shared_data;
+    };
 }

@@ -6,36 +6,36 @@
 
 namespace sge
 {
-	struct SGE_ENGINE_API CInput
-	{
-		SGE_REFLECTED_TYPE;
-		struct SharedData;
+    struct SGE_ENGINE_API CInput
+    {
+        SGE_REFLECTED_TYPE;
+        struct SharedData;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		explicit CInput(NodeId node, SharedData& shared_data);
+        explicit CInput(NodeId node, SharedData& shared_data);
 
-		//////////////////
-		///   Events   ///
-	public:
+        //////////////////
+        ///   Events   ///
+    public:
 
         using EventName_t = FixedString<32>;
 
-		/* Input event dispatched when an 'action' occurs. */
-		struct EAction
-		{
-			NodeId input_node;
-			EventName_t name;
-		};
+        /* Input event dispatched when an 'action' occurs. */
+        struct EAction
+        {
+            NodeId input_node;
+            EventName_t name;
+        };
 
-		/* Input event dispatched when an input axis changes. */
-		struct EAxis
-		{
-			///////////////////
-			///   Methods   ///
-		public:
+        /* Input event dispatched when an input axis changes. */
+        struct EAxis
+        {
+            ///////////////////
+            ///   Methods   ///
+        public:
 
             float axis_half() const
             {
@@ -57,28 +57,28 @@ namespace sge
                 return distance_from_half() / (max - axis_half());
             }
 
-			//////////////////
-			///   Fields   ///
-		public:
+            //////////////////
+            ///   Fields   ///
+        public:
 
-			NodeId input_node;
-			EventName_t name;
-			float value;
+            NodeId input_node;
+            EventName_t name;
+            float value;
             float min;
             float max;
-		};
+        };
 
         ///////////////////
         ///   Methods   ///
-	public:
+    public:
 
         static void register_type(Scene& scene);
 
-		void to_archive(ArchiveWriter& writer) const;
+        void to_archive(ArchiveWriter& writer) const;
 
-		void from_archive(ArchiveReader& reader);
+        void from_archive(ArchiveReader& reader);
 
-		NodeId node() const;
+        NodeId node() const;
 
         void add_action_event(EventName_t action_name) const;
 
@@ -86,9 +86,9 @@ namespace sge
 
         //////////////////
         ///   Fields   ///
-	private:
+    private:
 
-		NodeId _node;
-		SharedData* _shared_data = nullptr;
-	};
+        NodeId _node;
+        SharedData* _shared_data = nullptr;
+    };
 }

@@ -4,7 +4,7 @@
 #include <Core/config.h>
 
 #ifdef SGE_ENGINE_BUILD
-#	define SGE_ENGINE_API SGE_EXPORT
+#   define SGE_ENGINE_API SGE_EXPORT
 #else
-#	define SGE_ENGINE_API SGE_IMPORT
+#   define SGE_ENGINE_API SGE_IMPORT
 #endif

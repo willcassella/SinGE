@@ -7,49 +7,49 @@
 
 namespace sge
 {
-	struct ProcessingFrame;
-	struct SceneData;
-	struct Scene;
+    struct ProcessingFrame;
+    struct SceneData;
+    struct Scene;
 
-	struct SGE_ENGINE_API SystemFrame
-	{
-		SGE_REFLECTED_TYPE;
+    struct SGE_ENGINE_API SystemFrame
+    {
+        SGE_REFLECTED_TYPE;
 
-		/* Only 'Scene' objects may construct SystemFrames. */
-		friend Scene;
+        /* Only 'Scene' objects may construct SystemFrames. */
+        friend Scene;
 
-		////////////////////////
-		///   Constructors   ///
-	private:
+        ////////////////////////
+        ///   Constructors   ///
+    private:
 
-		SystemFrame() = default;
-		SystemFrame(SystemFrame&& move) = delete;
-		SystemFrame(const SystemFrame& copy) = delete;
-		SystemFrame& operator=(const SystemFrame& copy) = delete;
-		SystemFrame& operator=(SystemFrame&& move) = delete;
+        SystemFrame() = default;
+        SystemFrame(SystemFrame&& move) = delete;
+        SystemFrame(const SystemFrame& copy) = delete;
+        SystemFrame& operator=(const SystemFrame& copy) = delete;
+        SystemFrame& operator=(SystemFrame&& move) = delete;
 
-		///////////////////
-		///   Methods   ///
-	public:
+        ///////////////////
+        ///   Methods   ///
+    public:
 
-		void yield();
+        void yield();
 
-		uint64 frame_id() const;
+        uint64 frame_id() const;
 
-		float current_time() const;
+        float current_time() const;
 
-		float time_delta() const;
+        float time_delta() const;
 
-		void push(const char* system_name);
+        void push(const char* system_name);
 
-		//////////////////
-		///   Fields   ///
-	private:
+        //////////////////
+        ///   Fields   ///
+    private:
 
-		float _current_time = 0.f;
-		float _time_delta = 0.f;
-		Scene* _scene = nullptr;
-		UpdatePipeline* _update_pipeline = nullptr;
-		std::vector<SystemInfo*> _job_queue;
-	};
+        float _current_time = 0.f;
+        float _time_delta = 0.f;
+        Scene* _scene = nullptr;
+        UpdatePipeline* _update_pipeline = nullptr;
+        std::vector<SystemInfo*> _job_queue;
+    };
 }

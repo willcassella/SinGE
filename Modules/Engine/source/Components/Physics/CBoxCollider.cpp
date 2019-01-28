@@ -15,37 +15,37 @@ SGE_REFLECT_TYPE(sge::CBoxCollider)
 
 namespace sge
 {
-	struct CBoxCollider::SharedData : public CSharedData<CBoxCollider>
-	{
-	};
+    struct CBoxCollider::SharedData : public CSharedData<CBoxCollider>
+    {
+    };
 
-	CBoxCollider::CBoxCollider(NodeId node, SharedData& shared_data)
-		: _node(node),
-		_shared_data(&shared_data)
-	{
-	}
+    CBoxCollider::CBoxCollider(NodeId node, SharedData& shared_data)
+        : _node(node),
+        _shared_data(&shared_data)
+    {
+    }
 
     void CBoxCollider::register_type(Scene& scene)
     {
         scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CBoxCollider, SharedData>>());
     }
 
-	void CBoxCollider::to_archive(ArchiveWriter& writer) const
-	{
-		writer.object_member("s", _shape);
-	}
+    void CBoxCollider::to_archive(ArchiveWriter& writer) const
+    {
+        writer.object_member("s", _shape);
+    }
 
-	void CBoxCollider::from_archive(ArchiveReader& reader)
-	{
-		reader.object_member("s", _shape);
-	}
+    void CBoxCollider::from_archive(ArchiveReader& reader)
+    {
+        reader.object_member("s", _shape);
+    }
 
-	NodeId CBoxCollider::node() const
-	{
-		return _node;
-	}
+    NodeId CBoxCollider::node() const
+    {
+        return _node;
+    }
 
-	float CBoxCollider::width() const
+    float CBoxCollider::width() const
     {
         return _shape.x();
     }
@@ -94,15 +94,15 @@ namespace sge
 
     void CBoxCollider::shape(const Vec3& value)
     {
-		if (_shape != value)
-		{
-			_shape = value;
-			set_modified();
-		}
+        if (_shape != value)
+        {
+            _shape = value;
+            set_modified();
+        }
     }
 
-	void CBoxCollider::set_modified()
-	{
-		_shared_data->set_modified(_node, this, "shape");
-	}
+    void CBoxCollider::set_modified()
+    {
+        _shared_data->set_modified(_node, this, "shape");
+    }
 }

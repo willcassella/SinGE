@@ -21,43 +21,43 @@ namespace sge
     {
     };
 
-	CRigidBody::CRigidBody(NodeId node, SharedData& shared_data)
-		: _node(node),
-		_shared_data(&shared_data)
-	{
-	}
+    CRigidBody::CRigidBody(NodeId node, SharedData& shared_data)
+        : _node(node),
+        _shared_data(&shared_data)
+    {
+    }
 
     void CRigidBody::register_type(Scene& scene)
     {
         scene.register_component_type(type_info, std::make_unique<BasicComponentContainer<CRigidBody, SharedData>>());
     }
 
-	void CRigidBody::to_archive(ArchiveWriter& writer) const
-	{
-		writer.object_member("k", _kinematic);
-		writer.object_member("m", _mass);
-		writer.object_member("f", _friction);
-		writer.object_member("rf", _rolling_friction);
-		writer.object_member("sf", _spinning_friction);
-		writer.object_member("lin", _linear_damping);
-		writer.object_member("ang", _angular_damping);
-	}
+    void CRigidBody::to_archive(ArchiveWriter& writer) const
+    {
+        writer.object_member("k", _kinematic);
+        writer.object_member("m", _mass);
+        writer.object_member("f", _friction);
+        writer.object_member("rf", _rolling_friction);
+        writer.object_member("sf", _spinning_friction);
+        writer.object_member("lin", _linear_damping);
+        writer.object_member("ang", _angular_damping);
+    }
 
-	void CRigidBody::from_archive(ArchiveReader& reader)
-	{
-		reader.object_member("k", _kinematic);
-		reader.object_member("m", _mass);
-		reader.object_member("f", _friction);
-		reader.object_member("rf", _rolling_friction);
-		reader.object_member("sf", _spinning_friction);
-		reader.object_member("lin", _linear_damping);
-		reader.object_member("ang", _angular_damping);
-	}
+    void CRigidBody::from_archive(ArchiveReader& reader)
+    {
+        reader.object_member("k", _kinematic);
+        reader.object_member("m", _mass);
+        reader.object_member("f", _friction);
+        reader.object_member("rf", _rolling_friction);
+        reader.object_member("sf", _spinning_friction);
+        reader.object_member("lin", _linear_damping);
+        reader.object_member("ang", _angular_damping);
+    }
 
-	NodeId CRigidBody::node() const
-	{
-		return _node;
-	}
+    NodeId CRigidBody::node() const
+    {
+        return _node;
+    }
 
     bool CRigidBody::kinematic() const
     {
@@ -69,7 +69,7 @@ namespace sge
         if (!_kinematic)
         {
             _kinematic = true;
-			set_modified("kinematic");
+            set_modified("kinematic");
         }
     }
 
@@ -78,7 +78,7 @@ namespace sge
         if (_kinematic)
         {
             _kinematic = false;
-			set_modified("kinematic");
+            set_modified("kinematic");
         }
     }
 
@@ -89,11 +89,11 @@ namespace sge
 
     void CRigidBody::mass(float value)
     {
-		if (_mass != value)
-		{
-			_mass = value;
-			set_modified("mass");
-		}
+        if (_mass != value)
+        {
+            _mass = value;
+            set_modified("mass");
+        }
     }
 
     float CRigidBody::friction() const
@@ -103,11 +103,11 @@ namespace sge
 
     void CRigidBody::friction(float value)
     {
-		if (_friction != value)
-		{
-			_friction = value;
-			set_modified("friction");
-		}
+        if (_friction != value)
+        {
+            _friction = value;
+            set_modified("friction");
+        }
     }
 
     float CRigidBody::rolling_friction() const
@@ -117,25 +117,25 @@ namespace sge
 
     void CRigidBody::rolling_friction(float value)
     {
-		if (_rolling_friction != value)
-		{
-			_rolling_friction = value;
-			set_modified("rolling_friction");
-		}
+        if (_rolling_friction != value)
+        {
+            _rolling_friction = value;
+            set_modified("rolling_friction");
+        }
     }
 
     float CRigidBody::spinning_friction() const
     {
-		return _spinning_friction;
+        return _spinning_friction;
     }
 
     void CRigidBody::spinning_friction(float value)
     {
-		if (_spinning_friction != value)
-		{
-			_spinning_friction = value;
-			set_modified("spinning_friction");
-		}
+        if (_spinning_friction != value)
+        {
+            _spinning_friction = value;
+            set_modified("spinning_friction");
+        }
     }
 
     float CRigidBody::linear_damping() const
@@ -145,11 +145,11 @@ namespace sge
 
     void CRigidBody::linear_damping(float value)
     {
-		if (_linear_damping != value)
-		{
-			_linear_damping = value;
-			set_modified("linear_damping");
-		}
+        if (_linear_damping != value)
+        {
+            _linear_damping = value;
+            set_modified("linear_damping");
+        }
     }
 
     float CRigidBody::angular_damping() const
@@ -159,12 +159,12 @@ namespace sge
 
     void CRigidBody::angular_damping(float value)
     {
-		if (_angular_damping != value)
-		{
-			_angular_damping = value;
-			set_modified("angular_damping");
-		}
-	}
+        if (_angular_damping != value)
+        {
+            _angular_damping = value;
+            set_modified("angular_damping");
+        }
+    }
 
     void CRigidBody::prop_set_kinematic(bool value)
     {
@@ -178,8 +178,8 @@ namespace sge
         }
     }
 
-	void CRigidBody::set_modified(const char* property_name)
-	{
-		_shared_data->set_modified(_node, this, property_name);
-	}
+    void CRigidBody::set_modified(const char* property_name)
+    {
+        _shared_data->set_modified(_node, this, property_name);
+    }
 }

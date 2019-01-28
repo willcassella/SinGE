@@ -8,13 +8,13 @@ namespace sge
     struct SGE_ENGINE_API CSensor
     {
         SGE_REFLECTED_TYPE;
-		struct SharedData;
+        struct SharedData;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		explicit CSensor(NodeId node, SharedData& shared_data);
+        explicit CSensor(NodeId node, SharedData& shared_data);
 
         ///////////////////
         ///   Methods   ///
@@ -22,16 +22,16 @@ namespace sge
 
         static void register_type(Scene& scene);
 
-		void to_archive(ArchiveWriter& writer) const;
+        void to_archive(ArchiveWriter& writer) const;
 
-		void from_archive(ArchiveReader& reader);
+        void from_archive(ArchiveReader& reader);
 
-		NodeId node() const;
+        NodeId node() const;
 
-		//////////////////
-		///   Fields   ///
-	private:
+        //////////////////
+        ///   Fields   ///
+    private:
 
-		NodeId _node;
+        NodeId _node;
     };
 }
