@@ -2,7 +2,7 @@
 
 ![Demersi](http://willcassella.net/SinGE/demersi.png)
 
-nektonic was largely inspired by ideas I had while developing WillowEngine and using other game engines and tools. Demersi was a game developed with nektonic and was the primary motivator of engine direction an development. Demersi may be downloaded on [my website](http://willcassella.net).
+nektonic was largely inspired by ideas I had while developing WillowEngine and using other game engines and tools. Demersi was a game developed with nektonic and was the primary motivator of engine direction and development. Demersi may be downloaded on [my website](http://willcassella.net).
 
 ## Compiling
 
@@ -34,5 +34,5 @@ I haven't made any major contributions to this in quite a while, since I'm busy 
 - Build a good resource manager. Somehow I always end up having a really crappy runtime resource manager, or none at all. Neither is particularily ideal, but this isn't exactly a priority either. Even if loading of resources isn't handled any more intelligently than it is now, I at least need a smarter way of organizing and storing resources and metadata on-disk.
 
 ### Engine: Unknown-term
-- Build prototype editor and game GUI with [Delta](https://github.com/willcassella/delta) or some other GUI library. Blender's great for hacking on top of, but it's not a very maintainable solution. I've gone without a decent GUI solution in my game projects for long enough, and I'd like to develop/find something I can stick with. This is a high priority, but it's not exactly something I think could be considered short-term.
+- Build prototype editor and game GUI with [Buoy](https://github.com/willcassella/buoy) or some other GUI library. Blender's great for hacking on top of, but it's not a very maintainable solution. I've gone without a decent GUI solution in my game projects for long enough, and I'd like to develop/find something I can stick with. This is a high priority, but it's not exactly something I think could be considered short-term.
 - Build BSP/voxel level prototyping tool. Even if none of the results are used in production, it's great to have something for whipping out ideas in a short amount of time. Unreal is the only real game engine I can think of that's come close to doing this right, but I think it can be done even better.
