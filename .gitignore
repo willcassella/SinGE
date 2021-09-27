@@ -2,8 +2,10 @@ out/
 target/
 packages/
 cache/
+.cache
 .vscode/
 .vs/
+compile_commands.json
 
 *.suo
 *.VC.db
