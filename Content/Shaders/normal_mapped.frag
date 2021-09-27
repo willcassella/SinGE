@@ -1,5 +1,5 @@
 // normal_mapped.frag
-#version 430 core
+#version 330 core
 
 const vec3 lm_x_basis_vec = vec3(0.81649, 0, 0.57735);
 const vec3 lm_y_basis_vec = vec3(-0.40824, 0.707106, 0.57735);

@@ -1,5 +1,5 @@
 // hdr_post.frag
-#version 430 core
+#version 330 core
 
 uniform sampler2D depth_buffer;
 uniform sampler2D position_buffer;
