@@ -17,19 +17,19 @@ namespace sge
     {
         class PhysicsEntity;
         class CharacterController;
-		struct StaticMeshCollider;
+        struct StaticMeshCollider;
 
-		struct PhysTransformedNode
-		{
-			Vec3 world_transform;
-			Quat world_rotation;
-		};
+        struct PhysTransformedNode
+        {
+            Vec3 world_transform;
+            Quat world_rotation;
+        };
 
-		// Bits used for efficiently identifying collider archetypes
-		static constexpr int CHARACTER_BIT = 1;
-		static constexpr int LEVEL_PORTAL_BIT = 2;
-		static constexpr int LIGHTMASK_RECEIVER_BIT = 4;
-		static constexpr int LIGHTMASK_VOLUME_BIT = 8;
+        // Bits used for efficiently identifying collider archetypes
+        static constexpr int CHARACTER_BIT = 1;
+        static constexpr int LEVEL_PORTAL_BIT = 2;
+        static constexpr int LIGHTMASK_RECEIVER_BIT = 4;
+        static constexpr int LIGHTMASK_VOLUME_BIT = 8;
 
         struct BulletPhysicsSystem::Data
         {
@@ -41,26 +41,26 @@ namespace sge
 
             PhysicsEntity* get_physics_entity(NodeId node);
 
-			void post_add_physics_entity_element(PhysicsEntity& phys_entity);
+            void post_add_physics_entity_element(PhysicsEntity& phys_entity);
 
             void post_remove_physics_entity_element(PhysicsEntity& phys_entity);
 
-			StaticMeshCollider* get_static_mesh_collider(const std::string& path);
+            StaticMeshCollider* get_static_mesh_collider(const std::string& path);
 
-			void release_static_mesh_collider(StaticMeshCollider& collider);
+            void release_static_mesh_collider(StaticMeshCollider& collider);
 
             //////////////////
             ///   Fields   ///
         public:
 
-			uint64 last_frame_id = 0;
+            uint64 last_frame_id = 0;
 
             std::map<NodeId, std::unique_ptr<PhysicsEntity>> physics_entities;
 
-        	// Nodes that were transformed this frame (by the pysics system), and how they were transformed
-        	std::vector<NodeId> frame_transformed_nodes;
-			std::vector<PhysTransformedNode> frame_transformed_node_transforms;
-			std::map<std::string, std::unique_ptr<StaticMeshCollider>> static_mesh_colliders;
+            // Nodes that were transformed this frame (by the pysics system), and how they were transformed
+            std::vector<NodeId> frame_transformed_nodes;
+            std::vector<PhysTransformedNode> frame_transformed_node_transforms;
+            std::map<std::string, std::unique_ptr<StaticMeshCollider>> static_mesh_colliders;
 
             /* NOTE: This must appear last, so that it is destroyed first. */
             PhysicsWorld phys_world;

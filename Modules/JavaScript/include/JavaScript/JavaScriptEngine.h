@@ -7,34 +7,34 @@
 
 namespace sge
 {
-	struct Scene;
+    struct Scene;
 
-	struct SGE_JAVASCRIPT_API JavaScriptEngine
-	{
-		SGE_REFLECTED_TYPE;
-		struct State;
+    struct SGE_JAVASCRIPT_API JavaScriptEngine
+    {
+        SGE_REFLECTED_TYPE;
+        struct State;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		JavaScriptEngine(Scene& scene);
-		~JavaScriptEngine();
+        JavaScriptEngine(Scene& scene);
+        ~JavaScriptEngine();
 
-		///////////////////
-		///   Methods   ///
-	public:
+        ///////////////////
+        ///   Methods   ///
+    public:
 
-		void register_type(const TypeInfo& type);
+        void register_type(const TypeInfo& type);
 
-		void run_expression(const char* expr);
+        void run_expression(const char* expr);
 
-		void load_script(const char* path);
+        void load_script(const char* path);
 
-		//////////////////
-		///   Fields   ///
-	private:
+        //////////////////
+        ///   Fields   ///
+    private:
 
-		std::unique_ptr<State> _state;
-	};
+        std::unique_ptr<State> _state;
+    };
 }

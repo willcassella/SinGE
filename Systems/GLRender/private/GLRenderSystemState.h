@@ -11,21 +11,21 @@
 
 namespace sge
 {
-	namespace gl_render
-	{
-		namespace GBufferLayer
-		{
-			enum : GLsizei
-			{
-				DEPTH_STENCIL,
-				POSITION,
-				NORMAL,
-				ALBEDO,
-				ROUGHNESS_METALLIC,
+    namespace gl_render
+    {
+        namespace GBufferLayer
+        {
+            enum : GLsizei
+            {
+                DEPTH_STENCIL,
+                POSITION,
+                NORMAL,
+                ALBEDO,
+                ROUGHNESS_METALLIC,
                 IRRADIANCE,
-				NUM_LAYERS
-			};
-		}
+                NUM_LAYERS
+            };
+        }
 
         /* These constants specify the attachment index for buffer layers. */
         static constexpr GLenum GBUFFER_DEPTH_STENCIL_ATTACHMENT = GL_DEPTH_STENCIL_ATTACHMENT;
@@ -62,45 +62,45 @@ namespace sge
         static constexpr GLenum POST_BUFFER_HDR_UPLOAD_FORMAT = GL_RGB;
         static constexpr GLenum POST_BUFFER_HDR_UPLOAD_TYPE = GL_FLOAT;
 
-		struct GLRenderSystem::State
-		{
-			///////////////////
-			///   Methods   ///
-		public:
+        struct GLRenderSystem::State
+        {
+            ///////////////////
+            ///   Methods   ///
+        public:
 
-			void gather_debug_lines(EventChannel& debug_line_channel, EventChannel::SubscriberId subscriber_id);
+            void gather_debug_lines(EventChannel& debug_line_channel, EventChannel::SubscriberId subscriber_id);
 
-			//////////////////
-			///   Fields   ///
-		public:
+            //////////////////
+            ///   Fields   ///
+        public:
 
-			// Config
-			GLint width;
-			GLint height;
+            // Config
+            GLint width;
+            GLint height;
 
-			// The default framebuffer
-			GLint default_framebuffer;
+            // The default framebuffer
+            GLint default_framebuffer;
 
-			// Gbuffer
-			GLuint gbuffer_framebuffer;
-			std::array<GLuint, GBufferLayer::NUM_LAYERS> gbuffer_layers;
+            // Gbuffer
+            GLuint gbuffer_framebuffer;
+            std::array<GLuint, GBufferLayer::NUM_LAYERS> gbuffer_layers;
 
             // Post-processing framebuffer
             GLuint post_framebuffer;
-		    GLuint post_buffer_hdr;
+            GLuint post_buffer_hdr;
 
-			// Sprite quad
-			GLuint sprite_vao;
-			GLuint sprite_vbo;
+            // Sprite quad
+            GLuint sprite_vao;
+            GLuint sprite_vbo;
 
-			// Screen quad
-			GLuint scene_shader_program;
+            // Screen quad
+            GLuint scene_shader_program;
             GLuint post_shader_program;
             GLint scene_program_view_uniform;
-			GLint scene_program_light_dir_uniform;
-			GLint scene_program_light_intensity_uniform;
-			GLint post_program_brightness_uniform;
-			GLint post_program_gamma_uniform;
+            GLint scene_program_light_dir_uniform;
+            GLint scene_program_light_intensity_uniform;
+            GLint post_program_brightness_uniform;
+            GLint post_program_gamma_uniform;
 
             // Debug draw line buffer
             GLuint debug_line_vao;
@@ -114,13 +114,13 @@ namespace sge
             // Debug line buffer
             std::vector<DebugLineVert> frame_debug_lines;
 
-			// Lightmask volume data
-			GLuint frustum_volume_ebo;
+            // Lightmask volume data
+            GLuint frustum_volume_ebo;
 
             // Scene data
-			bool initialized_render_scene = false;
+            bool initialized_render_scene = false;
             RenderScene_Commands render_scene;
-			RenderResource resources;
-		};
-	}
+            RenderResource resources;
+        };
+    }
 }

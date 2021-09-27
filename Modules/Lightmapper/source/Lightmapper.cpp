@@ -13,7 +13,7 @@
 
 namespace sge
 {
-	static constexpr int RAY_SET_SIZE = 8;
+    static constexpr int RAY_SET_SIZE = 8;
 
     static Vec3 get_barycentric(float u, float v)
     {
@@ -55,7 +55,7 @@ namespace sge
         RTCScene rtc_scene;
         const LightmapOccluder* occluders;
         std::size_t num_occluders;
-		void** norm_buffs;
+        void** norm_buffs;
     };
 
     LightmapScene* new_lightmap_scene(
@@ -68,7 +68,7 @@ namespace sge
         scene->rtc_scene = rtcDeviceNewScene(scene->rtc_device, RTC_SCENE_STATIC, RTC_INTERPOLATE | RTC_INTERSECT1 | RTC_INTERSECT8);
         scene->occluders = occluders;
         scene->num_occluders = num_occluders;
-		scene->norm_buffs = (void**)std::calloc(num_occluders, sizeof(void*));
+        scene->norm_buffs = (void**)std::calloc(num_occluders, sizeof(void*));
 
         // Fill it
         auto* const rtc_scene = scene->rtc_scene;
@@ -76,14 +76,14 @@ namespace sge
         {
             const auto* const occluder_mesh = occluders[occluder_i].mesh;
             const auto occluder_transform = occluders[occluder_i].world_transform;
-			Mat4 occluder_inverse_transpose;
+            Mat4 occluder_inverse_transpose;
 
-			// Calculate the inverse transpose of the transformation matrix
+            // Calculate the inverse transpose of the transformation matrix
             {
-				glm::mat4 inv_trans;
-				std::memcpy(&inv_trans, &occluder_transform, sizeof(Mat4));
-				inv_trans = glm::transpose(glm::inverse(inv_trans));
-				std::memcpy(&occluder_inverse_transpose, &inv_trans, sizeof(Mat4));
+                glm::mat4 inv_trans;
+                std::memcpy(&inv_trans, &occluder_transform, sizeof(Mat4));
+                inv_trans = glm::transpose(glm::inverse(inv_trans));
+                std::memcpy(&occluder_inverse_transpose, &inv_trans, sizeof(Mat4));
             }
 
             // Create the mesh
@@ -98,26 +98,26 @@ namespace sge
             const auto* const vert_positions = occluder_mesh->vertex_positions();
             auto* const pos_buffer = (Vec4*)rtcMapBuffer(rtc_scene, rtc_mesh, RTC_VERTEX_BUFFER);
 
-        	// Create user buffer for vertex normals
-			const auto* const vert_norms = occluder_mesh->vertex_normals();
-			auto* norm_buffer = (Vec3*)sge::aligned_alloc(sizeof(Vec3) * num_verts, 16);
-			scene->norm_buffs[occluder_i] = norm_buffer;
+            // Create user buffer for vertex normals
+            const auto* const vert_norms = occluder_mesh->vertex_normals();
+            auto* norm_buffer = (Vec3*)sge::aligned_alloc(sizeof(Vec3) * num_verts, 16);
+            scene->norm_buffs[occluder_i] = norm_buffer;
 
-			// Load in vertex positions and normals
-        	for (std::size_t vert_i = 0; vert_i < num_verts; ++vert_i)
+            // Load in vertex positions and normals
+            for (std::size_t vert_i = 0; vert_i < num_verts; ++vert_i)
             {
                 const auto pos = occluder_transform * vert_positions[vert_i];
-				const auto norm = occluder_inverse_transpose * Vec3{
-					vert_norms[vert_i].norm_f32_x(),
-					vert_norms[vert_i].norm_f32_y(),
-					vert_norms[vert_i].norm_f32_z()
-				};
+                const auto norm = occluder_inverse_transpose * Vec3{
+                    vert_norms[vert_i].norm_f32_x(),
+                    vert_norms[vert_i].norm_f32_y(),
+                    vert_norms[vert_i].norm_f32_z()
+                };
 
-        		pos_buffer[vert_i] = Vec4{ pos, 0.f };
-				norm_buffer[vert_i] = norm;
+                pos_buffer[vert_i] = Vec4{ pos, 0.f };
+                norm_buffer[vert_i] = norm;
             }
             rtcUnmapBuffer(rtc_scene, rtc_mesh, RTC_VERTEX_BUFFER);
-			rtcSetBuffer2(rtc_scene, rtc_mesh, RTC_USER_VERTEX_BUFFER, norm_buffer, 0, sizeof(Vec3));
+            rtcSetBuffer2(rtc_scene, rtc_mesh, RTC_USER_VERTEX_BUFFER, norm_buffer, 0, sizeof(Vec3));
 
             // Load in triangle indices
             const auto num_triangle_elements = occluder_mesh->num_triangle_elements();
@@ -138,13 +138,13 @@ namespace sge
     void free_lightmap_scene(
         LightmapScene* scene)
     {
-		const auto norm_buffs = scene->norm_buffs;
-		const auto num_occluders = scene->num_occluders;
-		for (std::size_t i = 0; i < num_occluders; ++i)
-		{
-			sge::aligned_free(norm_buffs[i]);
-		}
-		std::free(norm_buffs);
+        const auto norm_buffs = scene->norm_buffs;
+        const auto num_occluders = scene->num_occluders;
+        for (std::size_t i = 0; i < num_occluders; ++i)
+        {
+            sge::aligned_free(norm_buffs[i]);
+        }
+        std::free(norm_buffs);
 
         // Destroy rtc resources
         rtcDeleteScene(scene->rtc_scene);
@@ -154,7 +154,7 @@ namespace sge
         delete scene;
     }
 
-	void generate_lightmap_texels(
+    void generate_lightmap_texels(
         const LightmapObject* objects,
         std::size_t num_objects,
         int32 width,
@@ -247,7 +247,7 @@ namespace sge
                     vert_btans[vert_i] = Vec3::cross(vert_norms[vert_i], vert_tans[vert_i]) * triangle_bitangent_signs[vert_indices[vert_i]];
                 }
 
-				const auto base_color = objects[mesh_i].base_color;
+                const auto base_color = objects[mesh_i].base_color;
 
                 // Iterate from min to max
                 for (int32 y = min_y; y < max_y; ++y)
@@ -281,7 +281,7 @@ namespace sge
                         const std::size_t index = x + y * width;
                         out_texels[index].world_pos = Vec4{ pixel_pos, 0.f };
                         out_texels[index].TBN = TBN;
-						out_texels[index].base_color = base_color;
+                        out_texels[index].base_color = base_color;
 
                         // Set the mask for this texel
                         out_texel_mask[index] = 0xFF;
@@ -291,26 +291,26 @@ namespace sge
         }
     }
 
-	void compute_ambient_radiance(
-		color::RGBF32 ambient,
-		int32 width,
-		int32 height,
-		const byte* texel_mask,
-		color::RGBF32* out_radiance)
-	{
-		for (int32 y = 0; y < height; ++y)
-		{
-			for (int32 x = 0; x < width; ++x)
-			{
-				if (!texel_mask[x + y * width])
-				{
-					continue;
-				}
+    void compute_ambient_radiance(
+        color::RGBF32 ambient,
+        int32 width,
+        int32 height,
+        const byte* texel_mask,
+        color::RGBF32* out_radiance)
+    {
+        for (int32 y = 0; y < height; ++y)
+        {
+            for (int32 x = 0; x < width; ++x)
+            {
+                if (!texel_mask[x + y * width])
+                {
+                    continue;
+                }
 
-				out_radiance[x + y * width] += ambient / 3.141592654f;
-			}
-		}
-	}
+                out_radiance[x + y * width] += ambient / 3.141592654f;
+            }
+        }
+    }
 
     void compute_direct_irradiance(
         const LightmapScene* scene,
@@ -346,7 +346,7 @@ namespace sge
                 // Get the texel position and normal, and color
                 const auto texel_pos = texels[index].world_pos;
                 const auto texel_norm = Vec3{ texels[index].TBN[2][0], texels[index].TBN[2][1], texels[index].TBN[2][2] };
-				const auto texel_base_color = texels[index].base_color;
+                const auto texel_base_color = texels[index].base_color;
 
                 // Create the ray
                 RTCRay light_ray;
@@ -375,30 +375,30 @@ namespace sge
     void compute_indirect_radiance(
         const LightmapScene* scene,
         int32 num_sample_sets,
-		int32 num_accumulations,
+        int32 num_accumulations,
         int32 width,
         int32 height,
         const LightmapTexel* texels,
         const byte* texel_mask,
         color::RGBF32* SGE_RESTRICT out_x_basis_radiance,
-		color::RGBF32* SGE_RESTRICT out_y_basis_radiance,
-		color::RGBF32* SGE_RESTRICT out_z_basis_radiance,
-		color::RGBF32* SGE_RESTRICT out_normal_irradiance)
+        color::RGBF32* SGE_RESTRICT out_y_basis_radiance,
+        color::RGBF32* SGE_RESTRICT out_z_basis_radiance,
+        color::RGBF32* SGE_RESTRICT out_normal_irradiance)
     {
         // Get the scene
         auto* const rtc_scene = scene->rtc_scene;
         const auto* const occluders = scene->occluders;
         const float normalization_factor = 1.f / (static_cast<float>(num_sample_sets * num_accumulations) * RAY_SET_SIZE) * 2;
 
-		// Create the ray valid mask
-		alignas(32) std::array<uint32, RAY_SET_SIZE> valid_mask;
-		valid_mask.fill(0xFFFFFFFF);
-		std::array<Vec3, RAY_SET_SIZE> ray_dirs;
+        // Create the ray valid mask
+        alignas(32) std::array<uint32, RAY_SET_SIZE> valid_mask;
+        valid_mask.fill(0xFFFFFFFF);
+        std::array<Vec3, RAY_SET_SIZE> ray_dirs;
 
-		// Get basis vectors
-		const auto basis_x = get_lightmap_x_basis_vector();
-		const auto basis_y = get_lightmap_y_basis_vector();
-		const auto basis_z = get_lightmap_z_basis_vector();
+        // Get basis vectors
+        const auto basis_x = get_lightmap_x_basis_vector();
+        const auto basis_y = get_lightmap_y_basis_vector();
+        const auto basis_z = get_lightmap_z_basis_vector();
 
         // Iterate from min to max
         for (int32 y = 0; y < height; ++y)
@@ -418,12 +418,12 @@ namespace sge
                 const auto texel_pos = texels[texel_index].world_pos;
                 const auto texel_TBN = texels[texel_index].TBN;
                 const auto texel_norm = Vec3{ texel_TBN[2][0], texel_TBN[2][1], texel_TBN[2][2] };
-				const auto texel_base_color = texels[texel_index].base_color;
+                const auto texel_base_color = texels[texel_index].base_color;
 
-				// Compute tangent-space basis vectors
-				const auto tang_basis_x = texel_TBN * basis_x;
-				const auto tang_basis_y = texel_TBN * basis_y;
-				const auto tang_basis_z = texel_TBN * basis_z;
+                // Compute tangent-space basis vectors
+                const auto tang_basis_x = texel_TBN * basis_x;
+                const auto tang_basis_y = texel_TBN * basis_y;
+                const auto tang_basis_z = texel_TBN * basis_z;
 
                 // For each raycasting iteration
                 for (int iter_i = 0; iter_i < num_sample_sets; ++iter_i)
@@ -441,7 +441,7 @@ namespace sge
                             randf(-1.0f, 1.0f),
                             randf(-1.0f, 1.0f),
                             randf(0.15f, 1.0f) }.normalized();
-						ray_dirs[i] = dir;
+                        ray_dirs[i] = dir;
                         indirect_rays.dirx[i] = dir.x();
                         indirect_rays.diry[i] = dir.y();
                         indirect_rays.dirz[i] = dir.z();
@@ -459,10 +459,10 @@ namespace sge
                     rtcIntersect8(valid_mask.data(), rtc_scene, indirect_rays);
 
                     // Test rays
-					auto result_x = color::RGBF32::black();
-					auto result_y = color::RGBF32::black();
-					auto result_z = color::RGBF32::black();
-					auto result_norm = color::RGBF32::black();
+                    auto result_x = color::RGBF32::black();
+                    auto result_y = color::RGBF32::black();
+                    auto result_z = color::RGBF32::black();
+                    auto result_norm = color::RGBF32::black();
                     for (int i = 0; i < RAY_SET_SIZE; ++i)
                     {
                         // If the ray didn't hit anything
@@ -471,28 +471,28 @@ namespace sge
                             continue;
                         }
 
-						// Get the hit normal direction
-						Vec3 hit_norm;
-						rtcInterpolate2(
-							rtc_scene,
-							indirect_rays.geomID[i],
-							indirect_rays.primID[i],
-							indirect_rays.u[i],
-							indirect_rays.v[i],
-							RTC_USER_VERTEX_BUFFER,
-							hit_norm.vec(),
-							nullptr, // first derivative U
-							nullptr, // first derivative V
-							nullptr, // second derivative U
-							nullptr, // second derivative V
-							nullptr, // second direvative UV
-							3);
+                        // Get the hit normal direction
+                        Vec3 hit_norm;
+                        rtcInterpolate2(
+                            rtc_scene,
+                            indirect_rays.geomID[i],
+                            indirect_rays.primID[i],
+                            indirect_rays.u[i],
+                            indirect_rays.v[i],
+                            RTC_USER_VERTEX_BUFFER,
+                            hit_norm.vec(),
+                            nullptr, // first derivative U
+                            nullptr, // first derivative V
+                            nullptr, // second derivative U
+                            nullptr, // second derivative V
+                            nullptr, // second direvative UV
+                            3);
 
-						// Make sure we didn't hit the backside (dot product between normal and ray should be negative)
-						if (Vec3::dot(hit_norm, ray_dirs[i]) >= 0.f)
-						{
-							continue;
-						}
+                        // Make sure we didn't hit the backside (dot product between normal and ray should be negative)
+                        if (Vec3::dot(hit_norm, ray_dirs[i]) >= 0.f)
+                        {
+                            continue;
+                        }
 
                         // Get the hit triangle
                         const auto hit_mesh = occluders[indirect_rays.geomID[i]];
@@ -527,35 +527,35 @@ namespace sge
 
                         // Calculate the influence from this point
                         const auto dir = Vec3{ indirect_rays.dirx[i], indirect_rays.diry[i], indirect_rays.dirz[i] };
-						const auto dot_x = std::max(Vec3::dot(dir, tang_basis_x), 0.f);
-						const auto dot_y = std::max(Vec3::dot(dir, tang_basis_y), 0.f);
-						const auto dot_z = std::max(Vec3::dot(dir, tang_basis_z), 0.f);
-                    	const auto dot_norm = std::max(Vec3::dot(dir, texel_norm), 0.f);
+                        const auto dot_x = std::max(Vec3::dot(dir, tang_basis_x), 0.f);
+                        const auto dot_y = std::max(Vec3::dot(dir, tang_basis_y), 0.f);
+                        const auto dot_z = std::max(Vec3::dot(dir, tang_basis_z), 0.f);
+                        const auto dot_norm = std::max(Vec3::dot(dir, texel_norm), 0.f);
 
                         // Calculate resulting radiance
-						result_x += hit_irradiance * dot_x;
-						result_y += hit_irradiance * dot_y;
-						result_z += hit_irradiance * dot_z;
-						result_norm += hit_irradiance * dot_norm;
+                        result_x += hit_irradiance * dot_x;
+                        result_y += hit_irradiance * dot_y;
+                        result_z += hit_irradiance * dot_z;
+                        result_norm += hit_irradiance * dot_norm;
                     }
 
                     // Write results, dividing by normalization factor (Monte Carlo integration)
-					out_x_basis_radiance[texel_index] += result_x * normalization_factor;
-					out_y_basis_radiance[texel_index] += result_y * normalization_factor;
-					out_z_basis_radiance[texel_index] += result_z * normalization_factor;
+                    out_x_basis_radiance[texel_index] += result_x * normalization_factor;
+                    out_y_basis_radiance[texel_index] += result_y * normalization_factor;
+                    out_z_basis_radiance[texel_index] += result_z * normalization_factor;
 
-					// Write normal irradiance, dividing by normalization factor (Monte Carlo integration), and factoring in base color
-					out_normal_irradiance[texel_index] += result_norm * texel_base_color * normalization_factor;
+                    // Write normal irradiance, dividing by normalization factor (Monte Carlo integration), and factoring in base color
+                    out_normal_irradiance[texel_index] += result_norm * texel_base_color * normalization_factor;
                 }
             }
         }
     }
 
     void lightmap_postprocess(
-		int32 width,
-		int32 height,
-		int32 num_steps,
-		color::RGBF32* lightmap)
+        int32 width,
+        int32 height,
+        int32 num_steps,
+        color::RGBF32* lightmap)
     {
         // Create a copy of the image
         std::vector<color::RGBF32> temp;

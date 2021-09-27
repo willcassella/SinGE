@@ -5,45 +5,45 @@
 
 namespace sge
 {
-	////////////////////////
-	///   Constructors   ///
+    ////////////////////////
+    ///   Constructors   ///
 
-	EditorServerSystem::EditorServerSystem(uint16 port)
-		: _serve_time_ms(8)
-	{
-		_data = std::make_unique<Data>(port);
-	}
+    EditorServerSystem::EditorServerSystem(uint16 port)
+        : _serve_time_ms(8)
+    {
+        _data = std::make_unique<Data>(port);
+    }
 
-	EditorServerSystem::~EditorServerSystem()
-	{
-	}
+    EditorServerSystem::~EditorServerSystem()
+    {
+    }
 
-	///////////////////
-	///   Methods   ///
+    ///////////////////
+    ///   Methods   ///
 
-	void EditorServerSystem::register_pipeline(UpdatePipeline& pipeline)
-	{
+    void EditorServerSystem::register_pipeline(UpdatePipeline& pipeline)
+    {
         pipeline.register_system_fn(
             "editor_server_serve",
             this,
             &EditorServerSystem::serve_fn);
-	}
+    }
 
-	int EditorServerSystem::get_serve_time() const
-	{
-		return _serve_time_ms;
-	}
+    int EditorServerSystem::get_serve_time() const
+    {
+        return _serve_time_ms;
+    }
 
-	void EditorServerSystem::set_serve_time(int milliseconds)
-	{
-		_serve_time_ms = milliseconds;
-	}
+    void EditorServerSystem::set_serve_time(int milliseconds)
+    {
+        _serve_time_ms = milliseconds;
+    }
 
-	void EditorServerSystem::serve_fn(Scene& scene, SystemFrame& frame)
-	{
-		// Run the service
-		_data->frame = &frame;
-		_data->scene = &scene;
+    void EditorServerSystem::serve_fn(Scene& scene, SystemFrame& frame)
+    {
+        // Run the service
+        _data->frame = &frame;
+        _data->scene = &scene;
         _data->io.poll();
-	}
+    }
 }

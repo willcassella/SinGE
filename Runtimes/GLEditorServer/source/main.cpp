@@ -22,36 +22,36 @@
 
 int main(int argc, char* argv[])
 {
-	// Make sure we have a config file
-	assert(argc == 2);
-	sge::JsonArchive config;
-	auto loaded_config = config.from_file(argv[1]);
-	assert(loaded_config);
-	auto* config_reader = config.read_root();
+    // Make sure we have a config file
+    assert(argc == 2);
+    sge::JsonArchive config;
+    auto loaded_config = config.from_file(argv[1]);
+    assert(loaded_config);
+    auto* config_reader = config.read_root();
 
-	// Initialize GLFW3
-	if (!glfwInit())
-	{
-		std::cerr << "GLEditorServer: Could not initialize GLFW3." << std::endl;
-		return EXIT_FAILURE;
-	}
+    // Initialize GLFW3
+    if (!glfwInit())
+    {
+        std::cerr << "GLEditorServer: Could not initialize GLFW3." << std::endl;
+        return EXIT_FAILURE;
+    }
 
-	// Get the window width and height
-	int window_width = 1920, window_height = 1080;
-	config_reader->object_member("window_width", window_width);
-	config_reader->object_member("window_height", window_height);
+    // Get the window width and height
+    int window_width = 1920, window_height = 1080;
+    config_reader->object_member("window_width", window_width);
+    config_reader->object_member("window_height", window_height);
 
-	// Create a windowed mode window and its OpenGL context
+    // Create a windowed mode window and its OpenGL context
     auto* window = sge::create_sge_opengl_window("SinGE Editor Server", window_width, window_height, false);
-	if (!window)
-	{
-		std::cerr << "GLEditorServer: Could not create a window." << std::endl;
-		glfwTerminate();
-		return EXIT_FAILURE;
-	}
+    if (!window)
+    {
+        std::cerr << "GLEditorServer: Could not create a window." << std::endl;
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
 
-	// Make the window's OpenGL context current
-	glfwMakeContextCurrent(window);
+    // Make the window's OpenGL context current
+    glfwMakeContextCurrent(window);
 
     // Create an event window
     sge::GLEventWindow event_window{ window };
@@ -59,22 +59,22 @@ int main(int argc, char* argv[])
     config_reader->object_member("input_bindings", input_bindings);
     event_window.set_bindings(std::move(input_bindings));
 
-	// Create a type database
-	sge::TypeDB type_db;
-	type_db.new_type<sge::Angle>();
-	type_db.new_type<sge::Vec2>();
-	type_db.new_type<sge::Vec3>();
-	type_db.new_type<sge::Quat>();
-	type_db.new_type<sge::StaticMesh>();
-	type_db.new_type<sge::Material>();
-	type_db.new_type<sge::Texture>();
-	type_db.new_type<sge::CStaticMesh::LightmaskMode>();
-	type_db.new_type<sge::CSpotlight::Shape>();
-	type_db.new_type<sge::color::RGBF32>();
+    // Create a type database
+    sge::TypeDB type_db;
+    type_db.new_type<sge::Angle>();
+    type_db.new_type<sge::Vec2>();
+    type_db.new_type<sge::Vec3>();
+    type_db.new_type<sge::Quat>();
+    type_db.new_type<sge::StaticMesh>();
+    type_db.new_type<sge::Material>();
+    type_db.new_type<sge::Texture>();
+    type_db.new_type<sge::CStaticMesh::LightmaskMode>();
+    type_db.new_type<sge::CSpotlight::Shape>();
+    type_db.new_type<sge::color::RGBF32>();
 
-	// Create a scene
-	sge::Scene scene{ type_db };
-	sge::register_builtin_components(scene);
+    // Create a scene
+    sge::Scene scene{ type_db };
+    sge::register_builtin_components(scene);
 
     // Create a pipeline
     sge::UpdatePipeline pipeline;
@@ -82,28 +82,28 @@ int main(int argc, char* argv[])
     // Register the input window
     event_window.register_pipeline(pipeline);
 
-	// Create a render system
-	sge::gl_render::Config render_config;
-	render_config.viewport_width = window_width;
-	render_config.viewport_height = window_height;
+    // Create a render system
+    sge::gl_render::Config render_config;
+    render_config.viewport_width = window_width;
+    render_config.viewport_height = window_height;
 
-	if (!config_reader->object_member("gl_render", render_config))
-	{
-		assert(false /*Could not load render config from the config file.*/);
-	}
+    if (!config_reader->object_member("gl_render", render_config))
+    {
+        assert(false /*Could not load render config from the config file.*/);
+    }
 
-	sge::gl_render::GLRenderSystem render_system{ render_config };
-	render_system.pipeline_register(pipeline);
-	render_system.initialize_subscriptions(scene);
+    sge::gl_render::GLRenderSystem render_system{ render_config };
+    render_system.pipeline_register(pipeline);
+    render_system.initialize_subscriptions(scene);
 
-	sge::bullet_physics::Config physics_config;
-	sge::bullet_physics::BulletPhysicsSystem physics_system{ physics_config };
-	physics_system.register_pipeline(pipeline);
-	physics_system.initialize_subscriptions(scene);
+    sge::bullet_physics::Config physics_config;
+    sge::bullet_physics::BulletPhysicsSystem physics_system{ physics_config };
+    physics_system.register_pipeline(pipeline);
+    physics_system.initialize_subscriptions(scene);
 
-	// Create an editor server
-	sge::EditorServerSystem editorServer{ 1995 };
-	editorServer.set_serve_time(12);
+    // Create an editor server
+    sge::EditorServerSystem editorServer{ 1995 };
+    editorServer.set_serve_time(12);
     editorServer.register_pipeline(pipeline);
 
     // Load the pipeline config
@@ -117,27 +117,27 @@ int main(int argc, char* argv[])
         assert(false /*Engine update pipeline not specified*/);
     }
 
-	// Load the scene
-	std::string scene_path;
-	if (config_reader->object_member("scene", scene_path))
-	{
-		sge::JsonArchive scene_archive;
-		scene_archive.from_file(scene_path.c_str());
-		scene_archive.deserialize_root(scene);
-	}
+    // Load the scene
+    std::string scene_path;
+    if (config_reader->object_member("scene", scene_path))
+    {
+        sge::JsonArchive scene_archive;
+        scene_archive.from_file(scene_path.c_str());
+        scene_archive.deserialize_root(scene);
+    }
 
-	// Loop until the user closes the window
-	while (!glfwWindowShouldClose(window))
-	{
-		// Update
-		scene.update(pipeline, 0.016);
+    // Loop until the user closes the window
+    while (!glfwWindowShouldClose(window))
+    {
+        // Update
+        scene.update(pipeline, 0.016);
 
-		// Swap front and back buffers
-		glfwSwapBuffers(window);
+        // Swap front and back buffers
+        glfwSwapBuffers(window);
 
-		// Poll for and process events
-		glfwPollEvents();
-	}
+        // Poll for and process events
+        glfwPollEvents();
+    }
 
-	glfwTerminate();
+    glfwTerminate();
 }

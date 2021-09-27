@@ -5,8 +5,8 @@
 
 namespace sge
 {
-	namespace gl_render
-	{
+    namespace gl_render
+    {
         namespace gl_static_mesh
         {
             void upload_static_mesh_vertex_data(
@@ -96,5 +96,5 @@ namespace sge
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
             }
         }
-	}
+    }
 }

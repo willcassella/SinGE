@@ -5,13 +5,13 @@
 
 namespace sge
 {
-	namespace gl_render
-	{
+    namespace gl_render
+    {
         namespace gl_material
         {
             GLuint new_standard_material_program(
-				GLuint v_shader,
-				GLuint f_shader)
+                GLuint v_shader,
+                GLuint f_shader)
             {
                 const auto mat_id = glCreateProgram();
 
@@ -38,31 +38,31 @@ namespace sge
             }
 
             void free_standard_material_program(
-				GLuint mat_id)
+                GLuint mat_id)
             {
                 glDeleteProgram(mat_id);
             }
 
             void get_material_standard_uniforms(
-				GLuint mat_id,
-				MaterialStandardUniforms* out_uniforms)
+                GLuint mat_id,
+                MaterialStandardUniforms* out_uniforms)
             {
                 out_uniforms->model_matrix_uniform = glGetUniformLocation(mat_id, MODEL_MATRIX_UNIFORM_NAME);
                 out_uniforms->view_matrix_uniform = glGetUniformLocation(mat_id, VIEW_MATRIX_UNIFORM_NAME);
                 out_uniforms->proj_matrix_uniform = glGetUniformLocation(mat_id, PROJ_MATRIX_UNIFORM_NAME);
-				out_uniforms->base_mat_uv_scale_uniform = glGetUniformLocation(mat_id, BASE_MAT_UV_SCALE_UNIFORM_NAME);
-				out_uniforms->inst_mat_uv_scale_uniform = glGetUniformLocation(mat_id, INST_MAT_UV_SCALE_UNIFORM_NAME);
+                out_uniforms->base_mat_uv_scale_uniform = glGetUniformLocation(mat_id, BASE_MAT_UV_SCALE_UNIFORM_NAME);
+                out_uniforms->inst_mat_uv_scale_uniform = glGetUniformLocation(mat_id, INST_MAT_UV_SCALE_UNIFORM_NAME);
                 out_uniforms->lightmap_x_basis_uniform = glGetUniformLocation(mat_id, LIGHTMAP_X_BASIS_UNIFORM_NAME);
-				out_uniforms->lightmap_y_basis_uniform = glGetUniformLocation(mat_id, LIGHTMAP_Y_BASIS_UNIFORM_NAME);
-				out_uniforms->lightmap_z_basis_uniform = glGetUniformLocation(mat_id, LIGHTMAP_Z_BASIS_UNIFORM_NAME);
-				out_uniforms->lightmap_direct_mask_uniform = glGetUniformLocation(mat_id, LIGHTMAP_DIRECT_MASK_UNIFORM_NAME);
-				out_uniforms->use_lightmap_uniform = glGetUniformLocation(mat_id, USE_LIGHTMAP_UNIFORM_NAME);
+                out_uniforms->lightmap_y_basis_uniform = glGetUniformLocation(mat_id, LIGHTMAP_Y_BASIS_UNIFORM_NAME);
+                out_uniforms->lightmap_z_basis_uniform = glGetUniformLocation(mat_id, LIGHTMAP_Z_BASIS_UNIFORM_NAME);
+                out_uniforms->lightmap_direct_mask_uniform = glGetUniformLocation(mat_id, LIGHTMAP_DIRECT_MASK_UNIFORM_NAME);
+                out_uniforms->use_lightmap_uniform = glGetUniformLocation(mat_id, USE_LIGHTMAP_UNIFORM_NAME);
             }
 
             GLint get_uniform_location(
-				GLuint mat_id,
-				const char* name,
-				GLDebugOutputMode out_mode)
+                GLuint mat_id,
+                const char* name,
+                GLDebugOutputMode out_mode)
             {
                 const auto location = glGetUniformLocation(mat_id, name);
 
@@ -81,7 +81,7 @@ namespace sge
             }
 
             void init_material_lightmap_params(
-				const GLuint mat_id,
+                const GLuint mat_id,
                 const MaterialStandardUniforms uniforms)
             {
                 glProgramUniform1i(mat_id, uniforms.lightmap_x_basis_uniform, LIGHTMAP_X_BASIS_TEXTURE_SLOT - GL_TEXTURE0);
@@ -91,9 +91,9 @@ namespace sge
             }
 
             void set_material_params(
-				const GLuint mat_id,
-				GLenum* const next_active_texture,
-				const MaterialParams& params)
+                const GLuint mat_id,
+                GLenum* const next_active_texture,
+                const MaterialParams& params)
             {
                 // Bind int params
                 for (auto int_param : params.int_params)
@@ -135,5 +135,5 @@ namespace sge
                 }
             }
         }
-	}
+    }
 }

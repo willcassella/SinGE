@@ -37,7 +37,7 @@ namespace sge
             void setDebugMode(
                 int debugMode) override;
 
-            int	getDebugMode() const override;
+            int getDebugMode() const override;
 
             //////////////////
             ///   Fields   ///

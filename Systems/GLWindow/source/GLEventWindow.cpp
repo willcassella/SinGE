@@ -9,21 +9,21 @@
 namespace sge
 {
     GLFWwindow* create_sge_opengl_window(
-		const char* title,
-		int width,
-		int height,
-		bool fullscreen)
+        const char* title,
+        int width,
+        int height,
+        bool fullscreen)
     {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-		GLFWmonitor* monitor = fullscreen ? glfwGetPrimaryMonitor() : nullptr;
+        GLFWmonitor* monitor = fullscreen ? glfwGetPrimaryMonitor() : nullptr;
         return glfwCreateWindow(width, height, title, monitor, nullptr);
     }
 
     GLEventWindow::GLEventWindow()
         : _quit_requested(false),
-		_has_focus(true),
+        _has_focus(true),
         _window(nullptr),
         _window_x(0),
         _window_y(0),
@@ -121,12 +121,12 @@ namespace sge
         }
     }
 
-	bool GLEventWindow::quit_requested() const
-	{
-		return _quit_requested;
-	}
+    bool GLEventWindow::quit_requested() const
+    {
+        return _quit_requested;
+    }
 
-	void GLEventWindow::glfw_window_resize_callback(GLFWwindow* window, int width, int height)
+    void GLEventWindow::glfw_window_resize_callback(GLFWwindow* window, int width, int height)
     {
         auto* event_window = static_cast<GLEventWindow*>(glfwGetWindowUserPointer(window));
         event_window->_window_width = width;
@@ -162,11 +162,11 @@ namespace sge
             return;
         }
 
-		if (iter->second == "QUIT")
-		{
-			event_window->_quit_requested = true;
-			return;
-		}
+        if (iter->second == "QUIT")
+        {
+            event_window->_quit_requested = true;
+            return;
+        }
 
         // If the key has been pressed
         switch (state)
@@ -225,79 +225,79 @@ namespace sge
             return;
         }
 
-		auto* input_component = scene.get_component_container(CInput::type_info);
+        auto* input_component = scene.get_component_container(CInput::type_info);
 
-		// Get all input nodes
-		NodeId input_node_ids[32];
-		CInput* input_instances[32];
-		std::size_t num_instances;
-		std::size_t start_index = 0;
+        // Get all input nodes
+        NodeId input_node_ids[32];
+        CInput* input_instances[32];
+        std::size_t num_instances;
+        std::size_t start_index = 0;
 
-		// Get input nodes
-		while (input_component->get_instance_nodes(start_index, 32, &num_instances, input_node_ids))
-		{
-			start_index += 32;
+        // Get input nodes
+        while (input_component->get_instance_nodes(start_index, 32, &num_instances, input_node_ids))
+        {
+            start_index += 32;
 
-			// Get input component instances
-			input_component->get_instances(input_node_ids, num_instances, input_instances);
+            // Get input component instances
+            input_component->get_instances(input_node_ids, num_instances, input_instances);
 
-			// Dispatch events
-			for (std::size_t i = 0; i < num_instances; ++i)
-			{
-				auto& input = *input_instances[i];
+            // Dispatch events
+            for (std::size_t i = 0; i < num_instances; ++i)
+            {
+                auto& input = *input_instances[i];
 
-				// For each keyboard binding
-				for (auto binding : this->_active_action_bindings)
-				{
-					input.add_action_event(binding);
-				}
+                // For each keyboard binding
+                for (auto binding : this->_active_action_bindings)
+                {
+                    input.add_action_event(binding);
+                }
 
-				// For each mouse x-axis binding
-				for (const auto& binding : this->_bindings.mouse_x_bindings)
-				{
-					input.add_axis_event(
-						binding.c_str(),
-						static_cast<float>(this->_mouse_x), // value
-						static_cast<float>(this->_window_width), // min
-						static_cast<float>(0) // max
-					);
-				}
+                // For each mouse x-axis binding
+                for (const auto& binding : this->_bindings.mouse_x_bindings)
+                {
+                    input.add_axis_event(
+                        binding.c_str(),
+                        static_cast<float>(this->_mouse_x), // value
+                        static_cast<float>(this->_window_width), // min
+                        static_cast<float>(0) // max
+                    );
+                }
 
-				// For each mouse y-axis binding
-				for (const auto& binding : this->_bindings.mouse_y_bindings)
-				{
-					input.add_axis_event(
-						binding.c_str(),
-						static_cast<float>(this->_mouse_y), // value
-						static_cast<float>(this->_window_height), // min
-						static_cast<float>(0) // max
-					);
-				}
+                // For each mouse y-axis binding
+                for (const auto& binding : this->_bindings.mouse_y_bindings)
+                {
+                    input.add_axis_event(
+                        binding.c_str(),
+                        static_cast<float>(this->_mouse_y), // value
+                        static_cast<float>(this->_window_height), // min
+                        static_cast<float>(0) // max
+                    );
+                }
 
-				// For each mouse delta-x binding
-				for (const auto& binding : this->_bindings.mouse_delta_x_bindings)
-				{
-					input.add_axis_event(
-						binding.c_str(),
-						static_cast<float>(this->_mouse_delta_x), // value
-						0.f,
-						0.f
-					);
-				}
-				this->_mouse_delta_x = 0;
+                // For each mouse delta-x binding
+                for (const auto& binding : this->_bindings.mouse_delta_x_bindings)
+                {
+                    input.add_axis_event(
+                        binding.c_str(),
+                        static_cast<float>(this->_mouse_delta_x), // value
+                        0.f,
+                        0.f
+                    );
+                }
+                this->_mouse_delta_x = 0;
 
-				// For each mouse delta-y binding
-				for (const auto& binding : this->_bindings.mouse_delta_y_bindings)
-				{
-					input.add_axis_event(
-						binding.c_str(),
-						static_cast<float>(this->_mouse_delta_y), //value
-						0.f,
-						0.f
-					);
-				}
-				this->_mouse_delta_y = 0;
-			}
-		}
+                // For each mouse delta-y binding
+                for (const auto& binding : this->_bindings.mouse_delta_y_bindings)
+                {
+                    input.add_axis_event(
+                        binding.c_str(),
+                        static_cast<float>(this->_mouse_delta_y), //value
+                        0.f,
+                        0.f
+                    );
+                }
+                this->_mouse_delta_y = 0;
+            }
+        }
     }
 }

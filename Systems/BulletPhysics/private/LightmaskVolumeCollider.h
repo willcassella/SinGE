@@ -8,52 +8,52 @@
 
 namespace sge
 {
-	namespace bullet_physics
-	{
-		struct LightmaskVolumeCollider
-		{
-			/*--- Constructors ---*/
-		public:
+    namespace bullet_physics
+    {
+        struct LightmaskVolumeCollider
+        {
+            /*--- Constructors ---*/
+        public:
 
-			~LightmaskVolumeCollider()
-			{
-				get_mesh_shape()->~btBvhTriangleMeshShape();
-			}
+            ~LightmaskVolumeCollider()
+            {
+                get_mesh_shape()->~btBvhTriangleMeshShape();
+            }
 
-			/*--- Methods ---*/
-		public:
+            /*--- Methods ---*/
+        public:
 
-			void init_shape()
-			{
-				new (_buffer) btBvhTriangleMeshShape{ &mesh, true };
-			}
+            void init_shape()
+            {
+                new (_buffer) btBvhTriangleMeshShape{ &mesh, true };
+            }
 
-			btBvhTriangleMeshShape* get_mesh_shape()
-			{
-				return reinterpret_cast<btBvhTriangleMeshShape*>(_buffer);
-			}
+            btBvhTriangleMeshShape* get_mesh_shape()
+            {
+                return reinterpret_cast<btBvhTriangleMeshShape*>(_buffer);
+            }
 
-			/*--- Fields ---*/
-		public:
+            /*--- Fields ---*/
+        public:
 
-			/* The shape itself. */
-			btTriangleMesh mesh;
+            /* The shape itself. */
+            btTriangleMesh mesh;
 
-		private:
+        private:
 
-			alignas(alignof(btBvhTriangleMeshShape))
-			char _buffer[sizeof(btBvhTriangleMeshShape)];
-		};
+            alignas(alignof(btBvhTriangleMeshShape))
+            char _buffer[sizeof(btBvhTriangleMeshShape)];
+        };
 
-		void on_spotlight_new(
-			EventChannel& new_spotlight_channel,
-			EventChannel::SubscriberId subscriber_id,
-			BulletPhysicsSystem::Data& phys_data,
-			Scene& scene);
+        void on_spotlight_new(
+            EventChannel& new_spotlight_channel,
+            EventChannel::SubscriberId subscriber_id,
+            BulletPhysicsSystem::Data& phys_data,
+            Scene& scene);
 
-		void on_spotlight_destroyed(
-			EventChannel& destroyed_spotlight_channel,
-			EventChannel::SubscriberId subscriber_id,
-			BulletPhysicsSystem::Data& phys_data);
-	}
+        void on_spotlight_destroyed(
+            EventChannel& destroyed_spotlight_channel,
+            EventChannel::SubscriberId subscriber_id,
+            BulletPhysicsSystem::Data& phys_data);
+    }
 }

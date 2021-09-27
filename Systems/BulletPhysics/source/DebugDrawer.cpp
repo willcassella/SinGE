@@ -44,7 +44,7 @@ namespace sge
             // Do nothing
         }
 
-        int	DebugDrawer::getDebugMode() const
+        int DebugDrawer::getDebugMode() const
         {
             return DBG_DrawWireframe | DBG_DrawAabb;
         }

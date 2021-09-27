@@ -6,8 +6,8 @@
 
 namespace sge
 {
-	namespace gl_render
-	{
+    namespace gl_render
+    {
         GLuint create_texture(
             int32 width,
             int32 height,
@@ -15,5 +15,5 @@ namespace sge
             GLenum internal_format,
             GLenum upload_format,
             GLenum upload_type);
-	}
+    }
 }

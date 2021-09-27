@@ -6,39 +6,39 @@
 
 namespace sge
 {
-	class ArchiveReader;
+    class ArchiveReader;
 
-	namespace gl_render
-	{
-		struct SGE_GLRENDER_API Config
-		{
-			SGE_REFLECTED_TYPE;
+    namespace gl_render
+    {
+        struct SGE_GLRENDER_API Config
+        {
+            SGE_REFLECTED_TYPE;
 
-			////////////////////////
-			///   Constructors   ///
-		public:
+            ////////////////////////
+            ///   Constructors   ///
+        public:
 
-			Config();
+            Config();
 
-			///////////////////
-			///   Methods   ///
-		public:
+            ///////////////////
+            ///   Methods   ///
+        public:
 
-			void from_archive(ArchiveReader& reader);
+            void from_archive(ArchiveReader& reader);
 
-			bool validate() const;
+            bool validate() const;
 
-			//////////////////
-			///   Fields   ///
-		public:
+            //////////////////
+            ///   Fields   ///
+        public:
 
-			int viewport_width;
+            int viewport_width;
 
-			int viewport_height;
+            int viewport_height;
 
-			std::string viewport_vert_shader;
+            std::string viewport_vert_shader;
 
-			std::string scene_shader;
+            std::string scene_shader;
 
             std::string post_shader;
 
@@ -46,9 +46,9 @@ namespace sge
 
             std::string debug_line_frag_shader;
 
-			std::string missing_material;
+            std::string missing_material;
 
-			std::string missing_mesh;
-		};
-	}
+            std::string missing_mesh;
+        };
+    }
 }

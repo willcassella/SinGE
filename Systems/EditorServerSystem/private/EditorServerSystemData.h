@@ -6,32 +6,32 @@
 
 namespace sge
 {
-	using asio::ip::tcp;
+    using asio::ip::tcp;
 
-	struct EditorServerSystem::Data
-	{
-		////////////////////////
-		///   Constructors   ///
-	public:
+    struct EditorServerSystem::Data
+    {
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		Data(uint16 port);
+        Data(uint16 port);
 
-		///////////////////
-		///   Methods   ///
-	private:
+        ///////////////////
+        ///   Methods   ///
+    private:
 
-		void async_connection();
+        void async_connection();
 
-		//////////////////
-		///   Fields   ///
-	public:
+        //////////////////
+        ///   Fields   ///
+    public:
 
-		SystemFrame* frame;
-		Scene* scene;
-		asio::io_service io;
+        SystemFrame* frame;
+        Scene* scene;
+        asio::io_service io;
 
-	private:
+    private:
 
-		tcp::acceptor _acceptor;
-	};
+        tcp::acceptor _acceptor;
+    };
 }

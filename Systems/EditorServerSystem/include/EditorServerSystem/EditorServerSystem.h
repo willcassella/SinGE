@@ -8,37 +8,37 @@
 
 namespace sge
 {
-	struct SGE_EDITORSERVERSYSTEM_API EditorServerSystem
-	{
-		struct Data;
-		SGE_REFLECTED_TYPE;
+    struct SGE_EDITORSERVERSYSTEM_API EditorServerSystem
+    {
+        struct Data;
+        SGE_REFLECTED_TYPE;
 
-		////////////////////////
-		///   Constructors   ///
-	public:
+        ////////////////////////
+        ///   Constructors   ///
+    public:
 
-		EditorServerSystem(uint16 port);
-		~EditorServerSystem();
+        EditorServerSystem(uint16 port);
+        ~EditorServerSystem();
 
-		///////////////////
-		///   Methods   ///
-	public:
+        ///////////////////
+        ///   Methods   ///
+    public:
 
-		void register_pipeline(UpdatePipeline& pipeline);
+        void register_pipeline(UpdatePipeline& pipeline);
 
-		int get_serve_time() const;
+        int get_serve_time() const;
 
-		void set_serve_time(int milliseconds);
+        void set_serve_time(int milliseconds);
 
-	private:
+    private:
 
         void serve_fn(Scene& scene, SystemFrame& frame);
 
-		//////////////////
-		///   Fields   ///
-	private:
+        //////////////////
+        ///   Fields   ///
+    private:
 
-		int _serve_time_ms;
-		std::unique_ptr<Data> _data;
-	};
+        int _serve_time_ms;
+        std::unique_ptr<Data> _data;
+    };
 }

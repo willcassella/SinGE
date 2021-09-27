@@ -20,10 +20,10 @@ namespace sge
          */
         Vec4 world_pos;
 
-		/*
-		 * \breif The base color of the material represented by this texel.
-		 */
-		color::RGBF32 base_color;
+        /*
+         * \breif The base color of the material represented by this texel.
+         */
+        color::RGBF32 base_color;
     };
 
     struct LightmapObject
@@ -38,10 +38,10 @@ namespace sge
          */
         Mat4 world_transform;
 
-	    /**
-		 * \brief The base color of the material represented by this texel.
-		 */
-		color::RGBF32 base_color;
+        /**
+         * \brief The base color of the material represented by this texel.
+         */
+        color::RGBF32 base_color;
     };
 
     struct LightmapOccluder
@@ -87,29 +87,29 @@ namespace sge
 
     struct LightmapScene;
 
-	/**
-	 * \brief Returns the tangent-space x basis vector for lightmapping.
-	 */
-	inline Vec3 get_lightmap_x_basis_vector()
-	{
-		return Vec3{ sqrtf(2.f / 3.f), 0.f, sqrtf(1.f / 3.f) };
-	}
+    /**
+     * \brief Returns the tangent-space x basis vector for lightmapping.
+     */
+    inline Vec3 get_lightmap_x_basis_vector()
+    {
+        return Vec3{ sqrtf(2.f / 3.f), 0.f, sqrtf(1.f / 3.f) };
+    }
 
-	/**
-	 * \brief Returns the tangent-space y basis vector for lightmapping.
-	 */
-	inline Vec3 get_lightmap_y_basis_vector()
-	{
-		return Vec3{ -sqrtf(1.f / 6.f), sqrtf(1.f / 2.f), sqrtf(1.f / 3.f) };
-	}
+    /**
+     * \brief Returns the tangent-space y basis vector for lightmapping.
+     */
+    inline Vec3 get_lightmap_y_basis_vector()
+    {
+        return Vec3{ -sqrtf(1.f / 6.f), sqrtf(1.f / 2.f), sqrtf(1.f / 3.f) };
+    }
 
-	/**
-	 * \brief Returns the tangent-space z basis vector for lightmapping.
-	 */
-	inline Vec3 get_lightmap_z_basis_vector()
-	{
-		return Vec3{ -sqrtf(1.f / 6.f), -sqrtf(1.f / 2.f), sqrtf(1.f / 3.f) };
-	}
+    /**
+     * \brief Returns the tangent-space z basis vector for lightmapping.
+     */
+    inline Vec3 get_lightmap_z_basis_vector()
+    {
+        return Vec3{ -sqrtf(1.f / 6.f), -sqrtf(1.f / 2.f), sqrtf(1.f / 3.f) };
+    }
 
     /**
      * \brief Generates lightmap texel information for the given lightmap objects.
@@ -146,20 +146,20 @@ namespace sge
     SGE_LIGHTMAPPER_API void free_lightmap_scene(
         LightmapScene* sene);
 
-	/**
-	 * \brief Computes a fudgy ambient term. Useful for scenes where direct lighting is not the sole exterior contribution of light.
-	 * \param ambient The amount of ambient light.
-	 * \param width The width (in pixels) of the lightmap.
-	 * \param height The height (in pixels) of the lightmap.
-	 * \param texel_mask The array of texel masks in the lightmap.
-	 * \param out_irradiance The pixels to assign the ambient radiance to.
-	 */
-	SGE_LIGHTMAPPER_API void compute_ambient_radiance(
-		color::RGBF32 ambient,
-		int32 width,
-		int32 height,
-		const byte* texel_mask,
-		color::RGBF32* out_irradiance);
+    /**
+     * \brief Computes a fudgy ambient term. Useful for scenes where direct lighting is not the sole exterior contribution of light.
+     * \param ambient The amount of ambient light.
+     * \param width The width (in pixels) of the lightmap.
+     * \param height The height (in pixels) of the lightmap.
+     * \param texel_mask The array of texel masks in the lightmap.
+     * \param out_irradiance The pixels to assign the ambient radiance to.
+     */
+    SGE_LIGHTMAPPER_API void compute_ambient_radiance(
+        color::RGBF32 ambient,
+        int32 width,
+        int32 height,
+        const byte* texel_mask,
+        color::RGBF32* out_irradiance);
 
     /**
      * \brief Computes irradiance due to direct lighting from the given light source.
@@ -197,15 +197,15 @@ namespace sge
     SGE_LIGHTMAPPER_API void compute_indirect_radiance(
         const LightmapScene* scene,
         int32 num_sample_sets,
-		int32 num_accumulations,
+        int32 num_accumulations,
         int32 width,
         int32 height,
         const LightmapTexel* texels,
         const byte* texel_mask,
         color::RGBF32* SGE_RESTRICT out_x_basis_radiance,
-		color::RGBF32* SGE_RESTRICT out_y_basis_radiance,
-		color::RGBF32* SGE_RESTRICT out_z_basis_radiance,
-		color::RGBF32* SGE_RESTRICT out_normal_irradiance);
+        color::RGBF32* SGE_RESTRICT out_y_basis_radiance,
+        color::RGBF32* SGE_RESTRICT out_z_basis_radiance,
+        color::RGBF32* SGE_RESTRICT out_normal_irradiance);
 
     /**
      * \brief Post-processes the given lightmap to reduce noise.

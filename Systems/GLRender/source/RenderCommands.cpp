@@ -15,39 +15,39 @@ namespace sge
             glEnable(GL_STENCIL_TEST);
             glEnable(GL_DEPTH_TEST);
             glEnable(GL_CULL_FACE);
-			glClearDepth(1.f);
-			glClearColor(0.f, 0.f, 0.f, 1.f);
-			glDepthMask(GL_TRUE);
-			glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+            glClearDepth(1.f);
+            glClearColor(0.f, 0.f, 0.f, 1.f);
+            glDepthMask(GL_TRUE);
+            glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         }
 
-	    void RenderCommand_bind_framebuffer(
-			const GLuint framebuffer,
-			const GLuint width,
-			const GLuint height)
-	    {
-			glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
-			glViewport(0, 0, width, height);
-	    }
+        void RenderCommand_bind_framebuffer(
+            const GLuint framebuffer,
+            const GLuint width,
+            const GLuint height)
+        {
+            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+            glViewport(0, 0, width, height);
+        }
 
-	    void RenderCommand_bind_material(
-			const GLuint program_id,
-			const gl_material::MaterialStandardUniforms uniforms,
-			const gl_material::MaterialParams& params,
-			const Mat4& view_matrix,
-			const Mat4& proj_matrix)
-	    {
-			glUseProgram(program_id);
+        void RenderCommand_bind_material(
+            const GLuint program_id,
+            const gl_material::MaterialStandardUniforms uniforms,
+            const gl_material::MaterialParams& params,
+            const Mat4& view_matrix,
+            const Mat4& proj_matrix)
+        {
+            glUseProgram(program_id);
 
-			GLenum next_active_texture = gl_material::FIRST_USER_TEXTURE_SLOT;
-			gl_material::set_material_params(program_id, &next_active_texture, params);
+            GLenum next_active_texture = gl_material::FIRST_USER_TEXTURE_SLOT;
+            gl_material::set_material_params(program_id, &next_active_texture, params);
 
-			glProgramUniformMatrix4fv(program_id, uniforms.view_matrix_uniform, 1, GL_FALSE, view_matrix.vec());
-			glProgramUniformMatrix4fv(program_id, uniforms.proj_matrix_uniform, 1, GL_FALSE, proj_matrix.vec());
-	    }
+            glProgramUniformMatrix4fv(program_id, uniforms.view_matrix_uniform, 1, GL_FALSE, view_matrix.vec());
+            glProgramUniformMatrix4fv(program_id, uniforms.proj_matrix_uniform, 1, GL_FALSE, proj_matrix.vec());
+        }
 
-	    void RenderCommand_render_meshes(
+        void RenderCommand_render_meshes(
             const gl_material::MaterialStandardUniforms uniforms,
             const RenderCommand_Mesh& mesh,
             const RenderCommand_MeshInstance* instances,
@@ -93,18 +93,18 @@ namespace sge
             }
         }
 
-	    void RenderCommand_render_lines(
-			const RenderCommand_Lines* line_sets,
-			std::size_t num_line_sets)
-	    {
-			for (std::size_t i = 0; i < num_line_sets; ++i)
-			{
-				glBindVertexArray(line_sets[i].vao);
-				glDrawArrays(GL_LINES, 0, line_sets[i].num_verts);
-			}
-	    }
+        void RenderCommand_render_lines(
+            const RenderCommand_Lines* line_sets,
+            std::size_t num_line_sets)
+        {
+            for (std::size_t i = 0; i < num_line_sets; ++i)
+            {
+                glBindVertexArray(line_sets[i].vao);
+                glDrawArrays(GL_LINES, 0, line_sets[i].num_verts);
+            }
+        }
 
-	    void render_scene_shade_hdr(
+        void render_scene_shade_hdr(
             GLuint framebuffer,
             const GLRenderSystem::State& render_state,
             Mat4 view)
@@ -141,9 +141,9 @@ namespace sge
             // Upload view matrix
             glUniformMatrix4fv(render_state.scene_program_view_uniform, 1, GL_FALSE, view.vec());
 
-			// Upload light uniforms
-			glUniform3fv(render_state.scene_program_light_dir_uniform, 1, render_state.render_scene.light_dir.vec());
-			glUniform3fv(render_state.scene_program_light_intensity_uniform, 1, render_state.render_scene.light_intensity.vec());
+            // Upload light uniforms
+            glUniform3fv(render_state.scene_program_light_dir_uniform, 1, render_state.render_scene.light_dir.vec());
+            glUniform3fv(render_state.scene_program_light_intensity_uniform, 1, render_state.render_scene.light_intensity.vec());
 
             // Draw the screen quad
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);

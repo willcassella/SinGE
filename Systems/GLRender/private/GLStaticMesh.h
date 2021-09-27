@@ -9,8 +9,8 @@
 
 namespace sge
 {
-	namespace gl_render
-	{
+    namespace gl_render
+    {
         namespace gl_static_mesh
         {
             enum BufferIndex
@@ -75,5 +75,5 @@ namespace sge
                 std::size_t num_elements,
                 const uint32* elements);
         }
-	}
+    }
 }
