@@ -55,7 +55,7 @@ void main()
     out_normal = normalize(TBN * normal);
 
     // Output albedo
-    const vec4 albedo = texture(albedo, fs_in.mat_tex_coords * base_mat_uv_scale * inst_mat_uv_scale);
+    vec4 albedo = texture(albedo, fs_in.mat_tex_coords * base_mat_uv_scale * inst_mat_uv_scale);
     out_albedo = albedo;
 
     // Get AO
