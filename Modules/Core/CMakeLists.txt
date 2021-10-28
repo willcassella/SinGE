@@ -1,11 +1,21 @@
-# Core project CMake file
-cmake_minimum_required(VERSION 2.8)
-project(Core CXX)
-
-# Private
-file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/source/*.cpp")
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
-add_definitions(-DSGE_CORE_BUILD)
-
-# Public
-set(${PROJECT_NAME}_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include" PARENT_SCOPE)
+enable_language(CXX)
+set(SOURCE_FILES
+    source/Interfaces/IFromArchive.cpp
+    source/Interfaces/IFromString.cpp
+    source/Interfaces/IToArchive.cpp
+    source/Interfaces/IToString.cpp
+    source/Math/Angle.cpp
+    source/Math/Mat4.cpp
+    source/Math/Quat.cpp
+    source/Math/Vec2.cpp
+    source/Math/Vec3.cpp
+    source/Math/Vec4.cpp
+    source/Memory/Buffers/MultiStackBuffer.cpp
+    source/Memory/Functions.cpp
+    source/Reflection/EnumTypeInfo.cpp
+    source/Reflection/Reflection.cpp
+    source/Reflection/TypeDB.cpp
+)
+add_library(Core SHARED ${SOURCE_FILES})
+target_compile_definitions(Core PRIVATE SGE_CORE_BUILD)
+target_include_directories(Core PUBLIC include)

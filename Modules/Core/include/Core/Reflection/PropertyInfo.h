@@ -2,7 +2,8 @@
 #pragma once
 
 #include <utility>
-#include "../Functional/FunctionView.h"
+#include <string>
+#include "Core/Functional/FunctionView.h"
 #include "Any.h"
 
 namespace sge

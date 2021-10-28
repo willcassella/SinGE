@@ -1,15 +1,22 @@
-# Resource project CMake file
-cmake_minimum_required(VERSION 2.8)
-project(Resource CXX)
-
-# Private
-file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/source/*.cpp")
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
-add_definitions(-DSGE_RESOURCE_BUILD)
-
-# Dependencies
-include_directories(${Core_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} Core freeimage)
-
-# Public
-set(${PROJECT_NAME}_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include" PARENT_SCOPE)
+enable_language(CXX)
+set(SOURCE_FILES
+    source/Archives/BinaryArchive.cpp
+    source/Archives/JsonArchive.cpp
+    source/Interfaces/IFromFile.cpp
+    source/Misc/Color.cpp
+    source/Misc/ImageOps.cpp
+    source/Misc/LightmaskVolume.cpp
+    source/ResourceManager.cpp
+    source/Resources/HDRImage.cpp
+    source/Resources/Image.cpp
+    source/Resources/Material.cpp
+    source/Resources/Shader.cpp
+    source/Resources/StaticMesh.cpp
+    source/Resources/Texture.cpp
+)
+add_library(Resource SHARED ${SOURCE_FILES})
+target_compile_definitions(Resource PRIVATE SGE_RESOURCE_BUILD)
+target_include_directories(Resource PUBLIC include)
+target_include_directories(Resource PRIVATE private)
+target_link_libraries(Resource PUBLIC Core)
+target_link_libraries(Resource PRIVATE freeimage)

@@ -1,17 +1,22 @@
-# BulletPhysics project cmake file
-cmake_minimum_required(VERSION 2.8)
-project(BulletPhysics CXX)
+enable_language(CXX)
+set(SOURCE_FILES
+    source/BulletPhysicsSystem.cpp
+    source/BulletPhysicsSystemData.cpp
+    source/CharacterController.cpp
+    source/Colliders.cpp
+    source/Config.cpp
+    source/DebugDrawer.cpp
+    source/LevelPortal.cpp
+    source/LightmaskVolumeCollider.cpp
+    source/PhysicsEntity.cpp
+    source/RigidBody.cpp
+)
+add_library(BulletPhysics SHARED ${SOURCE_FILES})
+target_compile_definitions(BulletPhysics PRIVATE SGE_BULLET_PHYSICS_BUILD)
+target_include_directories(BulletPhysics PUBLIC include)
+target_include_directories(BulletPhysics PRIVATE private)
+target_link_libraries(BulletPhysics PUBLIC Core Resource Engine)
 
-# Private
-file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/source/*.cpp")
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
-add_definitions(-DSGE_BULLET_PHYSICS_BUILD)
-
-# Dependencies
 pkg_check_modules(Bullet bullet REQUIRED)
-include_directories(SYSTEM ${Bullet_STATIC_INCLUDE_DIRS}) # Supress warnings from Bullet headers
-include_directories(${Core_INCLUDE_DIRS} ${Resource_INCLUDE_DIRS} ${Engine_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} Core Resource Engine ${Bullet_STATIC_LIBRARIES})
-
-# Public
-set(${PROJECT_NAME}_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include" PARENT_SCOPE)
+target_include_directories(BulletPhysics SYSTEM PRIVATE ${Bullet_STATIC_INCLUDE_DIRS})
+target_link_libraries(BulletPhysics PRIVATE ${Bullet_STATIC_LIBRARIES})

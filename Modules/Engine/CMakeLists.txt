@@ -1,15 +1,30 @@
-# Engine project CMake file
-cmake_minimum_required(VERSION 2.8)
-project(Engine CXX)
-
-# Private
-file(GLOB_RECURSE SOURCE_FILES "${PROJECT_SOURCE_DIR}/source/*.cpp")
-add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
-add_definitions(-DSGE_ENGINE_BUILD)
-
-# Dependencies
-include_directories(${Core_INCLUDE_DIRS} ${Resource_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} Core Resource)
-
-# Public
-set(${PROJECT_NAME}_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/include" PARENT_SCOPE)
+enable_language(CXX)
+set(SOURCE_FILES
+    source/Component.cpp
+    source/Components/Display/CCamera.cpp
+    source/Components/Display/CPointLight.cpp
+    source/Components/Display/CSpotLight.cpp
+    source/Components/Display/CStaticMesh.cpp
+    source/Components/Gameplay/CAnimation.cpp
+    source/Components/Gameplay/CCharacterController.cpp
+    source/Components/Gameplay/CInput.cpp
+    source/Components/Gameplay/CLevelPortal.cpp
+    source/Components/Physics/CBoxCollider.cpp
+    source/Components/Physics/CCapsuleCollider.cpp
+    source/Components/Physics/CRigidBody.cpp
+    source/Components/Physics/CSensor.cpp
+    source/Components/Physics/CSphereCollider.cpp
+    source/Components/Physics/CStaticMeshCollider.cpp
+    source/Engine/UpdatePipeline.cpp
+    source/EventChannel.cpp
+    source/Lightmap.cpp
+    source/Node.cpp
+    source/Scene.cpp
+    source/SystemFrame.cpp
+    source/Systems/AnimationSystem.cpp
+    source/Systems/ChangeLevelSystem.cpp
+)
+add_library(Engine SHARED ${SOURCE_FILES})
+target_compile_definitions(Engine PRIVATE SGE_ENGINE_BUILD)
+target_include_directories(Engine PUBLIC include)
+target_link_libraries(Engine PUBLIC Core Resource)
