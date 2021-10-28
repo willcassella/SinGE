@@ -1,4 +1,3 @@
-enable_language(CXX)
 set(SOURCE_FILES
     source/Config.cpp
     source/GLMaterial.cpp
