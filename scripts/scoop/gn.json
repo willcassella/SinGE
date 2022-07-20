@@ -1,0 +1,9 @@
+{
+    "version":  "latest",
+    "description": "GN is a meta-build system that generates build files for Ninja.",
+    "license":  "https://gn.googlesource.com/gn/+/refs/heads/main/LICENSE",
+    "url":  "https://chrome-infra-packages.appspot.com/dl/gn/gn/windows-amd64/+/latest#/dl.zip",
+    "homepage":  "https://gn.googlesource.com/gn/",
+    "extract_dir": "",
+    "bin":  "gn.exe"
+}
