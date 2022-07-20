@@ -1,0 +1,32 @@
+config("compiler_defaults") {
+  # Allow includes for library folder for all targets.
+  # This assumes output directory is on level deep, looking for a better way to do this.
+  cflags = [ "-I../../lib/" ]
+  cflags += [
+    "-target",
+    "x86_64-linux",
+  ]
+
+  if (current_os == "linux") {
+    cflags += [
+      "-fPIC",
+      "-pthread",
+    ]
+  }
+}
+
+config("executable_ldconfig") {
+  ldflags = []
+
+  if (is_linux) {
+    ldflags = [
+      "-Wl,-rpath=\$ORIGIN/",
+      "-Wl,-rpath-link=",
+    ]
+  }
+
+  ldflags += [
+    "-target",
+    "x86_64-linux",
+  ]
+}
