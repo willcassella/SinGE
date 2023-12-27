@@ -1,0 +1,24 @@
+cxx_binary(
+    name = "gl_editor_server",
+    srcs = [
+        "main.cpp",
+    ],
+    deps = [
+        "//lib/base:base",
+        "//lib/bullet_physics:bullet_physics",
+        "//lib/engine:engine",
+        "//lib/gl_render:gl_render",
+        "//lib/gl_window:gl_window",
+        "//lib/resource:resource",
+        "//lib/editor_server:editor_server",
+    ],
+    compiler_flags = [
+        "-std=c++20",
+        "-I/opt/homebrew/include",
+    ],
+    linker_flags = [
+        "-L/opt/homebrew/lib",
+        "-lglfw",
+    ],
+    link_style = "static",
+)

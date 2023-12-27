@@ -1,4 +1,3 @@
-// TVector3.h
 #pragma once
 
 namespace sge
@@ -6,10 +5,6 @@ namespace sge
     template <typename T>
     struct TVector3
     {
-        ////////////////////////
-        ///   Constructors   ///
-    public:
-
         TVector3()
             : value{ 0, 0, 0 }
         {
@@ -18,10 +13,6 @@ namespace sge
             : value{ x, y, z }
         {
         }
-
-        ///////////////////
-        ///   Methods   ///
-    public:
 
         T& x()
         {
@@ -60,10 +51,7 @@ namespace sge
             value[2] = z;
         }
 
-        //////////////////
-        ///   Fields   ///
     public:
-
         T value[3];
     };
 }

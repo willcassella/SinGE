@@ -1,7 +1,5 @@
-// Angle.cpp
-
-#include "base/reflection/ReflectionBuilder.h"
-#include "base/math/Angle.h"
+#include "lib/base/math/angle.h"
+#include "lib/base/reflection/reflection_builder.h"
 
 SGE_REFLECT_TYPE(sge::Angle)
     .flags(TF_RECURSE_TERMINAL)

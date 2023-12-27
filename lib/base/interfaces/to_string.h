@@ -1,11 +1,11 @@
-// to_string.h
 #pragma once
 
-#include <cstring>
 #include <cassert>
+#include <cstring>
 #include <string>
-#include "base/util/InterfaceUtils.h"
-#include "base/reflection/Reflection.h"
+
+#include "lib/base/reflection/reflection.h"
+#include "lib/base/util/interface_utils.h"
 
 namespace sge
 {
@@ -14,9 +14,6 @@ namespace sge
         SGE_REFLECTED_INTERFACE;
         SGE_INTERFACE_1(IToString, to_string)
 
-        /////////////////////
-        ///   Functions   ///
-    public:
         std::string (*to_string)(Self self);
     };
 

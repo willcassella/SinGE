@@ -1,8 +1,8 @@
-// Mat4.h
 #pragma once
 
 #include <cassert>
-#include "base/math/Quat.h"
+
+#include "lib/base/math/quat.h"
 
 namespace sge
 {
@@ -10,9 +10,6 @@ namespace sge
     {
         SGE_REFLECTED_TYPE;
 
-        ////////////////////////
-        ///   Constructors   ///
-    public:
         /** Constructs a new 4x4 matrix
         default - identity matrix
         values - what to set each element of the matrix to */
@@ -39,9 +36,6 @@ namespace sge
             _values[3][3] = dd;
         }
 
-        ///////////////////
-        ///   Methods   ///
-    public:
         const Scalar *vec() const
         {
             return &_values[0][0];
@@ -191,9 +185,6 @@ namespace sge
             _values[column][row] = value;
         }
 
-        /////////////////////
-        ///   Operators   ///
-    public:
         Scalar *operator[](uint32 index)
         {
             assert(index < 16);
@@ -262,8 +253,6 @@ namespace sge
             return !(lhs == rhs);
         }
 
-        //////////////////
-        ///   Fields   ///
     private:
         Scalar _values[4][4];
     };

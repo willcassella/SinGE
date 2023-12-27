@@ -1,0 +1,54 @@
+cxx_library(
+    name = "bullet_physics",
+    exported_headers = [
+        "build.h",
+        "bullet_physics_system.h",
+        "config.h",
+    ],
+    headers = [
+        "bullet_physics_system_data.h",
+        "character_controller.h",
+        "colliders.h",
+        "debug_drawer.h",
+        "level_portal.h",
+        "lightmask_volume_collider.h",
+        "physics_entity.h",
+        "physics_world.h",
+        "rigid_body.h",
+        "util.h",
+    ],
+    srcs = [
+        "bullet_physics_system.cpp",
+        "bullet_physics_system_data.cpp",
+        "character_controller.cpp",
+        "colliders.cpp",
+        "config.cpp",
+        "debug_drawer.cpp",
+        "level_portal.cpp",
+        "lightmask_volume_collider.cpp",
+        "physics_entity.cpp",
+        "rigid_body.cpp",
+    ],
+    deps = [
+        "//lib/base:base",
+        "//lib/engine:engine",
+        "//lib/resource:resource",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    preprocessor_flags = [
+        "-DSGE_BULLET_PHYSICS_BUILD",
+    ],
+    compiler_flags = [
+        "-std=c++20",
+        "-I/opt/homebrew/include/bullet",
+    ],
+    exported_linker_flags = [
+        "-L/opt/homebrew/lib",
+        "-lBulletDynamics",
+        "-lBulletCollision",
+        "-lLinearMath",
+    ],
+    link_style = "static",
+)

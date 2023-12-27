@@ -1,7 +1,5 @@
-// from_string.cpp
-
-#include "base/interfaces/from_string.h"
-#include "base/reflection/ReflectionBuilder.h"
+#include "lib/base/interfaces/from_string.h"
+#include "lib/base/reflection/reflection_builder.h"
 
 SGE_REFLECT_INTERFACE(sge::IFromString)
     .implemented_for<int32>()

@@ -1,7 +1,5 @@
-// Quat.cpp
-
-#include "base/math/Quat.h"
-#include "base/reflection/ReflectionBuilder.h"
+#include "lib/base/math/quat.h"
+#include "lib/base/reflection/reflection_builder.h"
 
 SGE_REFLECT_TYPE(sge::Quat)
     .implements<IToString>()

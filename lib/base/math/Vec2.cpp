@@ -1,7 +1,5 @@
-// Vec2.cpp
-
-#include "base/math/Vec2.h"
-#include "base/reflection/ReflectionBuilder.h"
+#include "lib/base/math/vec2.h"
+#include "lib/base/reflection/reflection_builder.h"
 
 SGE_REFLECT_TYPE(sge::Vec2)
     .implements<IToString>()

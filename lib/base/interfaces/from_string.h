@@ -1,10 +1,10 @@
-// from_string.h
 #pragma once
 
 #include <cassert>
 #include <string>
-#include "base/util/InterfaceUtils.h"
-#include "base/reflection/Reflection.h"
+
+#include "lib/base/reflection/reflection.h"
+#include "lib/base/util/interface_utils.h"
 
 namespace sge
 {
@@ -13,9 +13,6 @@ namespace sge
         SGE_REFLECTED_INTERFACE;
         SGE_INTERFACE_1(IFromString, from_string)
 
-        /////////////////////
-        ///   Functions   ///
-    public:
         std::size_t (*from_string)(SelfMut self, const char *str, std::size_t len);
     };
 

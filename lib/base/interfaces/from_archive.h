@@ -1,10 +1,10 @@
-// from_archive.h
 #pragma once
 
 #include <cassert>
-#include "base/util/InterfaceUtils.h"
-#include "base/reflection/Reflection.h"
-#include "base/io/archive_reader.h"
+
+#include "lib/base/io/archive_reader.h"
+#include "lib/base/reflection/reflection.h"
+#include "lib/base/util/interface_utils.h"
 
 namespace sge
 {
@@ -13,9 +13,6 @@ namespace sge
         SGE_REFLECTED_INTERFACE;
         SGE_INTERFACE_1(IFromArchive, from_archive);
 
-        /////////////////////
-        ///   Functions   ///
-    public:
         void (*from_archive)(SelfMut self, ArchiveReader &reader);
     };
 

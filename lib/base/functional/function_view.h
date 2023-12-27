@@ -1,4 +1,3 @@
-// FunctionView.h
 #pragma once
 
 #include <utility>
@@ -21,10 +20,7 @@ namespace sge
         };
         using Function = RetT(UserData, ArgTs...);
 
-        ////////////////////////
-        ///   Constructors   ///
     public:
-
         /* Explicitly initializes this FunctionView with a state pointer and function pointer. */
         FunctionView(void* state, Function* func)
         {
@@ -75,28 +71,17 @@ namespace sge
         {
         }
 
-        ///////////////////
-        ///   Methods   ///
-    public:
-
         RetT invoke(ArgTs... args) const
         {
             return _func(_data, std::forward<ArgTs>(args)...);
         }
-
-        /////////////////////
-        ///   Operators   ///
-    public:
 
         RetT operator()(ArgTs... args) const
         {
             return _func(_data, std::forward<ArgTs>(args)...);
         }
 
-        ////////////////
-        ///   Data   ///
     private:
-
         UserData _data;
         Function* _func;
     };

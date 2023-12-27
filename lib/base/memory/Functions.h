@@ -1,7 +1,6 @@
-// Functions.h
 #pragma once
 
-#include "base/config.h"
+#include "lib/base/build.h"
 
 namespace sge
 {

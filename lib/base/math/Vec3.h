@@ -1,7 +1,6 @@
-// Vec3.h
 #pragma once
 
-#include "base/math/Vec2.h"
+#include "lib/base/math/vec2.h"
 
 namespace sge
 {
@@ -9,9 +8,6 @@ namespace sge
     {
         SGE_REFLECTED_TYPE;
 
-        ////////////////////////
-        ///   Constructors   ///
-    public:
         constexpr Vec3()
             : _values{0, 0, 0}
         {
@@ -29,9 +25,6 @@ namespace sge
         {
         }
 
-        ///////////////////
-        ///   Methods   ///
-    public:
         constexpr Scalar x() const
         {
             return _values[0];
@@ -132,9 +125,6 @@ namespace sge
             return std::acos(Vec3::dot(a.normalized(), b.normalized()));
         }
 
-        ////////////////////////////
-        ///   Static Instances   ///
-    public:
         static Vec3 zero()
         {
             return {0, 0, 0};
@@ -152,9 +142,6 @@ namespace sge
             return {1, 0, 0};
         }
 
-        /////////////////////
-        ///   Operators   ///
-    public:
         friend Vec3 operator+(const Vec3 &lhs, const Vec3 &rhs)
         {
             return Vec3{lhs.x() + rhs.x(), lhs.y() + rhs.y(), lhs.z() + rhs.z()};
@@ -252,8 +239,6 @@ namespace sge
             return lhs.x() != rhs.x() || lhs.y() != rhs.y() || lhs.z() != rhs.z();
         }
 
-        //////////////////
-        ///   Fields   ///
     private:
         Scalar _values[3];
     };

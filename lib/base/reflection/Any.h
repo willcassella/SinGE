@@ -1,8 +1,8 @@
-// Any.h
 #pragma once
 
 #include <utility>
-#include "base/util/InterfaceUtils.h"
+
+#include "lib/base/util/interface_utils.h"
 
 namespace sge
 {
@@ -14,24 +14,17 @@ namespace sge
     template <typename I>
     struct AnyImpl
     {
-        ////////////////////////
-        ///   Constructors   ///
     protected:
         AnyImpl(const I &impl)
             : _impl(&impl)
         {
         }
 
-        ///////////////////
-        ///   Methods   ///
-    protected:
         const I &impl() const
         {
             return *_impl;
         }
 
-        //////////////////
-        ///   Fields   ///
     private:
         const I *_impl;
     };
@@ -39,9 +32,6 @@ namespace sge
     template <typename... Is>
     struct AnyMut : AnyImpl<Is>...
     {
-        ////////////////////////
-        ///   Constructors   ///
-    public:
         AnyMut(const TypeInfo &type, void *object, const Is &...impls)
             : AnyImpl<Is>(impls)...,
               _type(&type),
@@ -90,9 +80,6 @@ namespace sge
         {
         }
 
-        ///////////////////
-        ///   Methods   ///
-    public:
         const TypeInfo &type() const
         {
             return *_type;
@@ -127,8 +114,6 @@ namespace sge
             return (this->AnyImpl<I>::impl().*member)(std::forward<ActualArgTs>(args)...);
         }
 
-        //////////////////
-        ///   Fields   ///
     private:
         const TypeInfo *_type;
         void *_object;
@@ -137,9 +122,6 @@ namespace sge
     template <typename... Is>
     struct Any : AnyImpl<Is>...
     {
-        ////////////////////////
-        ///   Constructors   ///
-    public:
         Any(const TypeInfo &type, const void *object, const Is &...impls)
             : AnyImpl<Is>(impls)...,
               _type(&type),
@@ -196,9 +178,6 @@ namespace sge
         {
         }
 
-        ///////////////////
-        ///   Methods   ///
-    public:
         const TypeInfo &type() const
         {
             return *_type;
@@ -221,8 +200,6 @@ namespace sge
             return (this->AnyImpl<I>::impl().*member)(std::forward<ActualArgTs>(args)...);
         }
 
-        //////////////////
-        ///   Fields   ///
     private:
         const TypeInfo *_type;
         const void *_object;

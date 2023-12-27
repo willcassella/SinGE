@@ -1,9 +1,9 @@
-// archive_writer.h
 #pragma once
 
 #include <string>
-#include "base/functional/function_view.h"
-#include "base/config.h"
+
+#include "lib/base/build.h"
+#include "lib/base/functional/function_view.h"
 
 namespace sge
 {
@@ -14,8 +14,6 @@ namespace sge
 
     class SGE_BASE_EXPORT ArchiveWriter
     {
-        ///////////////////
-        ///   Methods   ///
     public:
         /**
          * \brief Pops the active node from this writer, and returns to the parent.

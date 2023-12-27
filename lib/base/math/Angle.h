@@ -1,9 +1,8 @@
-// Angle.h
 #pragma once
 
-#include "base/reflection/Reflection.h"
-#include "base/interfaces/to_archive.h"
-#include "base/interfaces/from_archive.h"
+#include "lib/base/reflection/reflection.h"
+#include "lib/base/interfaces/to_archive.h"
+#include "lib/base/interfaces/from_archive.h"
 
 namespace sge
 {
@@ -12,18 +11,12 @@ namespace sge
     {
         SGE_REFLECTED_TYPE;
 
-        /////////////////////
-        ///   Constants   ///
-    public:
         /** Multiplication factor for converting degrees to radians. */
         static constexpr Scalar DEGREES_TO_RADIANS = 0.0174533f;
 
         /** Multiplication factor for converting radians to degrees. */
         static constexpr Scalar RADIANS_TO_DEGREES = 57.2958f;
 
-        ////////////////////////
-        ///   Constructors   ///
-    public:
         constexpr Angle()
             : _radians{0}
         {
@@ -33,9 +26,6 @@ namespace sge
         {
         }
 
-        ///////////////////
-        ///   Methods   ///
-    public:
         void to_archive(ArchiveWriter &writer) const
         {
             writer.number(_radians);
@@ -70,23 +60,15 @@ namespace sge
             _radians = value * DEGREES_TO_RADIANS;
         }
 
-        /////////////////////
-        ///   Operators   ///
-    public:
         /** Converts this object to the underlying type. */
         operator Scalar() const
         {
             return _radians;
         }
 
-        //////////////////
-        ///   Fields   ///
     private:
         Scalar _radians;
     };
-
-    /////////////////////
-    ///   Functions   ///
 
     /** Constructs an angle in radians. */
     constexpr Angle radians(Scalar value)

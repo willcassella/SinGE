@@ -1,7 +1,5 @@
-// to_string.cpp
-
-#include "base/interfaces/to_string.h"
-#include "base/reflection/ReflectionBuilder.h"
+#include "lib/base/interfaces/to_string.h"
+#include "lib/base/reflection/reflection_builder.h"
 
 SGE_REFLECT_INTERFACE(sge::IToString)
     .implemented_for<bool>()

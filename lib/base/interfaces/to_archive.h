@@ -1,12 +1,12 @@
-// to_archive.h
 #pragma once
 
 #include <cassert>
 #include <map>
 #include <unordered_map>
-#include "base/util/InterfaceUtils.h"
-#include "base/reflection/Reflection.h"
-#include "base/io/archive_writer.h"
+
+#include "lib/base/io/archive_writer.h"
+#include "lib/base/reflection/reflection.h"
+#include "lib/base/util/interface_utils.h"
 
 namespace sge
 {
@@ -15,9 +15,6 @@ namespace sge
         SGE_REFLECTED_INTERFACE;
         SGE_INTERFACE_1(IToArchive, to_archive)
 
-        /////////////////////
-        ///   Functions   ///
-    public:
         void (*to_archive)(Self self, ArchiveWriter &writer);
     };
 

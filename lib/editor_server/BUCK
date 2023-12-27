@@ -1,0 +1,46 @@
+cxx_library(
+    name = "editor_server",
+    exported_headers = [
+        "build.h",
+        "editor_server_system.h",
+    ],
+    headers = [
+        "editor_ops.h",
+        "editor_server_system_data.h",
+        "packet.h",
+        "session.h",
+    ],
+    srcs = [
+        "asio.cpp",
+        "editor_ops.cpp",
+        "editor_server_system.cpp",
+        "editor_server_system_data.cpp",
+        "session.cpp",
+    ],
+    exported_deps = [
+        "//lib/base:base",
+        "//lib/engine:engine",
+    ],
+    deps = [
+        "//lib/resource:resource",
+        #"//lib/lightmapper:lightmapper", WIP
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    preprocessor_flags = [
+        "-DSGE_EDITORSERVERSYSTEM_BUILD",
+        "-DASIO_HAS_STD_CHRONO",
+        "-DASIO_HAS_STD_SYSTEM_ERROR",
+        "-DASIO_SEPARATE_COMPILATION",
+        "-DASIO_STANDALONE",
+    ],
+    compiler_flags = [
+        "-std=c++20",
+        "-I/opt/homebrew/include",
+    ],
+    exported_linker_flags = [
+        "-L/opt/homebrew/lib",
+    ],
+    link_style = "static",
+)

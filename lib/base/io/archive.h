@@ -1,21 +1,15 @@
-// archive.h
 #pragma once
 
-#include "base/io/archive_reader.h"
-#include "base/io/archive_writer.h"
+#include "lib/base/io/archive_reader.h"
+#include "lib/base/io/archive_writer.h"
 
 namespace sge
 {
     class SGE_BASE_EXPORT Archive
     {
-        ////////////////////////
-        ///   Constructors   ///
     public:
         virtual ~Archive() = default;
 
-        ///////////////////
-        ///   Methods   ///
-    public:
         /**
          * \brief Writes to the root node of this archive.
          */

@@ -1,11 +1,3 @@
-out/
-packages/
-cache/
-.cache
+buck-out/
 .vscode/
-.vs/
 compile_commands.json
-
-*.suo
-*.VC.db
-*.VC.opendb

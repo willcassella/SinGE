@@ -1,12 +1,12 @@
-// Vec2.h
 #pragma once
 
 #include <cmath>
 #include <string>
-#include "base/reflection/Reflection.h"
-#include "base/util/StringUtils.h"
-#include "base/interfaces/to_archive.h"
-#include "base/interfaces/from_archive.h"
+
+#include "lib/base/interfaces/from_archive.h"
+#include "lib/base/interfaces/to_archive.h"
+#include "lib/base/reflection/reflection.h"
+#include "lib/base/util/string_utils.h"
 
 namespace sge
 {
@@ -14,9 +14,6 @@ namespace sge
     {
         SGE_REFLECTED_TYPE;
 
-        ////////////////////////
-        ///   Constructors   ///
-    public:
         constexpr Vec2()
             : _values{0, 0}
         {
@@ -26,9 +23,6 @@ namespace sge
         {
         }
 
-        ///////////////////
-        ///   Methods   ///
-    public:
         constexpr Scalar x() const
         {
             return _values[0];
@@ -107,9 +101,6 @@ namespace sge
             return std::acos(Vec2::dot(a.normalized(), b.normalized()));
         }
 
-        ///////////////////
-        ///   Statics   ///
-    public:
         static Vec2 zero()
         {
             return {0, 0};
@@ -123,9 +114,6 @@ namespace sge
             return {1, 0};
         }
 
-        /////////////////////
-        ///   Operators   ///
-    public:
         friend Vec2 operator+(const Vec2 &lhs, const Vec2 &rhs)
         {
             return Vec2{lhs.x() + rhs.x(), lhs.y() + rhs.y()};
@@ -223,8 +211,6 @@ namespace sge
             return lhs.x() != rhs.x() || lhs.y() != rhs.y();
         }
 
-        //////////////////
-        ///   Fields   ///
     private:
         Scalar _values[2];
     };

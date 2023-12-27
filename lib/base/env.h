@@ -5,9 +5,6 @@
 #include <cstddef>
 #include <cstdint>
 
-////////////////////////////
-///   Operating System   ///
-
 /** Detect Unix (OSX/Linux) */
 #if defined(unix) || defined(__unix__) || defined(__unix)
 #define SGE_OS_UNIX
@@ -27,9 +24,6 @@
 #if defined(_WIN32)
 #define SGE_OS_WINDOWS
 #endif
-
-/////////////////////////////
-///   Build Information   ///
 
 /** Determine linkage */
 #if defined SGE_LINK_STATIC
@@ -52,9 +46,6 @@
 #endif
 #endif
 
-//////////////////////
-///   Primitives   ///
-
 namespace sge
 {
     // bool is still bool
@@ -74,9 +65,6 @@ namespace sge
     /** The default type used for scalar values. */
     using Scalar = float;
 }
-
-//////////////////
-///   Macros   ///
 
 /** Inline macro */
 #if defined _MSC_VER

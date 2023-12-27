@@ -1,0 +1,28 @@
+cxx_library(
+    name = "gl_window",
+    exported_headers = [
+        "gl_event_window.h",
+        "input_bindings.h",
+    ],
+    srcs = [
+        "gl_event_window.cpp",
+        "input_bindings.cpp",
+    ],
+    deps = [
+        "//lib/base:base",
+        "//lib/engine:engine",
+        "//lib/resource:resource",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    compiler_flags = [
+        "-std=c++20",
+        "-I/opt/homebrew/include",
+    ],
+    exported_linker_flags = [
+        "-L/opt/homebrew/lib",
+        "-lglfw",
+    ],
+    link_style = "static",
+)

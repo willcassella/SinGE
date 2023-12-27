@@ -1,7 +1,6 @@
-// Vec4.h
 #pragma once
 
-#include "base/math/Vec3.h"
+#include "lib/base/math/vec3.h"
 
 namespace sge
 {
@@ -9,9 +8,6 @@ namespace sge
     {
         SGE_REFLECTED_TYPE;
 
-        ////////////////////////
-        ///   Constructors   ///
-    public:
         constexpr Vec4()
             : _values{0, 0, 0, 0}
         {
@@ -45,9 +41,6 @@ namespace sge
         {
         }
 
-        ///////////////////
-        ///   Methods   ///
-    public:
         constexpr Scalar x() const
         {
             return _values[0];
@@ -142,17 +135,11 @@ namespace sge
             return std::acos(Vec4::dot(a.normalized(), b.normalized()));
         }
 
-        ////////////////////////////
-        ///   Static Instances   ///
-    public:
         static Vec4 zero()
         {
             return {0, 0, 0, 0};
         }
 
-        /////////////////////
-        ///   Operators   ///
-    public:
         friend Vec4 operator+(const Vec4 &lhs, const Vec4 &rhs)
         {
             return Vec4{lhs.x() + rhs.x(), lhs.y() + rhs.y(), lhs.z() + rhs.z(), lhs.w() + rhs.w()};
@@ -250,8 +237,6 @@ namespace sge
             return lhs.x() != rhs.x() || lhs.y() != rhs.y() || lhs.z() != rhs.z() || lhs.w() != rhs.w();
         }
 
-        //////////////////
-        ///   Fields   ///
     private:
         Scalar _values[4];
     };

@@ -1,7 +1,5 @@
-// Mat4.cpp
-
-#include "base/math/Mat4.h"
-#include "base/reflection/ReflectionBuilder.h"
+#include "lib/base/math/mat4.h"
+#include "lib/base/reflection/reflection_builder.h"
 
 SGE_REFLECT_TYPE(sge::Mat4)
     .implements<IToString>()

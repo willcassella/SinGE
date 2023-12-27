@@ -1,11 +1,10 @@
-// Reflection.h
 #pragma once
 
-#include "base/config.h"
-#include "base/stde/TypeTraits.h"
-#include "base/reflection/NativeTypeInfo.h"
-#include "base/reflection/InterfaceInfo.h"
-#include "base/reflection/EnumTypeInfo.h"
+#include "lib/base/build.h"
+#include "lib/base/reflection/enum_type_info.h"
+#include "lib/base/reflection/interface_info.h"
+#include "lib/base/reflection/native_type_info.h"
+#include "lib/base/stde/type_traits.h"
 
 namespace sge
 {
@@ -178,9 +177,6 @@ namespace sge
     template <class I, typename T>
     struct Impl;
 
-    /////////////////////
-    ///   Functions   ///
-
     template <typename I>
     const InterfaceInfo &get_interface()
     {
@@ -217,9 +213,6 @@ namespace sge
         return impl;
     }
 }
-
-//////////////////
-///   Macros   ///
 
 /* Use this macro inside the definition of a type in order for it to be recognized by the reflection system. */
 #define SGE_REFLECTED_TYPE                        \

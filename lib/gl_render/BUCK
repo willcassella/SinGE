@@ -1,0 +1,56 @@
+cxx_library(
+    name = "gl_render",
+    exported_headers = [
+        "build.h",
+        "config.h",
+        "gl_render_system.h",
+    ],
+    headers = [
+        "debug_line.h",
+        "gl_material.h",
+        "gl_render_system_state.h",
+        "gl_shader.h",
+        "gl_static_mesh.h",
+        "gl_texture_2d.h",
+        "glew.h",
+        "render_commands.h",
+        "render_resource.h",
+        "render_scene.h",
+        "util.h",
+    ],
+    srcs = [
+        "config.cpp",
+        "gl_material.cpp",
+        "gl_render_system.cpp",
+        "gl_render_system_state.cpp",
+        "gl_shader.cpp",
+        "gl_static_mesh.cpp",
+        "gl_texture_2d.cpp",
+        "render_commands.cpp",
+        "render_resource.cpp",
+        "render_scene.cpp",
+        "util.cpp",
+    ],
+    deps = [
+        "//lib/base:base",
+        "//lib/engine:engine",
+        "//lib/resource:resource",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+    preprocessor_flags = [
+        "-DSGE_GL_RENDER_BUILD",
+    ],
+    compiler_flags = [
+        "-std=c++20",
+        "-I/opt/homebrew/include",
+    ],
+    exported_linker_flags = [
+        "-L/opt/homebrew/lib",
+        "-lGLEW",
+        "-framework",
+        "OpenGL",
+    ],
+    link_style = "static",
+)

@@ -1,10 +1,9 @@
-// IVec3.h
 #pragma once
 
-#include "base/reflection/ReflectionBuilder.h"
-#include "base/interfaces/to_archive.h"
-#include "base/interfaces/from_archive.h"
-#include "Conversions.h"
+#include "lib/base/interfaces/from_archive.h"
+#include "lib/base/interfaces/to_archive.h"
+#include "lib/base/math/conversions.h"
+#include "lib/base/reflection/reflection_builder.h"
 
 namespace sge
 {
@@ -13,9 +12,6 @@ namespace sge
     {
         SGE_REFLECTED_TYPE;
 
-        /////////////////////////
-        ///   Constructors    ///
-    public:
         IVec3()
             : _values{0, 0, 0}
         {
@@ -31,9 +27,6 @@ namespace sge
             return IVec3{0, 0, 0};
         }
 
-        ///////////////////
-        ///   Methods   ///
-    public:
         void to_archive(ArchiveWriter &writer) const
         {
             writer.typed_array(_values, 3);
@@ -114,9 +107,6 @@ namespace sge
             _values[2] = from_norm_f32<T>(value);
         }
 
-        /////////////////////
-        ///   Operators   ///
-    public:
         friend bool operator==(const IVec3 &lhs, const IVec3 &rhs)
         {
             return lhs.x() == rhs.x() && lhs.y() == rhs.y() && lhs.z() == rhs.z();
@@ -126,8 +116,6 @@ namespace sge
             return !(lhs == rhs);
         }
 
-        //////////////////
-        ///   Fields   ///
     private:
         T _values[3];
     };

@@ -1,8 +1,7 @@
-// Quat.h
 #pragma once
 
-#include "base/math/Vec3.h"
-#include "base/math/Angle.h"
+#include "lib/base/math/vec3.h"
+#include "lib/base/math/angle.h"
 
 namespace sge
 {
@@ -10,9 +9,6 @@ namespace sge
     {
         SGE_REFLECTED_TYPE;
 
-        ////////////////////////
-        ///   Constructors   ///
-    public:
         constexpr Quat()
             : _values{0, 0, 0, 1}
         {
@@ -38,9 +34,6 @@ namespace sge
             w(std::cos(angle * Scalar{0.5}));
         }
 
-        ///////////////////
-        ///   Methods   ///
-    public:
         Scalar x() const
         {
             return _values[0];
@@ -110,9 +103,6 @@ namespace sge
             }
         }
 
-        /////////////////////
-        ///   Operators   ///
-    public:
         friend Quat operator*(const Quat &lhs, const Quat &rhs)
         {
             Quat total;
@@ -164,8 +154,6 @@ namespace sge
             return lhs.x() != rhs.x() || lhs.y() != rhs.y() || lhs.z() != rhs.z();
         }
 
-        ////////////////
-        ///   Data   ///
     private:
         Scalar _values[4];
     };

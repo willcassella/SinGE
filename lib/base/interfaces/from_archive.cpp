@@ -1,7 +1,5 @@
-// from_archive.cpp
-
-#include "base/interfaces/from_archive.h"
-#include "base/reflection/ReflectionBuilder.h"
+#include "lib/base/interfaces/from_archive.h"
+#include "lib/base/reflection/reflection_builder.h"
 
 SGE_REFLECT_INTERFACE(sge::IFromArchive)
     .implemented_for<bool>()

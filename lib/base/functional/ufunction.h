@@ -1,12 +1,12 @@
-// UFunction.h
 #pragma once
 
-#include <functional>
 #include <cassert>
 #include <cstdlib>
+#include <functional>
 #include <type_traits>
-#include "base/env.h"
-#include "base/memory/Functions.h"
+
+#include "lib/base/env.h"
+#include "lib/base/memory/functions.h"
 
 namespace sge
 {
@@ -33,9 +33,6 @@ namespace sge
         using InvokerFn = RetT(const Data &data, ArgTs... args);
         using DestructorFn = void(Data &data);
 
-        ////////////////////////
-        ///   Constructors   ///
-    public:
         UFunction()
             : _invoker(nullptr),
               _destructor(nullptr)
@@ -99,8 +96,24 @@ namespace sge
             return *this;
         }
 
-        ///////////////////
-        ///   Methods   ///
+        bool operator==(std::nullptr_t) const
+        {
+            return _invoker == nullptr;
+        }
+        bool operator!=(std::nullptr_t) const
+        {
+            return _invoker != nullptr;
+        }
+        operator bool() const
+        {
+            return _invoker != nullptr;
+        }
+        RetT operator()(ArgTs... args) const
+        {
+            assert(_invoker != nullptr);
+            return _invoker(_data, std::forward<ArgTs>(args)...);
+        }
+
     private:
         template <typename FnT>
         static RetT invoke_erased_fptr(const Data &data, ArgTs... args)
@@ -171,29 +184,6 @@ namespace sge
             _destructor = nullptr;
         }
 
-        /////////////////////
-        ///   Operators   ///
-    public:
-        bool operator==(std::nullptr_t) const
-        {
-            return _invoker == nullptr;
-        }
-        bool operator!=(std::nullptr_t) const
-        {
-            return _invoker != nullptr;
-        }
-        operator bool() const
-        {
-            return _invoker != nullptr;
-        }
-        RetT operator()(ArgTs... args) const
-        {
-            assert(_invoker != nullptr);
-            return _invoker(_data, std::forward<ArgTs>(args)...);
-        }
-
-        //////////////////
-        ///   Fields   ///
     private:
         Data _data;
         InvokerFn *_invoker;

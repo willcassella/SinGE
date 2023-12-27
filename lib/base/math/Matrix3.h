@@ -1,7 +1,6 @@
-// Matrix3.h
 #pragma once
 
-#include "base/math/TVector3.h"
+#include "base/math/tvector3.h"
 
 namespace sge
 {
@@ -10,9 +9,6 @@ namespace sge
     {
         using Column_t = TVector3<T>;
 
-        ////////////////////////
-        ///   Constructors   ///
-    public:
         TMatrix3()
             : columns{Column_t{1, 0, 0}, Column_t{0, 1, 0}, Column_t{0, 0, 1}}
         {
@@ -22,9 +18,6 @@ namespace sge
         {
         }
 
-        //////////////////
-        ///   Fields   ///
-    public:
         Column_t columns[3];
     };
 }

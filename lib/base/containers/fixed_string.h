@@ -1,4 +1,3 @@
-// FixedString.h
 #pragma once
 
 #include <cstring>
@@ -8,10 +7,6 @@ namespace sge
     template <std::size_t Size>
     struct FixedString
     {
-        ////////////////////////
-        ///   Constructors   ///
-    public:
-
         FixedString()
         {
             std::memset(_value, 0, sizeof(_value));
@@ -21,10 +16,6 @@ namespace sge
         {
             set_str(str);
         }
-
-        ///////////////////
-        ///   Methods   ///
-    public:
 
         const char* c_str() const
         {
@@ -45,10 +36,6 @@ namespace sge
         {
             return std::strncmp(_value, str, Size) == 0;
         }
-
-        /////////////////////
-        ///   Operators   ///
-    public:
 
         friend bool operator==(const FixedString& lhs, const char* rhs)
         {
@@ -79,10 +66,7 @@ namespace sge
             return !(lhs == rhs);
         }
 
-        //////////////////
-        ///   Fields   ///
     private:
-
         char _value[Size + 1];
     };
 }

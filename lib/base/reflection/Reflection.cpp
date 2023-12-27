@@ -1,6 +1,4 @@
-// Reflection.cpp
-
-#include "base/reflection/ReflectionBuilder.h"
+#include "lib/base/reflection/reflection_builder.h"
 
 namespace sge
 {
