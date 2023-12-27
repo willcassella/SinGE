@@ -1,7 +1,7 @@
 #pragma once
 
-#include <set>
 #include <functional>
+#include <set>
 
 #include <GLFW/glfw3.h>
 

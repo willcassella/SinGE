@@ -63,15 +63,7 @@ namespace sge
 
         struct GLRenderSystem::State
         {
-            ///////////////////
-            ///   Methods   ///
-        public:
-
             void gather_debug_lines(EventChannel& debug_line_channel, EventChannel::SubscriberId subscriber_id);
-
-            //////////////////
-            ///   Fields   ///
-        public:
 
             // Config
             GLint width;

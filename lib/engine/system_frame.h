@@ -15,17 +15,6 @@ namespace sge
     {
         SGE_REFLECTED_TYPE;
 
-        /* Only 'Scene' objects may construct SystemFrames. */
-        friend Scene;
-
-    private:
-        SystemFrame() = default;
-        SystemFrame(SystemFrame&& move) = delete;
-        SystemFrame(const SystemFrame& copy) = delete;
-        SystemFrame& operator=(const SystemFrame& copy) = delete;
-        SystemFrame& operator=(SystemFrame&& move) = delete;
-
-    public:
         void yield();
 
         uint64 frame_id() const;
@@ -37,6 +26,15 @@ namespace sge
         void push(const char* system_name);
 
     private:
+        /* Only 'Scene' objects may construct SystemFrames. */
+        friend Scene;
+
+        SystemFrame() = default;
+        SystemFrame(SystemFrame&& move) = delete;
+        SystemFrame(const SystemFrame& copy) = delete;
+        SystemFrame& operator=(const SystemFrame& copy) = delete;
+        SystemFrame& operator=(SystemFrame&& move) = delete;
+
         float _current_time = 0.f;
         float _time_delta = 0.f;
         Scene* _scene = nullptr;

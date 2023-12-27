@@ -313,9 +313,6 @@ namespace sge
             return program;
         }
 
-        ////////////////////////
-        ///   Constructors   ///
-
         GLRenderSystem::GLRenderSystem(const Config& config)
         {
             assert(config.validate() /*The given GLRenderSystem config object is not valid*/);
@@ -589,9 +586,6 @@ namespace sge
         {
             // Todo
         }
-
-        ///////////////////
-        ///   Methods   ///
 
         void GLRenderSystem::pipeline_register(UpdatePipeline& pipeline)
         {

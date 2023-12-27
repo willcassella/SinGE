@@ -22,12 +22,6 @@ namespace sge
             PhysicsEntity(NodeId node, BulletPhysicsSystem::Data& data);
             ~PhysicsEntity();
 
-        private:
-            void getWorldTransform(btTransform& world_trans) const override;
-
-            void setWorldTransform(const btTransform& world_trans) override;
-
-        public:
             void add_to_modified();
 
             void extern_set_transform(const btTransform& transform, const btVector3& scale);
@@ -60,6 +54,10 @@ namespace sge
             std::unique_ptr<CharacterController> character_controller;
 
         private:
+            void getWorldTransform(btTransform& world_trans) const override;
+
+            void setWorldTransform(const btTransform& world_trans) override;
+
             int _user_index_1_value;
             int _user_index_2_value;
         };

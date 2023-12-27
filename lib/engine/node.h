@@ -141,10 +141,6 @@ namespace sge
             H_NODE_MODIFIED = ~(DESTROYED_PENDING | DESTROYED_APPLIED)
         };
 
-    private:
-        Node();
-
-    public:
         /**
          * \brief Returns the Id for this node.
          */
@@ -270,13 +266,14 @@ namespace sge
         const Mat4& get_world_matrix() const;
 
     private:
+        Node();
+
         static bool sort_by_hierarchy_depth(const Node* lhs, const Node* rhs);
 
         NodeLocalTransformMod& get_or_create_transform_mod();
 
         NodeRootMod& get_or_create_root_mod();
 
-    private:
         Scene* _scene;
         NodeId _id;
         NodeId _root;

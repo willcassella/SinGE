@@ -38,7 +38,6 @@ namespace sge
             _color_space = value;
         }
 
-    public:
         Image image;
 
     private:

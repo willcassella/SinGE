@@ -131,7 +131,6 @@ namespace sge
             std::size_t offset,
             std::vector<ENodeTransformChanged>& out_events);
 
-    private:
         TypeDB* _type_db;
         float _current_time;
         uint64 _frame_id = 0;

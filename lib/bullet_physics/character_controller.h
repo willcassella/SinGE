@@ -18,7 +18,6 @@ namespace sge
         class CharacterController final : public btKinematicCharacterController
         {
         public:
-
             CharacterController(
                 PhysicsEntity& phys_enitty,
                 const CCharacterController& component);

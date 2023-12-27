@@ -51,7 +51,6 @@ namespace sge
             value[2] = z;
         }
 
-    public:
         T value[3];
     };
 }
