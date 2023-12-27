@@ -1,5 +1,4 @@
-// basic.vert
-#version 330 core
+#version 410 core
 
 uniform mat4 model;
 uniform mat4 view;

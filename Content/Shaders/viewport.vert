@@ -1,5 +1,4 @@
-// viewport.vert
-#version 330 core
+#version 410 core
 
 in vec2 v_position;
 in vec2 v_mat_texcoord;

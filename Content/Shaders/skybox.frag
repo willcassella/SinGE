@@ -1,5 +1,4 @@
-// skybox.frag
-#version 330 core
+#version 410 core
 
 uniform sampler2D skybox;
 uniform vec2 base_mat_uv_scale = vec2(1, 1);

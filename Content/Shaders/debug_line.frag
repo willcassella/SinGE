@@ -1,5 +1,4 @@
-// line.frag
-#version 330 core
+#version 410 core
 
 in vec3 f_color;
 

@@ -1,5 +1,4 @@
-// basic.frag
-#version 330 core
+#version 410 core
 
 const vec3 lm_x_basis_vec = vec3(0.81649, 0, 0.57735);
 const vec3 lm_y_basis_vec = vec3(-0.40824, 0.707106, 0.57735);
@@ -9,7 +8,7 @@ uniform sampler2D lightmap_x_basis;
 uniform sampler2D lightmap_y_basis;
 uniform sampler2D lightmap_z_basis;
 uniform sampler2D lightmap_direct_mask;
-uniform sampler2D albedo;
+uniform sampler2D albedo_map;
 uniform sampler2D roughness_map;
 uniform sampler2D metallic_map;
 uniform float roughness_constant = 0.5;
@@ -41,7 +40,7 @@ void main()
     out_normal = normalize(fs_in.cam_normal);
 
     // Output albedo
-    vec4 albedo = texture(albedo, fs_in.mat_tex_coords * base_mat_uv_scale * inst_mat_uv_scale);
+    vec4 albedo = texture(albedo_map, fs_in.mat_tex_coords * base_mat_uv_scale * inst_mat_uv_scale);
     out_albedo = albedo;
 
     // Output irradiance

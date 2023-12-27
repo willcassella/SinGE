@@ -1,5 +1,4 @@
-// pbr_shading.frag
-#version 330 core
+#version 410 core
 
 const float PI = 3.141592654f;
 const vec3 F0 = vec3(0.04f);
