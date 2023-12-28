@@ -42,7 +42,8 @@ cxx_library(
     ],
     compiler_flags = [
         "-std=c++20",
-        "-I/opt/homebrew/include/bullet",
+        "-isystem",
+        "/opt/homebrew/include/bullet",
     ],
     exported_linker_flags = [
         "-L/opt/homebrew/lib",
