@@ -1,5 +1,6 @@
 #include <chrono>
 #include <iostream>
+#include <stdint.h>
 
 #include <GLFW/glfw3.h>
 
@@ -25,11 +26,11 @@ static void action_input_response(
     sge::ComponentContainer& character_component)
 {
     sge::CInput::EAction events[8];
-    sge::int32 num_events;
+    int32_t num_events;
 
     while (action_event.consume(subscriber, sizeof(sge::CInput::EAction), 8, events, &num_events))
     {
-        for (sge::int32 i = 0; i < num_events; ++i)
+        for (int32_t i = 0; i < num_events; ++i)
         {
             // Access character component for this event
             sge::CCharacterController* character;
@@ -71,11 +72,11 @@ static void axis_input_response(
     sge::Scene& scene)
 {
     sge::CInput::EAxis events[8];
-    sge::int32 num_events;
+    int32_t num_events;
 
     while (axis_event.consume(subscriber_id, sizeof(sge::CInput::EAxis), 8, events, &num_events))
     {
-        for (sge::int32 i = 0; i < num_events; ++i)
+        for (int32_t i = 0; i < num_events; ++i)
         {
             // Access the node instance for this event
             sge::Node* node;
@@ -92,7 +93,7 @@ static void axis_input_response(
             {
                 // Get first child of this object
                 sge::NodeId child_id = sge::NodeId::null_id();
-                std::size_t num_children;
+                size_t num_children;
                 node->get_children(0, 1, &num_children, &child_id);
 
                 if (num_children == 0)

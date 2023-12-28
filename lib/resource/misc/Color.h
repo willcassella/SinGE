@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/base/reflection/reflection.h"
 #include "lib/resource/build.h"
 
@@ -15,11 +17,11 @@ namespace sge
          */
         struct SGE_RESOURCE_API RGBA8
         {
-            using Color_t = uint32;
-            using Red_t = uint8;
-            using Green_t = uint8;
-            using Blue_t = uint8;
-            using Alpha_t = uint8;
+            using Color_t = uint32_t;
+            using Red_t = uint8_t;
+            using Green_t = uint8_t;
+            using Blue_t = uint8_t;
+            using Alpha_t = uint8_t;
             SGE_REFLECTED_TYPE;
 
             RGBA8()
@@ -44,7 +46,7 @@ namespace sge
 
             std::string to_string() const;
 
-            std::size_t from_string(const char* str, std::size_t len);
+            size_t from_string(const char* str, size_t len);
 
             void to_archive(ArchiveWriter& writer) const;
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/resource/misc/color.h"
 #include "lib/engine/component.h"
 
@@ -19,7 +21,7 @@ namespace sge
 
         void from_archive(ArchiveReader& reader);
 
-        uint32 update_revision() const;
+        uint32_t update_revision() const;
 
         NodeId node() const;
 
@@ -34,7 +36,7 @@ namespace sge
     private:
         void set_modified(const char* prop_name);
 
-        uint32 _update_revision = 0;
+        uint32_t _update_revision = 0;
         float _radius = 1.f;
         color::RGBF32 _intensity = color::RGBF32::white();
         NodeId _node;

@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "lib/base/reflection/reflection_builder.h"
 #include "lib/engine/lightmap.h"
 #include "lib/resource/misc/image_ops.h"
@@ -36,8 +38,8 @@ namespace sge
             writer.pop(); // "h"
 
             // Save individual components, compressed
-            byte* image_buff;
-            std::size_t image_buff_size;
+            uint8_t* image_buff;
+            size_t image_buff_size;
 
             image_ops::save_rgbf_to_memory(element.second.basis_x_radiance.data()->vec(), width, height, 3, &image_buff, &image_buff_size);
             writer.push_object_member("x");
@@ -90,12 +92,12 @@ namespace sge
             element.direct_mask.assign(size, 0);
 
             // Load individual components, from compressed memory
-            std::vector<byte> compressed_buff;
-            std::size_t compressed_buff_size;
+            std::vector<uint8_t> compressed_buff;
+            size_t compressed_buff_size;
             float* image_buff;
-            int32 image_width;
-            int32 image_height;
-            byte image_num_channels;
+            int32_t image_width;
+            int32_t image_height;
+            uint8_t image_num_channels;
 
             // Load data for x component
             reader.pull_object_member("x");
@@ -106,7 +108,7 @@ namespace sge
 
             // Construct image
             image_ops::load_rgbf_from_memory(compressed_buff.data(), compressed_buff_size, &image_buff, &image_width, &image_height, &image_num_channels);
-            std::memcpy(element.basis_x_radiance.data(), image_buff, size * 3 * sizeof(float));
+            memcpy(element.basis_x_radiance.data(), image_buff, size * 3 * sizeof(float));
             sge::free(image_buff);
 
             // Load data for y component
@@ -118,7 +120,7 @@ namespace sge
 
             // Construct image
             image_ops::load_rgbf_from_memory(compressed_buff.data(), compressed_buff_size, &image_buff, &image_width, &image_height, &image_num_channels);
-            std::memcpy(element.basis_y_radiance.data(), image_buff, size * 3 * sizeof(float));
+            memcpy(element.basis_y_radiance.data(), image_buff, size * 3 * sizeof(float));
             sge::free(image_buff);
 
             // Load data for z component
@@ -130,7 +132,7 @@ namespace sge
 
             // Construct image
             image_ops::load_rgbf_from_memory(compressed_buff.data(), compressed_buff_size, &image_buff, &image_width, &image_height, &image_num_channels);
-            std::memcpy(element.basis_z_radiance.data(), image_buff, size * 3 * sizeof(float));
+            memcpy(element.basis_z_radiance.data(), image_buff, size * 3 * sizeof(float));
             sge::free(image_buff);
 
             reader.pull_object_member("d");

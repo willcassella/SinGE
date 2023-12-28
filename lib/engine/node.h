@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cinttypes>
+#include <inttypes.h>
+#include <stdint.h>
 #include <vector>
 
 #include "lib/base/math/mat4.h"
@@ -15,15 +16,15 @@ namespace sge
     struct SGE_ENGINE_API NodeId
     {
         SGE_REFLECTED_TYPE;
-        using Version_t = uint32;
-        using Index_t = uint32;
+        using Version_t = uint32_t;
+        using Index_t = uint32_t;
 
         NodeId()
             : index(0)
         {
         }
 
-        explicit NodeId(uint64 value)
+        explicit NodeId(uint64_t value)
         {
             from_u64(value);
         }
@@ -33,24 +34,24 @@ namespace sge
             return NodeId{ 0 };
         }
 
-        uint64 to_u64() const
+        uint64_t to_u64() const
         {
             return index;
         }
 
-        void from_u64(uint64 value)
+        void from_u64(uint64_t value)
         {
             index = value & 0x00000000FFFFFFFF;
         }
 
-        std::size_t to_string(char* out_str, std::size_t size) const
+        size_t to_string(char* out_str, size_t size) const
         {
-            return (std::size_t)std::snprintf(out_str, size, "%" PRIu64, to_u64());
+            return (size_t)snprintf(out_str, size, "%" PRIu64, to_u64());
         }
 
         void from_string(const char* str)
         {
-            const uint64 value = std::strtoull(str, nullptr, 10);
+            const uint64_t value = strtoull(str, nullptr, 10);
             from_u64(value);
         }
 
@@ -61,7 +62,7 @@ namespace sge
 
         void from_archive(ArchiveReader& reader)
         {
-            uint64 value = 0;
+            uint64_t value = 0;
             reader.number(value);
             from_u64(value);
         }
@@ -92,7 +93,7 @@ namespace sge
         SGE_REFLECTED_TYPE;
         friend Scene;
 
-        using ModState_t = uint32;
+        using ModState_t = uint32_t;
         enum ModState : ModState_t
         {
             /**
@@ -181,7 +182,7 @@ namespace sge
         /**
          * \brief Returns the current number of children of this node.
          */
-        std::size_t get_num_children() const;
+        size_t get_num_children() const;
 
         /**
          * \brief Fills the given array with the Ids of all children of this node betwee [start_index, start_index + num_children)
@@ -191,10 +192,10 @@ namespace sge
          * \param out_children The array to fill with the ids of the children.
          * \return The number of children retreived.
          */
-        std::size_t get_children(
-            std::size_t start_index,
-            std::size_t num_children,
-            std::size_t* out_num_children,
+        size_t get_children(
+            size_t start_index,
+            size_t num_children,
+            size_t* out_num_children,
             NodeId* out_children) const;
 
         /**
@@ -278,10 +279,10 @@ namespace sge
         NodeId _id;
         NodeId _root;
         std::vector<NodeId> _child_nodes;
-        uint32 _hierarchy_depth;
+        uint32_t _hierarchy_depth;
         ModState_t _mod_state;
-        int32 _transform_mod_index;
-        int32 _root_mod_index;
+        int32_t _transform_mod_index;
+        int32_t _root_mod_index;
         Vec3 _local_position;
         Vec3 _local_scale;
         Quat _local_rotation;

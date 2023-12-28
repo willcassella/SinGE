@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include <FreeImage.h>
 
 #include "lib/base/reflection/reflection_builder.h"
@@ -119,17 +121,17 @@ namespace sge
         return true;
     }
 
-    byte HDRImage::get_num_channels() const
+    uint8_t HDRImage::get_num_channels() const
     {
         return _num_channels;
     }
 
-    int32 HDRImage::get_width() const
+    int32_t HDRImage::get_width() const
     {
         return FreeImage_GetWidth(_bitmap);
     }
 
-    int32 HDRImage::get_height() const
+    int32_t HDRImage::get_height() const
     {
         return FreeImage_GetHeight(_bitmap);
     }

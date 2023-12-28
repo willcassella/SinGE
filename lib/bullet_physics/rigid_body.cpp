@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "lib/bullet_physics/physics_entity.h"
 #include "lib/bullet_physics/rigid_body.h"
 #include "lib/bullet_physics/util.h"
@@ -14,12 +16,12 @@ namespace sge
     {
         // Get events
         ENewComponent events[8];
-        int32 num_events;
+        int32_t num_events;
         while (new_rigid_body_channel.consume(subscriber_id, events, &num_events))
         {
             NodeId node_ids[8];
             const CRigidBody* instances[8];
-            for (int32 i = 0; i < num_events; ++i)
+            for (int32_t i = 0; i < num_events; ++i)
             {
                 node_ids[i] = events[i].node;
                 instances[i] = (const CRigidBody*)events[i].instance;
@@ -30,7 +32,7 @@ namespace sge
             scene.get_nodes(node_ids, num_events, nodes);
 
             // Create rigid bodies
-            for (int32 i = 0; i < num_events; ++i)
+            for (int32_t i = 0; i < num_events; ++i)
             {
                 auto& physics_entity = phys_data.get_or_create_physics_entity(node_ids[i], *nodes[i]);
                 assert(physics_entity.rigid_body == nullptr);
@@ -86,10 +88,10 @@ namespace sge
     {
         // Get events
         EDestroyedComponent events[8];
-        int32 num_events;
+        int32_t num_events;
         while (destroyed_rigid_body_channel.consume(subscriber_id, events, &num_events))
         {
-            for (int32 i = 0; i < num_events; ++i)
+            for (int32_t i = 0; i < num_events; ++i)
             {
                 const auto node = events[i].node;
 
@@ -113,11 +115,11 @@ namespace sge
     {
         // Get events
         EModifiedComponent events[8];
-        int32 num_events;
+        int32_t num_events;
         while (modified_rigid_body_channel.consume(subscriber_id, events, &num_events))
         {
             // For each event
-            for (int32 i = 0; i < num_events; ++i)
+            for (int32_t i = 0; i < num_events; ++i)
             {
                 auto& event = events[i];
                 const auto* const instance = (const CRigidBody*)event.instance;

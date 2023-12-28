@@ -12,15 +12,15 @@ namespace sge
             : _values{0, 0, 0, 0}
         {
         }
-        constexpr Vec4(Scalar x, Scalar y, Scalar z, Scalar w)
+        constexpr Vec4(float x, float y, float z, float w)
             : _values{x, y, z, w}
         {
         }
-        constexpr Vec4(Vec3 xyz, Scalar w)
+        constexpr Vec4(Vec3 xyz, float w)
             : _values{xyz.x(), xyz.y(), xyz.z(), w}
         {
         }
-        constexpr Vec4(Scalar x, Vec3 yzw)
+        constexpr Vec4(float x, Vec3 yzw)
             : _values{x, yzw.x(), yzw.y(), yzw.z()}
         {
         }
@@ -28,58 +28,58 @@ namespace sge
             : _values{xy.x(), xy.y(), zw.x(), zw.y()}
         {
         }
-        constexpr Vec4(Vec2 xy, Scalar z, Scalar w)
+        constexpr Vec4(Vec2 xy, float z, float w)
             : _values{xy.x(), xy.y(), z, w}
         {
         }
-        constexpr Vec4(Scalar x, Vec2 yz, Scalar w)
+        constexpr Vec4(float x, Vec2 yz, float w)
             : _values{x, yz.x(), yz.y(), w}
         {
         }
-        constexpr Vec4(Scalar x, Scalar y, Vec2 zw)
+        constexpr Vec4(float x, float y, Vec2 zw)
             : _values{x, y, zw.x(), zw.y()}
         {
         }
 
-        constexpr Scalar x() const
+        constexpr float x() const
         {
             return _values[0];
         }
-        void x(Scalar x)
+        void x(float x)
         {
             _values[0] = x;
         }
-        constexpr Scalar y() const
+        constexpr float y() const
         {
             return _values[1];
         }
-        void y(Scalar y)
+        void y(float y)
         {
             _values[1] = y;
         }
-        constexpr Scalar z() const
+        constexpr float z() const
         {
             return _values[2];
         }
-        void z(Scalar z)
+        void z(float z)
         {
             _values[2] = z;
         }
-        constexpr Scalar w() const
+        constexpr float w() const
         {
             return _values[3];
         }
-        void w(Scalar w)
+        void w(float w)
         {
             _values[3] = w;
         }
 
-        const Scalar *vec() const
+        const float *vec() const
         {
             return _values;
         }
 
-        Scalar *vec()
+        float *vec()
         {
             return _values;
         }
@@ -103,9 +103,9 @@ namespace sge
         }
 
         /** Returns the length of this vector */
-        Scalar length() const
+        float length() const
         {
-            return std::sqrt(x() * x() + y() * y() + z() * z() + w() * w());
+            return sqrtf(x() * x() + y() * y() + z() * z() + w() * w());
         }
 
         /** Normalizes this vector */
@@ -124,15 +124,15 @@ namespace sge
         }
 
         /** Returns the dot product of two Vec4s */
-        static Scalar dot(const Vec4 &a, const Vec4 &b)
+        static float dot(const Vec4 &a, const Vec4 &b)
         {
             return a.x() * b.x() + a.y() * b.y() + a.z() * b.z() + a.w() * b.w();
         }
 
         /** Returns the angle between two radians */
-        static Scalar angle(const Vec4 &a, const Vec4 &b)
+        static float angle(const Vec4 &a, const Vec4 &b)
         {
-            return std::acos(Vec4::dot(a.normalized(), b.normalized()));
+            return acosf(Vec4::dot(a.normalized(), b.normalized()));
         }
 
         static Vec4 zero()
@@ -144,11 +144,11 @@ namespace sge
         {
             return Vec4{lhs.x() + rhs.x(), lhs.y() + rhs.y(), lhs.z() + rhs.z(), lhs.w() + rhs.w()};
         }
-        friend Vec4 operator+(const Vec4 &lhs, Scalar rhs)
+        friend Vec4 operator+(const Vec4 &lhs, float rhs)
         {
             return Vec4{lhs.x() + rhs, lhs.y() + rhs, lhs.z() + rhs, lhs.w() + rhs};
         }
-        friend Vec4 operator+(Scalar lhs, const Vec4 &rhs)
+        friend Vec4 operator+(float lhs, const Vec4 &rhs)
         {
             return Vec4{lhs + rhs.x(), lhs + rhs.y(), lhs + rhs.z(), lhs + rhs.w()};
         }
@@ -157,7 +157,7 @@ namespace sge
             lhs = lhs + rhs;
             return lhs;
         }
-        friend Vec4 &operator+=(Vec4 &lhs, Scalar rhs)
+        friend Vec4 &operator+=(Vec4 &lhs, float rhs)
         {
             lhs = lhs + rhs;
             return lhs;
@@ -166,11 +166,11 @@ namespace sge
         {
             return Vec4{lhs.x() - rhs.x(), lhs.y() - rhs.y(), lhs.z() - rhs.z(), lhs.w() - rhs.w()};
         }
-        friend Vec4 operator-(const Vec4 &lhs, Scalar rhs)
+        friend Vec4 operator-(const Vec4 &lhs, float rhs)
         {
             return Vec4{lhs.x() - rhs, lhs.y() - rhs, lhs.z() - rhs, lhs.w() - rhs};
         }
-        friend Vec4 operator-(Scalar lhs, const Vec4 &rhs)
+        friend Vec4 operator-(float lhs, const Vec4 &rhs)
         {
             return Vec4{lhs - rhs.x(), lhs - rhs.y(), lhs - rhs.z(), lhs - rhs.w()};
         }
@@ -179,7 +179,7 @@ namespace sge
             lhs = lhs - rhs;
             return lhs;
         }
-        friend Vec4 &operator-=(Vec4 &lhs, Scalar rhs)
+        friend Vec4 &operator-=(Vec4 &lhs, float rhs)
         {
             lhs = lhs - rhs;
             return lhs;
@@ -188,11 +188,11 @@ namespace sge
         {
             return Vec4{lhs.x() * rhs.x(), lhs.y() * rhs.y(), lhs.x() * rhs.x(), lhs.w() * rhs.w()};
         }
-        friend Vec4 operator*(const Vec4 &lhs, Scalar rhs)
+        friend Vec4 operator*(const Vec4 &lhs, float rhs)
         {
             return Vec4{lhs.x() * rhs, lhs.y() * rhs, lhs.z() * rhs, lhs.w() * rhs};
         }
-        friend Vec4 operator*(Scalar lhs, const Vec4 &rhs)
+        friend Vec4 operator*(float lhs, const Vec4 &rhs)
         {
             return Vec4{lhs * rhs.x(), lhs * rhs.y(), lhs * rhs.z(), lhs * rhs.w()};
         }
@@ -201,7 +201,7 @@ namespace sge
             lhs = lhs * rhs;
             return lhs;
         }
-        friend Vec4 &operator*=(Vec4 &lhs, Scalar rhs)
+        friend Vec4 &operator*=(Vec4 &lhs, float rhs)
         {
             lhs = lhs * rhs;
             return lhs;
@@ -210,11 +210,11 @@ namespace sge
         {
             return Vec4{lhs.x() * rhs.x(), lhs.y() * rhs.y(), lhs.z() * rhs.z(), lhs.w() * rhs.w()};
         }
-        friend Vec4 operator/(const Vec4 &lhs, Scalar rhs)
+        friend Vec4 operator/(const Vec4 &lhs, float rhs)
         {
             return Vec4{lhs.x() * rhs, lhs.y() * rhs, lhs.z() * rhs, lhs.w() * rhs};
         }
-        friend Vec4 operator/(Scalar lhs, const Vec4 &rhs)
+        friend Vec4 operator/(float lhs, const Vec4 &rhs)
         {
             return Vec4{lhs / rhs.x(), lhs / rhs.y(), lhs / rhs.z(), lhs / rhs.w()};
         }
@@ -223,7 +223,7 @@ namespace sge
             lhs = lhs / rhs;
             return lhs;
         }
-        friend Vec4 &operator/=(Vec4 &lhs, Scalar rhs)
+        friend Vec4 &operator/=(Vec4 &lhs, float rhs)
         {
             lhs = lhs / rhs;
             return lhs;
@@ -238,6 +238,6 @@ namespace sge
         }
 
     private:
-        Scalar _values[4];
+        float _values[4];
     };
 }

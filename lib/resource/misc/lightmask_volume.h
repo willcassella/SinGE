@@ -1,19 +1,21 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/base/math/vec3.h"
 #include "lib/resource/build.h"
 
 namespace sge
 {
-    static constexpr uint32 NUM_FRUSTUM_ELEMS = 36;
-    static constexpr uint32 NUM_FRUSTUM_VERTS = 24;
+    static constexpr uint32_t NUM_FRUSTUM_ELEMS = 36;
+    static constexpr uint32_t NUM_FRUSTUM_VERTS = 24;
 
     /**
         * \brief Fills the given element buffer with vertex elements for a frustum.
         * \param out_elems The element buffer to fill. This must have NUM_FRUSTUM_ELEMS elements.
         */
     SGE_RESOURCE_API void create_lightmask_volume_frustum_elems(
-        uint32* out_elems);
+        uint32_t* out_elems);
 
     SGE_RESOURCE_API void create_lightmask_volume_frustum_normals(
         float horiz_angle_radians,

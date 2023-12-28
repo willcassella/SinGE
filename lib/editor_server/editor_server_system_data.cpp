@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdint.h>
 
 #include "lib/base/reflection/reflection_builder.h"
 #include "lib/editor_server/editor_server_system_data.h"
@@ -8,7 +9,7 @@ SGE_REFLECT_TYPE(sge::EditorServerSystem);
 
 namespace sge
 {
-    EditorServerSystem::Data::Data(uint16 port)
+    EditorServerSystem::Data::Data(uint16_t port)
         : frame(nullptr),
         scene(nullptr),
         _acceptor(io, tcp::endpoint{ tcp::v4(), port })

@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cmath>
+#include <math.h>
+#include <stdint.h>
 
 #include "lib/base/math/mat4.h"
 #include "lib/lightmapper/build.h"
@@ -59,12 +60,12 @@ namespace sge
         /**
          * \brief Width (in pixels) of the irradiance map for this object.
          */
-        int32 irradiance_width = 0;
+        int32_t irradiance_width = 0;
 
         /**
          * \brief Height (in pixels) of the irradiance map for this object.
          */
-        int32 irradiance_height = 0;
+        int32_t irradiance_height = 0;
 
         /**
          * \brief A texture that describes the irradiance of this object.
@@ -122,11 +123,11 @@ namespace sge
      */
     SGE_LIGHTMAPPER_API void generate_lightmap_texels(
         const LightmapObject* objects,
-        std::size_t num_objects,
-        int32 width,
-        int32 height,
+        size_t num_objects,
+        int32_t width,
+        int32_t height,
         LightmapTexel* out_texels,
-        byte* out_texel_mask);
+        uint8_t* out_texel_mask);
 
     /**
      * \brief Constructs a lightmap scene. You must call 'free_lightmap_scene' once you are done with this scene.
@@ -137,7 +138,7 @@ namespace sge
      */
     SGE_LIGHTMAPPER_API LightmapScene* new_lightmap_scene(
         const LightmapOccluder* occluders,
-        std::size_t num_occluders);
+        size_t num_occluders);
 
     /**
      * \brief Frees resources associated with the given lightmap scene.
@@ -156,9 +157,9 @@ namespace sge
      */
     SGE_LIGHTMAPPER_API void compute_ambient_radiance(
         color::RGBF32 ambient,
-        int32 width,
-        int32 height,
-        const byte* texel_mask,
+        int32_t width,
+        int32_t height,
+        const uint8_t* texel_mask,
         color::RGBF32* out_irradiance);
 
     /**
@@ -174,10 +175,10 @@ namespace sge
     SGE_LIGHTMAPPER_API void compute_direct_irradiance(
         const LightmapScene* scene,
         LightmapLight light,
-        int32 width,
-        int32 height,
+        int32_t width,
+        int32_t height,
         const LightmapTexel* texels,
-        const byte* texel_mask,
+        const uint8_t* texel_mask,
         color::RGBF32* out_irradiance);
 
     /**
@@ -196,12 +197,12 @@ namespace sge
      */
     SGE_LIGHTMAPPER_API void compute_indirect_radiance(
         const LightmapScene* scene,
-        int32 num_sample_sets,
-        int32 num_accumulations,
-        int32 width,
-        int32 height,
+        int32_t num_sample_sets,
+        int32_t num_accumulations,
+        int32_t width,
+        int32_t height,
         const LightmapTexel* texels,
-        const byte* texel_mask,
+        const uint8_t* texel_mask,
         color::RGBF32* SGE_RESTRICT out_x_basis_radiance,
         color::RGBF32* SGE_RESTRICT out_y_basis_radiance,
         color::RGBF32* SGE_RESTRICT out_z_basis_radiance,
@@ -215,8 +216,8 @@ namespace sge
      * \param lightmap Lightmap to post-process.
      */
     SGE_LIGHTMAPPER_API void lightmap_postprocess(
-        int32 width,
-        int32 height,
-        int32 num_steps,
+        int32_t width,
+        int32_t height,
+        int32_t num_steps,
         color::RGBF32* lightmap);
 }

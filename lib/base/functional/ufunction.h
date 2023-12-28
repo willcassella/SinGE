@@ -1,8 +1,9 @@
 #pragma once
 
-#include <cassert>
-#include <cstdlib>
+#include <assert.h>
 #include <functional>
+#include <stdint.h>
+#include <stdlib.h>
 #include <type_traits>
 
 #include "lib/base/env.h"
@@ -21,13 +22,13 @@ namespace sge
     template <typename RetT, typename... ArgTs>
     struct UFunction<RetT(ArgTs...)>
     {
-        static constexpr std::size_t LOCAL_BUFFER_SIZE = sizeof(void *) * 2;
+        static constexpr size_t LOCAL_BUFFER_SIZE = sizeof(void *) * 2;
 
         union Data
         {
             void (*erased_fptr)();
             void *erased_heap_fobj;
-            byte erased_local_fobj[LOCAL_BUFFER_SIZE];
+            uint8_t erased_local_fobj[LOCAL_BUFFER_SIZE];
         };
 
         using InvokerFn = RetT(const Data &data, ArgTs... args);

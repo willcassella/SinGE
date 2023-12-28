@@ -1,14 +1,14 @@
 #pragma once
 
-#include "lib/base/env.h"
+#include <stdint.h>
 
 namespace sge
 {
     /* Type used to represent sizes and spans in the archive. */
-    using BinaryArchiveSize_t = uint32;
+    using BinaryArchiveSize_t = uint32_t;
 
     /* Type used to represent booleans in the archive. */
-    using BinaryArchiveBool_t = uint8;
+    using BinaryArchiveBool_t = uint8_t;
 
     /* Constant value used to 'true'. */
     static constexpr BinaryArchiveBool_t BAN_TRUE = 1;
@@ -17,7 +17,7 @@ namespace sge
     static constexpr BinaryArchiveBool_t BAN_FALSE = 0;
 
     /* Indicates which node type the cursor is pointed at. */
-    enum BinaryArchiveNode : byte
+    enum BinaryArchiveNode : uint8_t
     {
         BAN_NULL,
         BAN_BOOLEAN,

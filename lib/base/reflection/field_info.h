@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include <string>
 
 #include "lib/base/reflection/any.h"
@@ -8,7 +9,7 @@ namespace sge
 {
     struct TypeInfo;
 
-    using FieldFlags_t = uint32;
+    using FieldFlags_t = uint32_t;
     enum FieldFlags : FieldFlags_t
     {
         /**
@@ -33,9 +34,9 @@ namespace sge
         struct Data
         {
             FieldFlags_t flags = FF_NONE;
-            uint32 index = 0;
+            uint32_t index = 0;
             const TypeInfo* type = nullptr;
-            std::size_t offset = 0;
+            size_t offset = 0;
         };
 
         FieldInfo(Data data)
@@ -54,7 +55,7 @@ namespace sge
         /**
          * \brief Returns the registration index of this field.
          */
-        uint32 index() const
+        uint32_t index() const
         {
             return _data.index;
         }
@@ -70,7 +71,7 @@ namespace sge
         /**
          * \brief Returns the offset of this field from the base object pointer.
          */
-        std::size_t offset() const
+        size_t offset() const
         {
             return _data.offset;
         }

@@ -8,7 +8,7 @@ namespace sge
 {
     struct SGE_BASE_EXPORT MultiStackBuffer
     {
-        static constexpr std::size_t STACK_SIZE = 32;
+        static constexpr size_t STACK_SIZE = 32;
 
         MultiStackBuffer();
         ~MultiStackBuffer();
@@ -19,22 +19,22 @@ namespace sge
 
         void clear();
 
-        std::size_t num_elems();
+        size_t num_elems();
 
-        void set_num_elems(std::size_t num_elems);
+        void set_num_elems(size_t num_elems);
 
-        std::size_t num_stack_buffers();
+        size_t num_stack_buffers();
 
-        byte* const* stack_buffers();
+        uint8_t* const* stack_buffers();
 
-        const byte* const* stack_buffers() const;
+        const uint8_t* const* stack_buffers() const;
 
-        void* alloc(std::size_t obj_size);
+        void* alloc(size_t obj_size);
 
         void compact();
 
     private:
-        std::size_t _num_elems;
-        std::vector<byte*> _stacks;
+        size_t _num_elems;
+        std::vector<uint8_t*> _stacks;
     };
 }

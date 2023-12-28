@@ -1,9 +1,11 @@
+#include <stdint.h>
+
 #include "lib/editor_server/editor_server_system_data.h"
 #include "lib/engine/update_pipeline.h"
 
 namespace sge
 {
-    EditorServerSystem::EditorServerSystem(uint16 port)
+    EditorServerSystem::EditorServerSystem(uint16_t port)
         : _serve_time_ms(8)
     {
         _data = std::make_unique<Data>(port);

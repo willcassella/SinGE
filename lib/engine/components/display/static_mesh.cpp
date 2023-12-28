@@ -1,4 +1,5 @@
 #include <memory>
+#include <stdint.h>
 
 #include "lib/base/math/ivec2.h"
 #include "lib/base/reflection/reflection_builder.h"
@@ -107,12 +108,12 @@ namespace sge
         }
     }
 
-    uint32 CStaticMesh::lightmask_group() const
+    uint32_t CStaticMesh::lightmask_group() const
     {
         return _lightmask_group;
     }
 
-    void CStaticMesh::lightmask_group(uint32 value)
+    void CStaticMesh::lightmask_group(uint32_t value)
     {
         if (_lightmask_group != value)
         {
@@ -135,12 +136,12 @@ namespace sge
         }
     }
 
-    int32 CStaticMesh::lightmap_width() const
+    int32_t CStaticMesh::lightmap_width() const
     {
         return _lightmap_size.x();
     }
 
-    void CStaticMesh::lightmap_width(int32 width)
+    void CStaticMesh::lightmap_width(int32_t width)
     {
         if (lightmap_width() != width)
         {
@@ -149,12 +150,12 @@ namespace sge
         }
     }
 
-    int32 CStaticMesh::lightmap_height() const
+    int32_t CStaticMesh::lightmap_height() const
     {
         return _lightmap_size.y();
     }
 
-    void CStaticMesh::lightmap_height(int32 height)
+    void CStaticMesh::lightmap_height(int32_t height)
     {
         if (lightmap_height() != height)
         {

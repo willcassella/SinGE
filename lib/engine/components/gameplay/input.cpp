@@ -32,11 +32,11 @@ namespace sge
 
         EventChannel* get_event_channel(const char* name)
         {
-            if (std::strcmp(name, "action_event") == 0)
+            if (strcmp(name, "action_event") == 0)
             {
                 return &action_event_channel;
             }
-            else if (std::strcmp(name, "axis_event") == 0)
+            else if (strcmp(name, "axis_event") == 0)
             {
                 return &axis_event_channel;
             }

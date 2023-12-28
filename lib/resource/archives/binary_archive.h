@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include <vector>
 
 #include "lib/base/io/archive.h"
@@ -21,12 +22,12 @@ namespace sge
 
         bool from_file(const char* path) override;
 
-        const std::vector<byte>& buffer() const
+        const std::vector<uint8_t>& buffer() const
         {
             return _buffer;
         }
 
     private:
-        std::vector<byte> _buffer;
+        std::vector<uint8_t> _buffer;
     };
 }

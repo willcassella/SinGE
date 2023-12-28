@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdint.h>
 
 #include "lib/base/reflection/reflection_builder.h"
 #include "lib/engine/components/display/camera.h"
@@ -29,13 +30,13 @@ namespace sge
         {
             // Get events
             ENodeTransformChanged events[16];
-            int32 num_events;
+            int32_t num_events;
             while (node_transform_update_channel.consume(subscriber_id, events, &num_events))
             {
                 // Get ids and transforms
                 NodeId nodes_ids[16];
                 Mat4 world_transforms[16];
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     nodes_ids[i] = events[i].node->get_id();
                     world_transforms[i] = events[i].node->get_world_matrix();
@@ -59,12 +60,12 @@ namespace sge
         {
             // Get events
             ENewComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (new_static_mesh_channel.consume(subscriber_id, events, &num_events))
             {
                 NodeId node_ids[8];
                 const CStaticMesh* components[8];
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     node_ids[i] = events[i].node;
                     components[i] = (const CStaticMesh*)events[i].instance;
@@ -91,11 +92,11 @@ namespace sge
         {
             // Get events
             EDestroyedComponent events[16];
-            int32 num_events;
+            int32_t num_events;
             while (destroyed_static_mesh_channel.consume(subscriber_id, events, &num_events))
             {
                 NodeId node_ids[16];
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     node_ids[i] = events[i].node;
                 }
@@ -117,12 +118,12 @@ namespace sge
         {
             // Get events
             ENewComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (new_spotlight_channel.consume(subscriber_id, events, & num_events))
             {
                 NodeId node_ids[8];
                 const CSpotlight* components[8];
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     node_ids[i] = events[i].node;
                     components[i] = (const CSpotlight*)events[i].instance;
@@ -151,12 +152,12 @@ namespace sge
         {
             // Get events
             EModifiedComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (modified_spotlight_event_channel.consume(subscriber_id, events, &num_events))
             {
                 NodeId node_ids[8];
                 const CSpotlight* components[8];
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     node_ids[i] = events[i].node;
                     components[i] = (const CSpotlight*)events[i].instance;
@@ -183,11 +184,11 @@ namespace sge
         {
             // Get events
             EDestroyedComponent events[16];
-            int32 num_events;
+            int32_t num_events;
             while (destroyed_spotlight_event_channel.consume(subscriber_id, events, &num_events))
             {
                 NodeId node_ids[16];
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     node_ids[i] = events[i].node;
                 }
@@ -344,7 +345,7 @@ namespace sge
             _state->resources.lightmask_volume_material = _state->resources.missing_material;
 
             // Create the frustum volume EBO
-            uint32 frustum_elems[NUM_FRUSTUM_ELEMS];
+            uint32_t frustum_elems[NUM_FRUSTUM_ELEMS];
             create_lightmask_volume_frustum_elems(frustum_elems);
             glGenBuffers(1, &_state->resources.frustum_ebo);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _state->resources.frustum_ebo);
@@ -713,7 +714,7 @@ namespace sge
             NodeId cam_node;
             CPerspectiveCamera* cam_instance;
             Node* cam_node_instance;
-            std::size_t num_cameras;
+            size_t num_cameras;
 
             auto* cam_component = scene.get_component_container(CPerspectiveCamera::type_info);
             cam_component->get_instance_nodes(0, 1, &num_cameras, &cam_node);

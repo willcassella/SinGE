@@ -41,7 +41,7 @@ namespace sge
         {
             gl_material::Material material;
             std::vector<RenderScene_Mesh> mesh_instances;
-            std::map<GLuint, std::size_t> mesh_indices;
+            std::map<GLuint, size_t> mesh_indices;
         };
 
         struct RenderScene_Spotlight

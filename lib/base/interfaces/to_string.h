@@ -1,7 +1,8 @@
 #pragma once
 
-#include <cassert>
-#include <cstring>
+#include <assert.h>
+#include <stdint.h>
+#include <string.h>
 #include <string>
 
 #include "lib/base/reflection/reflection.h"
@@ -44,82 +45,82 @@ namespace sge
     };
 
     template <>
-    struct Impl<IToString, int8>
+    struct Impl<IToString, int8_t>
     {
         static std::string to_string(Self self)
         {
             assert(!self.null());
-            return std::to_string(*self.as<int8>());
+            return std::to_string(*self.as<int8_t>());
         }
     };
 
     template <>
-    struct Impl<IToString, uint8>
+    struct Impl<IToString, uint8_t>
     {
         static std::string to_string(Self self)
         {
             assert(!self.null());
-            return std::to_string(*self.as<uint8>());
+            return std::to_string(*self.as<uint8_t>());
         }
     };
 
     template <>
-    struct Impl<IToString, int16>
+    struct Impl<IToString, int16_t>
     {
         static std::string to_string(Self self)
         {
             assert(!self.null());
-            return std::to_string(*self.as<int16>());
+            return std::to_string(*self.as<int16_t>());
         }
     };
 
     template <>
-    struct Impl<IToString, uint16>
+    struct Impl<IToString, uint16_t>
     {
         static std::string to_string(Self self)
         {
             assert(!self.null());
-            return std::to_string(*self.as<uint16>());
+            return std::to_string(*self.as<uint16_t>());
         }
     };
 
     template <>
-    struct Impl<IToString, int32>
+    struct Impl<IToString, int32_t>
     {
         static std::string to_string(Self self)
         {
             assert(!self.null());
-            return std::to_string(*self.as<int32>());
+            return std::to_string(*self.as<int32_t>());
         }
     };
 
     template <>
-    struct Impl<IToString, uint32>
+    struct Impl<IToString, uint32_t>
     {
         static std::string to_string(Self self)
         {
             assert(!self.null());
-            return std::to_string(*self.as<uint32>());
+            return std::to_string(*self.as<uint32_t>());
         }
     };
 
     template <>
-    struct Impl<IToString, int64>
+    struct Impl<IToString, int64_t>
     {
         static std::string to_string(Self self)
         {
             assert(!self.null());
-            return std::to_string(*self.as<int64>());
+            return std::to_string(*self.as<int64_t>());
         }
     };
 
     template <>
-    struct Impl<IToString, uint64>
+    struct Impl<IToString, uint64_t>
     {
         static std::string to_string(Self self)
         {
             assert(!self.null());
-            return std::to_string(*self.as<uint64>());
+            return std::to_string(*self.as<uint64_t>());
         }
     };
 
@@ -163,7 +164,7 @@ namespace sge
         }
     };
 
-    template <std::size_t Size>
+    template <size_t Size>
     struct Impl<IToString, char[Size]>
     {
         static std::string to_string(Self self)
@@ -173,7 +174,7 @@ namespace sge
         };
     };
 
-    template <std::size_t Size>
+    template <size_t Size>
     struct Impl<IToString, const char[Size]>
     {
         static std::string to_string(Self self)

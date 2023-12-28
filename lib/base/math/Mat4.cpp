@@ -170,7 +170,7 @@ namespace sge
         {
             for (int y = 0; y < 4; ++y)
             {
-                const Scalar temp = _values[x][y];
+                const float temp = _values[x][y];
                 _values[x][y] = _values[y][x];
                 _values[y][x] = temp;
             }

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <map>
 #include <set>
+#include <stdint.h>
 #include <vector>
 
 #include "lib/base/interfaces/from_string.h"
@@ -99,7 +100,7 @@ namespace sge
             _new_instance_channel.append(
                 new_instances.data(),
                 sizeof(ENewComponent),
-                (int32)new_instances.size());
+                (int32_t)new_instances.size());
         }
 
         void on_end_system_frame() override
@@ -135,12 +136,12 @@ namespace sge
             _destroyed_instance_channel.clear();
         }
 
-        void create_instances(const Node* const* nodes, std::size_t num_nodes, void** out_instances) override
+        void create_instances(const Node* const* nodes, size_t num_nodes, void** out_instances) override
         {
             std::vector<ENewComponent> new_instances;
             new_instances.reserve(num_nodes);
 
-            for (std::size_t i = 0; i < num_nodes; ++i)
+            for (size_t i = 0; i < num_nodes; ++i)
             {
                 const auto node = nodes[i];
                 if (!node)
@@ -202,16 +203,16 @@ namespace sge
             _new_instance_channel.append(
                 new_instances.data(),
                 sizeof(ENewComponent),
-                (int32)new_instances.size());
+                (int32_t)new_instances.size());
         }
 
-        void remove_instances(const NodeId* nodes, std::size_t num_nodes) override
+        void remove_instances(const NodeId* nodes, size_t num_nodes) override
         {
             std::vector<EDestroyedComponent> destroyed_events;
             destroyed_events.reserve(num_nodes);
 
             // Figure out which instances of the given nodes actually have these components
-            for (std::size_t i = 0; i < num_nodes; ++i)
+            for (size_t i = 0; i < num_nodes; ++i)
             {
                 const auto node = nodes[i];
 
@@ -237,12 +238,12 @@ namespace sge
             _destroyed_instance_channel.append(
                 destroyed_events.data(),
                 sizeof(EDestroyedComponent),
-                (int32)destroyed_events.size());
+                (int32_t)destroyed_events.size());
         }
 
-        void get_instances(const NodeId* nodes, std::size_t num_instances, void** out_instances) override
+        void get_instances(const NodeId* nodes, size_t num_instances, void** out_instances) override
         {
-            for (std::size_t i = 0; i < num_instances; ++i)
+            for (size_t i = 0; i < num_instances; ++i)
             {
                 const auto node = nodes[i];
 
@@ -258,15 +259,15 @@ namespace sge
             }
         }
 
-        std::size_t num_instance_nodes() const override
+        size_t num_instance_nodes() const override
         {
             return _instance_nodes.size();
         }
 
-        std::size_t get_instance_nodes(
-            std::size_t start_index,
-            std::size_t num_instances,
-            std::size_t* out_num_instances,
+        size_t get_instance_nodes(
+            size_t start_index,
+            size_t num_instances,
+            size_t* out_num_instances,
             NodeId* out_instances) const override
         {
             if (start_index >= _instance_nodes.size())
@@ -276,18 +277,18 @@ namespace sge
             }
 
             const auto num_copy = std::min(_instance_nodes.size() - start_index, num_instances);
-            std::memcpy(out_instances, _instance_nodes.data() + start_index, num_copy * sizeof(NodeId));
+            memcpy(out_instances, _instance_nodes.data() + start_index, num_copy * sizeof(NodeId));
             *out_num_instances = num_copy;
             return num_copy;
         }
 
         EventChannel* get_event_channel(const char* name) override
         {
-            if (std::strcmp(name, "new") == 0)
+            if (strcmp(name, "new") == 0)
             {
                 return &_new_instance_channel;
             }
-            else if (std::strcmp(name, "destroy") == 0)
+            else if (strcmp(name, "destroy") == 0)
             {
                 return &_destroyed_instance_channel;
             }

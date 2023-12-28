@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include <vector>
 
 #include "lib/engine/component.h"
@@ -27,7 +28,7 @@ namespace sge
             modified_instance_channel.append(
                 modified_instances.data(),
                 sizeof(EModifiedComponent),
-                (int32)modified_instances.size());
+                (int32_t)modified_instances.size());
 
             modified_instances.clear();
         }
@@ -39,7 +40,7 @@ namespace sge
 
         EventChannel* get_event_channel(const char* name)
         {
-            if (std::strcmp(name, "prop_mod") == 0)
+            if (strcmp(name, "prop_mod") == 0)
             {
                 return &modified_instance_channel;
             }

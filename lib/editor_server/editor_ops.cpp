@@ -1,6 +1,7 @@
 #include <chrono>
 #include <future>
 #include <iostream>
+#include <stdio.h>
 
 #include "lib/base/interfaces/to_string.h"
 #include "lib/base/io/archive_reader.h"
@@ -146,7 +147,7 @@ namespace sge
             void get_type_info_query(const TypeDB& type_db, ArchiveReader& reader, ArchiveWriter& writer)
             {
                 // Enumerate the types to get the properties from
-                reader.enumerate_array_elements([&type_db, &reader, &writer](std::size_t /*i*/)
+                reader.enumerate_array_elements([&type_db, &reader, &writer](size_t /*i*/)
                 {
                     // Get the type name
                     std::string typeName;
@@ -202,7 +203,7 @@ namespace sge
 
             void destroy_node_query(Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
             {
-                reader.enumerate_array_elements([&scene, &reader, &writer](std::size_t /*i*/)
+                reader.enumerate_array_elements([&scene, &reader, &writer](size_t /*i*/)
                 {
                     // Get the id of the node to destroy
                     NodeId node_id;
@@ -353,7 +354,7 @@ namespace sge
                     writer.push_object_member(component_type_name);
 
                     // Enumerate nodes to add
-                    reader.enumerate_array_elements([type, container, &scene, &reader, &writer](std::size_t /*i*/)
+                    reader.enumerate_array_elements([type, container, &scene, &reader, &writer](size_t /*i*/)
                     {
                         NodeId node_id;
                         node_id.from_archive(reader);
@@ -402,7 +403,7 @@ namespace sge
                     writer.push_object_member(component_type_name);
 
                     // Enumerate instances to destroy
-                    reader.enumerate_array_elements([component_type_name, container, &scene, &reader, &writer](std::size_t /*i*/)
+                    reader.enumerate_array_elements([component_type_name, container, &scene, &reader, &writer](size_t /*i*/)
                     {
                         // Get the node id
                         NodeId node;
@@ -453,8 +454,8 @@ namespace sge
                 {
                     NodeId instance_nodes[8];
                     void* instances[8];
-                    std::size_t num_nodes = 0;
-                    std::size_t start_index = 0;
+                    size_t num_nodes = 0;
+                    size_t start_index = 0;
 
                     writer.push_object_member(component_type.first->name().c_str());
 
@@ -465,7 +466,7 @@ namespace sge
                         component_type.second->get_instances(instance_nodes, num_nodes, instances);
 
                         // For each instance
-                        for (std::size_t i = 0; i < num_nodes; ++i)
+                        for (size_t i = 0; i < num_nodes; ++i)
                         {
                             char node_id_str[20];
                             instance_nodes[i].to_string(node_id_str, 20);
@@ -529,7 +530,7 @@ namespace sge
 
             void get_resource_query(const Scene& scene, ArchiveReader& reader, ArchiveWriter& writer)
             {
-                reader.enumerate_array_elements([&scene, &reader, &writer](std::size_t /*i*/)
+                reader.enumerate_array_elements([&scene, &reader, &writer](size_t /*i*/)
                 {
                     // Get the type name
                     std::string type_str;
@@ -575,7 +576,7 @@ namespace sge
                     std::cout << "Reading resource '" << path << "'" << std::endl;
 
                     // Construct the type
-                    auto* object = SGE_STACK_ALLOC(uint8, type->size());
+                    auto* object = SGE_STACK_ALLOC(uint8_t, type->size());
                     type->init(object);
 
                     // Load it from the file
@@ -621,16 +622,16 @@ namespace sge
             /*     NodeId node; */
 
             /*     /1* Data shared with SceneLightmap::LightmapElement *1/ */
-            /*     int32 width = 0; */
-            /*     int32 height = 0; */
-            /*     byte* direct_mask = nullptr; */
+            /*     int32_t width = 0; */
+            /*     int32_t height = 0; */
+            /*     uint8_t* direct_mask = nullptr; */
             /*     color::RGBF32* basis_x_radiance = nullptr; */
             /*     color::RGBF32* basis_y_radiance = nullptr; */
             /*     color::RGBF32* basis_z_radiance = nullptr; */
 
             /*     /1* Owned data *1/ */
             /*     LightmapTexel* lightmap_texels = nullptr; */
-            /*     byte* lightmap_texel_mask = nullptr; */
+            /*     uint8_t* lightmap_texel_mask = nullptr; */
             /*     color::RGBF32* irradiance_front = nullptr; */
             /*     color::RGBF32* irradiance_back = nullptr; */
             /* }; */
@@ -656,15 +657,15 @@ namespace sge
             /*     NodeId instance_node_ids[8]; */
             /*     Node* instance_nodes[8]; */
             /*     CStaticMesh* mesh_instances[8]; */
-            /*     std::size_t start_index = 0; */
-            /*     std::size_t num_nodes = 0; */
+            /*     size_t start_index = 0; */
+            /*     size_t num_nodes = 0; */
             /*     while (static_mesh_container->get_instance_nodes(start_index, 8, &num_nodes, instance_node_ids)) */
             /*     { */
             /*         start_index += 8; */
             /*         static_mesh_container->get_instances(instance_node_ids, num_nodes, mesh_instances); */
             /*         scene.get_nodes(instance_node_ids, num_nodes, instance_nodes); */
 
-            /*         for (std::size_t i = 0; i < num_nodes; ++i) */
+            /*         for (size_t i = 0; i < num_nodes; ++i) */
             /*         { */
             /*             const auto node_id = instance_node_ids[i]; */
             /*             const auto* const node = instance_nodes[i]; */
@@ -740,10 +741,10 @@ namespace sge
             /*             lightmap.basis_x_radiance = lightmap_element.basis_x_radiance.data(); */
             /*             lightmap.basis_y_radiance = lightmap_element.basis_y_radiance.data(); */
             /*             lightmap.basis_z_radiance = lightmap_element.basis_z_radiance.data(); */
-            /*             lightmap.lightmap_texels = (LightmapTexel*)std::calloc(lightmap.width * lightmap.height, sizeof(LightmapTexel)); */
-            /*             lightmap.lightmap_texel_mask = (byte*)std::calloc(lightmap.width * lightmap.height, 1); */
-            /*             lightmap.irradiance_front = (color::RGBF32*)std::calloc(lightmap.width * lightmap.height, sizeof(color::RGBF32)); */
-            /*             lightmap.irradiance_back = (color::RGBF32*)std::calloc(lightmap.width * lightmap.height, sizeof(color::RGBF32)); */
+            /*             lightmap.lightmap_texels = (LightmapTexel*)calloc(lightmap.width * lightmap.height, sizeof(LightmapTexel)); */
+            /*             lightmap.lightmap_texel_mask = (uint8_t*)calloc(lightmap.width * lightmap.height, 1); */
+            /*             lightmap.irradiance_front = (color::RGBF32*)calloc(lightmap.width * lightmap.height, sizeof(color::RGBF32)); */
+            /*             lightmap.irradiance_back = (color::RGBF32*)calloc(lightmap.width * lightmap.height, sizeof(color::RGBF32)); */
 
             /*             // Add the lightmap to the list of lightmaps */
             /*             lightmap_object_lightmaps.push_back(std::move(lightmap)); */
@@ -773,7 +774,7 @@ namespace sge
             /*     // Generate lightmap texels for all objects */
             /*     std::cout << "Generating lightmap texel information..." << std::endl; */
             /*     const auto gen_tex_start = std::chrono::high_resolution_clock::now(); */
-            /*     for (std::size_t i = 0; i < lightmap_objects.size(); ++i) */
+            /*     for (size_t i = 0; i < lightmap_objects.size(); ++i) */
             /*     { */
             /*         auto& object = lightmap_objects[i]; */
             /*         auto& lightmap = lightmap_object_lightmaps[i]; */
@@ -800,7 +801,7 @@ namespace sge
             /*     // Compute direct lighting for all objects */
             /*     std::cout << "Computing direct lighting..." << std::endl; */
             /*     const auto gen_direct_start = std::chrono::high_resolution_clock::now(); */
-            /*     for (std::size_t i = 0; i < lightmap_objects.size(); ++i) */
+            /*     for (size_t i = 0; i < lightmap_objects.size(); ++i) */
             /*     { */
             /*         auto& occluder = occluders[i]; */
             /*         auto& lightmap = lightmap_object_lightmaps[i]; */
@@ -817,7 +818,7 @@ namespace sge
             /*         auto* const irradiance_back = lightmap.irradiance_back; */
             /*         auto* const direct_mask = lightmap.direct_mask; */
             /*         const auto lightmap_size = lightmap.width * lightmap.height; */
-            /*         for (int32 pix_i = 0; pix_i < lightmap_size; ++pix_i) */
+            /*         for (int32_t pix_i = 0; pix_i < lightmap_size; ++pix_i) */
             /*         { */
             /*             const auto irradiance_value = irradiance_back[pix_i]; */
 
@@ -842,16 +843,16 @@ namespace sge
             /*     std::cout << " milliseconds.\n"; */
 
             /*     // Compute indirect lighting for all objects */
-            /*     int32 num_sample_sets = 16; */
-            /*     int32 num_accumulation_steps = 1; */
+            /*     int32_t num_sample_sets = 16; */
+            /*     int32_t num_accumulation_steps = 1; */
             /*     reader.object_member("num_indirect_sample_sets", num_sample_sets); */
             /*     reader.object_member("num_accumulation_steps", num_accumulation_steps); */
             /*     std::cout << "Computing indirect lighting (" << num_sample_sets << " sample sets, " << num_accumulation_steps << " accumulation steps)..." << std::endl; */
             /*     const auto gen_indirect_start = std::chrono::high_resolution_clock::now(); */
             /*     const int num_threads = std::thread::hardware_concurrency(); */
-            /*     for (int32 pass_i = 0; pass_i < num_accumulation_steps; ++pass_i) */
+            /*     for (int32_t pass_i = 0; pass_i < num_accumulation_steps; ++pass_i) */
             /*     { */
-            /*         for (std::size_t i = 0; i < lightmap_objects.size(); ++i) */
+            /*         for (size_t i = 0; i < lightmap_objects.size(); ++i) */
             /*         { */
             /*             auto& lightmap = lightmap_object_lightmaps[i]; */
 
@@ -892,10 +893,10 @@ namespace sge
             /*         } */
 
             /*         // Copy irradiance back buffer to front buffer */
-            /*         for (std::size_t i = 0; i < lightmap_objects.size(); ++i) */
+            /*         for (size_t i = 0; i < lightmap_objects.size(); ++i) */
             /*         { */
             /*             auto& lightmap = lightmap_object_lightmaps[i]; */
-            /*             std::memcpy( */
+            /*             memcpy( */
             /*                 lightmap.irradiance_front, */
             /*                 lightmap.irradiance_back, */
             /*                 lightmap.width * lightmap.height * sizeof(color::RGBF32)); */
@@ -943,7 +944,7 @@ namespace sge
             /*     std::cout << " milliseconds.\n"; */
 
             /*     // Post-process lightmaps */
-            /*     int32 num_post_steps = 4; */
+            /*     int32_t num_post_steps = 4; */
             /*     reader.object_member("post_process_steps", num_post_steps); */
             /*     std::cout << "Post-processing..." << std::endl; */
             /*     const auto post_start = std::chrono::high_resolution_clock::now(); */
@@ -956,10 +957,10 @@ namespace sge
             /*         sge::lightmap_postprocess(lightmap.width, lightmap.height, num_post_steps, lightmap.basis_z_radiance); */
 
             /*         // Free owned data */
-            /*         std::free(lightmap.lightmap_texels); */
-            /*         std::free(lightmap.lightmap_texel_mask); */
-            /*         std::free(lightmap.irradiance_front); */
-            /*         std::free(lightmap.irradiance_back); */
+            /*         free(lightmap.lightmap_texels); */
+            /*         free(lightmap.lightmap_texel_mask); */
+            /*         free(lightmap.irradiance_front); */
+            /*         free(lightmap.irradiance_back); */
             /*     } */
             /*     const auto post_end = std::chrono::high_resolution_clock::now(); */
 

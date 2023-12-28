@@ -1,7 +1,8 @@
 #pragma once
 
-#include <utility>
+#include <stdint.h>
 #include <string>
+#include <utility>
 
 #include "lib/base/functional/function_view.h"
 #include "lib/base/reflection/any.h"
@@ -10,7 +11,7 @@ namespace sge
 {
     struct TypeInfo;
 
-    using PropertyFlags_t = uint32;
+    using PropertyFlags_t = uint32_t;
     enum PropertyFlags : PropertyFlags_t
     {
         /**
@@ -42,7 +43,7 @@ namespace sge
         struct Data
         {
             PropertyFlags_t flags = PF_NONE;
-            uint32 index = 0;
+            uint32_t index = 0;
             std::string category;
             std::string description;
             const TypeInfo* type = nullptr;
@@ -72,7 +73,7 @@ namespace sge
         /**
          * \brief Returns the property registration index (used to order properties).
          */
-        uint32 index() const
+        uint32_t index() const
         {
             return _data.index;
         }

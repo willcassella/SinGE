@@ -19,7 +19,7 @@ namespace sge
             auto bt_mesh = std::make_unique<StaticMeshCollider>();
             bt_mesh->path = std::move(path);
             bt_mesh->mesh.preallocateVertices((int)num_verts);
-            for (std::size_t i = 0; i < num_triangles; ++i)
+            for (size_t i = 0; i < num_triangles; ++i)
             {
                 bt_mesh->mesh.addTriangle(
                     to_bullet(vert_positions[triangle_elements[i * 3 + 0]]),

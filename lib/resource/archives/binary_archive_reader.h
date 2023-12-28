@@ -1,10 +1,11 @@
 #pragma once
 
-#include <cassert>
-#include <cstring>
-#include <stack>
-#include <vector>
 #include <algorithm>
+#include <assert.h>
+#include <stack>
+#include <stdint.h>
+#include <string.h>
+#include <vector>
 
 #include "lib/base/io/archive_reader.h"
 #include "lib/resource/archives/binary_archive_node.h"
@@ -15,7 +16,7 @@ namespace sge
     {
         struct Cursor
         {
-            const byte* node_value;
+            const uint8_t* node_value;
 
             BinaryArchiveNode node_type;
 
@@ -23,7 +24,7 @@ namespace sge
         };
 
     public:
-        BinaryArchiveReader(const std::vector<byte>& buffer)
+        BinaryArchiveReader(const std::vector<uint8_t>& buffer)
         {
             cursor.node_value = buffer.data() + 1;
             cursor.node_type = static_cast<BinaryArchiveNode>(buffer.front());
@@ -74,42 +75,42 @@ namespace sge
             return cursor.node_type >= BAN_INT8 && cursor.node_type <= BAN_DOUBLE;
         }
 
-        bool number(int8& out) const override
+        bool number(int8_t& out) const override
         {
             return impl_value(BAN_INT8, out);
         }
 
-        bool number(uint8& out) const override
+        bool number(uint8_t& out) const override
         {
             return impl_value(BAN_UINT8, out);
         }
 
-        bool number(int16& out) const override
+        bool number(int16_t& out) const override
         {
             return impl_value(BAN_INT16, out);
         }
 
-        bool number(uint16& out) const override
+        bool number(uint16_t& out) const override
         {
             return impl_value(BAN_UINT16, out);
         }
 
-        bool number(int32& out) const override
+        bool number(int32_t& out) const override
         {
             return impl_value(BAN_INT32, out);
         }
 
-        bool number(uint32& out) const override
+        bool number(uint32_t& out) const override
         {
             return impl_value(BAN_UINT32, out);
         }
 
-        bool number(int64& out) const override
+        bool number(int64_t& out) const override
         {
             return impl_value(BAN_INT64, out);
         }
 
-        bool number(uint64& out) const override
+        bool number(uint64_t& out) const override
         {
             return impl_value(BAN_UINT64, out);
         }
@@ -129,7 +130,7 @@ namespace sge
             return cursor.node_type == BAN_STRING;
         }
 
-        bool string_size(std::size_t& out) const override
+        bool string_size(size_t& out) const override
         {
             BinaryArchiveSize_t size = 0;
             if (impl_value(BAN_STRING, size))
@@ -141,16 +142,16 @@ namespace sge
             return false;
         }
 
-        std::size_t string(char* out, std::size_t len) const override
+        size_t string(char* out, size_t len) const override
         {
-            std::size_t str_len;
+            size_t str_len;
             if (!string_size(str_len))
             {
                 return 0;
             }
 
-            const std::size_t copy_len = std::min(str_len, len);
-            std::memcpy(out, cursor.node_value + sizeof(BinaryArchiveSize_t), copy_len);
+            const size_t copy_len = std::min(str_len, len);
+            memcpy(out, cursor.node_value + sizeof(BinaryArchiveSize_t), copy_len);
             return copy_len;
         }
 
@@ -159,7 +160,7 @@ namespace sge
             return (cursor.node_type >= BAN_ARRAY_INT8 && cursor.node_type <= BAN_ARRAY_FLOAT) || cursor.node_type == BAN_ARRAY_GENERIC;
         }
 
-        bool array_size(std::size_t& out) const override
+        bool array_size(size_t& out) const override
         {
             if (!is_array())
             {
@@ -167,11 +168,11 @@ namespace sge
             }
 
             const auto size = buffer_read<BinaryArchiveSize_t>(cursor.node_value);
-            out = static_cast<std::size_t>(size);
+            out = static_cast<size_t>(size);
             return true;
         }
 
-        std::size_t typed_array(bool* out, std::size_t out_size) const override
+        size_t typed_array(bool* out, size_t out_size) const override
         {
             if (cursor.node_type != BAN_ARRAY_BOOLEAN)
             {
@@ -179,14 +180,14 @@ namespace sge
             }
 
             // Get the array size and the amount to read
-            const auto size = static_cast<std::size_t>(buffer_read<BinaryArchiveSize_t>(cursor.node_value));
+            const auto size = static_cast<size_t>(buffer_read<BinaryArchiveSize_t>(cursor.node_value));
             const auto read_size = std::min(size, out_size);
 
             // Create the array pointer
             const auto arr = reinterpret_cast<const BinaryArchiveBool_t*>(cursor.node_value);
 
             // Copy the data
-            for (std::size_t i = 0; i < read_size; ++i)
+            for (size_t i = 0; i < read_size; ++i)
             {
                 out[i] = (arr[i] == 1);
             }
@@ -194,60 +195,60 @@ namespace sge
             return read_size;
         }
 
-        std::size_t typed_array(int8* out, std::size_t size) const override
+        size_t typed_array(int8_t* out, size_t size) const override
         {
             return impl_typed_array(BAN_ARRAY_INT8, out, size);
         }
 
-        std::size_t typed_array(uint8* out, std::size_t size) const override
+        size_t typed_array(uint8_t* out, size_t size) const override
         {
             return impl_typed_array(BAN_ARRAY_UINT8, out, size);
         }
 
-        std::size_t typed_array(int16* out, std::size_t size) const override
+        size_t typed_array(int16_t* out, size_t size) const override
         {
             return impl_typed_array(BAN_ARRAY_INT16, out, size);
         }
 
-        std::size_t typed_array(uint16* out, std::size_t size) const override
+        size_t typed_array(uint16_t* out, size_t size) const override
         {
             return impl_typed_array(BAN_ARRAY_UINT16, out, size);
         }
 
-        std::size_t typed_array(int32* out, std::size_t size) const override
+        size_t typed_array(int32_t* out, size_t size) const override
         {
             return impl_typed_array(BAN_ARRAY_INT32, out, size);
         }
 
-        std::size_t typed_array(uint32* out, std::size_t size) const override
+        size_t typed_array(uint32_t* out, size_t size) const override
         {
             return impl_typed_array(BAN_ARRAY_UINT32, out, size);
         }
 
-        std::size_t typed_array(int64* out, std::size_t size) const override
+        size_t typed_array(int64_t* out, size_t size) const override
         {
             return impl_typed_array(BAN_ARRAY_INT64, out, size);
         }
 
-        std::size_t typed_array(uint64* out, std::size_t size) const override
+        size_t typed_array(uint64_t* out, size_t size) const override
         {
             return impl_typed_array(BAN_ARRAY_UINT64, out, size);
         }
 
-        std::size_t typed_array(float* out, std::size_t size) const override
+        size_t typed_array(float* out, size_t size) const override
         {
             return impl_typed_array(BAN_ARRAY_FLOAT, out, size);
         }
 
-        std::size_t typed_array(double* out, std::size_t size) const override
+        size_t typed_array(double* out, size_t size) const override
         {
             return impl_typed_array(BAN_ARRAY_DOUBLE, out, size);
         }
 
-        void enumerate_array_elements(FunctionView<void(std::size_t i)> enumerator) override
+        void enumerate_array_elements(FunctionView<void(size_t i)> enumerator) override
         {
             // Get the size of the array
-            std::size_t size = 0;
+            size_t size = 0;
             if (!array_size(size))
             {
                 return;
@@ -268,7 +269,7 @@ namespace sge
             cursor.in_enumeration = true;
 
             // Loop through elements
-            for (std::size_t i = 0; i < size; ++i)
+            for (size_t i = 0; i < size; ++i)
             {
                 // Get the node type and advance the cursor past the indicator
                 cursor.node_type = static_cast<BinaryArchiveNode>(*cursor.node_value);
@@ -285,7 +286,7 @@ namespace sge
             cursor = cursor_backup;
         }
 
-        void enumerate_typed_array_elements(std::size_t size, FunctionView<void(std::size_t i)> enumerator)
+        void enumerate_typed_array_elements(size_t size, FunctionView<void(size_t i)> enumerator)
         {
             // Back up the cursor
             const auto cursor_backup = cursor;
@@ -295,7 +296,7 @@ namespace sge
             cursor.in_enumeration = true;
 
             // Amount to advance the cursor by each enumeration
-            std::size_t advance = 0;
+            size_t advance = 0;
 
             // Figure out which node to mark as the node type
             switch (cursor.node_type)
@@ -307,42 +308,42 @@ namespace sge
 
             case BAN_ARRAY_INT8:
                 cursor.node_type = BAN_INT8;
-                advance = sizeof(int8);
+                advance = sizeof(int8_t);
                 break;
 
             case BAN_ARRAY_UINT8:
                 cursor.node_type = BAN_UINT8;
-                advance = sizeof(uint8);
+                advance = sizeof(uint8_t);
                 break;
 
             case BAN_ARRAY_INT16:
                 cursor.node_type = BAN_INT16;
-                advance = sizeof(int16);
+                advance = sizeof(int16_t);
                 break;
 
             case BAN_ARRAY_UINT16:
                 cursor.node_type = BAN_UINT16;
-                advance = sizeof(uint16);
+                advance = sizeof(uint16_t);
                 break;
 
             case BAN_ARRAY_INT32:
                 cursor.node_type = BAN_INT32;
-                advance = sizeof(int32);
+                advance = sizeof(int32_t);
                 break;
 
             case BAN_ARRAY_UINT32:
                 cursor.node_type = BAN_UINT32;
-                advance = sizeof(uint32);
+                advance = sizeof(uint32_t);
                 break;
 
             case BAN_ARRAY_INT64:
                 cursor.node_type = BAN_INT64;
-                advance = sizeof(int64);
+                advance = sizeof(int64_t);
                 break;
 
             case BAN_ARRAY_UINT64:
                 cursor.node_type = BAN_UINT64;
-                advance = sizeof(uint64);
+                advance = sizeof(uint64_t);
                 break;
 
             case BAN_ARRAY_FLOAT:
@@ -360,7 +361,7 @@ namespace sge
             }
 
             // For each element
-            for (std::size_t i = 0; i < size; ++i)
+            for (size_t i = 0; i < size; ++i)
             {
                 // Call the enumerator
                 enumerator(i);
@@ -373,9 +374,9 @@ namespace sge
             cursor = cursor_backup;
         }
 
-        bool pull_array_element(std::size_t i) override
+        bool pull_array_element(size_t i) override
         {
-            std::size_t size;
+            size_t size;
             if (!array_size(size))
             {
                 return false;
@@ -421,42 +422,42 @@ namespace sge
                 break;
 
             case BAN_ARRAY_INT8:
-                cursor.node_value += sizeof(int8) * i;
+                cursor.node_value += sizeof(int8_t) * i;
                 cursor.node_type = BAN_INT8;
                 break;
 
             case BAN_ARRAY_UINT8:
-                cursor.node_value += sizeof(uint8) * i;
+                cursor.node_value += sizeof(uint8_t) * i;
                 cursor.node_type = BAN_UINT8;
                 break;
 
             case BAN_ARRAY_INT16:
-                cursor.node_value += sizeof(int16) * i;
+                cursor.node_value += sizeof(int16_t) * i;
                 cursor.node_type = BAN_INT16;
                 break;
 
             case BAN_ARRAY_UINT16:
-                cursor.node_value += sizeof(uint16) * i;
+                cursor.node_value += sizeof(uint16_t) * i;
                 cursor.node_type = BAN_UINT16;
                 break;
 
             case BAN_ARRAY_INT32:
-                cursor.node_value += sizeof(int32) * i;
+                cursor.node_value += sizeof(int32_t) * i;
                 cursor.node_type = BAN_INT32;
                 break;
 
             case BAN_ARRAY_UINT32:
-                cursor.node_value += sizeof(uint32) * i;
+                cursor.node_value += sizeof(uint32_t) * i;
                 cursor.node_type = BAN_UINT32;
                 break;
 
             case BAN_ARRAY_INT64:
-                cursor.node_value += sizeof(int64) * i;
+                cursor.node_value += sizeof(int64_t) * i;
                 cursor.node_type = BAN_INT64;
                 break;
 
             case BAN_ARRAY_UINT64:
-                cursor.node_value += sizeof(uint64) * i;
+                cursor.node_value += sizeof(uint64_t) * i;
                 cursor.node_type = BAN_UINT64;
                 break;
 
@@ -474,7 +475,7 @@ namespace sge
             return cursor.node_type == BAN_OBJECT;
         }
 
-        bool object_size(std::size_t& out) const override
+        bool object_size(size_t& out) const override
         {
             if (!is_object())
             {
@@ -482,14 +483,14 @@ namespace sge
             }
 
             // Get the size from the archive
-            out = static_cast<std::size_t>(buffer_read<BinaryArchiveSize_t>(cursor.node_value));
+            out = static_cast<size_t>(buffer_read<BinaryArchiveSize_t>(cursor.node_value));
             return true;
         }
 
         void enumerate_object_members(FunctionView<void(const char* name)> enumerator) override
         {
             // Get the object size
-            std::size_t size = 0;
+            size_t size = 0;
             if (!object_size(size))
             {
                 return;
@@ -503,11 +504,11 @@ namespace sge
             cursor.node_value += sizeof(BinaryArchiveSize_t) * 2;
 
             // Enumerate over members
-            for (std::size_t i = 0; i < size; ++i)
+            for (size_t i = 0; i < size; ++i)
             {
                 // Get the name
                 const char* name = reinterpret_cast<const char*>(cursor.node_value);
-                cursor.node_value += std::strlen(name) + 1;
+                cursor.node_value += strlen(name) + 1;
 
                 // Get the type
                 cursor.node_type = static_cast<BinaryArchiveNode>(*cursor.node_value);
@@ -527,7 +528,7 @@ namespace sge
         bool pull_object_member(const char* name) override
         {
             // Get the object size
-            std::size_t size = 0;
+            size_t size = 0;
             if (!object_size(size))
             {
                 return false;
@@ -541,18 +542,18 @@ namespace sge
             cursor.node_value += sizeof(BinaryArchiveSize_t) * 2;
 
             // Enumerate over members
-            for (std::size_t i = 0; i < size; ++i)
+            for (size_t i = 0; i < size; ++i)
             {
                 // Get the member's name name
                 const char* mem_name = reinterpret_cast<const char*>(cursor.node_value);
-                cursor.node_value += std::strlen(mem_name) + 1;
+                cursor.node_value += strlen(mem_name) + 1;
 
                 // Get the type
                 cursor.node_type = static_cast<BinaryArchiveNode>(*cursor.node_value);
                 cursor.node_value += 1;
 
                 // See if this is the node we're looking for
-                if (std::strcmp(name, mem_name) == 0)
+                if (strcmp(name, mem_name) == 0)
                 {
                     // Push the cursor onto the stack
                     cursor_stack.push(cursor_backup);
@@ -582,7 +583,7 @@ namespace sge
         }
 
         template <typename T>
-        std::size_t impl_typed_array(BinaryArchiveNode required_type, T* out, std::size_t out_size) const
+        size_t impl_typed_array(BinaryArchiveNode required_type, T* out, size_t out_size) const
         {
             if (cursor.node_type != required_type)
             {
@@ -590,35 +591,35 @@ namespace sge
             }
 
             // Get the array size and the amount to read
-            const auto size = static_cast<std::size_t>(buffer_read<BinaryArchiveSize_t>(cursor.node_value));
+            const auto size = static_cast<size_t>(buffer_read<BinaryArchiveSize_t>(cursor.node_value));
             const auto read_size = std::min(size, out_size);
 
             // Copy the data
-            std::memcpy(out, cursor.node_value + sizeof(BinaryArchiveSize_t), read_size * sizeof(T));
+            memcpy(out, cursor.node_value + sizeof(BinaryArchiveSize_t), read_size * sizeof(T));
             return read_size;
         }
 
         template <typename T>
-        static T buffer_read(const byte* buffer)
+        static T buffer_read(const uint8_t* buffer)
         {
             return *reinterpret_cast<const T*>(buffer);
         }
 
         // Figure out how much to advance the cursor by.
         // (NOTE: This does not account for indicators, because the cursor has already advanced passed the current indicator)
-        std::size_t get_cursor_advancement() const
+        size_t get_cursor_advancement() const
         {
             // If this node is a generic array or object
             if (cursor.node_type == BAN_ARRAY_GENERIC || cursor.node_type == BAN_OBJECT)
             {
                 // Get the span (includes indicator byte, which we've passed)
-                return static_cast<std::size_t>(buffer_read<BinaryArchiveSize_t>(cursor.node_value + sizeof(BinaryArchiveSize_t))) - 1;
+                return static_cast<size_t>(buffer_read<BinaryArchiveSize_t>(cursor.node_value + sizeof(BinaryArchiveSize_t))) - 1;
             }
             // If the node contains an array
             else if (is_array())
             {
                 // Get the length
-                const std::size_t len = static_cast<std::size_t>(buffer_read<BinaryArchiveSize_t>(cursor.node_value));
+                const size_t len = static_cast<size_t>(buffer_read<BinaryArchiveSize_t>(cursor.node_value));
 
                 switch (cursor.node_type)
                 {
@@ -626,28 +627,28 @@ namespace sge
                     return sizeof(BinaryArchiveSize_t) + sizeof(BinaryArchiveBool_t) * len;
 
                 case BAN_ARRAY_INT8:
-                    return sizeof(BinaryArchiveSize_t) + sizeof(int8) * len;
+                    return sizeof(BinaryArchiveSize_t) + sizeof(int8_t) * len;
 
                 case BAN_ARRAY_UINT8:
-                    return sizeof(BinaryArchiveSize_t) + sizeof(uint8) * len;
+                    return sizeof(BinaryArchiveSize_t) + sizeof(uint8_t) * len;
 
                 case BAN_ARRAY_INT16:
-                    return sizeof(BinaryArchiveSize_t) + sizeof(int16) * len;
+                    return sizeof(BinaryArchiveSize_t) + sizeof(int16_t) * len;
 
                 case BAN_ARRAY_UINT16:
-                    return sizeof(BinaryArchiveSize_t) + sizeof(uint16) * len;
+                    return sizeof(BinaryArchiveSize_t) + sizeof(uint16_t) * len;
 
                 case BAN_ARRAY_INT32:
-                    return sizeof(BinaryArchiveSize_t) + sizeof(int32) * len;
+                    return sizeof(BinaryArchiveSize_t) + sizeof(int32_t) * len;
 
                 case BAN_ARRAY_UINT32:
-                    return sizeof(BinaryArchiveSize_t) + sizeof(uint32) * len;
+                    return sizeof(BinaryArchiveSize_t) + sizeof(uint32_t) * len;
 
                 case BAN_ARRAY_INT64:
-                    return sizeof(BinaryArchiveSize_t) + sizeof(int64) * len;
+                    return sizeof(BinaryArchiveSize_t) + sizeof(int64_t) * len;
 
                 case BAN_ARRAY_UINT64:
-                    return sizeof(BinaryArchiveSize_t) + sizeof(uint64) * len;
+                    return sizeof(BinaryArchiveSize_t) + sizeof(uint64_t) * len;
 
                 case BAN_ARRAY_FLOAT:
                     return sizeof(BinaryArchiveSize_t) + sizeof(float) * len;
@@ -671,28 +672,28 @@ namespace sge
                 return sizeof(BinaryArchiveBool_t);
 
             case BAN_INT8:
-                return sizeof(int8);
+                return sizeof(int8_t);
 
             case BAN_UINT8:
-                return sizeof(uint8);
+                return sizeof(uint8_t);
 
             case BAN_INT16:
-                return sizeof(int16);
+                return sizeof(int16_t);
 
             case BAN_UINT16:
-                return sizeof(uint16);
+                return sizeof(uint16_t);
 
             case BAN_INT32:
-                return sizeof(int32);
+                return sizeof(int32_t);
 
             case BAN_UINT32:
-                return sizeof(uint32);
+                return sizeof(uint32_t);
 
             case BAN_INT64:
-                return sizeof(int64);
+                return sizeof(int64_t);
 
             case BAN_UINT64:
-                return sizeof(uint64);
+                return sizeof(uint64_t);
 
             case BAN_FLOAT:
                 return sizeof(float);
@@ -701,7 +702,7 @@ namespace sge
                 return sizeof(double);
 
             case BAN_STRING:
-                return sizeof(BinaryArchiveSize_t) + static_cast<std::size_t>(buffer_read<BinaryArchiveSize_t>(cursor.node_value));
+                return sizeof(BinaryArchiveSize_t) + static_cast<size_t>(buffer_read<BinaryArchiveSize_t>(cursor.node_value));
 
             default:
                 assert(false);

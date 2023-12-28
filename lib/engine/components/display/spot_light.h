@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/engine/component.h"
 #include "lib/resource/misc/color.h"
 
@@ -34,7 +36,7 @@ namespace sge
 
         NodeId node() const;
 
-        uint32 update_revision() const;
+        uint32_t update_revision() const;
 
         Shape shape() const;
 
@@ -72,26 +74,26 @@ namespace sge
 
         void casts_shadows(bool value);
 
-        uint32 shadow_map_width() const;
+        uint32_t shadow_map_width() const;
 
-        void shadow_map_width(uint32 value);
+        void shadow_map_width(uint32_t value);
 
-        uint32 shadow_map_height() const;
+        uint32_t shadow_map_height() const;
 
-        void shadow_map_height(uint32 value);
+        void shadow_map_height(uint32_t value);
 
         bool is_lightmask_volume() const;
 
         void is_lightmask_volume(bool value);
 
-        uint32 lightmask_group() const;
+        uint32_t lightmask_group() const;
 
-        void lightmask_group(uint32 value);
+        void lightmask_group(uint32_t value);
 
     private:
         void set_modified(const char* property_name);
 
-        uint32 _update_revision = 0;
+        uint32_t _update_revision = 0;
         Shape _shape = Shape::CONE;
         Angle _cone_angle = degrees(30.f);
         Angle _frustum_horiz_angle = degrees(30.f);
@@ -100,10 +102,10 @@ namespace sge
         float _far_clipping_plane = 1.0f;
         color::RGBF32 _intensity = color::RGBF32::white();
         bool _casts_shadows = false;
-        uint32 _shadow_width = 512;
-        uint32 _shadow_height = 512;
+        uint32_t _shadow_width = 512;
+        uint32_t _shadow_height = 512;
         bool _lightmask_volume = false;
-        uint32 _lightmask_group = 0;
+        uint32_t _lightmask_group = 0;
         NodeId _node;
         SharedData* _shared_data = nullptr;
     };

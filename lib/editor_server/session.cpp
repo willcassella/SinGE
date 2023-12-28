@@ -43,7 +43,7 @@ namespace sge
 
             // Send it
             asio::async_write(socket, asio::buffer(_outgoing_packets.front(), _outgoing_packets.front()->packet_size()),
-                [self = shared_from_this()](const std::error_code& error, std::size_t /*bytes*/)
+                [self = shared_from_this()](const std::error_code& error, size_t /*bytes*/)
             {
                 if (error)
                 {
@@ -62,7 +62,7 @@ namespace sge
         void Session::async_receive_message()
         {
             asio::async_read(socket, asio::buffer(_in_header),
-                [self = shared_from_this()](const std::error_code& error, std::size_t /*len*/)
+                [self = shared_from_this()](const std::error_code& error, size_t /*len*/)
             {
                 if (error)
                 {

@@ -34,7 +34,7 @@ namespace sge
             DropFn* drop = nullptr;
             EqualityCompareFn* equality_compare = nullptr;
             std::unordered_map<const InterfaceInfo *, const void *> interfaces;
-            std::unordered_map<std::size_t, NativeConstructorInfo> constructors;
+            std::unordered_map<size_t, NativeConstructorInfo> constructors;
             std::unordered_map<std::string, NativeConstructorInfo> named_constructors;
             std::unordered_map<std::string, NativePropertyInfo> properties;
             std::unordered_map<std::string, FieldInfo> fields;
@@ -121,12 +121,12 @@ namespace sge
             return _data.equality_compare(lhs, rhs);
         }
 
-        std::size_t num_constructors() const override
+        size_t num_constructors() const override
         {
             return _data.constructors.size();
         }
 
-        const NativeConstructorInfo *find_constructor(std::size_t argc) const override
+        const NativeConstructorInfo *find_constructor(size_t argc) const override
         {
             auto ctor = _data.constructors.find(argc);
             return ctor == _data.constructors.end() ? nullptr : &ctor->second;
@@ -140,7 +140,7 @@ namespace sge
             }
         }
 
-        std::size_t num_named_constructors() const override
+        size_t num_named_constructors() const override
         {
             return _data.named_constructors.size();
         }
@@ -159,7 +159,7 @@ namespace sge
             }
         }
 
-        std::size_t num_properties() const override
+        size_t num_properties() const override
         {
             return _data.properties.size();
         }
@@ -178,7 +178,7 @@ namespace sge
             }
         }
 
-        std::size_t num_fields() const override
+        size_t num_fields() const override
         {
             return _data.fields.size();
         }

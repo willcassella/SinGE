@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/base/reflection/arg_any.h"
 #include "lib/base/reflection/reflection.h"
 
@@ -228,7 +230,7 @@ namespace sge
             PropertyInfo::Data basePropData;
             basePropData.type = &sge::get_type<FieldT>();
             basePropData.flags = propertyFlags;
-            basePropData.index = (uint32)type_data.properties.size();
+            basePropData.index = (uint32_t)type_data.properties.size();
 
             NativePropertyInfo::Data propData;
             propData.getter = Self::create_field_getter(field);
@@ -253,7 +255,7 @@ namespace sge
             PropertyInfo::Data basePropData;
             basePropData.type = &sge::get_type<FieldT>();
             basePropData.flags = propertyFlags;
-            basePropData.index = (uint32)type_data.properties.size();
+            basePropData.index = (uint32_t)type_data.properties.size();
 
             NativePropertyInfo::Data propData;
             Self::create_field_getter(propData, field);
@@ -265,7 +267,7 @@ namespace sge
 
     private:
         template <typename FieldT>
-        static std::size_t get_field_offset(FieldT T::*field)
+        static size_t get_field_offset(FieldT T::*field)
         {
             // Bit of a hack, but necessary. If this becomes problematic, I can replace the field offset with a getter/setter std::function pair or something.
             // Though that would be much less performant.
@@ -281,7 +283,7 @@ namespace sge
             PropertyInfo::Data basePropData;
             basePropData.type = &sge::get_type<PropT>();
             basePropData.flags = flags;
-            basePropData.index = (uint32)type_data.properties.size();
+            basePropData.index = (uint32_t)type_data.properties.size();
 
             NativePropertyInfo::Data propData;
             propData.getter = Self::create_getter<PropT>(getter);
@@ -297,7 +299,7 @@ namespace sge
             PropertyInfo::Data basePropData;
             basePropData.type = &sge::get_type<PropT>();
             basePropData.flags = flags;
-            basePropData.index = (uint32)type_data.properties.size();
+            basePropData.index = (uint32_t)type_data.properties.size();
 
             NativePropertyInfo::Data propData;
             propData.getter = Self::create_getter<PropT>(getter);
@@ -310,7 +312,7 @@ namespace sge
         {
             FieldInfo::Data fieldData;
             fieldData.flags = flags;
-            fieldData.index = (uint32)type_data.fields.size();
+            fieldData.index = (uint32_t)type_data.fields.size();
             fieldData.type = &sge::get_type<FieldT>();
             fieldData.offset = Self::get_field_offset(field);
 
@@ -560,7 +562,7 @@ namespace sge
         {
             PropertyInfo::Data base_prop_data;
             base_prop_data.flags = flags;
-            base_prop_data.index = (uint32)enum_data.values.size();
+            base_prop_data.index = (uint32_t)enum_data.values.size();
             base_prop_data.type = &sge::get_type<bool>();
 
             EnumPropertyInfo::Data prop_data;

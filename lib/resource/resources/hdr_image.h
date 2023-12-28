@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/resource/resources/image.h"
 
 namespace sge
@@ -18,11 +20,11 @@ namespace sge
 
         bool from_file(const char* path);
 
-        byte get_num_channels() const;
+        uint8_t get_num_channels() const;
 
-        int32 get_width() const;
+        int32_t get_width() const;
 
-        int32 get_height() const;
+        int32_t get_height() const;
 
         float* get_bits();
 
@@ -30,6 +32,6 @@ namespace sge
 
     private:
         FIBITMAP* _bitmap;
-        byte _num_channels;
+        uint8_t _num_channels;
     };
 }

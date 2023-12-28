@@ -1,12 +1,14 @@
+#include <stdint.h>
+
 #include "lib/base/env.h"
 #include "lib/resource/misc/lightmask_volume.h"
 
 namespace sge
 {
     void create_lightmask_volume_frustum_elems(
-        uint32* out_elems)
+        uint32_t* out_elems)
     {
-        constexpr uint32 elems[NUM_FRUSTUM_ELEMS] = {
+        constexpr uint32_t elems[NUM_FRUSTUM_ELEMS] = {
             // Near face
             2, 8, 5,
             2, 11, 8,

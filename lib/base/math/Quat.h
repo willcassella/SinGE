@@ -14,7 +14,7 @@ namespace sge
         {
         }
 
-        Quat(Scalar x, Scalar y, Scalar z, Scalar w)
+        Quat(float x, float y, float z, float w)
             : _values{x, y, z, w}
         {
         }
@@ -26,43 +26,43 @@ namespace sge
         {
             // Make sure the axis vector is normalized
             const auto normAxis = axis.normalized();
-            const auto sinHalfAngle = std::sin(angle * Scalar{0.5});
+            const auto sinHalfAngle = sinf(angle * float{0.5});
 
             x(normAxis.x() * sinHalfAngle);
             y(normAxis.y() * sinHalfAngle);
             z(normAxis.z() * sinHalfAngle);
-            w(std::cos(angle * Scalar{0.5}));
+            w(cosf(angle * float{0.5}));
         }
 
-        Scalar x() const
+        float x() const
         {
             return _values[0];
         }
-        void x(Scalar x)
+        void x(float x)
         {
             _values[0] = x;
         }
-        Scalar y() const
+        float y() const
         {
             return _values[1];
         }
-        void y(Scalar y)
+        void y(float y)
         {
             _values[1] = y;
         }
-        Scalar z() const
+        float z() const
         {
             return _values[2];
         }
-        void z(Scalar z)
+        void z(float z)
         {
             _values[2] = z;
         }
-        Scalar w() const
+        float w() const
         {
             return _values[3];
         }
-        void w(Scalar w)
+        void w(float w)
         {
             _values[3] = w;
         }
@@ -155,6 +155,6 @@ namespace sge
         }
 
     private:
-        Scalar _values[4];
+        float _values[4];
     };
 }

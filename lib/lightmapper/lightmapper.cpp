@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
-#include <cmath>
+#include <math.h>
+#include <stdint.h>
 
 #include <embree4/rtcore.h>
 #include <embree4/rtcore_ray.h>
@@ -20,7 +21,7 @@ namespace sge
         return Vec3{ u, v, 1.f - u - v };
     }
 
-    static Vec3 get_barycentric(const IVec2<int32>* tri, IVec2<int32> point)
+    static Vec3 get_barycentric(const IVec2<int32_t>* tri, IVec2<int32_t> point)
     {
         // Calculate the Barycentric coordinates of the point
         const float u = float((tri[1].y() - tri[2].y()) * (point.x() - tri[2].x()) + (tri[2].x() - tri[1].x()) * (point.y() - tri[2].y())) /
@@ -54,13 +55,13 @@ namespace sge
         RTCDevice rtc_device;
         RTCScene rtc_scene;
         const LightmapOccluder* occluders;
-        std::size_t num_occluders;
+        size_t num_occluders;
         void** norm_buffs;
     };
 
     LightmapScene* new_lightmap_scene(
         const LightmapOccluder* occluders,
-        std::size_t num_occluders)
+        size_t num_occluders)
     {
         // Create the scene
         auto* scene = new LightmapScene{};
@@ -68,11 +69,11 @@ namespace sge
         scene->rtc_scene = rtcDeviceNewScene(scene->rtc_device, RTC_SCENE_STATIC, RTC_INTERPOLATE | RTC_INTERSECT1 | RTC_INTERSECT8);
         scene->occluders = occluders;
         scene->num_occluders = num_occluders;
-        scene->norm_buffs = (void**)std::calloc(num_occluders, sizeof(void*));
+        scene->norm_buffs = (void**)calloc(num_occluders, sizeof(void*));
 
         // Fill it
         auto* const rtc_scene = scene->rtc_scene;
-        for (std::size_t occluder_i = 0; occluder_i < num_occluders; ++occluder_i)
+        for (size_t occluder_i = 0; occluder_i < num_occluders; ++occluder_i)
         {
             const auto* const occluder_mesh = occluders[occluder_i].mesh;
             const auto occluder_transform = occluders[occluder_i].world_transform;
@@ -81,9 +82,9 @@ namespace sge
             // Calculate the inverse transpose of the transformation matrix
             {
                 glm::mat4 inv_trans;
-                std::memcpy(&inv_trans, &occluder_transform, sizeof(Mat4));
+                memcpy(&inv_trans, &occluder_transform, sizeof(Mat4));
                 inv_trans = glm::transpose(glm::inverse(inv_trans));
-                std::memcpy(&occluder_inverse_transpose, &inv_trans, sizeof(Mat4));
+                memcpy(&occluder_inverse_transpose, &inv_trans, sizeof(Mat4));
             }
 
             // Create the mesh
@@ -104,7 +105,7 @@ namespace sge
             scene->norm_buffs[occluder_i] = norm_buffer;
 
             // Load in vertex positions and normals
-            for (std::size_t vert_i = 0; vert_i < num_verts; ++vert_i)
+            for (size_t vert_i = 0; vert_i < num_verts; ++vert_i)
             {
                 const auto pos = occluder_transform * vert_positions[vert_i];
                 const auto norm = occluder_inverse_transpose * Vec3{
@@ -123,7 +124,7 @@ namespace sge
             const auto num_triangle_elements = occluder_mesh->num_triangle_elements();
             const auto* const triangle_elements = occluder_mesh->triangle_elements();
             auto* index_buffer = (int*)rtcMapBuffer(rtc_scene, rtc_mesh, RTC_INDEX_BUFFER);
-            for (std::size_t index_i = 0; index_i < num_triangle_elements; ++index_i)
+            for (size_t index_i = 0; index_i < num_triangle_elements; ++index_i)
             {
                 index_buffer[index_i] = static_cast<int>(triangle_elements[index_i]);
             }
@@ -140,11 +141,11 @@ namespace sge
     {
         const auto norm_buffs = scene->norm_buffs;
         const auto num_occluders = scene->num_occluders;
-        for (std::size_t i = 0; i < num_occluders; ++i)
+        for (size_t i = 0; i < num_occluders; ++i)
         {
             sge::aligned_free(norm_buffs[i]);
         }
-        std::free(norm_buffs);
+        free(norm_buffs);
 
         // Destroy rtc resources
         rtcDeleteScene(scene->rtc_scene);
@@ -156,17 +157,17 @@ namespace sge
 
     void generate_lightmap_texels(
         const LightmapObject* objects,
-        std::size_t num_objects,
-        int32 width,
-        int32 height,
+        size_t num_objects,
+        int32_t width,
+        int32_t height,
         LightmapTexel* out_texels,
-        byte* out_texel_mask)
+        uint8_t* out_texel_mask)
     {
         // Initialize the mask to 0
-        std::memset(out_texel_mask, 0, width * height);
+        memset(out_texel_mask, 0, width * height);
 
         // For each object
-        for (std::size_t mesh_i = 0; mesh_i < num_objects; ++mesh_i)
+        for (size_t mesh_i = 0; mesh_i < num_objects; ++mesh_i)
         {
             // Get the properties of the submesh
             const auto mesh_transform = objects[mesh_i].world_transform;
@@ -175,9 +176,9 @@ namespace sge
             // Construct inverse transpose matrix
             {
                 glm::mat4 inverse_trans;
-                std::memcpy(&inverse_trans, &mesh_transform, sizeof(Mat4));
+                memcpy(&inverse_trans, &mesh_transform, sizeof(Mat4));
                 inverse_trans = glm::transpose(glm::inverse(inverse_trans));
-                std::memcpy(&mesh_inverse_transpose, &inverse_trans, sizeof(Mat4));
+                memcpy(&mesh_inverse_transpose, &inverse_trans, sizeof(Mat4));
             }
 
             const auto num_triangles = objects[mesh_i].mesh->num_triangles();
@@ -189,29 +190,29 @@ namespace sge
             const auto* const triangle_bitangent_signs = objects[mesh_i].mesh->bitangent_signs();
 
             // For each triangle
-            for (std::size_t tri_i = 0; tri_i < num_triangles; ++tri_i)
+            for (size_t tri_i = 0; tri_i < num_triangles; ++tri_i)
             {
                 // Get vertex indices for this triangle
-                uint32 vert_indices[3];
-                std::memcpy(vert_indices, triangle_elements + tri_i * 3, sizeof(uint32) * 3);
+                uint32_t vert_indices[3];
+                memcpy(vert_indices, triangle_elements + tri_i * 3, sizeof(uint32_t) * 3);
 
                 // The properties of each vertex on the triangle
-                IVec2<int32> vert_uv_coords[3];
+                IVec2<int32_t> vert_uv_coords[3];
                 Vec3 vert_pos[3];
                 Vec3 vert_norms[3];
                 Vec3 vert_tans[3];
                 Vec3 vert_btans[3];
 
                 // The min and max UV coordinates of the triangle
-                int32 min_x = INT32_MAX, min_y = INT32_MAX, max_x = 0, max_y = 0;
+                int32_t min_x = INT32_MAX, min_y = INT32_MAX, max_x = 0, max_y = 0;
 
                 // For each vert in the triangle
                 for (int vert_i = 0; vert_i < 3; ++vert_i)
                 {
                     // Convert the normalized UV coordinates to image coordinates
                     UHalfVec2 coord = lightmap_uv[vert_indices[vert_i]];
-                    const int32 x = static_cast<int32>(coord.norm_f32_x() * width);
-                    const int32 y = static_cast<int32>(coord.norm_f32_y() * height);
+                    const int32_t x = static_cast<int32_t>(coord.norm_f32_x() * width);
+                    const int32_t y = static_cast<int32_t>(coord.norm_f32_y() * height);
 
                     // Set the coordinates
                     vert_uv_coords[vert_i].x(x);
@@ -250,9 +251,9 @@ namespace sge
                 const auto base_color = objects[mesh_i].base_color;
 
                 // Iterate from min to max
-                for (int32 y = min_y; y < max_y; ++y)
+                for (int32_t y = min_y; y < max_y; ++y)
                 {
-                    for (int32 x = min_x; x <= max_x; ++x)
+                    for (int32_t x = min_x; x <= max_x; ++x)
                     {
                         // Get the barycentric coordinates for this point
                         const auto bary_coords = get_barycentric(vert_uv_coords, { x, y });
@@ -278,7 +279,7 @@ namespace sge
                         };
 
                         // Assign to texel element
-                        const std::size_t index = x + y * width;
+                        const size_t index = x + y * width;
                         out_texels[index].world_pos = Vec4{ pixel_pos, 0.f };
                         out_texels[index].TBN = TBN;
                         out_texels[index].base_color = base_color;
@@ -293,14 +294,14 @@ namespace sge
 
     void compute_ambient_radiance(
         color::RGBF32 ambient,
-        int32 width,
-        int32 height,
-        const byte* texel_mask,
+        int32_t width,
+        int32_t height,
+        const uint8_t* texel_mask,
         color::RGBF32* out_radiance)
     {
-        for (int32 y = 0; y < height; ++y)
+        for (int32_t y = 0; y < height; ++y)
         {
-            for (int32 x = 0; x < width; ++x)
+            for (int32_t x = 0; x < width; ++x)
             {
                 if (!texel_mask[x + y * width])
                 {
@@ -315,10 +316,10 @@ namespace sge
     void compute_direct_irradiance(
         const LightmapScene* scene,
         LightmapLight light,
-        int32 width,
-        int32 height,
+        int32_t width,
+        int32_t height,
         const LightmapTexel* texels,
-        const byte* texel_mask,
+        const uint8_t* texel_mask,
         color::RGBF32* out_irradiance)
     {
         // Get the scene
@@ -330,12 +331,12 @@ namespace sge
         // Determine how long the ray should be
         const float ray_len = std::numeric_limits<float>::max();
 
-        for (int32 y = 0; y < height; ++y)
+        for (int32_t y = 0; y < height; ++y)
         {
-            for (int32 x = 0; x < width; ++x)
+            for (int32_t x = 0; x < width; ++x)
             {
                 // Get the index of this texel
-                const int32 index = x + y * width;
+                const int32_t index = x + y * width;
 
                 // Make sure this texel is enabled
                 if (!texel_mask[index])
@@ -350,8 +351,8 @@ namespace sge
 
                 // Create the ray
                 RTCRay light_ray;
-                std::memcpy(light_ray.org, texel_pos.vec(), sizeof(float) * 3);
-                std::memcpy(light_ray.dir, ray_dir.vec(), sizeof(float) * 3);
+                memcpy(light_ray.org, texel_pos.vec(), sizeof(float) * 3);
+                memcpy(light_ray.dir, ray_dir.vec(), sizeof(float) * 3);
                 light_ray.tnear = 0.0001f;
                 light_ray.tfar = ray_len;
                 light_ray.geomID = 1;
@@ -374,12 +375,12 @@ namespace sge
 
     void compute_indirect_radiance(
         const LightmapScene* scene,
-        int32 num_sample_sets,
-        int32 num_accumulations,
-        int32 width,
-        int32 height,
+        int32_t num_sample_sets,
+        int32_t num_accumulations,
+        int32_t width,
+        int32_t height,
         const LightmapTexel* texels,
-        const byte* texel_mask,
+        const uint8_t* texel_mask,
         color::RGBF32* SGE_RESTRICT out_x_basis_radiance,
         color::RGBF32* SGE_RESTRICT out_y_basis_radiance,
         color::RGBF32* SGE_RESTRICT out_z_basis_radiance,
@@ -391,7 +392,7 @@ namespace sge
         const float normalization_factor = 1.f / (static_cast<float>(num_sample_sets * num_accumulations) * RAY_SET_SIZE) * 2;
 
         // Create the ray valid mask
-        alignas(32) std::array<uint32, RAY_SET_SIZE> valid_mask;
+        alignas(32) std::array<uint32_t, RAY_SET_SIZE> valid_mask;
         valid_mask.fill(0xFFFFFFFF);
         std::array<Vec3, RAY_SET_SIZE> ray_dirs;
 
@@ -401,12 +402,12 @@ namespace sge
         const auto basis_z = get_lightmap_z_basis_vector();
 
         // Iterate from min to max
-        for (int32 y = 0; y < height; ++y)
+        for (int32_t y = 0; y < height; ++y)
         {
-            for (int32 x = 0; x < width; ++x)
+            for (int32_t x = 0; x < width; ++x)
             {
                 // Get the index of this texel
-                const int32 texel_index = x + y * width;
+                const int32_t texel_index = x + y * width;
 
                 // Make sure this texel isn't masked out
                 if (!texel_mask[texel_index])
@@ -499,12 +500,12 @@ namespace sge
                         const auto* const hit_elems = hit_mesh.mesh->triangle_elements() + indirect_rays.primID[i] * 3;
 
                         // Calculate the uv coordinates for the hit triangle
-                        IVec2<int32> hit_tri_lm_uvs[3];
+                        IVec2<int32_t> hit_tri_lm_uvs[3];
                         for (int vert_i = 0; vert_i < 3; ++vert_i)
                         {
                             const auto lm_uv = hit_mesh.mesh->lightmap_uv()[hit_elems[vert_i]];
-                            hit_tri_lm_uvs[vert_i].x(static_cast<int32>(lm_uv.norm_f32_x() * INT32_MAX));
-                            hit_tri_lm_uvs[vert_i].y(static_cast<int32>(lm_uv.norm_f32_y() * INT32_MAX));
+                            hit_tri_lm_uvs[vert_i].x(static_cast<int32_t>(lm_uv.norm_f32_x() * INT32_MAX));
+                            hit_tri_lm_uvs[vert_i].y(static_cast<int32_t>(lm_uv.norm_f32_y() * INT32_MAX));
                         }
 
                         // Calculate the hit uv coordinate
@@ -514,9 +515,9 @@ namespace sge
                         const auto hit_lm_uv = bary_interpolate(hit_bary, hit_tri_lm_uvs);
 
                         // Calculate the hit irradiance uv coordinates
-                        auto hit_irradiance_uv = IVec2<int32>{
-                            static_cast<int32>(hit_lm_uv.norm_f32_x() * hit_mesh.irradiance_width),
-                            static_cast<int32>(hit_lm_uv.norm_f32_y() * hit_mesh.irradiance_height) };
+                        auto hit_irradiance_uv = IVec2<int32_t>{
+                            static_cast<int32_t>(hit_lm_uv.norm_f32_x() * hit_mesh.irradiance_width),
+                            static_cast<int32_t>(hit_lm_uv.norm_f32_y() * hit_mesh.irradiance_height) };
 
                         // Clamp irradiance UV
                         hit_irradiance_uv.x(std::max(std::min(hit_mesh.irradiance_width, hit_irradiance_uv.x()), 0));
@@ -552,16 +553,16 @@ namespace sge
     }
 
     void lightmap_postprocess(
-        int32 width,
-        int32 height,
-        int32 num_steps,
+        int32_t width,
+        int32_t height,
+        int32_t num_steps,
         color::RGBF32* lightmap)
     {
         // Create a copy of the image
         std::vector<color::RGBF32> temp;
         temp.assign(width * height, color::RGBF32::black());
 
-        for (int32 i = 0; i < num_steps; ++i)
+        for (int32_t i = 0; i < num_steps; ++i)
         {
             image_ops::dilate_rgbf(lightmap->vec(), width, height, 3, temp.data()->vec());
             image_ops::smooth_rgbf(temp.data()->vec(), width, height, 3, lightmap->vec());

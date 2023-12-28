@@ -87,25 +87,25 @@ namespace sge
 
         bool equality_compare(const void *lhs, const void *rhs) const override;
 
-        std::size_t num_constructors() const override;
+        size_t num_constructors() const override;
 
-        const ConstructorInfo *find_constructor(std::size_t argc) const override;
+        const ConstructorInfo *find_constructor(size_t argc) const override;
 
         void enumerate_constructors(FunctionView<ConstructorEnumeratorFn> enumerator) const override;
 
-        std::size_t num_named_constructors() const override;
+        size_t num_named_constructors() const override;
 
         const ConstructorInfo *find_named_constructor(const char *name) const override;
 
         void enumerate_named_constructors(FunctionView<NamedConstructorEnumeratorFn> enumerator) const override;
 
-        std::size_t num_properties() const override;
+        size_t num_properties() const override;
 
         const PropertyInfo *find_property(const char *name) const override;
 
         void enumerate_properties(FunctionView<PropertyEnumeratorFn> enumerator) const override;
 
-        std::size_t num_fields() const override;
+        size_t num_fields() const override;
 
         const FieldInfo *find_field(const char *name) const override;
 

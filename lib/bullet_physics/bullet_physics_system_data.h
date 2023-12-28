@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <stdint.h>
 
 #include "lib/bullet_physics/bullet_physics_system.h"
 #include "lib/bullet_physics/physics_world.h"
@@ -45,7 +46,7 @@ namespace sge
 
             void release_static_mesh_collider(StaticMeshCollider& collider);
 
-            uint64 last_frame_id = 0;
+            uint64_t last_frame_id = 0;
 
             std::map<NodeId, std::unique_ptr<PhysicsEntity>> physics_entities;
 

@@ -31,7 +31,6 @@ cxx_library(
         "reflection/constructor_info.h",
         "reflection/enum_type_info.h",
         "reflection/field_info.h",
-        "reflection/function_info.h",
         "reflection/interface_info.h",
         "reflection/native_constructor_info.h",
         "reflection/native_property_info.h",

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/base/reflection/reflection.h"
 #include "lib/resource/misc/color.h"
 
@@ -23,13 +25,13 @@ namespace sge
 
         void to_archive(ArchiveWriter& archive) const;
 
-        uint32 get_width() const;
+        uint32_t get_width() const;
 
-        uint32 get_height() const;
+        uint32_t get_height() const;
 
-        byte* get_bitmap();
+        uint8_t* get_bitmap();
 
-        const byte* get_bitmap() const;
+        const uint8_t* get_bitmap() const;
 
     private:
         FIBITMAP* _bitmap;

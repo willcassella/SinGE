@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include <FreeImage.h>
 
 #include "lib/base/interfaces/to_archive.h"
@@ -12,12 +14,12 @@ SGE_REFLECT_TYPE(sge::Image)
 
 namespace sge
 {
-    static void swap_red_and_blue_32(byte* bitmap, std::size_t num_pixels)
+    static void swap_red_and_blue_32(uint8_t* bitmap, size_t num_pixels)
     {
-        for (std::size_t i = 0; i < num_pixels; ++i)
+        for (size_t i = 0; i < num_pixels; ++i)
         {
-            const std::size_t pixel_offset = i * 4;
-            const byte temp = bitmap[pixel_offset];
+            const size_t pixel_offset = i * 4;
+            const uint8_t temp = bitmap[pixel_offset];
             bitmap[pixel_offset] = bitmap[pixel_offset + 2];
             bitmap[pixel_offset + 2] = temp;
         }
@@ -94,22 +96,22 @@ namespace sge
         writer.pop();
     }
 
-    uint32 Image::get_width() const
+    uint32_t Image::get_width() const
     {
         return FreeImage_GetWidth(_bitmap);
     }
 
-    uint32 Image::get_height() const
+    uint32_t Image::get_height() const
     {
         return FreeImage_GetHeight(_bitmap);
     }
 
-    byte* Image::get_bitmap()
+    uint8_t* Image::get_bitmap()
     {
         return FreeImage_GetBits(_bitmap);
     }
 
-    const byte* Image::get_bitmap() const
+    const uint8_t* Image::get_bitmap() const
     {
         return FreeImage_GetBits(_bitmap);
     }

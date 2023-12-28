@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "lib/engine/util/debug_draw.h"
 #include "lib/gl_render/gl_render_system_state.h"
 
@@ -11,12 +13,12 @@ namespace sge
             frame_debug_lines.clear();
 
             DebugLine lines[64];
-            int32 num_lines;
+            int32_t num_lines;
             DebugLineVert verts[128];
             while (debug_line_channel.consume(subscriber_id, lines, &num_lines))
             {
                 // Fill in lines
-                for (int32 i = 0; i < num_lines; ++i)
+                for (int32_t i = 0; i < num_lines; ++i)
                 {
                     verts[i * 2].color_rgb = lines[i].color;
                     verts[i * 2].world_position = lines[i].world_start;

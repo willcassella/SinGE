@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdint.h>
 
 #include "lib/bullet_physics/colliders.h"
 #include "lib/bullet_physics/physics_entity.h"
@@ -22,12 +23,12 @@ namespace sge
         {
             // Get events
             ENewComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (new_sphere_collider_channel.consume(subscriber_id, events, &num_events))
             {
                 NodeId node_ids[8];
                 const CSphereCollider* components[8];
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     node_ids[i] = events[i].node;
                     components[i] = (const CSphereCollider*)events[i].instance;
@@ -37,7 +38,7 @@ namespace sge
                 const Node* nodes[8];
                 scene.get_nodes(node_ids, num_events, nodes);
 
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     // Add the sphere collider
                     auto& physics_entity = phys_data.get_or_create_physics_entity(node_ids[i], *nodes[i]);
@@ -59,10 +60,10 @@ namespace sge
         {
             // Get events
             EDestroyedComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (destroyed_sphere_collider_channel.consume(subscriber_id, events, &num_events))
             {
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     NodeId node = events[i].node;
 
@@ -85,10 +86,10 @@ namespace sge
         {
             // Get events
             EModifiedComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (modified_sphere_collider_channel.consume(subscriber_id, events, &num_events))
             {
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     const NodeId node = events[i].node;
                     const auto* const component = (const CSphereCollider*)events[i].instance;
@@ -114,12 +115,12 @@ namespace sge
         {
             // Get events
             ENewComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (new_box_collider_channel.consume(subscriber_id, events, &num_events))
             {
                 NodeId node_ids[8];
                 const CBoxCollider* components[8];
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     node_ids[i] = events[i].node;
                     components[i] = (const CBoxCollider*)events[i].instance;
@@ -129,7 +130,7 @@ namespace sge
                 const Node* nodes[8];
                 scene.get_nodes(node_ids, num_events, nodes);
 
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     // Add the box collider
                     auto& physics_entity = phys_data.get_or_create_physics_entity(node_ids[i], *nodes[i]);
@@ -151,10 +152,10 @@ namespace sge
         {
             // Get events
             EDestroyedComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (destroyed_box_collider_channel.consume(subscriber_id, events, &num_events))
             {
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     NodeId node = events[i].node;
 
@@ -179,10 +180,10 @@ namespace sge
         {
             // Get events
             EModifiedComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (modified_box_collider_channel.consume(subscriber_id, events, &num_events))
             {
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     NodeId node = events[i].node;
                     const auto* const component = (const CBoxCollider*)events[i].instance;
@@ -209,12 +210,12 @@ namespace sge
         {
             // Get events
             ENewComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (new_capsule_collider_channel.consume(subscriber_id, events, &num_events))
             {
                 NodeId node_ids[8];
                 const CCapsuleCollider* components[8];
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     node_ids[i] = events[i].node;
                     components[i] = (const CCapsuleCollider*)events[i].instance;
@@ -224,7 +225,7 @@ namespace sge
                 const Node* nodes[8];
                 scene.get_nodes(node_ids, num_events, nodes);
 
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     auto& phys_entity = phys_data.get_or_create_physics_entity(node_ids[i], *nodes[i]);
                     assert(phys_entity.capsule_collider == nullptr);
@@ -247,10 +248,10 @@ namespace sge
         {
             // Get events
             EDestroyedComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (destroyed_capsule_collider_channel.consume(subscriber_id, events, &num_events))
             {
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     NodeId node = events[i].node;
 
@@ -274,10 +275,10 @@ namespace sge
         {
             // Gete events
             EModifiedComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (modified_capsule_collider_channel.consume(subscriber_id, events, &num_events))
             {
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     const NodeId node = events[i].node;
                     const auto* const component = (const CCapsuleCollider*)events[i].instance;
@@ -303,12 +304,12 @@ namespace sge
         {
             // Get events
             ENewComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (new_static_mesh_collider_channel.consume(subscriber_id, events, &num_events))
             {
                 NodeId node_ids[8];
                 const CStaticMeshCollider* components[8];
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     node_ids[i] = events[i].node;
                     components[i] = (const CStaticMeshCollider*)events[i].instance;
@@ -318,7 +319,7 @@ namespace sge
                 const Node* nodes[8];
                 scene.get_nodes(node_ids, num_events, nodes);
 
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     // Get the base collider
                     auto* const base_collider = phys_data.get_static_mesh_collider(components[i]->mesh());
@@ -358,10 +359,10 @@ namespace sge
         {
             // Get events
             EDestroyedComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (destroyed_static_mesh_collider_channel.consume(subscriber_id, events, &num_events))
             {
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     const NodeId node = events[i].node;
 
@@ -395,12 +396,12 @@ namespace sge
         {
             // Get events
             EModifiedComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (modified_static_mesh_collider_channel.consume(subscriber_id, events, &num_events))
             {
                 NodeId node_ids[8];
                 const CStaticMeshCollider* components[8];
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     node_ids[i] = events[i].node;
                     components[i] = (const CStaticMeshCollider*)events[i].instance;
@@ -410,7 +411,7 @@ namespace sge
                 const Node* nodes[8];
                 scene.get_nodes(node_ids, num_events, nodes);
 
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     // If we only modified whether it was a lightmask receiver, just do that
                     if (events[i].property == "lightmask_receiver")

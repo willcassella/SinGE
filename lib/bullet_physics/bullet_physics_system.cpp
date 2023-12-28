@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "lib/base/reflection/reflection_builder.h"
 #include "lib/bullet_physics/bullet_physics_system.h"
 #include "lib/bullet_physics/bullet_physics_system_data.h"
@@ -34,10 +36,10 @@ namespace sge
         {
             // Get events
             ENodeTransformChanged events[8];
-            int32 num_events;
+            int32_t num_events;
             while (modified_transform_channel.consume(subscriber_id, events, &num_events))
             {
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     // Get the physics state for this transform
                     auto* phys_ent = phys_data.get_physics_entity(events[i].node->get_id());
@@ -61,9 +63,9 @@ namespace sge
         static void update_scene_nodes(
             Node* const* nodes,
             const PhysTransformedNode* transforms,
-            std::size_t num_transforms)
+            size_t num_transforms)
         {
-            for (std::size_t i = 0; i < num_transforms; ++i)
+            for (size_t i = 0; i < num_transforms; ++i)
             {
                 nodes[i]->set_local_position(transforms[i].world_transform);
                 nodes[i]->set_local_rotation(transforms[i].world_rotation);
@@ -305,11 +307,11 @@ namespace sge
             _data->phys_world.dynamics_world().stepSimulation(frame.time_delta(), 3);
 
             // Update scene transforms
-            const std::size_t num_transforms = _data->frame_transformed_nodes.size();
-            auto* const scene_nodes = (Node**)std::malloc(num_transforms * sizeof(Node*));
+            const size_t num_transforms = _data->frame_transformed_nodes.size();
+            auto* const scene_nodes = (Node**)malloc(num_transforms * sizeof(Node*));
             scene.get_nodes(_data->frame_transformed_nodes.data(), num_transforms, scene_nodes);
             update_scene_nodes(scene_nodes, _data->frame_transformed_node_transforms.data(), num_transforms);
-            std::free(scene_nodes);
+            free(scene_nodes);
 
             // Handle collision with portal component
             auto* const portal_component_container = scene.get_component_container(CLevelPortal::type_info);
@@ -379,7 +381,7 @@ namespace sge
             _data->phys_world.dynamics_world().setDebugDrawer(nullptr);
 
             // Add events to the channel
-            scene.get_debug_draw_line_channel()->append(drawer.lines.data(), (int32)drawer.lines.size());
+            scene.get_debug_draw_line_channel()->append(drawer.lines.data(), (int32_t)drawer.lines.size());
         }
     }
 }

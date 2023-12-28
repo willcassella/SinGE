@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cassert>
+#include <assert.h>
+#include <stdint.h>
 
 #include "lib/base/math/quat.h"
 
@@ -13,10 +14,10 @@ namespace sge
         /** Constructs a new 4x4 matrix
         default - identity matrix
         values - what to set each element of the matrix to */
-        Mat4(Scalar aa = 1.f, Scalar ba = 0.f, Scalar ca = 0.f, Scalar da = 0.f,
-             Scalar ab = 0.f, Scalar bb = 1.f, Scalar cb = 0.f, Scalar db = 0.f,
-             Scalar ac = 0.f, Scalar bc = 0.f, Scalar cc = 1.f, Scalar dc = 0.f,
-             Scalar ad = 0.f, Scalar bd = 0.f, Scalar cd = 0.f, Scalar dd = 1.f)
+        Mat4(float aa = 1.f, float ba = 0.f, float ca = 0.f, float da = 0.f,
+             float ab = 0.f, float bb = 1.f, float cb = 0.f, float db = 0.f,
+             float ac = 0.f, float bc = 0.f, float cc = 1.f, float dc = 0.f,
+             float ad = 0.f, float bd = 0.f, float cd = 0.f, float dd = 1.f)
         {
             _values[0][0] = aa;
             _values[1][0] = ba;
@@ -36,12 +37,12 @@ namespace sge
             _values[3][3] = dd;
         }
 
-        const Scalar *vec() const
+        const float *vec() const
         {
             return &_values[0][0];
         }
 
-        Scalar *vec()
+        float *vec()
         {
             return &_values[0][0];
         }
@@ -86,12 +87,12 @@ namespace sge
         Mat4 transposed() const;
 
         /** Generates a perspective projection matrix with the given properties */
-        static Mat4 perspective_projection(Angle hFOV, Angle vFOV, Scalar zMin, Scalar zMax)
+        static Mat4 perspective_projection(Angle hFOV, Angle vFOV, float zMin, float zMax)
         {
-            const auto xMax = std::tan(hFOV * 0.5f) * zMin;
+            const auto xMax = tanf(hFOV * 0.5f) * zMin;
             const auto xMin = -xMax;
 
-            const auto yMax = std::tan(vFOV * 0.5f) * zMin;
+            const auto yMax = tanf(vFOV * 0.5f) * zMin;
             const auto yMin = -yMax;
 
             const auto width = xMax - xMin;
@@ -106,23 +107,23 @@ namespace sge
         }
 
         /** Generates a perspective projection matrix with the following horizontal FOV */
-        static Mat4 perspective_projection_hfov(Angle hFOV, Scalar ratio, Scalar zMin, Scalar zMax)
+        static Mat4 perspective_projection_hfov(Angle hFOV, float ratio, float zMin, float zMax)
         {
             // Calculate vertical field of view
-            const Angle vFOV = 2 * std::atan(std::tan(hFOV * 0.5f) * (1.f / ratio));
+            const Angle vFOV = 2 * atanf(tanf(hFOV * 0.5f) * (1.f / ratio));
             return perspective_projection(hFOV, vFOV, zMin, zMax);
         }
 
         /** Generates a perspective projection matrix with the following vertical FOV */
-        static Mat4 perspective_project_vfov(Angle vFOV, Scalar ratio, Scalar zMin, Scalar zMax)
+        static Mat4 perspective_project_vfov(Angle vFOV, float ratio, float zMin, float zMax)
         {
             // Calculate horizontal field of view
-            const Angle hFOV = 2 * std::atan(std::tan(vFOV * 0.5f) * ratio);
+            const Angle hFOV = 2 * atanf(tanf(vFOV * 0.5f) * ratio);
             return perspective_projection(hFOV, vFOV, zMin, zMax);
         }
 
         /** Generates an orthographic projection matrix with the given properties */
-        static Mat4 orthographic_projection(Scalar xMin, Scalar xMax, Scalar yMin, Scalar yMax, Scalar zMin, Scalar zMax)
+        static Mat4 orthographic_projection(float xMin, float xMax, float yMin, float yMax, float zMin, float zMax)
         {
             const auto width = xMax - xMin;
             const auto height = yMax - yMin;
@@ -158,7 +159,7 @@ namespace sge
         /** Generates a transformation matrix representing a rotation */
         static Mat4 rotate(const Quat &rot)
         {
-            Scalar x, y, z, w;
+            float x, y, z, w;
             x = rot.x();
             y = rot.y();
             z = rot.z();
@@ -172,25 +173,25 @@ namespace sge
         }
 
         /** Gets the value at the specified column and row */
-        Scalar get(uint32 column, uint32 row) const
+        float get(uint32_t column, uint32_t row) const
         {
             assert(column < 4 && row < 4);
             return _values[column][row];
         }
 
         /** Sets the value at the specified column and row */
-        void set(uint32 column, uint32 row, Scalar value)
+        void set(uint32_t column, uint32_t row, float value)
         {
             assert(column < 4 && row < 4);
             _values[column][row] = value;
         }
 
-        Scalar *operator[](uint32 index)
+        float *operator[](uint32_t index)
         {
             assert(index < 16);
             return _values[index];
         }
-        const Scalar *operator[](uint32 index) const
+        const float *operator[](uint32_t index) const
         {
             assert(index < 16);
             return _values[index];
@@ -200,15 +201,15 @@ namespace sge
             Mat4 total;
 
             // For each row
-            for (uint32 row = 0; row < 4; ++row)
+            for (uint32_t row = 0; row < 4; ++row)
             {
                 // For each column
-                for (uint32 col = 0; col < 4; ++col)
+                for (uint32_t col = 0; col < 4; ++col)
                 {
-                    Scalar value = 0;
+                    float value = 0;
 
                     // For each addition
-                    for (uint32 i = 0; i < 4; ++i)
+                    for (uint32_t i = 0; i < 4; ++i)
                     {
                         // add them up
                         value += lhs.get(i, row) * rhs.get(col, i);
@@ -254,6 +255,6 @@ namespace sge
         }
 
     private:
-        Scalar _values[4][4];
+        float _values[4][4];
     };
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/engine/component.h"
 #include "lib/resource/resources/static_mesh.h"
 
@@ -50,21 +52,21 @@ namespace sge
 
         void lightmask_mode(LightmaskMode value);
 
-        uint32 lightmask_group() const;
+        uint32_t lightmask_group() const;
 
-        void lightmask_group(uint32 value);
+        void lightmask_group(uint32_t value);
 
         bool uses_lightmap() const;
 
         void set_uses_lightmap(bool value);
 
-        int32 lightmap_width() const;
+        int32_t lightmap_width() const;
 
-        void lightmap_width(int32 width);
+        void lightmap_width(int32_t width);
 
-        int32 lightmap_height() const;
+        int32_t lightmap_height() const;
 
-        void lightmap_height(int32 height);
+        void lightmap_height(int32_t height);
 
         Vec2 uv_scale() const;
 
@@ -77,10 +79,10 @@ namespace sge
         std::string _mesh;
         std::string _material;
         LightmaskMode _lightmask_mode = LightmaskMode::NONE;
-        uint32 _lightmask_group = 0;
+        uint32_t _lightmask_group = 0;
         bool _use_lightmap = false;
         Vec2 _uv_scale = { 1.f, 1.f };
-        IVec2<int32> _lightmap_size = { 512, 512 };
+        IVec2<int32_t> _lightmap_size = { 512, 512 };
         SharedData* _shared_data;
     };
 }

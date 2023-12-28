@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "lib/gl_render/gl_material.h"
 #include "lib/gl_render/gl_static_mesh.h"
 
@@ -10,11 +12,11 @@ namespace sge
             void upload_static_mesh_vertex_data(
                 GLuint vao,
                 const GLuint vertex_buffers[],
-                std::size_t num_vertices,
+                size_t num_vertices,
                 const Vec3* vertex_positions,
                 const HalfVec3* vertex_normals,
                 const HalfVec3* vertex_tangents,
-                const int8* vertex_bitangent_signs,
+                const int8_t* vertex_bitangent_signs,
                 const UHalfVec2* material_uv_coords,
                 const UHalfVec2* lightmap_uv_coords)
             {
@@ -77,8 +79,8 @@ namespace sge
             void upload_static_mesh_elements(
                 GLuint vao,
                 GLuint ebo,
-                std::size_t num_elements,
-                const uint32* elements)
+                size_t num_elements,
+                const uint32_t* elements)
             {
                 // Bind the vertex array object
                 glBindVertexArray(vao);
@@ -87,7 +89,7 @@ namespace sge
                 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
 
                 // Upload the data
-                glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_elements * sizeof(uint32), elements, GL_STATIC_DRAW);
+                glBufferData(GL_ELEMENT_ARRAY_BUFFER, num_elements * sizeof(uint32_t), elements, GL_STATIC_DRAW);
 
                 // Unbind
                 glBindVertexArray(0);

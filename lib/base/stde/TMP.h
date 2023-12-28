@@ -25,7 +25,7 @@ namespace sge
         template <typename ... T>
         struct list
         {
-            static constexpr std::size_t size()
+            static constexpr size_t size()
             {
                 return sizeof...(T);
             }
@@ -60,11 +60,11 @@ namespace sge
             template <typename ... Ts>
             struct len< list<Ts...> >
             {
-                static constexpr std::size_t result_v = sizeof...(Ts);
+                static constexpr size_t result_v = sizeof...(Ts);
             };
 
             /* Implements 'cdr_n'. */
-            template <typename SeqT, std::size_t N>
+            template <typename SeqT, size_t N>
             struct cdr_n
             {
                 using result_t = typename cdr_n<typename cdr<SeqT>::result_t, N - 1>::result_t;
@@ -88,14 +88,14 @@ namespace sge
 
         /* Returns the length of a sequence. */
         template <typename SeqT>
-        constexpr std::size_t len = impl::len<SeqT>::result_v;
+        constexpr size_t len = impl::len<SeqT>::result_v;
 
         /* Equivalent to calling 'cdr' N times. */
-        template <typename SeqT, std::size_t N>
+        template <typename SeqT, size_t N>
         using cdr_n = typename impl::cdr_n<SeqT, N>::result_t;
 
         /* Equivalent to calling 'cdr' N times, followed by 'car'. */
-        template <typename SeqT, std::size_t N>
+        template <typename SeqT, size_t N>
         using car_n = car<cdr_n<SeqT, N>>;
     }
 }

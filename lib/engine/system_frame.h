@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stack>
+#include <stdint.h>
 
 #include "lib/base/functional/ufunction.h"
 #include "lib/engine/update_pipeline.h"
@@ -17,7 +18,7 @@ namespace sge
 
         void yield();
 
-        uint64 frame_id() const;
+        uint64_t frame_id() const;
 
         float current_time() const;
 

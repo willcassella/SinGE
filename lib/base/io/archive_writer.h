@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdint.h>
 #include <string>
 
 #include "lib/base/build.h"
@@ -32,52 +33,52 @@ namespace sge
         virtual void boolean(bool value) = 0;
 
         /**
-         * \brief Sets this archive node as a numeric value of type int8.
+         * \brief Sets this archive node as a numeric value of type int8_t.
          * \param value The value to set.
          */
-        virtual void number(int8 value) = 0;
+        virtual void number(int8_t value) = 0;
 
         /**
-         * \brief Sets this archive node as a numeric value of type uint8.
+         * \brief Sets this archive node as a numeric value of type uint8_t.
          * \param value The value to set.
          */
-        virtual void number(uint8 value) = 0;
+        virtual void number(uint8_t value) = 0;
 
         /**
-         * \brief Sets this archive node as a numeric value of type int16.
+         * \brief Sets this archive node as a numeric value of type int16_t.
          * \param value The value to set.
          */
-        virtual void number(int16 value) = 0;
+        virtual void number(int16_t value) = 0;
 
         /**
-         * \brief Sets this archive node as a numeric value of type uint16.
+         * \brief Sets this archive node as a numeric value of type uint16_t.
          * \param value The value to set.
          */
-        virtual void number(uint16 value) = 0;
+        virtual void number(uint16_t value) = 0;
 
         /**
-         * \brief Sets this archive node as a numeric value of type int32.
+         * \brief Sets this archive node as a numeric value of type int32_t.
          * \param value The value to set.
          */
-        virtual void number(int32 value) = 0;
+        virtual void number(int32_t value) = 0;
 
         /**
-         * \brief Sets this archive node as a numeric value of type uint32.
+         * \brief Sets this archive node as a numeric value of type uint32_t.
          * \param value The value to set.
          */
-        virtual void number(uint32 value) = 0;
+        virtual void number(uint32_t value) = 0;
 
         /**
-         * \brief Sets this archive node as a numeric value of type int64.
+         * \brief Sets this archive node as a numeric value of type int64_t.
          * \param value The value to set.
          */
-        virtual void number(int64 value) = 0;
+        virtual void number(int64_t value) = 0;
 
         /**
-         * \brief Sets this archive node as a numeric value of type uint64.
+         * \brief Sets this archive node as a numeric value of type uint64_t.
          * \param value The value to set.
          */
-        virtual void number(uint64 value) = 0;
+        virtual void number(uint64_t value) = 0;
 
         /**
          * \brief Sets this archive node as a numeric value of type float.
@@ -96,84 +97,84 @@ namespace sge
          * \param str Address of the the first character of the string.
          * \param len The length of the string.
          */
-        virtual void string(const char *str, std::size_t len) = 0;
+        virtual void string(const char *str, size_t len) = 0;
 
         /**
          * \brief Sets this archive node as an array of all type bool.
          * \param array A pointer to the first element of the array.
          * \param size The number of elements in the array.
          */
-        virtual void typed_array(const bool *array, std::size_t size) = 0;
+        virtual void typed_array(const bool *array, size_t size) = 0;
 
         /**
-         * \brief Sets this archive node as an array of all type int8.
+         * \brief Sets this archive node as an array of all type int8_t.
          * \param array A pointer to the first element of the array.
          * \param size The number of elements in the array.
          */
-        virtual void typed_array(const int8 *array, std::size_t size) = 0;
+        virtual void typed_array(const int8_t *array, size_t size) = 0;
 
         /**
-         * \brief Sets this archive node as an array of all type uint8.
+         * \brief Sets this archive node as an array of all type uint8_t.
          * \param array A pointer to the first element of the array.
          * \param size The number of elements in the array.
          */
-        virtual void typed_array(const uint8 *array, std::size_t size) = 0;
+        virtual void typed_array(const uint8_t *array, size_t size) = 0;
 
         /**
-         * \brief Sets this archive node as an array of all type int16.
+         * \brief Sets this archive node as an array of all type int16_t.
          * \param array A pointer to the first element of the array.
          * \param size The number of elements in the array.
          */
-        virtual void typed_array(const int16 *array, std::size_t size) = 0;
+        virtual void typed_array(const int16_t *array, size_t size) = 0;
 
         /**
-         * \brief Sets this archive node as an array of all type uint16.
+         * \brief Sets this archive node as an array of all type uint16_t.
          * \param array A pointer to the first element of the array.
          * \param size The number of elements in the array.
          */
-        virtual void typed_array(const uint16 *array, std::size_t size) = 0;
+        virtual void typed_array(const uint16_t *array, size_t size) = 0;
 
         /**
-         * \brief Sets this archive node as an array of all type int32.
+         * \brief Sets this archive node as an array of all type int32_t.
          * \param array A pointer to the first element of the array.
          * \param size The number of elements in the array.
          */
-        virtual void typed_array(const int32 *array, std::size_t size) = 0;
+        virtual void typed_array(const int32_t *array, size_t size) = 0;
 
         /**
-         * \brief Sets this archive node as an array of all type uint32.
+         * \brief Sets this archive node as an array of all type uint32_t.
          * \param array A pointer to the first element of the array.
          * \param size The number of elements in the array.
          */
-        virtual void typed_array(const uint32 *array, std::size_t size) = 0;
+        virtual void typed_array(const uint32_t *array, size_t size) = 0;
 
         /**
-         * \brief Sets this archive node as an array of all type int64.
+         * \brief Sets this archive node as an array of all type int64_t.
          * \param array A pointer to the first element of the array.
          * \param size The number of elements in the array.
          */
-        virtual void typed_array(const int64 *array, std::size_t size) = 0;
+        virtual void typed_array(const int64_t *array, size_t size) = 0;
 
         /**
-         * \brief Sets this archive node as an array of all type uint64.
+         * \brief Sets this archive node as an array of all type uint64_t.
          * \param array A pointer to the first element of the array.
          * \param size The number of elements in the array.
          */
-        virtual void typed_array(const uint64 *array, std::size_t size) = 0;
+        virtual void typed_array(const uint64_t *array, size_t size) = 0;
 
         /**
          * \brief Sets this archive node as an array of all type float.
          * \param array A pointer to the first element of the array.
          * \param size The number of elements in the array.
          */
-        virtual void typed_array(const float *array, std::size_t size) = 0;
+        virtual void typed_array(const float *array, size_t size) = 0;
 
         /**
          * \brief Sets this archive node as an array of all type double.
          * \param array A pointer to the first element of the array.
          * \param size The number of elements in the array.
          */
-        virtual void typed_array(const double *array, std::size_t size) = 0;
+        virtual void typed_array(const double *array, size_t size) = 0;
 
         virtual void push_array_element() = 0;
 

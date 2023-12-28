@@ -4,13 +4,13 @@
 
 namespace sge
 {
-    /* Wrapper for 'std::malloc', prevents the issue of freeing memory across DLL boundaries. */
-    SGE_BASE_EXPORT void *malloc(std::size_t size);
+    /* Wrapper for 'malloc', prevents the issue of freeing memory across DLL boundaries. */
+    SGE_BASE_EXPORT void *malloc(size_t size);
 
-    /* Wrapper for 'std::free', prevents the issue of freeing memory across DLL boundaries. */
+    /* Wrapper for 'free', prevents the issue of freeing memory across DLL boundaries. */
     SGE_BASE_EXPORT void free(void *buff);
 
-    SGE_BASE_EXPORT void *aligned_alloc(std::size_t size, std::size_t alignment);
+    SGE_BASE_EXPORT void *aligned_alloc(size_t size, size_t alignment);
 
     SGE_BASE_EXPORT void aligned_free(void *buffer);
 }

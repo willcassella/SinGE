@@ -30,7 +30,7 @@ namespace sge
 
             // Figure out the size of the file
             file.seekg(0, std::ios::end);
-            std::size_t len = static_cast<std::size_t>(file.tellg());
+            size_t len = static_cast<size_t>(file.tellg());
             file.seekg(0);
 
             // Allocate a string for the source code

@@ -47,10 +47,10 @@ namespace sge
             return result.str();
         }
 
-        std::size_t RGBA8::from_string(const char* str, std::size_t /*len*/)
+        size_t RGBA8::from_string(const char* str, size_t /*len*/)
         {
             char* end = nullptr;
-            color = std::strtoul(str, &end, 16);
+            color = strtoul(str, &end, 16);
             return end - str;
         }
 
@@ -62,7 +62,7 @@ namespace sge
         void RGBA8::from_archive(ArchiveReader& reader)
         {
             // Get the length of the string
-            std::size_t len = 0;
+            size_t len = 0;
             if (!reader.string_size(len))
             {
                 return;
@@ -74,7 +74,7 @@ namespace sge
             buff[len] = 0;
 
             // Set the value from the string
-            color = std::strtoul(buff, nullptr, 16);
+            color = strtoul(buff, nullptr, 16);
         }
 
         void RGBF32::to_archive(ArchiveWriter& writer) const

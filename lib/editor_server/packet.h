@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cstring>
+#include <stdint.h>
+#include <string.h>
 
 #include "lib/base/memory/functions.h"
 
@@ -13,7 +14,7 @@ namespace sge
             /**
              * \brief Represents the sequence number of the packet (global packets always have sequence number 0).
              */
-            using SequenceNumber_t = uint32;
+            using SequenceNumber_t = uint32_t;
 
             /**
              * \brief Sequence number used when there is no corresponding sequence number to send.
@@ -23,32 +24,32 @@ namespace sge
             /**
              * \brief Offset of the sequence number object in the header.
              */
-            static constexpr std::size_t HEADER_SEQUENCE_NUMBER_OFFSET = 0;
+            static constexpr size_t HEADER_SEQUENCE_NUMBER_OFFSET = 0;
 
             /**
              * \brief The content length proceeds the message.
              */
-            using ContentLength_t = uint32;
+            using ContentLength_t = uint32_t;
 
             /**
              * \brief Offset of the content length object in the header.
              */
-            static constexpr std::size_t HEADER_CONTENT_LENGTH_OFFSET = HEADER_SEQUENCE_NUMBER_OFFSET + sizeof(SequenceNumber_t);
+            static constexpr size_t HEADER_CONTENT_LENGTH_OFFSET = HEADER_SEQUENCE_NUMBER_OFFSET + sizeof(SequenceNumber_t);
 
             /**
              * \brief Size of header data (everything but content).
              */
-            static constexpr std::size_t HEADER_SIZE = HEADER_CONTENT_LENGTH_OFFSET + sizeof(ContentLength_t);
+            static constexpr size_t HEADER_SIZE = HEADER_CONTENT_LENGTH_OFFSET + sizeof(ContentLength_t);
 
             /**
              * \brief Offset of the content in the packet buffer.
              */
-            static constexpr std::size_t PACKET_CONTENT_OFFSET = HEADER_SIZE;
+            static constexpr size_t PACKET_CONTENT_OFFSET = HEADER_SIZE;
 
             /**
              * \brief Type used to represent a packet header.
              */
-            using Header_t = byte[HEADER_SIZE];
+            using Header_t = uint8_t[HEADER_SIZE];
 
             static Packet* encode_packet(SequenceNumber_t sequence_number, const char* str, ContentLength_t len)
             {
@@ -62,7 +63,7 @@ namespace sge
                 new (packet + HEADER_CONTENT_LENGTH_OFFSET) ContentLength_t(len);
 
                 // Copy the content into the packet
-                std::memcpy(packet + PACKET_CONTENT_OFFSET, str, len);
+                memcpy(packet + PACKET_CONTENT_OFFSET, str, len);
 
                 return packet;
             }
@@ -87,7 +88,7 @@ namespace sge
             /**
              * \brief Returns the total size of this packet.
              */
-            std::size_t packet_size() const
+            size_t packet_size() const
             {
                 return HEADER_SIZE + content_length(packet_header());
             }

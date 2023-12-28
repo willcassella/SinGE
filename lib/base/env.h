@@ -1,9 +1,7 @@
-// env.h - Copyright 2013-2016 Will Cassella, All Rights Reserved
 /** All macros for determining compiler and build environment go here */
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
+#include <stddef.h>
 
 /** Detect Unix (OSX/Linux) */
 #if defined(unix) || defined(__unix__) || defined(__unix)
@@ -46,26 +44,6 @@
 #endif
 #endif
 
-namespace sge
-{
-    // bool is still bool
-    // char is still char
-    using int8 = std::int8_t;
-    using uint8 = std::uint8_t;
-    using int16 = std::int16_t;
-    using uint16 = std::uint16_t;
-    using int32 = std::int32_t;
-    using uint32 = std::uint32_t;
-    using int64 = std::int64_t;
-    using uint64 = std::uint64_t;
-    using byte = uint8;
-    // float is still float (prefer 'Scalar')
-    // double is still double (prefer 'Scalar')
-
-    /** The default type used for scalar values. */
-    using Scalar = float;
-}
-
 /** Inline macro */
 #if defined _MSC_VER
 /** We're on MSVC, so use the __forceinline specifier */
@@ -88,4 +66,4 @@ namespace sge
  * Macro useful for maintaining alignment with buffer headers.
  * NOTE: I use 'alignas(alignof(...))' instead of the 'alignas(type-id)' expression, because that doesn't appear to work on MSVC (as usual).
  */
-#define SGE_ALIGNED_BUFFER_HEADER alignas(alignof(std::max_align_t))
+#define SGE_ALIGNED_BUFFER_HEADER alignas(alignof(max_align_t))

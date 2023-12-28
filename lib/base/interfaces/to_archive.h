@@ -1,7 +1,8 @@
 #pragma once
 
-#include <cassert>
+#include <assert.h>
 #include <map>
+#include <stdint.h>
 #include <unordered_map>
 
 #include "lib/base/io/archive_writer.h"
@@ -38,82 +39,82 @@ namespace sge
     };
 
     template <>
-    struct Impl<IToArchive, int8>
+    struct Impl<IToArchive, int8_t>
     {
         static void to_archive(Self self, ArchiveWriter &writer)
         {
             assert(!self.null());
-            writer.number(*self.as<int8>());
+            writer.number(*self.as<int8_t>());
         }
     };
 
     template <>
-    struct Impl<IToArchive, uint8>
+    struct Impl<IToArchive, uint8_t>
     {
         static void to_archive(Self self, ArchiveWriter &writer)
         {
             assert(!self.null());
-            writer.number(*self.as<uint8>());
+            writer.number(*self.as<uint8_t>());
         }
     };
 
     template <>
-    struct Impl<IToArchive, int16>
+    struct Impl<IToArchive, int16_t>
     {
         static void to_archive(Self self, ArchiveWriter &writer)
         {
             assert(!self.null());
-            writer.number(*self.as<int16>());
+            writer.number(*self.as<int16_t>());
         }
     };
 
     template <>
-    struct Impl<IToArchive, uint16>
+    struct Impl<IToArchive, uint16_t>
     {
         static void to_archive(Self self, ArchiveWriter &writer)
         {
             assert(!self.null());
-            writer.number(*self.as<uint16>());
+            writer.number(*self.as<uint16_t>());
         }
     };
 
     template <>
-    struct Impl<IToArchive, int32>
+    struct Impl<IToArchive, int32_t>
     {
         static void to_archive(Self self, ArchiveWriter &writer)
         {
             assert(!self.null());
-            writer.number(*self.as<int32>());
+            writer.number(*self.as<int32_t>());
         }
     };
 
     template <>
-    struct Impl<IToArchive, uint32>
+    struct Impl<IToArchive, uint32_t>
     {
         static void to_archive(Self self, ArchiveWriter &writer)
         {
             assert(!self.null());
-            writer.number(*self.as<uint32>());
+            writer.number(*self.as<uint32_t>());
         }
     };
 
     template <>
-    struct Impl<IToArchive, int64>
+    struct Impl<IToArchive, int64_t>
     {
         static void to_archive(Self self, ArchiveWriter &writer)
         {
             assert(!self.null());
-            writer.number(*self.as<int64>());
+            writer.number(*self.as<int64_t>());
         }
     };
 
     template <>
-    struct Impl<IToArchive, uint64>
+    struct Impl<IToArchive, uint64_t>
     {
         static void to_archive(Self self, ArchiveWriter &writer)
         {
             assert(!self.null());
-            writer.number(*self.as<uint64>());
+            writer.number(*self.as<uint64_t>());
         }
     };
 
@@ -147,7 +148,7 @@ namespace sge
         }
     };
 
-    template <std::size_t Size>
+    template <size_t Size>
     struct Impl<IToArchive, char[Size]>
     {
         static void to_archive(Self self, ArchiveWriter &writer)
@@ -157,7 +158,7 @@ namespace sge
         }
     };
 
-    template <std::size_t Size>
+    template <size_t Size>
     struct Impl<IToArchive, const char[Size]>
     {
         static void to_archive(Self self, ArchiveWriter &writer)
@@ -167,7 +168,7 @@ namespace sge
         }
     };
 
-    template <typename T, std::size_t Size>
+    template <typename T, size_t Size>
     struct Impl<IToArchive, T[Size]>
     {
         static void to_archive(Self self, ArchiveWriter &writer)

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdint.h>
 
 #include "lib/base/memory/functions.h"
 #include "lib/base/reflection/reflection_builder.h"
@@ -20,7 +21,7 @@ namespace sge
         _job_queue.clear();
     }
 
-    uint64 SystemFrame::frame_id() const
+    uint64_t SystemFrame::frame_id() const
     {
         return _scene->_frame_id;
     }

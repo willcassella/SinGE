@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "lib/base/math/mat4.h"
 #include "lib/bullet_physics/bullet_physics_system_data.h"
 #include "lib/bullet_physics/character_controller.h"
@@ -98,7 +100,7 @@ namespace sge
         {
             // Get events
             ENewComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (new_character_controller_channel.consume(subscriber_id, events, &num_events))
             {
                 NodeId node_ids[8];
@@ -106,7 +108,7 @@ namespace sge
                 const CCharacterController* components[8];
 
                 // Gather node ids and instances
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     node_ids[i] = events[i].node;
                     components[i] = (const CCharacterController*)events[i].instance;
@@ -116,7 +118,7 @@ namespace sge
                 scene.get_nodes(node_ids, num_events, nodes);
 
                 // Iterate over events
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     auto& physics_entity = phys_data.get_or_create_physics_entity(node_ids[i], *nodes[i]);
                     assert(physics_entity.character_controller == nullptr);
@@ -148,10 +150,10 @@ namespace sge
         {
             // Get events
             EDestroyedComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (destroyed_character_controller_channel.consume(subscriber_id, events, &num_events))
             {
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     auto* const phys_entity = phys_data.get_physics_entity(events[i].node);
                     assert(phys_entity != nullptr && phys_entity->character_controller != nullptr);
@@ -176,10 +178,10 @@ namespace sge
         {
             // Get events
             EModifiedComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (modified_character_controller_channel.consume(subscriber_id, events, &num_events))
             {
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     const auto* const component = (const CCharacterController*)events[i].instance;
 
@@ -203,10 +205,10 @@ namespace sge
         {
             // Get events
             CCharacterController::EJump events[8];
-            int32 num_events;
+            int32_t num_events;
             while (jump_event_channel.consume(subscriber_id, events, &num_events))
             {
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     // Get the physics state for this node
                     auto* phys_ent = phys_data.get_physics_entity(events[i].node);
@@ -231,10 +233,10 @@ namespace sge
         {
             // Get events
             CCharacterController::ETurn events[8];
-            int32 num_events;
+            int32_t num_events;
             while (turn_event_channel.consume(subscriber_id, events, &num_events))
             {
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     // Get the physics state for this node
                     auto* const phys_ent = phys_data.get_physics_entity(events[i].node);
@@ -256,10 +258,10 @@ namespace sge
         {
             // Get events
             CCharacterController::EWalk events[8];
-            int32 num_events;
+            int32_t num_events;
             while (walk_event_channel.consume(subscriber_id, events, &num_events))
             {
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     // Get the physics state for this node
                     auto* const phys_ent = phys_data.get_physics_entity(events[i].node);

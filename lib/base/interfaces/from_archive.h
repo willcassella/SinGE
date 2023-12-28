@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cassert>
+#include <assert.h>
+#include <stdint.h>
 
 #include "lib/base/io/archive_reader.h"
 #include "lib/base/reflection/reflection.h"
@@ -36,82 +37,82 @@ namespace sge
     };
 
     template <>
-    struct Impl<IFromArchive, int8>
+    struct Impl<IFromArchive, int8_t>
     {
         static void from_archive(SelfMut self, ArchiveReader &reader)
         {
             assert(!self.null());
-            reader.number(*self.as<int8>());
+            reader.number(*self.as<int8_t>());
         }
     };
 
     template <>
-    struct Impl<IFromArchive, uint8>
+    struct Impl<IFromArchive, uint8_t>
     {
         static void from_archive(SelfMut self, ArchiveReader &reader)
         {
             assert(!self.null());
-            reader.number(*self.as<uint8>());
+            reader.number(*self.as<uint8_t>());
         }
     };
 
     template <>
-    struct Impl<IFromArchive, int16>
+    struct Impl<IFromArchive, int16_t>
     {
         static void from_archive(SelfMut self, ArchiveReader &reader)
         {
             assert(!self.null());
-            reader.number(*self.as<int16>());
+            reader.number(*self.as<int16_t>());
         }
     };
 
     template <>
-    struct Impl<IFromArchive, uint16>
+    struct Impl<IFromArchive, uint16_t>
     {
         static void from_archive(SelfMut self, ArchiveReader &reader)
         {
             assert(!self.null());
-            reader.number(*self.as<uint16>());
+            reader.number(*self.as<uint16_t>());
         }
     };
 
     template <>
-    struct Impl<IFromArchive, int32>
+    struct Impl<IFromArchive, int32_t>
     {
         static void from_archive(SelfMut self, ArchiveReader &reader)
         {
             assert(!self.null());
-            reader.number(*self.as<int32>());
+            reader.number(*self.as<int32_t>());
         }
     };
 
     template <>
-    struct Impl<IFromArchive, uint32>
+    struct Impl<IFromArchive, uint32_t>
     {
         static void from_archive(SelfMut self, ArchiveReader &reader)
         {
             assert(!self.null());
-            reader.number(*self.as<uint32>());
+            reader.number(*self.as<uint32_t>());
         }
     };
 
     template <>
-    struct Impl<IFromArchive, int64>
+    struct Impl<IFromArchive, int64_t>
     {
         static void from_archive(SelfMut self, ArchiveReader &reader)
         {
             assert(!self.null());
-            reader.number(*self.as<int64>());
+            reader.number(*self.as<int64_t>());
         }
     };
 
     template <>
-    struct Impl<IFromArchive, uint64>
+    struct Impl<IFromArchive, uint64_t>
     {
         static void from_archive(SelfMut self, ArchiveReader &reader)
         {
             assert(!self.null());
-            reader.number(*self.as<uint64>());
+            reader.number(*self.as<uint64_t>());
         }
     };
 
@@ -142,7 +143,7 @@ namespace sge
         {
             assert(!self.null());
 
-            std::size_t len = 0;
+            size_t len = 0;
             if (reader.string_size(len))
             {
                 self.as<std::string>()->assign(len, 0);
@@ -151,7 +152,7 @@ namespace sge
         }
     };
 
-    template <std::size_t Size>
+    template <size_t Size>
     struct Impl<IFromArchive, char[Size]>
     {
         static void from_archive(SelfMut self, ArchiveReader &reader)
@@ -161,7 +162,7 @@ namespace sge
         }
     };
 
-    template <typename T, std::size_t Size>
+    template <typename T, size_t Size>
     struct Impl<IFromArchive, T[Size]>
     {
         static void from_archive(SelfMut self, ArchiveReader &reader)

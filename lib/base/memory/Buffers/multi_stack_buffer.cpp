@@ -1,4 +1,5 @@
-#include <cstdlib>
+#include <stdint.h>
+#include <stdlib.h>
 
 #include "lib/base/memory/buffers/multi_stack_buffer.h"
 
@@ -13,7 +14,7 @@ namespace sge
     {
         for (auto *stack : _stacks)
         {
-            std::free(stack);
+            free(stack);
         }
     }
 
@@ -23,32 +24,32 @@ namespace sge
         _stacks.clear();
     }
 
-    std::size_t MultiStackBuffer::num_elems()
+    size_t MultiStackBuffer::num_elems()
     {
         return _num_elems;
     }
 
-    void MultiStackBuffer::set_num_elems(std::size_t num_elems)
+    void MultiStackBuffer::set_num_elems(size_t num_elems)
     {
         _num_elems = num_elems;
     }
 
-    std::size_t MultiStackBuffer::num_stack_buffers()
+    size_t MultiStackBuffer::num_stack_buffers()
     {
         return _stacks.size();
     }
 
-    byte *const *MultiStackBuffer::stack_buffers()
+    uint8_t *const *MultiStackBuffer::stack_buffers()
     {
         return _stacks.data();
     }
 
-    const byte *const *MultiStackBuffer::stack_buffers() const
+    const uint8_t *const *MultiStackBuffer::stack_buffers() const
     {
         return _stacks.data();
     }
 
-    void *MultiStackBuffer::alloc(std::size_t obj_size)
+    void *MultiStackBuffer::alloc(size_t obj_size)
     {
         // Determine where to place object
         const auto num_elems = _num_elems;
@@ -58,7 +59,7 @@ namespace sge
         // Make sure there's a spot for the new object
         if (stack_index >= _stacks.size())
         {
-            auto *buffer = (byte *)std::malloc(obj_size * STACK_SIZE);
+            auto *buffer = (uint8_t *)malloc(obj_size * STACK_SIZE);
             _stacks.push_back(buffer);
             _num_elems = num_elems + 1;
             return buffer;
@@ -78,7 +79,7 @@ namespace sge
         // Free memory associated with the stacks
         for (auto i = last_stack; i < num_stacks; ++i)
         {
-            std::free(stacks[i]);
+            free(stacks[i]);
         }
 
         // Remove them from the array

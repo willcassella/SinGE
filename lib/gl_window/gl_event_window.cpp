@@ -229,8 +229,8 @@ namespace sge
         // Get all input nodes
         NodeId input_node_ids[32];
         CInput* input_instances[32];
-        std::size_t num_instances;
-        std::size_t start_index = 0;
+        size_t num_instances;
+        size_t start_index = 0;
 
         // Get input nodes
         while (input_component->get_instance_nodes(start_index, 32, &num_instances, input_node_ids))
@@ -241,7 +241,7 @@ namespace sge
             input_component->get_instances(input_node_ids, num_instances, input_instances);
 
             // Dispatch events
-            for (std::size_t i = 0; i < num_instances; ++i)
+            for (size_t i = 0; i < num_instances; ++i)
             {
                 auto& input = *input_instances[i];
 

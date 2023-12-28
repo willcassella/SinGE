@@ -28,26 +28,26 @@ namespace sge
 
         virtual void on_end_update_frame() = 0;
 
-        virtual void create_instances(const Node* const* nodes, std::size_t num_instances, void** out_instances) = 0;
+        virtual void create_instances(const Node* const* nodes, size_t num_instances, void** out_instances) = 0;
 
-        virtual void remove_instances(const NodeId* nodes, std::size_t num_instances) = 0;
+        virtual void remove_instances(const NodeId* nodes, size_t num_instances) = 0;
 
-        virtual void get_instances(const NodeId* nodes, std::size_t num_instances, void** out_instances) = 0;
+        virtual void get_instances(const NodeId* nodes, size_t num_instances, void** out_instances) = 0;
 
-        virtual std::size_t num_instance_nodes() const = 0;
+        virtual size_t num_instance_nodes() const = 0;
 
-        virtual std::size_t get_instance_nodes(std::size_t start_index, std::size_t num_instances, std::size_t* out_num_instances, NodeId* out_instance_nodes) const = 0;
+        virtual size_t get_instance_nodes(size_t start_index, size_t num_instances, size_t* out_num_instances, NodeId* out_instance_nodes) const = 0;
 
         virtual EventChannel* get_event_channel(const char* name) = 0;
 
         template <class T>
-        void create_instances(const NodeId* nodes, std::size_t num_instances, T** out_instances)
+        void create_instances(const NodeId* nodes, size_t num_instances, T** out_instances)
         {
             return this->create_instances(nodes, num_instances, reinterpret_cast<void**>(out_instances));
         }
 
         template <class T>
-        void get_instances(const NodeId* nodes, std::size_t num_instances, T** out_instances)
+        void get_instances(const NodeId* nodes, size_t num_instances, T** out_instances)
         {
             return this->get_instances(nodes, num_instances, reinterpret_cast<void**>(out_instances));
         }

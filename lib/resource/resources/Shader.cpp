@@ -11,7 +11,7 @@ SGE_REFLECT_TYPE(sge::PixelShader)
 
 namespace sge
 {
-    void Shader::from_file(std::istream& file, std::size_t end)
+    void Shader::from_file(std::istream& file, size_t end)
     {
         // Read the file
         _source = std::string(end, ' ');

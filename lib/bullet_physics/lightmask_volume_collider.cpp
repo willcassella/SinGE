@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include <btBulletCollisionCommon.h>
 
 #include "lib/bullet_physics/bullet_physics_system_data.h"
@@ -16,7 +18,7 @@ namespace sge
         {
             // Build the mesh for the collider
             Vec3 frustum_verts[NUM_FRUSTUM_VERTS];
-            uint32 frustum_elems[NUM_FRUSTUM_ELEMS];
+            uint32_t frustum_elems[NUM_FRUSTUM_ELEMS];
             create_lightmask_volume_frustum_positions(
                 component.near_clipping_plane(),
                 component.far_clipping_plane(),
@@ -28,7 +30,7 @@ namespace sge
 
             auto mesh = std::make_unique<LightmaskVolumeCollider>();
             mesh->mesh.preallocateVertices(NUM_FRUSTUM_ELEMS);
-            for (std::size_t triangle_i = 0; triangle_i < NUM_FRUSTUM_ELEMS / 3; ++triangle_i)
+            for (size_t triangle_i = 0; triangle_i < NUM_FRUSTUM_ELEMS / 3; ++triangle_i)
             {
                 mesh->mesh.addTriangle(
                     to_bullet(frustum_verts[frustum_elems[triangle_i * 3 + 0]]),
@@ -48,13 +50,13 @@ namespace sge
         {
             // Get events
             ENewComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (new_spotlight_channel.consume(subscriber_id, events, &num_events))
             {
                 // Get nodes
                 NodeId node_ids[8];
                 const CSpotlight* components[8];
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     node_ids[i] = events[i].node;
                     components[i] = (const CSpotlight*)events[i].instance;
@@ -64,7 +66,7 @@ namespace sge
                 scene.get_nodes(node_ids, num_events, nodes);
 
                 // Process events
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     if (!components[i]->is_lightmask_volume() || components[i]->shape() != CSpotlight::Shape::FRUSTUM)
                     {
@@ -105,10 +107,10 @@ namespace sge
         {
             // Get events
             EDestroyedComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (destroyed_spotlight_channel.consume(subscriber_id, events, &num_events))
             {
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     const NodeId node = events[i].node;
 

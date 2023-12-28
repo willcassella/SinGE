@@ -1,5 +1,6 @@
-#include <cassert>
-#include <cstring>
+#include <assert.h>
+#include <stdint.h>
+#include <string.h>
 
 #include <FreeImage.h>
 
@@ -10,9 +11,9 @@ namespace sge
 {
     void image_ops::save_rgbf(
         const float* image,
-        int32 width,
-        int32 height,
-        byte num_channels,
+        int32_t width,
+        int32_t height,
+        uint8_t num_channels,
         const char* path)
     {
         FREE_IMAGE_TYPE type = FIT_UNKNOWN;
@@ -31,18 +32,18 @@ namespace sge
         }
 
         auto* bitmap = FreeImage_AllocateT(type, width, height, 32 * num_channels);
-        std::memcpy(FreeImage_GetBits(bitmap), image, width * height * num_channels * sizeof(float));
+        memcpy(FreeImage_GetBits(bitmap), image, width * height * num_channels * sizeof(float));
         FreeImage_Save(FIF_EXR, bitmap, path);
         FreeImage_Unload(bitmap);
     }
 
     void image_ops::save_rgbf_to_memory(
         const float* image,
-        int32 width,
-        int32 height,
-        byte num_channels,
-        byte** out_buff,
-        std::size_t* out_size)
+        int32_t width,
+        int32_t height,
+        uint8_t num_channels,
+        uint8_t** out_buff,
+        size_t* out_size)
     {
         FREE_IMAGE_TYPE type = FIT_UNKNOWN;
         switch (num_channels)
@@ -61,7 +62,7 @@ namespace sge
 
         // Load the image data into a FreeImage bitmap
         auto* bitmap = FreeImage_AllocateT(type, width, height, 32 * num_channels);
-        std::memcpy(FreeImage_GetBits(bitmap), image, width * height * num_channels * sizeof(float));
+        memcpy(FreeImage_GetBits(bitmap), image, width * height * num_channels * sizeof(float));
 
         // Save the bitmap to a FreeImage memory stream
         auto* fi_buff = FreeImage_OpenMemory();
@@ -71,13 +72,13 @@ namespace sge
         FreeImage_Unload(bitmap);
 
         // Acqure the memory stream created by FreeImage
-        BYTE* buff;
+        uint8_t* buff;
         DWORD size;
         FreeImage_AcquireMemory(fi_buff, &buff, &size);
 
         // Create a buffer for the user of the same size
-        byte* user_buff = (byte*)sge::malloc(size);
-        std::memcpy(user_buff, buff, size);
+        uint8_t* user_buff = (uint8_t*)sge::malloc(size);
+        memcpy(user_buff, buff, size);
 
         // Close the FreeImage memory stream
         FreeImage_CloseMemory(fi_buff);
@@ -87,15 +88,15 @@ namespace sge
     }
 
     void image_ops::load_rgbf_from_memory(
-        const byte* buff,
-        std::size_t size,
+        const uint8_t* buff,
+        size_t size,
         float** out_image,
-        int32* out_width,
-        int32* out_height,
-        byte* out_num_channels)
+        int32_t* out_width,
+        int32_t* out_height,
+        uint8_t* out_num_channels)
     {
         // Open the memory with FreeImage
-        auto* fi_buff = FreeImage_OpenMemory(const_cast<byte*>(buff), static_cast<DWORD>(size));
+        auto* fi_buff = FreeImage_OpenMemory(const_cast<uint8_t*>(buff), static_cast<DWORD>(size));
 
         // Open the bitmap with FreeImage
         auto* bitmap = FreeImage_LoadFromMemory(FIF_EXR, fi_buff);
@@ -105,7 +106,7 @@ namespace sge
         auto height = FreeImage_GetHeight(bitmap);
 
         // Get the number of channels
-        byte num_channels = 0;
+        uint8_t num_channels = 0;
         const auto image_type = FreeImage_GetImageType(bitmap);
         switch (image_type)
         {
@@ -121,7 +122,7 @@ namespace sge
 
         // Copy the image into a user buffer
         auto* user_buff = (float*)sge::malloc(width * height * num_channels * sizeof(float));
-        std::memcpy(user_buff, FreeImage_GetBits(bitmap), width * height * num_channels * sizeof(float));
+        memcpy(user_buff, FreeImage_GetBits(bitmap), width * height * num_channels * sizeof(float));
 
         // Close the bitmap and file stream
         FreeImage_Unload(bitmap);
@@ -135,19 +136,19 @@ namespace sge
 
     void image_ops::dilate_rgbf(
         const float* image,
-        int32 width,
-        int32 height,
-        byte num_channels,
+        int32_t width,
+        int32_t height,
+        uint8_t num_channels,
         float* out)
     {
-        for (int32 y = 0; y < height; ++y)
+        for (int32_t y = 0; y < height; ++y)
         {
-            for (int32 x = 0; x < width; ++x)
+            for (int32_t x = 0; x < width; ++x)
             {
                 float color[4];
                 bool valid = false;
 
-                for (byte channel = 0; channel < num_channels; ++channel)
+                for (uint8_t channel = 0; channel < num_channels; ++channel)
                 {
                     color[channel] = image[(y * width + x) * num_channels + channel];
                     valid |= color[channel] > 0.0f;
@@ -155,13 +156,13 @@ namespace sge
 
                 if (!valid)
                 {
-                    int32 num_valid = 0;
-                    const int32 dx[] = { -1, 0, 1,  0 };
-                    const int32 dy[] = { 0, 1, 0, -1 };
-                    for (byte d = 0; d < 4; ++d)
+                    int32_t num_valid = 0;
+                    const int32_t dx[] = { -1, 0, 1,  0 };
+                    const int32_t dy[] = { 0, 1, 0, -1 };
+                    for (uint8_t d = 0; d < 4; ++d)
                     {
-                        const int32 current_x = x + dx[d];
-                        const int32 current_y = y + dy[d];
+                        const int32_t current_x = x + dx[d];
+                        const int32_t current_y = y + dy[d];
 
                         // Make sure this pixel is within the image
                         if (current_x >= 0 && current_x < width && current_y >= 0 && current_y < height)
@@ -169,7 +170,7 @@ namespace sge
                             float dcolor[4];
                             bool dvalid = false;
 
-                            for (byte channel = 0; channel < num_channels; ++channel)
+                            for (uint8_t channel = 0; channel < num_channels; ++channel)
                             {
                                 dcolor[channel] = image[(current_x + current_y * width) * num_channels + channel];
                                 dvalid |= dcolor[channel] > 0.0f;
@@ -177,7 +178,7 @@ namespace sge
 
                             if (dvalid)
                             {
-                                for (byte channel = 0; channel < num_channels; ++channel)
+                                for (uint8_t channel = 0; channel < num_channels; ++channel)
                                 {
                                     color[channel] += dcolor[channel];
                                 }
@@ -191,14 +192,14 @@ namespace sge
                     {
                         const float in = 1.0f / num_valid;
 
-                        for (byte channel = 0; channel < num_channels; ++channel)
+                        for (uint8_t channel = 0; channel < num_channels; ++channel)
                         {
                             color[channel] *= in;
                         }
                     }
                 }
 
-                for (byte channel = 0; channel < num_channels; ++channel)
+                for (uint8_t channel = 0; channel < num_channels; ++channel)
                 {
                     out[(x + y * width) * num_channels + channel] = color[channel];
                 }
@@ -208,30 +209,30 @@ namespace sge
 
     void image_ops::smooth_rgbf(
         const float* image,
-        int32 width,
-        int32 height,
-        byte num_channels,
+        int32_t width,
+        int32_t height,
+        uint8_t num_channels,
         float* out)
     {
-        for (int32 y = 0; y < height; ++y)
+        for (int32_t y = 0; y < height; ++y)
         {
-            for (int32 x = 0; x < width; ++x)
+            for (int32_t x = 0; x < width; ++x)
             {
                 float color[4] = {};
 
-                int32 num_valid = 0;
-                for (int32 dy = -1; dy <= 1; ++dy)
+                int32_t num_valid = 0;
+                for (int32_t dy = -1; dy <= 1; ++dy)
                 {
-                    const int32 current_y = y + dy;
-                    for (int32 dx = -1; dx <= 1; ++dx)
+                    const int32_t current_y = y + dy;
+                    for (int32_t dx = -1; dx <= 1; ++dx)
                     {
-                        const int32 current_x = x + dx;
+                        const int32_t current_x = x + dx;
 
                         // Make sure this pixel is within the bounds of the image
                         if (current_x >= 0 && current_x < width && current_y >= 0 && current_y < height)
                         {
                             bool valid = false;
-                            for (byte channel = 0; channel < num_channels; ++channel)
+                            for (uint8_t channel = 0; channel < num_channels; ++channel)
                             {
                                 // The pixel is valid if it has a non-zero channel
                                 valid |= image[(current_x + current_y * width) * num_channels + channel] > 0.0f;
@@ -239,7 +240,7 @@ namespace sge
 
                             if (valid)
                             {
-                                for (byte channel = 0; channel < num_channels; ++channel)
+                                for (uint8_t channel = 0; channel < num_channels; ++channel)
                                 {
                                     color[channel] += image[(current_x + current_y * width) * num_channels + channel];
                                 }
@@ -250,7 +251,7 @@ namespace sge
                     }
                 }
 
-                for (byte channel = 0; channel < num_channels; ++channel)
+                for (uint8_t channel = 0; channel < num_channels; ++channel)
                 {
                     out[(x + y * width) * num_channels + channel] = num_valid ? color[channel] / num_valid : 0.0f;
                 }

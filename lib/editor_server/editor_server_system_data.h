@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include <asio.hpp>
 
 #include "lib/editor_server/editor_server_system.h"
@@ -10,7 +12,7 @@ namespace sge
 
     struct EditorServerSystem::Data
     {
-        Data(uint16 port);
+        Data(uint16_t port);
 
     private:
         void async_connection();

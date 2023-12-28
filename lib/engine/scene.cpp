@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <iostream>
+#include <stdint.h>
 
 #include "lib/base/reflection/reflection_builder.h"
 #include "lib/base/reflection/type_db.h"
@@ -26,9 +27,9 @@ namespace sge
 
     Scene::~Scene() = default;
 
-    void Scene::create_nodes(std::size_t num_nodes, Node** out_nodes)
+    void Scene::create_nodes(size_t num_nodes, Node** out_nodes)
     {
-        for (std::size_t i = 0; i < num_nodes; ++i)
+        for (size_t i = 0; i < num_nodes; ++i)
         {
             // Reserve an Id for the new node
             const auto id = _scene_data.next_node_id;
@@ -62,12 +63,12 @@ namespace sge
         _scene_data.update_modified_nodes.insert(_scene_data.update_modified_nodes.end(), out_nodes, out_nodes + num_nodes);
     }
 
-    void Scene::destroy_nodes(std::size_t num_nodes, Node* const* nodes)
+    void Scene::destroy_nodes(size_t num_nodes, Node* const* nodes)
     {
         _scene_data.system_destroyed_nodes.reserve(_scene_data.system_destroyed_nodes.size() + num_nodes);
 
         // Mark all nodes as pending destroy
-        for (std::size_t i = 0; i < num_nodes; ++i)
+        for (size_t i = 0; i < num_nodes; ++i)
         {
             // If the node has not yet been marked for destruction
             if ((nodes[i]->_mod_state & (Node::DESTROYED_PENDING | Node::DESTROYED_APPLIED)) == 0)
@@ -78,9 +79,9 @@ namespace sge
         }
     }
 
-    void Scene::get_nodes(const NodeId* nodes, std::size_t num_nodes, Node** out_nodes)
+    void Scene::get_nodes(const NodeId* nodes, size_t num_nodes, Node** out_nodes)
     {
-        for (std::size_t i = 0; i < num_nodes; ++i)
+        for (size_t i = 0; i < num_nodes; ++i)
         {
             const auto node = nodes[i];
             const auto iter = _scene_data.nodes.find(node);
@@ -88,9 +89,9 @@ namespace sge
         }
     }
 
-    void Scene::get_nodes(const NodeId* nodes, std::size_t num_nodes, const Node** out_nodes) const
+    void Scene::get_nodes(const NodeId* nodes, size_t num_nodes, const Node** out_nodes) const
     {
-        for (std::size_t i = 0; i < num_nodes; ++i)
+        for (size_t i = 0; i < num_nodes; ++i)
         {
             const auto node = nodes[i];
             const auto iter = _scene_data.nodes.find(node);
@@ -98,12 +99,12 @@ namespace sge
         }
     }
 
-    std::size_t Scene::num_root_nodes() const
+    size_t Scene::num_root_nodes() const
     {
         return _scene_data.root_nodes.size();
     }
 
-    std::size_t Scene::get_root_nodes(std::size_t start_index, std::size_t num_nodes, std::size_t* out_num_nodes, NodeId* out_nodes) const
+    size_t Scene::get_root_nodes(size_t start_index, size_t num_nodes, size_t* out_num_nodes, NodeId* out_nodes) const
     {
         if (start_index >= _scene_data.root_nodes.size())
         {
@@ -112,7 +113,7 @@ namespace sge
         }
 
         const auto num_copy = std::min(_scene_data.root_nodes.size() - start_index, num_nodes);
-        std::memcpy(out_nodes, _scene_data.root_nodes.data() + start_index, num_copy * sizeof(NodeId));
+        memcpy(out_nodes, _scene_data.root_nodes.data() + start_index, num_copy * sizeof(NodeId));
         *out_num_nodes = num_copy;
         return num_copy;
     }
@@ -248,7 +249,7 @@ namespace sge
         reader.pull_object_member("nodes");
 
         // Get the number of nodes
-        std::size_t num_nodes = 0;
+        size_t num_nodes = 0;
         reader.object_size(num_nodes);
 
         // Load all nodes
@@ -273,7 +274,7 @@ namespace sge
             node->_id = id;
             node->_scene = this;
             node->_mod_state = Node::NEW | Node::TRANSFORM_PENDING;
-            node->_transform_mod_index = (int32)this->_scene_data.system_node_local_transform_changes.size();
+            node->_transform_mod_index = (int32_t)this->_scene_data.system_node_local_transform_changes.size();
 
             // Deserialize node data
             reader.object_member("root", node->_root);
@@ -340,18 +341,18 @@ namespace sge
         for (auto& component_type : _scene_data.components)
         {
             NodeId component_instances[8];
-            std::size_t num_instances;
-            std::size_t start_index = 0;
+            size_t num_instances;
+            size_t start_index = 0;
             auto* component = component_type.second.get();
 
             while (component->get_instance_nodes(start_index, 8, &num_instances, component_instances))
             {
                 start_index += 8;
                 NodeId destroy_instances[8];
-                std::size_t num_destroy = 0;
+                size_t num_destroy = 0;
 
                 // Make sure all the nodes exist
-                for (std::size_t i = 0; i < num_instances; ++i)
+                for (size_t i = 0; i < num_instances; ++i)
                 {
                     const auto iter = _scene_data.nodes.find(component_instances[i]);
                     if (iter == _scene_data.nodes.end())
@@ -459,7 +460,7 @@ namespace sge
         current_nodes.assign(num_root_nodes, nullptr);
         get_nodes(root_nodes, num_root_nodes, current_nodes.data());
 
-        uint32 current_depth = 0;
+        uint32_t current_depth = 0;
         while (!current_nodes.empty())
         {
             for (auto node : current_nodes)
@@ -484,11 +485,11 @@ namespace sge
 
     void Scene::execute_job_queue(
         SystemInfo* const* jobs,
-        std::size_t num_jobs,
+        size_t num_jobs,
         UpdatePipeline& pipeline,
         float time_delta)
     {
-        for (std::size_t i = 0; i < num_jobs; ++i)
+        for (size_t i = 0; i < num_jobs; ++i)
         {
             // Create a system frame for the job
             SystemFrame frame;
@@ -594,44 +595,44 @@ namespace sge
             num_destroyed_nodes,
             num_root_changes,
             num_local_transform_changes });
-        void* const event_buff = std::malloc(max_event_count * max_event_size);
+        void* const event_buff = malloc(max_event_count * max_event_size);
 
         // Create new node events
         const auto* const new_nodes = _scene_data.system_new_nodes.data();
-        for (std::size_t i = 0; i < num_new_nodes; ++i)
+        for (size_t i = 0; i < num_new_nodes; ++i)
         {
             ((ENewNode*)event_buff)[i].node = new_nodes[i];
         }
-        _scene_data.new_node_channel.append(event_buff, sizeof(ENewNode), (int32)num_new_nodes);
+        _scene_data.new_node_channel.append(event_buff, sizeof(ENewNode), (int32_t)num_new_nodes);
 
         // Create destroyed node events
         const auto* const destroyed_nodes = _scene_data.system_destroyed_nodes.data();
-        for (std::size_t i = 0; i < num_destroyed_nodes; ++i)
+        for (size_t i = 0; i < num_destroyed_nodes; ++i)
         {
             ((EDestroyedNode*)event_buff)[i].node = destroyed_nodes[i];
             _scene_data.update_destroyed_nodes.push_back(destroyed_nodes[i]->get_id());
         }
-        _scene_data.destroyed_node_channel.append(event_buff, sizeof(EDestroyedNode), (int32)num_destroyed_nodes);
+        _scene_data.destroyed_node_channel.append(event_buff, sizeof(EDestroyedNode), (int32_t)num_destroyed_nodes);
 
         // Create root changed events
         const auto* const root_changed_nodes = _scene_data.system_node_root_changes.data();
-        for (std::size_t i = 0; i < num_root_changes; ++i)
+        for (size_t i = 0; i < num_root_changes; ++i)
         {
             ((ENodeRootChangd*)event_buff)[i].node = root_changed_nodes[i].node;
             ((ENodeRootChangd*)event_buff)[i].root = root_changed_nodes[i].root;
         }
-        _scene_data.node_root_changed_channel.append(event_buff, sizeof(ENodeRootChangd), (int32)num_root_changes);
+        _scene_data.node_root_changed_channel.append(event_buff, sizeof(ENodeRootChangd), (int32_t)num_root_changes);
 
         // Create local transform changed events
         const auto* const local_transform_changed_nodes = _scene_data.system_node_local_transform_changes.data();
-        for (std::size_t i = 0; i < num_local_transform_changes; ++i)
+        for (size_t i = 0; i < num_local_transform_changes; ++i)
         {
             ((ENodeTransformChanged*)event_buff)[i].node = local_transform_changed_nodes[i].node;
         }
-        _scene_data.node_local_transform_changed_channel.append(event_buff, sizeof(ENodeTransformChanged), (int32)num_local_transform_changes);
+        _scene_data.node_local_transform_changed_channel.append(event_buff, sizeof(ENodeTransformChanged), (int32_t)num_local_transform_changes);
 
         // Create array of destroyed NodeIds to notify component containers
-        for (std::size_t i = 0; i < num_destroyed_nodes; ++i)
+        for (size_t i = 0; i < num_destroyed_nodes; ++i)
         {
             ((NodeId*)event_buff)[i] = destroyed_nodes[i]->get_id();
         }
@@ -648,16 +649,16 @@ namespace sge
         _scene_data.system_node_local_transform_changes.clear();
         _scene_data.system_new_nodes.clear();
         _scene_data.system_destroyed_nodes.clear();
-        std::free(event_buff);
+        free(event_buff);
     }
 
-    void Scene::update_hierarchy(Node* const* nodes, std::size_t num_nodes)
+    void Scene::update_hierarchy(Node* const* nodes, size_t num_nodes)
     {
         // Create buffer for children
         std::vector<Node*> children;
 
         // Update nodes
-        for (std::size_t i = 0; i < num_nodes; ++i)
+        for (size_t i = 0; i < num_nodes; ++i)
         {
             auto* const node = nodes[i];
             auto mod_state = node->_mod_state;
@@ -692,13 +693,13 @@ namespace sge
     }
 
     void Scene::update_child_hierarchy(
-        uint32 parent_depth,
+        uint32_t parent_depth,
         bool parent_destroyed,
         std::vector<Node*>& nodes,
-        std::size_t offset)
+        size_t offset)
     {
         const auto num_nodes = nodes.size();
-        for (std::size_t i = offset; i < num_nodes; ++i)
+        for (size_t i = offset; i < num_nodes; ++i)
         {
             auto* const node = nodes[i];
             auto mod_state = node->_mod_state;
@@ -734,14 +735,14 @@ namespace sge
         }
     }
 
-    void Scene::update_matrices(Node* const* nodes, std::size_t num_nodes)
+    void Scene::update_matrices(Node* const* nodes, size_t num_nodes)
     {
         // Allocate a buffer for root Ids and root pointers
-        auto* const root_ids = (NodeId*)std::malloc(sizeof(NodeId) * num_nodes + sizeof(Node*) * num_nodes);
+        auto* const root_ids = (NodeId*)malloc(sizeof(NodeId) * num_nodes + sizeof(Node*) * num_nodes);
         auto* const root_nodes = (Node**)(root_ids + num_nodes);
 
         // Fill the array of parent Ids
-        for (std::size_t i = 0; i < num_nodes; ++i)
+        for (size_t i = 0; i < num_nodes; ++i)
         {
             root_ids[i] = nodes[i]->_root;
         }
@@ -757,7 +758,7 @@ namespace sge
         std::vector<Node*> child_nodes;
 
         // Update matrices
-        for (std::size_t i = 0; i < num_nodes; ++i)
+        for (size_t i = 0; i < num_nodes; ++i)
         {
             auto* const node = nodes[i];
             const auto* const root = root_nodes[i];
@@ -787,22 +788,22 @@ namespace sge
         }
 
         // Create events
-        _scene_data.node_world_transform_changed_channel.append(transform_events.data(), (int32)transform_events.size());
+        _scene_data.node_world_transform_changed_channel.append(transform_events.data(), (int32_t)transform_events.size());
 
         // Clean up
-        std::free(root_ids);
+        free(root_ids);
     }
 
     void Scene::update_child_matrices(
         const Mat4& parent_matrix,
         std::vector<Node*>& nodes,
-        std::size_t offset,
+        size_t offset,
         std::vector<ENodeTransformChanged>& out_events)
     {
         const auto num_nodes = nodes.size();
         out_events.reserve(out_events.size() + num_nodes - offset);
 
-        for (std::size_t i = offset; i < num_nodes; ++i)
+        for (size_t i = offset; i < num_nodes; ++i)
         {
             auto* const node = nodes[i];
             auto mod_state = node->_mod_state;

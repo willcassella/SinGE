@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <stdint.h>
 
 #include "lib/base/reflection/reflection.h"
 #include "lib/editor_server/build.h"
@@ -13,7 +14,7 @@ namespace sge
         struct Data;
         SGE_REFLECTED_TYPE;
 
-        EditorServerSystem(uint16 port);
+        EditorServerSystem(uint16_t port);
         ~EditorServerSystem();
 
         void register_pipeline(UpdatePipeline& pipeline);

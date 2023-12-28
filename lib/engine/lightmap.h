@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <stdint.h>
 
 #include "lib/engine/component.h"
 #include "lib/resource/misc/color.h"
@@ -13,12 +14,12 @@ namespace sge
 
         struct LightmapElement
         {
-            int32 width;
-            int32 height;
+            int32_t width;
+            int32_t height;
             std::vector<color::RGBF32> basis_x_radiance;
             std::vector<color::RGBF32> basis_y_radiance;
             std::vector<color::RGBF32> basis_z_radiance;
-            std::vector<byte> direct_mask;
+            std::vector<uint8_t> direct_mask;
         };
 
         void to_archive(ArchiveWriter& writer) const;

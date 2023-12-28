@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <stdint.h>
 
 #include "lib/base/math/ivec2.h"
 #include "lib/base/math/ivec3.h"
@@ -28,8 +29,8 @@ namespace sge
             struct MeshSlice
             {
                 GLuint material = 0;
-                uint32 start_element_index = 0;
-                uint32 num_element_indices = 0;
+                uint32_t start_element_index = 0;
+                uint32_t num_element_indices = 0;
             };
 
             struct StaticMesh
@@ -54,11 +55,11 @@ namespace sge
             void upload_static_mesh_vertex_data(
                 GLuint vao,
                 const GLuint vertex_buffers[],
-                std::size_t num_vertices,
+                size_t num_vertices,
                 const Vec3* vertex_positions,
                 const HalfVec3* vertex_normals,
                 const HalfVec3* vertex_tangents,
-                const int8* vertex_bitangent_signs,
+                const int8_t* vertex_bitangent_signs,
                 const UHalfVec2* material_uv_coords,
                 const UHalfVec2* lightmap_uv_coords);
 
@@ -72,8 +73,8 @@ namespace sge
             void upload_static_mesh_elements(
                 GLuint vao,
                 GLuint ebo,
-                std::size_t num_elements,
-                const uint32* elements);
+                size_t num_elements,
+                const uint32_t* elements);
         }
     }
 }

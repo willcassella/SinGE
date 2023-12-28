@@ -1,25 +1,26 @@
 #include <algorithm>
-#include <cstring>
+#include <stdint.h>
+#include <string.h>
 
 #include "lib/engine/event_channel.h"
 
 namespace sge
 {
-    EventChannel::EventChannel(std::size_t event_object_size, int32 capacity)
+    EventChannel::EventChannel(size_t event_object_size, int32_t capacity)
         : _buffer(nullptr),
         _end_index(0)
     {
         capacity = std::max(capacity, 1);
-        _buffer = (byte*)std::malloc(capacity * event_object_size);
+        _buffer = (uint8_t*)malloc(capacity * event_object_size);
         _capacity = capacity;
 
-        std::memset(_subscriber_indices, 0xFF, sizeof(_subscriber_indices));
-        std::memset(_subscribers_active, 0, sizeof(_subscribers_active));
+        memset(_subscriber_indices, 0xFF, sizeof(_subscriber_indices));
+        memset(_subscribers_active, 0, sizeof(_subscribers_active));
     }
 
     EventChannel::~EventChannel()
     {
-        std::free(_buffer);
+        free(_buffer);
     }
 
     EventChannel::SubscriberId EventChannel::subscribe()
@@ -47,13 +48,13 @@ namespace sge
         _subscriber_indices[subscriber] = 0xFFFFFFFF;
     }
 
-    void EventChannel::append(const void* events, std::size_t event_object_size, int32 num_events)
+    void EventChannel::append(const void* events, size_t event_object_size, int32_t num_events)
     {
         // Cache members
         auto* buffer = _buffer;
         auto capacity = _capacity;
         auto end_index = _end_index;
-        auto start_index = std::numeric_limits<int32>::max();
+        auto start_index = std::numeric_limits<int32_t>::max();
 
         // Get the lowest start index
         for (auto index : _subscriber_indices)
@@ -62,7 +63,7 @@ namespace sge
         }
 
         // Check start index
-        if (start_index == std::numeric_limits<int32>::max())
+        if (start_index == std::numeric_limits<int32_t>::max())
         {
             // In the case of no subscribers, we don't have to do anything (new subscribers don't see old events)
             return;
@@ -80,12 +81,12 @@ namespace sge
         {
             // Create a new buffer
             const auto new_capacity = std::max(capacity * 2, num_events);
-            auto* new_buff = (byte*)std::malloc(new_capacity * event_object_size);
+            auto* new_buff = (uint8_t*)malloc(new_capacity * event_object_size);
 
             // Copy the old buffer into the new buffer
-            std::memcpy(new_buff, buffer + mod_start_index * event_object_size, (capacity - mod_start_index) * event_object_size);
-            std::memcpy(new_buff + (capacity - mod_start_index) * event_object_size, buffer, mod_end_index * event_object_size);
-            std::free(buffer);
+            memcpy(new_buff, buffer + mod_start_index * event_object_size, (capacity - mod_start_index) * event_object_size);
+            memcpy(new_buff + (capacity - mod_start_index) * event_object_size, buffer, mod_end_index * event_object_size);
+            free(buffer);
 
             // Move indices backwards
             for (SubscriberId id = 0; id < MAX_SUBSCRIBERS; ++id)
@@ -107,9 +108,9 @@ namespace sge
         // Add in new values
         const auto copy_1_num = std::min(capacity - mod_end_index, num_events);
         const auto copy_2_num = num_events - copy_1_num;
-        std::memcpy(buffer + mod_end_index * event_object_size, events, copy_1_num * event_object_size);
+        memcpy(buffer + mod_end_index * event_object_size, events, copy_1_num * event_object_size);
         mod_end_index = (mod_end_index + copy_1_num) % capacity;
-        std::memcpy(buffer + mod_end_index * event_object_size, (const byte*)events + copy_1_num * event_object_size, copy_2_num * event_object_size);
+        memcpy(buffer + mod_end_index * event_object_size, (const uint8_t*)events + copy_1_num * event_object_size, copy_2_num * event_object_size);
 
         // Reassign values
         _buffer = buffer;
@@ -117,7 +118,7 @@ namespace sge
         _end_index = end_index + num_events;
     }
 
-    int32 EventChannel::consume(SubscriberId subscriber, std::size_t event_object_size, int32 max_events, void* out_events, int32* out_num_events)
+    int32_t EventChannel::consume(SubscriberId subscriber, size_t event_object_size, int32_t max_events, void* out_events, int32_t* out_num_events)
     {
         assert(subscriber < MAX_SUBSCRIBERS);
         const auto buffer = _buffer;
@@ -132,8 +133,8 @@ namespace sge
         const auto copy_2_num = std::min({ max_events - copy_1_num, size - copy_1_num });
 
         // Perform actual copy
-        std::memcpy(out_events, buffer + mod_index * event_object_size, copy_1_num * event_object_size);
-        std::memcpy((byte*)out_events + copy_1_num * event_object_size, buffer, copy_2_num * event_object_size);
+        memcpy(out_events, buffer + mod_index * event_object_size, copy_1_num * event_object_size);
+        memcpy((uint8_t*)out_events + copy_1_num * event_object_size, buffer, copy_2_num * event_object_size);
 
         const auto num_copied = copy_1_num + copy_2_num;
         _subscriber_indices[subscriber] = index + num_copied;

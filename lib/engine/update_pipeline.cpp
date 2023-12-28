@@ -22,7 +22,7 @@ namespace sge
     {
         _pipeline.clear();
 
-        reader.enumerate_array_elements([this, &reader](std::size_t /*i*/)
+        reader.enumerate_array_elements([this, &reader](size_t /*i*/)
         {
             // Get the name of the system
             std::string system_fn_name;

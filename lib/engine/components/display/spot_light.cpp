@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "lib/base/reflection/reflection_builder.h"
 #include "lib/engine/components/display/spot_light.h"
 #include "lib/engine/scene.h"
@@ -96,7 +98,7 @@ namespace sge
         return _node;
     }
 
-    uint32 CSpotlight::update_revision() const
+    uint32_t CSpotlight::update_revision() const
     {
         return _update_revision;
     }
@@ -218,12 +220,12 @@ namespace sge
         }
     }
 
-    uint32 CSpotlight::shadow_map_width() const
+    uint32_t CSpotlight::shadow_map_width() const
     {
         return _shadow_width;
     }
 
-    void CSpotlight::shadow_map_width(uint32 value)
+    void CSpotlight::shadow_map_width(uint32_t value)
     {
         if (_shadow_width != value)
         {
@@ -232,12 +234,12 @@ namespace sge
         }
     }
 
-    uint32 CSpotlight::shadow_map_height() const
+    uint32_t CSpotlight::shadow_map_height() const
     {
         return _shadow_height;
     }
 
-    void CSpotlight::shadow_map_height(uint32 value)
+    void CSpotlight::shadow_map_height(uint32_t value)
     {
         if (_shadow_height != value)
         {
@@ -260,12 +262,12 @@ namespace sge
         }
     }
 
-    uint32 CSpotlight::lightmask_group() const
+    uint32_t CSpotlight::lightmask_group() const
     {
         return _lightmask_group;
     }
 
-    void CSpotlight::lightmask_group(uint32 value)
+    void CSpotlight::lightmask_group(uint32_t value)
     {
         if (value != _lightmask_group)
         {

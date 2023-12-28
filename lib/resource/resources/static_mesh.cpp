@@ -1,4 +1,5 @@
 #include <fstream>
+#include <stdint.h>
 
 #include "lib/base/reflection/reflection_builder.h"
 #include "lib/resource/archives/binary_archive.h"
@@ -28,15 +29,15 @@ namespace sge
 
         reader.enumerate_object_members([this, &reader](const char* mem_name)
         {
-            if (std::strcmp(mem_name, "path") == 0)
+            if (strcmp(mem_name, "path") == 0)
             {
                 sge::from_archive(this->_path, reader);
             }
-            else if (std::strcmp(mem_name, "estrt") == 0)
+            else if (strcmp(mem_name, "estrt") == 0)
             {
                 reader.number(this->_start_elem_index);
             }
-            else if (std::strcmp(mem_name, "ecnt") == 0)
+            else if (strcmp(mem_name, "ecnt") == 0)
             {
                 reader.number(this->_num_elem_indices);
             }
@@ -48,12 +49,12 @@ namespace sge
         return _path;
     }
 
-    uint32 StaticMesh::Material::start_elem_index() const
+    uint32_t StaticMesh::Material::start_elem_index() const
     {
         return _start_elem_index;
     }
 
-    uint32 StaticMesh::Material::num_elem_indices() const
+    uint32_t StaticMesh::Material::num_elem_indices() const
     {
         return _num_elem_indices;
     }
@@ -122,13 +123,13 @@ namespace sge
         _triangle_elements.clear();
         _materials.clear();
 
-        std::size_t num_verts = 0;
+        size_t num_verts = 0;
         reader.enumerate_object_members([this, &reader, &num_verts](const char* mem_name)
         {
-            if (std::strcmp(mem_name, "vpos") == 0)
+            if (strcmp(mem_name, "vpos") == 0)
             {
                 // Get vertex positions array size
-                std::size_t size = 0;
+                size_t size = 0;
                 const auto got_size = reader.array_size(size);
                 assert((got_size && num_verts == 0) || num_verts == size / 3);
                 num_verts = size / 3;
@@ -138,10 +139,10 @@ namespace sge
                 const auto read_size = reader.typed_array(this->_vertex_positions.data()->vec(), size);
                 assert(read_size == size);
             }
-            else if (std::strcmp(mem_name, "vnor") == 0)
+            else if (strcmp(mem_name, "vnor") == 0)
             {
                 // Get vertex normals array size
-                std::size_t size = 0;
+                size_t size = 0;
                 const auto got_size = reader.array_size(size);
                 assert((got_size && num_verts == 0) || num_verts == size / 3);
                 num_verts = size / 3;
@@ -151,10 +152,10 @@ namespace sge
                 const auto read_size = reader.typed_array(this->_vertex_normals.data()->vec(), size);
                 assert(read_size == size);
             }
-            else if (std::strcmp(mem_name, "vtan") == 0)
+            else if (strcmp(mem_name, "vtan") == 0)
             {
                 // Get vertex tangents array size
-                std::size_t size = 0;
+                size_t size = 0;
                 const auto got_size = reader.array_size(size);
                 assert((got_size && num_verts == 0) || size == num_verts * 3);
                 num_verts = size / 3;
@@ -164,10 +165,10 @@ namespace sge
                 const auto read_size = reader.typed_array(this->_vertex_tangents.data()->vec(), size);
                 assert(read_size == size);
             }
-            else if (std::strcmp(mem_name, "vbts") == 0)
+            else if (strcmp(mem_name, "vbts") == 0)
             {
                 // Get vertex bitangent signs array size
-                std::size_t size = 0;
+                size_t size = 0;
                 const bool got_size = reader.array_size(size);
                 assert((got_size && num_verts == 0) || size == num_verts);
                 num_verts = size;
@@ -177,10 +178,10 @@ namespace sge
                 const auto read_size = reader.typed_array(this->_bitangent_signs.data(), size);
                 assert(read_size == size);
             }
-            else if (std::strcmp(mem_name, "mtuv") == 0)
+            else if (strcmp(mem_name, "mtuv") == 0)
             {
                 // Get uv array size
-                std::size_t size = 0;
+                size_t size = 0;
                 const auto got_size = reader.array_size(size);
                 assert((got_size && num_verts == 0) || size == num_verts * 2);
                 num_verts = size / 2;
@@ -190,10 +191,10 @@ namespace sge
                 const auto read_size = reader.typed_array(this->_material_uv.data()->vec(), size);
                 assert(read_size == size);
             }
-            else if (std::strcmp(mem_name, "lmuv") == 0)
+            else if (strcmp(mem_name, "lmuv") == 0)
             {
                 // Get uv array size
-                std::size_t size = 0;
+                size_t size = 0;
                 const auto got_size = reader.array_size(size);
                 assert((got_size && num_verts == 0) || size == num_verts * 2);
                 num_verts = size / 2;
@@ -203,10 +204,10 @@ namespace sge
                 const auto read_size = reader.typed_array(this->_lightmap_uv.data()->vec(), size);
                 assert(read_size == size);
             }
-            else if (std::strcmp(mem_name, "elem") == 0)
+            else if (strcmp(mem_name, "elem") == 0)
             {
                 // Get element array size
-                std::size_t size = 0;
+                size_t size = 0;
                 const auto got_size = reader.array_size(size);
                 assert(got_size);
 
@@ -215,10 +216,10 @@ namespace sge
                 const auto read_size = reader.typed_array(this->_triangle_elements.data(), size);
                 assert(read_size == size);
             }
-            else if (std::strcmp(mem_name, "mats") == 0)
+            else if (strcmp(mem_name, "mats") == 0)
             {
                 // Get array size
-                std::size_t size = 0;
+                size_t size = 0;
                 const auto got_size = reader.array_size(size);
                 assert(got_size);
 
@@ -226,7 +227,7 @@ namespace sge
                 this->_materials.reserve(size);
 
                 // Deserialize materials
-                reader.enumerate_array_elements([this, &reader](std::size_t /*i*/)
+                reader.enumerate_array_elements([this, &reader](size_t /*i*/)
                 {
                     Material mat;
                     mat.from_archive(reader);
@@ -250,7 +251,7 @@ namespace sge
         return true;
     }
 
-    std::size_t StaticMesh::num_verts() const
+    size_t StaticMesh::num_verts() const
     {
         return _vertex_positions.size();
     }
@@ -285,7 +286,7 @@ namespace sge
         return _vertex_tangents.data();
     }
 
-    const int8* StaticMesh::bitangent_signs() const
+    const int8_t* StaticMesh::bitangent_signs() const
     {
         if (_bitangent_signs.empty())
         {
@@ -315,17 +316,17 @@ namespace sge
         return _lightmap_uv.data();
     }
 
-    std::size_t StaticMesh::num_triangles() const
+    size_t StaticMesh::num_triangles() const
     {
         return _triangle_elements.size() / 3;
     }
 
-    std::size_t StaticMesh::num_triangle_elements() const
+    size_t StaticMesh::num_triangle_elements() const
     {
         return _triangle_elements.size();
     }
 
-    const uint32* StaticMesh::triangle_elements() const
+    const uint32_t* StaticMesh::triangle_elements() const
     {
         if (_triangle_elements.empty())
         {
@@ -335,7 +336,7 @@ namespace sge
         return _triangle_elements.data();
     }
 
-    std::size_t StaticMesh::num_materials() const
+    size_t StaticMesh::num_materials() const
     {
         return _materials.size();
     }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/base/interfaces/from_archive.h"
 #include "lib/base/interfaces/to_archive.h"
 #include "lib/base/math/conversions.h"
@@ -125,6 +127,6 @@ namespace sge
         .template implements<IToArchive>()
         .template implements<IFromArchive>();
 
-    using HalfVec3 = IVec3<int16>;
-    using UHalfVec3 = IVec3<uint16>;
+    using HalfVec3 = IVec3<int16_t>;
+    using UHalfVec3 = IVec3<uint16_t>;
 }

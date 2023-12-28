@@ -7,7 +7,7 @@ namespace sge
 {
     struct SGE_RESOURCE_API Shader
     {
-        void from_file(std::istream& file, std::size_t end);
+        void from_file(std::istream& file, size_t end);
 
         const std::string& source() const
         {

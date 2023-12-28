@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "lib/base/reflection/reflection_builder.h"
 
 namespace sge
@@ -40,14 +42,14 @@ namespace sge
     {
         const NativeTypeInfo GetType<void>::type_info = build_void_type_info();
         const NativeTypeInfo GetType<bool>::type_info = build_primitive_type_info<bool>("bool");
-        const NativeTypeInfo GetType<int8>::type_info = build_primitive_type_info<int8>("int8");
-        const NativeTypeInfo GetType<uint8>::type_info = build_primitive_type_info<uint8>("uint8");
-        const NativeTypeInfo GetType<int16>::type_info = build_primitive_type_info<int16>("int16");
-        const NativeTypeInfo GetType<uint16>::type_info = build_primitive_type_info<uint16>("uint16");
-        const NativeTypeInfo GetType<int32>::type_info = build_primitive_type_info<int32>("int32");
-        const NativeTypeInfo GetType<uint32>::type_info = build_primitive_type_info<uint32>("uint32");
-        const NativeTypeInfo GetType<int64>::type_info = build_primitive_type_info<int64>("int64");
-        const NativeTypeInfo GetType<uint64>::type_info = build_primitive_type_info<uint64>("uint64");
+        const NativeTypeInfo GetType<int8_t>::type_info = build_primitive_type_info<int8_t>("int8");
+        const NativeTypeInfo GetType<uint8_t>::type_info = build_primitive_type_info<uint8_t>("uint8");
+        const NativeTypeInfo GetType<int16_t>::type_info = build_primitive_type_info<int16_t>("int16");
+        const NativeTypeInfo GetType<uint16_t>::type_info = build_primitive_type_info<uint16_t>("uint16");
+        const NativeTypeInfo GetType<int32_t>::type_info = build_primitive_type_info<int32_t>("int32");
+        const NativeTypeInfo GetType<uint32_t>::type_info = build_primitive_type_info<uint32_t>("uint32");
+        const NativeTypeInfo GetType<int64_t>::type_info = build_primitive_type_info<int64_t>("int64");
+        const NativeTypeInfo GetType<uint64_t>::type_info = build_primitive_type_info<uint64_t>("uint64");
         const NativeTypeInfo GetType<float>::type_info = build_primitive_type_info<float>("float");
         const NativeTypeInfo GetType<double>::type_info = build_primitive_type_info<double>("double");
 

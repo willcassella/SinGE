@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "lib/bullet_physics/bullet_physics_system_data.h"
 #include "lib/bullet_physics/level_portal.h"
 #include "lib/bullet_physics/physics_entity.h"
@@ -15,12 +17,12 @@ namespace sge
         {
             // Get events
             ENewComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (new_level_portal_channel.consume(subscriber_id, events, &num_events))
             {
                 // Get nodes
                 NodeId node_ids[8];
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     node_ids[i] = events[i].node;
                 }
@@ -29,7 +31,7 @@ namespace sge
                 scene.get_nodes(node_ids, num_events, nodes);
 
                 // Process events
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     auto& phys_entity = phys_data.get_or_create_physics_entity(node_ids[i], *nodes[i]);
                     assert(phys_entity.level_portal_ghost == nullptr);
@@ -56,11 +58,11 @@ namespace sge
         {
             // Get events
             EDestroyedComponent events[8];
-            int32 num_events;
+            int32_t num_events;
             while (destroyed_level_portal_channel.consume(subscriber_id, events, &num_events))
             {
                 // Process events
-                for (int32 i = 0; i < num_events; ++i)
+                for (int32_t i = 0; i < num_events; ++i)
                 {
                     auto* phys_entity = phys_data.get_physics_entity(events[i].node);
                     if (!phys_entity)

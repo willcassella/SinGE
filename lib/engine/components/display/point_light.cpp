@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include "lib/base/reflection/reflection_builder.h"
 #include "lib/engine/components/display/point_light.h"
 #include "lib/engine/scene.h"
@@ -45,7 +47,7 @@ namespace sge
         return _node;
     }
 
-    uint32 CPointLight::update_revision() const
+    uint32_t CPointLight::update_revision() const
     {
         return _update_revision;
     }

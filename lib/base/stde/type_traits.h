@@ -45,7 +45,7 @@ namespace stde
         using return_type = Ret;
         using self_type = void;
         using arg_types = sge::tmp::list<Args...>;
-        static constexpr std::size_t arity = sizeof...(Args);
+        static constexpr size_t arity = sizeof...(Args);
     };
 
     template <class T, typename Ret, typename ... Args>
@@ -54,7 +54,7 @@ namespace stde
         using return_type = Ret;
         using self_type = T;
         using arg_types = sge::tmp::list<Args...>;
-        static constexpr std::size_t arity = sizeof...(Args);
+        static constexpr size_t arity = sizeof...(Args);
     };
 
     template <typename T, typename Ret, typename ... Args>
@@ -63,7 +63,7 @@ namespace stde
         using return_type = Ret;
         using self_type = const T;
         using arg_types = sge::tmp::list<Args...>;
-        static constexpr std::size_t arity = sizeof...(Args);
+        static constexpr size_t arity = sizeof...(Args);
     };
 
     /* Handles case when 'nullptr' was passed a function pointer argument, allows you to perform SFINAE instead of erroring out. */

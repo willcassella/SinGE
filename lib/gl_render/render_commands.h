@@ -71,7 +71,7 @@ namespace sge
             const gl_material::MaterialStandardUniforms uniforms,
             const RenderCommand_Mesh& mesh,
             const RenderCommand_MeshInstance* mesh_instances,
-            std::size_t num_instances);
+            size_t num_instances);
 
         /**
          * \brief Command to render sets of lines to the currently bound framebuffer with the currently bound material and parameters.
@@ -80,7 +80,7 @@ namespace sge
          */
         void RenderCommand_render_lines(
             const RenderCommand_Lines* lines,
-            std::size_t num_lines);
+            size_t num_lines);
 
         void render_scene_shade_hdr(
             GLuint framebuffer,

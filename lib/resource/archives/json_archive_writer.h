@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stack>
+#include <stdint.h>
 
 #include <rapidjson/document.h>
 
@@ -42,42 +43,42 @@ namespace sge
             _head->SetBool(value);
         }
 
-        void number(int8 value) override
+        void number(int8_t value) override
         {
             _head->SetInt(value);
         }
 
-        void number(uint8 value) override
+        void number(uint8_t value) override
         {
             _head->SetUint(value);
         }
 
-        void number(int16 value) override
+        void number(int16_t value) override
         {
             _head->SetInt(value);
         }
 
-        void number(uint16 value) override
+        void number(uint16_t value) override
         {
             _head->SetUint(value);
         }
 
-        void number(int32 value) override
+        void number(int32_t value) override
         {
             _head->SetInt(value);
         }
 
-        void number(uint32 value) override
+        void number(uint32_t value) override
         {
             _head->SetUint(value);
         }
 
-        void number(int64 value) override
+        void number(int64_t value) override
         {
             _head->SetInt64(value);
         }
 
-        void number(uint64 value) override
+        void number(uint64_t value) override
         {
             _head->SetUint64(value);
         }
@@ -92,62 +93,62 @@ namespace sge
             _head->SetDouble(value);
         }
 
-        void string(const char* str, std::size_t len) override
+        void string(const char* str, size_t len) override
         {
             _head->SetString(str, static_cast<rapidjson::SizeType>(len), *_allocator);
         }
 
-        void typed_array(const bool* array, std::size_t size) override
+        void typed_array(const bool* array, size_t size) override
         {
             impl_typed_array(array, size);
         }
 
-        void typed_array(const int8* array, std::size_t size) override
+        void typed_array(const int8_t* array, size_t size) override
         {
             impl_typed_array(array, size);
         }
 
-        void typed_array(const uint8* array, std::size_t size) override
+        void typed_array(const uint8_t* array, size_t size) override
         {
             impl_typed_array(array, size);
         }
 
-        void typed_array(const int16* array, std::size_t size) override
+        void typed_array(const int16_t* array, size_t size) override
         {
             impl_typed_array(array, size);
         }
 
-        void typed_array(const uint16* array, std::size_t size) override
+        void typed_array(const uint16_t* array, size_t size) override
         {
             impl_typed_array(array, size);
         }
 
-        void typed_array(const int32* array, std::size_t size) override
+        void typed_array(const int32_t* array, size_t size) override
         {
             impl_typed_array(array, size);
         }
 
-        void typed_array(const uint32* array, std::size_t size) override
+        void typed_array(const uint32_t* array, size_t size) override
         {
             impl_typed_array(array, size);
         }
 
-        void typed_array(const int64* array, std::size_t size) override
+        void typed_array(const int64_t* array, size_t size) override
         {
             impl_typed_array(array, size);
         }
 
-        void typed_array(const uint64* array, std::size_t size) override
+        void typed_array(const uint64_t* array, size_t size) override
         {
             impl_typed_array(array, size);
         }
 
-        void typed_array(const float* array, std::size_t size) override
+        void typed_array(const float* array, size_t size) override
         {
             impl_typed_array(array, size);
         }
 
-        void typed_array(const double* array, std::size_t size) override
+        void typed_array(const double* array, size_t size) override
         {
             impl_typed_array(array, size);
         }
@@ -201,12 +202,12 @@ namespace sge
 
     private:
         template <typename T>
-        void impl_typed_array(const T* array, std::size_t size)
+        void impl_typed_array(const T* array, size_t size)
         {
             _head->SetArray();
             _head->Reserve(static_cast<rapidjson::SizeType>(size), *_allocator);
 
-            for (std::size_t i = 0; i < size; ++i)
+            for (size_t i = 0; i < size; ++i)
             {
                 _head->PushBack(array[i], *_allocator);
             }

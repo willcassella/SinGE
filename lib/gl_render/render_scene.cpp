@@ -230,9 +230,9 @@ namespace sge
                     const auto* const mesh_node_ids = mesh.node_ids.data();
                     auto* const mesh_instances = mesh.instance_commands.data();
 
-                    for (std::size_t i = 0; i < num_instances; ++i)
+                    for (size_t i = 0; i < num_instances; ++i)
                     {
-                        for (std::size_t search_i = 0; search_i < num_nodes; ++search_i)
+                        for (size_t search_i = 0; search_i < num_nodes; ++search_i)
                         {
                             if (mesh_node_ids[i] == node_ids[search_i])
                             {
@@ -258,7 +258,7 @@ namespace sge
 
             for (auto& receiver_instance : commands.lightmask_receiver_mesh_instances)
             {
-                for (std::size_t search_i = 0; search_i < num_nodes; ++search_i)
+                for (size_t search_i = 0; search_i < num_nodes; ++search_i)
                 {
                     if (node_ids[search_i] == receiver_instance.node_id)
                     {

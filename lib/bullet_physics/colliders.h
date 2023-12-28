@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/bullet_physics/bullet_physics_system_data.h"
 
 namespace sge
@@ -27,7 +29,7 @@ namespace sge
             std::string path;
 
             /* The number of uses of this collider. */
-            uint64 num_uses = 0;
+            uint64_t num_uses = 0;
 
             /* The shape itself. */
             btTriangleMesh mesh;

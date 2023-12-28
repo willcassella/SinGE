@@ -49,12 +49,12 @@ namespace sge
             const gl_material::MaterialStandardUniforms uniforms,
             const RenderCommand_Mesh& mesh,
             const RenderCommand_MeshInstance* instances,
-            std::size_t num_instances)
+            size_t num_instances)
         {
             // Bind the mesh
             glBindVertexArray(mesh.vao);
 
-            for (std::size_t i = 0; i < num_instances; ++i)
+            for (size_t i = 0; i < num_instances; ++i)
             {
                 // Set lightmap parameters
                 glActiveTexture(gl_material::LIGHTMAP_X_BASIS_TEXTURE_SLOT);
@@ -93,9 +93,9 @@ namespace sge
 
         void RenderCommand_render_lines(
             const RenderCommand_Lines* line_sets,
-            std::size_t num_line_sets)
+            size_t num_line_sets)
         {
-            for (std::size_t i = 0; i < num_line_sets; ++i)
+            for (size_t i = 0; i < num_line_sets; ++i)
             {
                 glBindVertexArray(line_sets[i].vao);
                 glDrawArrays(GL_LINES, 0, line_sets[i].num_verts);

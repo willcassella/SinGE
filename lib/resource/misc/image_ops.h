@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/resource/build.h"
 
 namespace sge
@@ -16,9 +18,9 @@ namespace sge
          */
         SGE_RESOURCE_API void save_rgbf(
             const float* image,
-            int32 width,
-            int32 height,
-            byte num_channels,
+            int32_t width,
+            int32_t height,
+            uint8_t num_channels,
             const char* path);
 
         /**
@@ -32,11 +34,11 @@ namespace sge
          */
         SGE_RESOURCE_API void save_rgbf_to_memory(
             const float* image,
-            int32 width,
-            int32 height,
-            byte num_channels,
-            byte** out_buff,
-            std::size_t* out_size);
+            int32_t width,
+            int32_t height,
+            uint8_t num_channels,
+            uint8_t** out_buff,
+            size_t* out_size);
 
         /**
          * \brief Loads an RGB float image from a memory buffer.
@@ -48,12 +50,12 @@ namespace sge
          * \param out_num_channels The number of channels in the image.
          */
         SGE_RESOURCE_API void load_rgbf_from_memory(
-            const byte* buff,
-            std::size_t size,
+            const uint8_t* buff,
+            size_t size,
             float** out_image,
-            int32* out_width,
-            int32* out_height,
-            byte* out_num_channels);
+            int32_t* out_width,
+            int32_t* out_height,
+            uint8_t* out_num_channels);
 
         /**
          * \brief Performs a dilation filter on the given RGB float image.
@@ -65,9 +67,9 @@ namespace sge
          */
         SGE_RESOURCE_API void dilate_rgbf(
             const float* image,
-            int32 width,
-            int32 height,
-            byte num_channels,
+            int32_t width,
+            int32_t height,
+            uint8_t num_channels,
             float* out);
 
         /**
@@ -80,9 +82,9 @@ namespace sge
          */
         SGE_RESOURCE_API void smooth_rgbf(
             const float* image,
-            int32 width,
-            int32 height,
-            byte num_channels,
+            int32_t width,
+            int32_t height,
+            uint8_t num_channels,
             float* out);
     }
 }

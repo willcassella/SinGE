@@ -135,12 +135,12 @@ namespace sge
         return *static_cast<const int *>(lhs) == *static_cast<const int *>(rhs);
     }
 
-    std::size_t EnumTypeInfo::num_constructors() const
+    size_t EnumTypeInfo::num_constructors() const
     {
         return 0;
     }
 
-    const ConstructorInfo *EnumTypeInfo::find_constructor(std::size_t /*argc*/) const
+    const ConstructorInfo *EnumTypeInfo::find_constructor(size_t /*argc*/) const
     {
         return nullptr;
     }
@@ -149,7 +149,7 @@ namespace sge
     {
     }
 
-    std::size_t EnumTypeInfo::num_named_constructors() const
+    size_t EnumTypeInfo::num_named_constructors() const
     {
         return 0;
     }
@@ -163,7 +163,7 @@ namespace sge
     {
     }
 
-    std::size_t EnumTypeInfo::num_properties() const
+    size_t EnumTypeInfo::num_properties() const
     {
         return _data.values.size();
     }
@@ -182,7 +182,7 @@ namespace sge
         }
     }
 
-    std::size_t EnumTypeInfo::num_fields() const
+    size_t EnumTypeInfo::num_fields() const
     {
         return 0;
     }

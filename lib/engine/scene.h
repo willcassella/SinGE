@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/engine/scene_data.h"
 
 namespace sge
@@ -21,20 +23,20 @@ namespace sge
         Scene& operator=(const Scene& copy) = delete;
         ~Scene();
 
-        void create_nodes(std::size_t num_nodes, Node** out_nodes);
+        void create_nodes(size_t num_nodes, Node** out_nodes);
 
-        void destroy_nodes(std::size_t num_nodes, Node* const* nodes);
+        void destroy_nodes(size_t num_nodes, Node* const* nodes);
 
-        void get_nodes(const NodeId* nodes, std::size_t num_nodes, Node** out_nodes);
+        void get_nodes(const NodeId* nodes, size_t num_nodes, Node** out_nodes);
 
-        void get_nodes(const NodeId* nodes, std::size_t num_nodes, const Node** out_nodes) const;
+        void get_nodes(const NodeId* nodes, size_t num_nodes, const Node** out_nodes) const;
 
-        std::size_t num_root_nodes() const;
+        size_t num_root_nodes() const;
 
-        std::size_t get_root_nodes(
-            std::size_t start_index,
-            std::size_t num_nodes,
-            std::size_t* out_num_nodes,
+        size_t get_root_nodes(
+            size_t start_index,
+            size_t num_nodes,
+            size_t* out_num_nodes,
             NodeId* out_nodes) const;
 
         ComponentContainer* get_component_container(const TypeInfo& type);
@@ -109,31 +111,31 @@ namespace sge
 
         void execute_job_queue(
             SystemInfo* const* jobs,
-            std::size_t num_jobs,
+            size_t num_jobs,
             UpdatePipeline& pipeline,
             float time_delta);
 
         void on_end_system_frame();
 
-        void update_hierarchy(Node* const* nodes, std::size_t num_nodes);
+        void update_hierarchy(Node* const* nodes, size_t num_nodes);
 
         void update_child_hierarchy(
-            uint32 parent_hierachy_depth,
+            uint32_t parent_hierachy_depth,
             bool parent_destroyed,
             std::vector<Node*>& nodes,
-            std::size_t offset);
+            size_t offset);
 
-        void update_matrices(Node* const* nodes, std::size_t num_nodes);
+        void update_matrices(Node* const* nodes, size_t num_nodes);
 
         void update_child_matrices(
             const Mat4& parent_matrix,
             std::vector<Node*>& nodes,
-            std::size_t offset,
+            size_t offset,
             std::vector<ENodeTransformChanged>& out_events);
 
         TypeDB* _type_db;
         float _current_time;
-        uint64 _frame_id = 0;
+        uint64_t _frame_id = 0;
         SceneData _scene_data;
         EventChannel _debug_draw_line_channel;
     };

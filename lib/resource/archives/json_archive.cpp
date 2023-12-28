@@ -1,4 +1,4 @@
-#include <cstdio>
+#include <stdio.h>
 
 #include <rapidjson/filewritestream.h>
 #include <rapidjson/filereadstream.h>
@@ -44,7 +44,7 @@ namespace sge
 
     bool JsonArchive::to_file(const char* path) const
     {
-        std::FILE* file = std::fopen(path, "wb");
+        FILE* file = fopen(path, "wb");
         char writeBuffer[65536];
 
         rapidjson::FileWriteStream out{ file, writeBuffer, sizeof(writeBuffer) };
@@ -52,7 +52,7 @@ namespace sge
 
         _data->doc.Accept(writer);
 
-        std::fclose(file);
+        fclose(file);
         return true;
     }
 
@@ -65,7 +65,7 @@ namespace sge
         }
 
         // Open the file
-        std::FILE* file = std::fopen(path, "rb");
+        FILE* file = fopen(path, "rb");
         if (!file)
         {
             return false;
@@ -77,7 +77,7 @@ namespace sge
 
         _data->doc.ParseStream<0, rapidjson::UTF8<>, rapidjson::FileReadStream>(in);
 
-        std::fclose(file);
+        fclose(file);
         return true;
     }
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/base/reflection/reflection.h"
 #include "lib/base/interfaces/to_archive.h"
 #include "lib/base/interfaces/from_archive.h"
@@ -12,16 +14,16 @@ namespace sge
         SGE_REFLECTED_TYPE;
 
         /** Multiplication factor for converting degrees to radians. */
-        static constexpr Scalar DEGREES_TO_RADIANS = 0.0174533f;
+        static constexpr float DEGREES_TO_RADIANS = 0.0174533f;
 
         /** Multiplication factor for converting radians to degrees. */
-        static constexpr Scalar RADIANS_TO_DEGREES = 57.2958f;
+        static constexpr float RADIANS_TO_DEGREES = 57.2958f;
 
         constexpr Angle()
             : _radians{0}
         {
         }
-        constexpr Angle(Scalar radians)
+        constexpr Angle(float radians)
             : _radians{radians}
         {
         }
@@ -37,47 +39,47 @@ namespace sge
         }
 
         /** Returns the current value in radians. */
-        Scalar radians() const
+        float radians() const
         {
             return _radians;
         }
 
         /** Sets the current value in radians. */
-        void radians(Scalar value)
+        void radians(float value)
         {
             _radians = value;
         }
 
         /** Returns the current value in degrees. */
-        Scalar degrees() const
+        float degrees() const
         {
             return _radians * RADIANS_TO_DEGREES;
         }
 
         /** Sets the current value in degrees. */
-        void degrees(Scalar value)
+        void degrees(float value)
         {
             _radians = value * DEGREES_TO_RADIANS;
         }
 
         /** Converts this object to the underlying type. */
-        operator Scalar() const
+        operator float() const
         {
             return _radians;
         }
 
     private:
-        Scalar _radians;
+        float _radians;
     };
 
     /** Constructs an angle in radians. */
-    constexpr Angle radians(Scalar value)
+    constexpr Angle radians(float value)
     {
         return {value};
     }
 
     /** Constructs an angle in degrees. */
-    constexpr Angle degrees(Scalar value)
+    constexpr Angle degrees(float value)
     {
         return {value * Angle::DEGREES_TO_RADIANS};
     }

@@ -1,9 +1,10 @@
 #pragma once
 
-#include <cassert>
-#include <cstring>
-#include <vector>
+#include <assert.h>
 #include <stack>
+#include <stdint.h>
+#include <string.h>
+#include <vector>
 
 #include "lib/base/io/archive_writer.h"
 #include "lib/resource/archives/binary_archive_node.h"
@@ -15,11 +16,11 @@ namespace sge
         struct Cursor
         {
             BinaryArchiveNode node_type;
-            std::size_t offset;
+            size_t offset;
         };
 
     public:
-        BinaryArchiveWriter(std::vector<byte>& buffer)
+        BinaryArchiveWriter(std::vector<uint8_t>& buffer)
             : buffer(&buffer)
         {
             current_node.node_type = BAN_NULL;
@@ -58,49 +59,49 @@ namespace sge
             buffer_append<BinaryArchiveBool_t>(value ? BAN_TRUE : BAN_FALSE);
         }
 
-        void number(int8 value) override
+        void number(int8_t value) override
         {
             node_set_type(BAN_INT8);
             buffer_append(value);
         }
 
-        void number(uint8 value) override
+        void number(uint8_t value) override
         {
             node_set_type(BAN_UINT8);
             buffer_append(value);
         }
 
-        void number(int16 value) override
+        void number(int16_t value) override
         {
             node_set_type(BAN_INT16);
             buffer_append(value);
         }
 
-        void number(uint16 value) override
+        void number(uint16_t value) override
         {
             node_set_type(BAN_UINT16);
             buffer_append(value);
         }
 
-        void number(int32 value) override
+        void number(int32_t value) override
         {
             node_set_type(BAN_INT32);
             buffer_append(value);
         }
 
-        void number(uint32 value) override
+        void number(uint32_t value) override
         {
             node_set_type(BAN_UINT32);
             buffer_append(value);
         }
 
-        void number(int64 value) override
+        void number(int64_t value) override
         {
             node_set_type(BAN_INT64);
             buffer_append(value);
         }
 
-        void number(uint64 value) override
+        void number(uint64_t value) override
         {
             node_set_type(BAN_UINT64);
             buffer_append(value);
@@ -118,14 +119,14 @@ namespace sge
             buffer_append(value);
         }
 
-        void string(const char* str, std::size_t len) override
+        void string(const char* str, size_t len) override
         {
             node_set_type(BAN_STRING);
             buffer_append(static_cast<BinaryArchiveSize_t>(len));
-            buffer->insert(buffer->end(), reinterpret_cast<const byte*>(str), reinterpret_cast<const byte*>(str + len));
+            buffer->insert(buffer->end(), reinterpret_cast<const uint8_t*>(str), reinterpret_cast<const uint8_t*>(str + len));
         }
 
-        void typed_array(const bool* arr, std::size_t size) override
+        void typed_array(const bool* arr, size_t size) override
         {
             // You may not change a node's type, or set it twice. Generic arrays are considered a different type than typed arrays.
             assert(current_node.node_type == BAN_NULL);
@@ -141,58 +142,58 @@ namespace sge
             buffer_append(static_cast<BinaryArchiveSize_t>(size));
 
             // Push the array into the buffer
-            for (std::size_t i = 0; i < size; ++i)
+            for (size_t i = 0; i < size; ++i)
             {
                 buffer_append<BinaryArchiveBool_t>(arr[i] ? BinaryArchiveBool_t{ 1 } : BinaryArchiveBool_t{ 0 });
             }
         }
 
-        void typed_array(const int8* arr, std::size_t size) override
+        void typed_array(const int8_t* arr, size_t size) override
         {
             impl_typed_array(BAN_ARRAY_INT8, arr, size);
         }
 
-        void typed_array(const uint8* arr, std::size_t size) override
+        void typed_array(const uint8_t* arr, size_t size) override
         {
             impl_typed_array(BAN_ARRAY_UINT8, arr, size);
         }
 
-        void typed_array(const int16* arr, std::size_t size) override
+        void typed_array(const int16_t* arr, size_t size) override
         {
             impl_typed_array(BAN_ARRAY_INT16, arr, size);
         }
 
-        void typed_array(const uint16* arr, std::size_t size) override
+        void typed_array(const uint16_t* arr, size_t size) override
         {
             impl_typed_array(BAN_ARRAY_UINT16, arr, size);
         }
 
-        void typed_array(const int32* arr, std::size_t size) override
+        void typed_array(const int32_t* arr, size_t size) override
         {
             impl_typed_array(BAN_ARRAY_INT32, arr, size);
         }
 
-        void typed_array(const uint32* arr, std::size_t size) override
+        void typed_array(const uint32_t* arr, size_t size) override
         {
             impl_typed_array(BAN_ARRAY_UINT32, arr, size);
         }
 
-        void typed_array(const int64* arr, std::size_t size) override
+        void typed_array(const int64_t* arr, size_t size) override
         {
             impl_typed_array(BAN_ARRAY_INT64, arr, size);
         }
 
-        void typed_array(const uint64* arr, std::size_t size) override
+        void typed_array(const uint64_t* arr, size_t size) override
         {
             impl_typed_array(BAN_ARRAY_UINT64, arr, size);
         }
 
-        void typed_array(const float* arr, std::size_t size) override
+        void typed_array(const float* arr, size_t size) override
         {
             impl_typed_array(BAN_ARRAY_FLOAT, arr, size);
         }
 
-        void typed_array(const double* arr, std::size_t size) override
+        void typed_array(const double* arr, size_t size) override
         {
             impl_typed_array(BAN_ARRAY_DOUBLE, arr, size);
         }
@@ -249,7 +250,7 @@ namespace sge
             node_stack.push(current_node);
 
             // Push the new node's name
-            buffer->insert(buffer->end(), reinterpret_cast<const byte*>(name), reinterpret_cast<const byte*>(name + std::strlen(name)));
+            buffer->insert(buffer->end(), reinterpret_cast<const uint8_t*>(name), reinterpret_cast<const uint8_t*>(name + strlen(name)));
             buffer->push_back(0);
 
             // Set up the new node
@@ -259,7 +260,7 @@ namespace sge
         }
 
         template <typename T>
-        void impl_typed_array(BinaryArchiveNode array_type, const T* arr, std::size_t size)
+        void impl_typed_array(BinaryArchiveNode array_type, const T* arr, size_t size)
         {
             // You may not change a node's type, or set it twice. Generic arrays are considered a different type than typed arrays.
             assert(current_node.node_type == BAN_NULL);
@@ -275,13 +276,13 @@ namespace sge
             buffer_append(static_cast<BinaryArchiveSize_t>(size));
 
             // Push the array into the buffer
-            buffer->insert(buffer->end(), reinterpret_cast<const byte*>(arr), reinterpret_cast<const byte*>(arr + size));
+            buffer->insert(buffer->end(), reinterpret_cast<const uint8_t*>(arr), reinterpret_cast<const uint8_t*>(arr + size));
         }
 
         template <typename T>
         void buffer_append(const T& value)
         {
-            const byte* addr = reinterpret_cast<const byte*>(&value);
+            const uint8_t* addr = reinterpret_cast<const uint8_t*>(&value);
             buffer->insert(buffer->end(), addr, addr + sizeof(T));
         }
 
@@ -297,6 +298,6 @@ namespace sge
     private:
         Cursor current_node;
         std::stack<Cursor> node_stack;
-        std::vector<byte>* buffer;
+        std::vector<uint8_t>* buffer;
     };
 }

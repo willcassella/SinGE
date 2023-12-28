@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 #include <BulletDynamics/Character/btKinematicCharacterController.h>
 #include <btBulletCollisionCommon.h>
@@ -33,7 +35,7 @@ namespace sge
                 const btCollisionObject* body1) override;
 
             btPairCachingGhostObject ghost_object;
-            uint64 last_lightmask_collision_frame = 0;
+            uint64_t last_lightmask_collision_frame = 0;
 
         private:
             PhysicsEntity* _phys_entity;

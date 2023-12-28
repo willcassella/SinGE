@@ -1,4 +1,4 @@
-#include <cstdio>
+#include <stdio.h>
 
 #include "lib/gl_render/gl_texture_2d.h"
 #include "lib/gl_render/render_resource.h"
@@ -170,7 +170,7 @@ namespace sge
                 gl_mesh.num_total_elements = static_cast<GLint>(static_mesh.num_triangle_elements());
 
                 // Create each material slice for the mesh
-                for (std::size_t i = 0; i < static_mesh.num_materials(); ++i)
+                for (size_t i = 0; i < static_mesh.num_materials(); ++i)
                 {
                     // Get the material
                     const auto& mat = static_mesh.materials()[i];

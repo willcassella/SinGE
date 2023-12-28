@@ -71,7 +71,7 @@ namespace sge
             // If this reader holds a string
             else if (reader.is_string())
             {
-                std::size_t len;
+                size_t len;
                 reader.string_size(len);
                 std::string tex;
                 tex.assign(len, 0);
@@ -80,7 +80,7 @@ namespace sge
             }
             else
             {
-                std::size_t size;
+                size_t size;
                 assert(reader.array_size(size));
 
                 if (size == 2)

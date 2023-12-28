@@ -1,5 +1,6 @@
-#include <cstring>
 #include <iostream>
+#include <string.h>
+#include <string>
 
 #include <GLFW/glfw3.h>
 
@@ -27,35 +28,35 @@ namespace sge
             int key = 0;
 
             // If the input name is a mouse input
-            if (std::strncmp(input_name.c_str(), MOUSE_PREFIX, MOUSE_PREFIX_LEN) == 0)
+            if (strncmp(input_name.c_str(), MOUSE_PREFIX, MOUSE_PREFIX_LEN) == 0)
             {
                 const char* mouse_input_name = input_name.c_str() + MOUSE_PREFIX_LEN;
 
-                if (std::strcmp(mouse_input_name, "X") == 0)
+                if (strcmp(mouse_input_name, "X") == 0)
                 {
                     this->mouse_x_bindings.insert(event_name);
                 }
-                else if (std::strcmp(mouse_input_name, "Y") == 0)
+                else if (strcmp(mouse_input_name, "Y") == 0)
                 {
                     this->mouse_y_bindings.insert(event_name);
                 }
-                else if (std::strcmp(mouse_input_name, "DX") == 0)
+                else if (strcmp(mouse_input_name, "DX") == 0)
                 {
                     this->mouse_delta_x_bindings.insert(event_name);
                 }
-                else if (std::strcmp(mouse_input_name, "DY") == 0)
+                else if (strcmp(mouse_input_name, "DY") == 0)
                 {
                     this->mouse_delta_y_bindings.insert(event_name);
                 }
-                else if (std::strcmp(mouse_input_name, "L") == 0)
+                else if (strcmp(mouse_input_name, "L") == 0)
                 {
                     this->mouse_button_bindings[GLFW_MOUSE_BUTTON_LEFT] = event_name;
                 }
-                else if (std::strcmp(mouse_input_name, "R") == 0)
+                else if (strcmp(mouse_input_name, "R") == 0)
                 {
                     this->mouse_button_bindings[GLFW_MOUSE_BUTTON_RIGHT] = event_name;
                 }
-                else if (std::strcmp(mouse_input_name, "M") == 0)
+                else if (strcmp(mouse_input_name, "M") == 0)
                 {
                     this->mouse_button_bindings[GLFW_MOUSE_BUTTON_MIDDLE] = event_name;
                 }

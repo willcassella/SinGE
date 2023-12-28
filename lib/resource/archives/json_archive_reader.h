@@ -1,7 +1,8 @@
 #pragma once
 
-#include <stack>
 #include <algorithm>
+#include <stack>
+#include <stdint.h>
 
 #include <rapidjson/document.h>
 
@@ -51,42 +52,42 @@ namespace sge
             return _head->IsNumber();
         }
 
-        bool number(int8& out) const override
+        bool number(int8_t& out) const override
         {
             return impl_value<int, &rapidjson::Value::IsInt, &rapidjson::Value::GetInt>(out);
         }
 
-        bool number(uint8& out) const override
+        bool number(uint8_t& out) const override
         {
             return impl_value<unsigned int, &rapidjson::Value::IsUint, &rapidjson::Value::GetUint>(out);
         }
 
-        bool number(int16& out) const override
+        bool number(int16_t& out) const override
         {
             return impl_value<int, &rapidjson::Value::IsInt, &rapidjson::Value::GetInt>(out);
         }
 
-        bool number(uint16& out) const override
+        bool number(uint16_t& out) const override
         {
             return impl_value<unsigned int, &rapidjson::Value::IsUint, &rapidjson::Value::GetUint>(out);
         }
 
-        bool number(int32& out) const override
+        bool number(int32_t& out) const override
         {
             return impl_value<int, &rapidjson::Value::IsInt, &rapidjson::Value::GetInt>(out);
         }
 
-        bool number(uint32& out) const override
+        bool number(uint32_t& out) const override
         {
             return impl_value<unsigned int, &rapidjson::Value::IsUint, &rapidjson::Value::GetUint>(out);
         }
 
-        bool number(int64& out) const override
+        bool number(int64_t& out) const override
         {
             return impl_value<int64_t, &rapidjson::Value::IsInt64, &rapidjson::Value::GetInt64>(out);
         }
 
-        bool number(uint64& out) const override
+        bool number(uint64_t& out) const override
         {
             return impl_value<uint64_t, &rapidjson::Value::IsUint64, &rapidjson::Value::GetUint64>(out);
         }
@@ -106,7 +107,7 @@ namespace sge
             return _head->IsString();
         }
 
-        bool string_size(std::size_t& out) const override
+        bool string_size(size_t& out) const override
         {
             if (!_head->IsString())
             {
@@ -117,7 +118,7 @@ namespace sge
             return true;
         }
 
-        std::size_t string(char* out, std::size_t len) const override
+        size_t string(char* out, size_t len) const override
         {
             if (!_head->IsString())
             {
@@ -125,8 +126,8 @@ namespace sge
             }
 
             // Copy the string
-            const std::size_t copy_length = std::min(len, (std::size_t)_head->GetStringLength());
-            std::memcpy(out, _head->GetString(), copy_length);
+            const size_t copy_length = std::min(len, (size_t)_head->GetStringLength());
+            memcpy(out, _head->GetString(), copy_length);
             return copy_length;
         }
 
@@ -135,7 +136,7 @@ namespace sge
             return _head->IsArray();
         }
 
-        bool array_size(std::size_t& out) const override
+        bool array_size(size_t& out) const override
         {
             if (!_head->IsArray())
             {
@@ -146,57 +147,57 @@ namespace sge
             return true;
         }
 
-        std::size_t typed_array(bool* out, std::size_t size) const override
+        size_t typed_array(bool* out, size_t size) const override
         {
             return impl_typed_array<bool, &rapidjson::Value::IsBool, &rapidjson::Value::GetBool>(out, size);
         }
 
-        std::size_t typed_array(int8* out, std::size_t size) const override
+        size_t typed_array(int8_t* out, size_t size) const override
         {
             return impl_typed_array<int, &rapidjson::Value::IsInt, &rapidjson::Value::GetInt>(out, size);
         }
 
-        std::size_t typed_array(uint8* out, std::size_t size) const override
+        size_t typed_array(uint8_t* out, size_t size) const override
         {
             return impl_typed_array<unsigned int, &rapidjson::Value::IsUint, &rapidjson::Value::GetUint>(out, size);
         }
 
-        std::size_t typed_array(int16* out, std::size_t size) const override
+        size_t typed_array(int16_t* out, size_t size) const override
         {
             return impl_typed_array<int, &rapidjson::Value::IsInt, &rapidjson::Value::GetInt>(out, size);
         }
 
-        std::size_t typed_array(uint16* out, std::size_t size) const override
+        size_t typed_array(uint16_t* out, size_t size) const override
         {
             return impl_typed_array<unsigned int, &rapidjson::Value::IsUint, &rapidjson::Value::GetUint>(out, size);
         }
 
-        std::size_t typed_array(int32* out, std::size_t size) const override
+        size_t typed_array(int32_t* out, size_t size) const override
         {
             return impl_typed_array<int, &rapidjson::Value::IsInt, &rapidjson::Value::GetInt>(out, size);
         }
 
-        std::size_t typed_array(uint32* out, std::size_t size) const override
+        size_t typed_array(uint32_t* out, size_t size) const override
         {
             return impl_typed_array<unsigned int, &rapidjson::Value::IsUint, &rapidjson::Value::GetUint>(out, size);
         }
 
-        std::size_t typed_array(int64* out, std::size_t size) const override
+        size_t typed_array(int64_t* out, size_t size) const override
         {
             return impl_typed_array<int64_t, &rapidjson::Value::IsInt64, &rapidjson::Value::GetInt64>(out, size);
         }
 
-        std::size_t typed_array(uint64* out, std::size_t size) const override
+        size_t typed_array(uint64_t* out, size_t size) const override
         {
             return impl_typed_array<uint64_t, &rapidjson::Value::IsUint64, &rapidjson::Value::GetUint64>(out, size);
         }
 
-        std::size_t typed_array(float* out, std::size_t size) const override
+        size_t typed_array(float* out, size_t size) const override
         {
             return impl_typed_array<double, &rapidjson::Value::IsDouble, &rapidjson::Value::GetDouble>(out, size);
         }
 
-        std::size_t typed_array(double* out, std::size_t size) const override
+        size_t typed_array(double* out, size_t size) const override
         {
             return impl_typed_array<double, &rapidjson::Value::IsDouble, &rapidjson::Value::GetDouble>(out, size);
         }
@@ -206,7 +207,7 @@ namespace sge
             return _head->IsObject();
         }
 
-        bool object_size(std::size_t& out) const override
+        bool object_size(size_t& out) const override
         {
             if (!_head->IsObject())
             {
@@ -264,7 +265,7 @@ namespace sge
             return true;
         }
 
-        void enumerate_array_elements(FunctionView<void(std::size_t i)> enumerator) override
+        void enumerate_array_elements(FunctionView<void(size_t i)> enumerator) override
         {
             if (!_head->IsArray())
             {
@@ -275,7 +276,7 @@ namespace sge
             _parents.push(_head);
 
             // For each element of the array
-            std::size_t index = 0;
+            size_t index = 0;
             auto const end = _head->End();
             for (auto iter = _head->Begin(); iter != end; ++iter)
             {
@@ -291,7 +292,7 @@ namespace sge
             _parents.pop();
         }
 
-        bool pull_array_element(std::size_t const i) override
+        bool pull_array_element(size_t const i) override
         {
             if (!_head->IsArray() || _head->Size() <= i)
             {
@@ -319,7 +320,7 @@ namespace sge
         }
 
         template <typename RetT, bool(rapidjson::Value::*CheckerFn)() const, RetT(rapidjson::Value::*GetterFn)() const, typename T>
-        std::size_t impl_typed_array(T* const out, std::size_t const size) const
+        size_t impl_typed_array(T* const out, size_t const size) const
         {
             if (!_head->IsArray())
             {
@@ -327,7 +328,7 @@ namespace sge
             }
 
             auto const end = _head->End();
-            std::size_t index = 0;
+            size_t index = 0;
             for (auto iter = _head->Begin(); iter != end && index < size; ++iter)
             {
                 if (!((*iter).*CheckerFn)())

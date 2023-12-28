@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/base/build.h"
 #include "lib/base/reflection/enum_type_info.h"
 #include "lib/base/reflection/interface_info.h"
@@ -48,7 +50,7 @@ namespace sge
         };
 
         template <>
-        struct SGE_BASE_EXPORT GetType<int8>
+        struct SGE_BASE_EXPORT GetType<int8_t>
         {
             static const NativeTypeInfo type_info;
 
@@ -59,7 +61,7 @@ namespace sge
         };
 
         template <>
-        struct SGE_BASE_EXPORT GetType<uint8>
+        struct SGE_BASE_EXPORT GetType<uint8_t>
         {
             static const NativeTypeInfo type_info;
 
@@ -70,7 +72,7 @@ namespace sge
         };
 
         template <>
-        struct SGE_BASE_EXPORT GetType<int16>
+        struct SGE_BASE_EXPORT GetType<int16_t>
         {
             static const NativeTypeInfo type_info;
 
@@ -81,7 +83,7 @@ namespace sge
         };
 
         template <>
-        struct SGE_BASE_EXPORT GetType<uint16>
+        struct SGE_BASE_EXPORT GetType<uint16_t>
         {
             static const NativeTypeInfo type_info;
 
@@ -92,7 +94,7 @@ namespace sge
         };
 
         template <>
-        struct SGE_BASE_EXPORT GetType<int32>
+        struct SGE_BASE_EXPORT GetType<int32_t>
         {
             static const NativeTypeInfo type_info;
 
@@ -103,7 +105,7 @@ namespace sge
         };
 
         template <>
-        struct SGE_BASE_EXPORT GetType<uint32>
+        struct SGE_BASE_EXPORT GetType<uint32_t>
         {
             static const NativeTypeInfo type_info;
 
@@ -114,7 +116,7 @@ namespace sge
         };
 
         template <>
-        struct SGE_BASE_EXPORT GetType<int64>
+        struct SGE_BASE_EXPORT GetType<int64_t>
         {
             static const NativeTypeInfo type_info;
 
@@ -125,7 +127,7 @@ namespace sge
         };
 
         template <>
-        struct SGE_BASE_EXPORT GetType<uint64>
+        struct SGE_BASE_EXPORT GetType<uint64_t>
         {
             static const NativeTypeInfo type_info;
 

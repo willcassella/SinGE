@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #include "lib/base/env.h"
 
 namespace sge
@@ -9,14 +11,14 @@ namespace sge
         union Storage
         {
             bool b;
-            int8 i8;
-            uint8 u8;
-            int16 i16;
-            uint16 u16;
-            int32 i32;
-            uint32 u32;
-            int64 i64;
-            uint64 u64;
+            int8_t i8;
+            uint8_t u8;
+            int16_t i16;
+            uint16_t u16;
+            int32_t i32;
+            uint32_t u32;
+            int64_t i64;
+            uint64_t u64;
             float f;
             double d;
             const void *obj;
@@ -54,42 +56,42 @@ namespace sge
             _value.b = value;
         }
 
-        void set(int8 value)
+        void set(int8_t value)
         {
             _value.i8 = value;
         }
 
-        void set(uint8 value)
+        void set(uint8_t value)
         {
             _value.u8 = value;
         }
 
-        void set(int16 value)
+        void set(int16_t value)
         {
             _value.i16 = value;
         }
 
-        void set(uint16 value)
+        void set(uint16_t value)
         {
             _value.u16 = value;
         }
 
-        void set(int32 value)
+        void set(int32_t value)
         {
             _value.i32 = value;
         }
 
-        void set(uint32 value)
+        void set(uint32_t value)
         {
             _value.u32 = value;
         }
 
-        void set(int64 value)
+        void set(int64_t value)
         {
             _value.i64 = value;
         }
 
-        void set(uint64 value)
+        void set(uint64_t value)
         {
             _value.u64 = value;
         }
@@ -115,49 +117,49 @@ namespace sge
     }
 
     template <>
-    inline const int8 &ArgAny::get() const
+    inline const int8_t &ArgAny::get() const
     {
         return _value.i8;
     }
 
     template <>
-    inline const uint8 &ArgAny::get() const
+    inline const uint8_t &ArgAny::get() const
     {
         return _value.u8;
     }
 
     template <>
-    inline const int16 &ArgAny::get() const
+    inline const int16_t &ArgAny::get() const
     {
         return _value.i16;
     }
 
     template <>
-    inline const uint16 &ArgAny::get() const
+    inline const uint16_t &ArgAny::get() const
     {
         return _value.u16;
     }
 
     template <>
-    inline const int32 &ArgAny::get() const
+    inline const int32_t &ArgAny::get() const
     {
         return _value.i32;
     }
 
     template <>
-    inline const uint32 &ArgAny::get() const
+    inline const uint32_t &ArgAny::get() const
     {
         return _value.u32;
     }
 
     template <>
-    inline const int64 &ArgAny::get() const
+    inline const int64_t &ArgAny::get() const
     {
         return _value.i64;
     }
 
     template <>
-    inline const uint64 &ArgAny::get() const
+    inline const uint64_t &ArgAny::get() const
     {
         return _value.u64;
     }

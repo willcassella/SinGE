@@ -20,7 +20,7 @@ namespace sge
         return Impl<IToString, T>::to_string(&value);
     }
 
-    inline void format_detail(std::string &out, const char *fmt, const std::string *values, std::size_t numValues)
+    inline void format_detail(std::string &out, const char *fmt, const std::string *values, size_t numValues)
     {
         // Replace all instances of '@' in the format string with the given values.
         for (; *fmt != 0 && numValues > 0; ++fmt)
@@ -48,7 +48,7 @@ namespace sge
         const std::string values[] = {to_string(ts)...};
 
         // Calculate total size of value strings
-        std::size_t buffSize = 0;
+        size_t buffSize = 0;
         for (const auto &str : values)
         {
             buffSize += str.size();

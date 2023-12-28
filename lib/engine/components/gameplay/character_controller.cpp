@@ -40,15 +40,15 @@ namespace sge
 
         EventChannel* get_event_channel(const char* channel_name)
         {
-            if (std::strcmp(channel_name, "jump_channel") == 0)
+            if (strcmp(channel_name, "jump_channel") == 0)
             {
                 return &jump_channel;
             }
-            else if (std::strcmp(channel_name, "turn_channel") == 0)
+            else if (strcmp(channel_name, "turn_channel") == 0)
             {
                 return &turn_channel;
             }
-            else if (std::strcmp(channel_name, "walk_channel") == 0)
+            else if (strcmp(channel_name, "walk_channel") == 0)
             {
                 return &walk_channel;
             }

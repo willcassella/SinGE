@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <stdint.h>
 
 #include "lib/base/reflection/reflection_builder.h"
 #include "lib/engine/node.h"
@@ -77,15 +78,15 @@ namespace sge
         return root ? root->get_id() : NodeId::null_id();
     }
 
-    std::size_t Node::get_num_children() const
+    size_t Node::get_num_children() const
     {
         return _child_nodes.size();
     }
 
-    std::size_t Node::get_children(
-        std::size_t start_index,
-        std::size_t num_children,
-        std::size_t* out_num_children,
+    size_t Node::get_children(
+        size_t start_index,
+        size_t num_children,
+        size_t* out_num_children,
         NodeId* out_children) const
     {
         if (_child_nodes.size() <= start_index)
@@ -95,7 +96,7 @@ namespace sge
         }
 
         const auto num_copy = std::min(num_children, _child_nodes.size() - start_index);
-        std::memcpy(out_children, _child_nodes.data() + start_index, num_copy * sizeof(NodeId));
+        memcpy(out_children, _child_nodes.data() + start_index, num_copy * sizeof(NodeId));
         *out_num_children = num_copy;
         return num_copy;
     }
@@ -230,7 +231,7 @@ namespace sge
 
         auto& transform_mod_array = _scene->get_raw_scene_data().system_node_local_transform_changes;
         const auto index = transform_mod_array.size();
-        _transform_mod_index = static_cast<int32>(index);
+        _transform_mod_index = static_cast<int32_t>(index);
         transform_mod_array.push_back(trans_mod);
         return transform_mod_array[index];
     }
@@ -248,7 +249,7 @@ namespace sge
 
         auto& root_mod_array = _scene->get_raw_scene_data().system_node_root_changes;
         const auto index = root_mod_array.size();
-        _root_mod_index = static_cast<int32>(index);
+        _root_mod_index = static_cast<int32_t>(index);
         root_mod_array.push_back(root_mod);
         return root_mod_array[index];
     }
