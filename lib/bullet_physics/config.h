@@ -4,23 +4,20 @@
 #include "lib/base/reflection/reflection.h"
 #include "lib/bullet_physics/build.h"
 
-namespace sge
-{
-    class ArchiveReader;
+namespace sge {
+class ArchiveReader;
 
-    namespace bullet_physics
-    {
-        struct SGE_BULLET_PHYSICS_API Config
-        {
-            SGE_REFLECTED_TYPE;
+namespace bullet_physics {
+struct SGE_BULLET_PHYSICS_API Config {
+  SGE_REFLECTED_TYPE;
 
-            Config();
+  Config();
 
-            bool validate() const;
+  bool validate() const;
 
-            void from_archive(ArchiveReader& reader);
+  void from_archive(ArchiveReader& reader);
 
-            Vec3 global_gravity;
-        };
-    }
-}
+  Vec3 global_gravity;
+};
+}  // namespace bullet_physics
+}  // namespace sge

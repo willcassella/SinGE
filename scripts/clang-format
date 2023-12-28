@@ -1,0 +1,2 @@
+#!/bin/bash
+clang-format -i $(find lib -type f -name '*.h') $(find lib -type f -name '*.cpp') $(find bin -type f -name '*.h') $(find bin -type f -name '*.cpp')

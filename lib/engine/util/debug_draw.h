@@ -4,17 +4,15 @@
 #include "lib/engine/build.h"
 #include "lib/resource/misc/color.h"
 
-namespace sge
-{
-    struct DebugLine
-    {
-        /* Starting point for the line in world coordintes. */
-        Vec3 world_start;
+namespace sge {
+struct DebugLine {
+  /* Starting point for the line in world coordintes. */
+  Vec3 world_start;
 
-        /* Ending point for the line in world coordinates. */
-        Vec3 world_end;
+  /* Ending point for the line in world coordinates. */
+  Vec3 world_end;
 
-        /* Color of the line. */
-        color::RGBF32 color;
-    };
-}
+  /* Color of the line. */
+  color::RGBF32 color;
+};
+}  // namespace sge

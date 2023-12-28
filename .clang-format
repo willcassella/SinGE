@@ -1,0 +1,5 @@
+BasedOnStyle: Chromium
+ColumnLimit: 110
+AlignAfterOpenBracket: BlockIndent
+BinPackArguments: false
+BinPackParameters: false

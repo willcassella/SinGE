@@ -4,37 +4,35 @@
 
 #include "lib/base/build.h"
 
-namespace sge
-{
-    struct SGE_BASE_EXPORT MultiStackBuffer
-    {
-        static constexpr size_t STACK_SIZE = 32;
+namespace sge {
+struct SGE_BASE_EXPORT MultiStackBuffer {
+  static constexpr size_t STACK_SIZE = 32;
 
-        MultiStackBuffer();
-        ~MultiStackBuffer();
-        MultiStackBuffer(const MultiStackBuffer &copy) = delete;
-        MultiStackBuffer(MultiStackBuffer &&move) = default;
-        MultiStackBuffer &operator=(const MultiStackBuffer &copy) = delete;
-        MultiStackBuffer &operator=(MultiStackBuffer &&move) = delete;
+  MultiStackBuffer();
+  ~MultiStackBuffer();
+  MultiStackBuffer(const MultiStackBuffer& copy) = delete;
+  MultiStackBuffer(MultiStackBuffer&& move) = default;
+  MultiStackBuffer& operator=(const MultiStackBuffer& copy) = delete;
+  MultiStackBuffer& operator=(MultiStackBuffer&& move) = delete;
 
-        void clear();
+  void clear();
 
-        size_t num_elems();
+  size_t num_elems();
 
-        void set_num_elems(size_t num_elems);
+  void set_num_elems(size_t num_elems);
 
-        size_t num_stack_buffers();
+  size_t num_stack_buffers();
 
-        uint8_t* const* stack_buffers();
+  uint8_t* const* stack_buffers();
 
-        const uint8_t* const* stack_buffers() const;
+  const uint8_t* const* stack_buffers() const;
 
-        void* alloc(size_t obj_size);
+  void* alloc(size_t obj_size);
 
-        void compact();
+  void compact();
 
-    private:
-        size_t _num_elems;
-        std::vector<uint8_t*> _stacks;
-    };
-}
+ private:
+  size_t _num_elems;
+  std::vector<uint8_t*> _stacks;
+};
+}  // namespace sge

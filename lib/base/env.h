@@ -64,6 +64,7 @@
 
 /*
  * Macro useful for maintaining alignment with buffer headers.
- * NOTE: I use 'alignas(alignof(...))' instead of the 'alignas(type-id)' expression, because that doesn't appear to work on MSVC (as usual).
+ * NOTE: I use 'alignas(alignof(...))' instead of the 'alignas(type-id)' expression, because that doesn't
+ * appear to work on MSVC (as usual).
  */
 #define SGE_ALIGNED_BUFFER_HEADER alignas(alignof(max_align_t))

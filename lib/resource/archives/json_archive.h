@@ -6,30 +6,28 @@
 #include "lib/base/reflection/reflection.h"
 #include "lib/resource/build.h"
 
-namespace sge
-{
-    class SGE_RESOURCE_API JsonArchive final : public Archive
-    {
-        struct Data;
-        SGE_REFLECTED_TYPE;
+namespace sge {
+class SGE_RESOURCE_API JsonArchive final : public Archive {
+  struct Data;
+  SGE_REFLECTED_TYPE;
 
-    public:
-        JsonArchive();
-        ~JsonArchive();
+ public:
+  JsonArchive();
+  ~JsonArchive();
 
-        ArchiveWriter* write_root() override;
+  ArchiveWriter* write_root() override;
 
-        ArchiveReader* read_root() const override;
+  ArchiveReader* read_root() const override;
 
-        bool to_file(const char* path) const override;
+  bool to_file(const char* path) const override;
 
-        bool from_file(const char* path) override;
+  bool from_file(const char* path) override;
 
-        std::string to_string() const;
+  std::string to_string() const;
 
-        void from_string(const char* str);
+  void from_string(const char* str);
 
-    private:
-        std::unique_ptr<Data> _data;
-    };
-}
+ private:
+  std::unique_ptr<Data> _data;
+};
+}  // namespace sge
