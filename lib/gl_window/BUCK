@@ -16,14 +16,24 @@ cxx_library(
     visibility = [
         "PUBLIC",
     ],
-    compiler_flags = [
-        "-std=c++20",
-        "-isystem",
-        "/opt/homebrew/include",
-    ],
-    exported_linker_flags = [
-        "-L/opt/homebrew/lib",
-        "-lglfw",
-    ],
+    compiler_flags = select({
+        "config//os:linux": [
+            "-std=c++20",
+        ],
+        "config//os:macos": [
+            "-std=c++20",
+             "-isystem",
+             "/opt/homebrew/include",
+        ],
+    }),
+    exported_linker_flags = select({
+        "config//os:linux": [
+            "-lglfw",
+        ],
+        "config//os:macos": [
+            "-L/opt/homebrew/lib",
+            "-lglfw",
+        ],
+    }),
     link_style = "static",
 )

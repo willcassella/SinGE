@@ -40,16 +40,30 @@ cxx_library(
     preprocessor_flags = [
         "-DSGE_BULLET_PHYSICS_BUILD",
     ],
-    compiler_flags = [
-        "-std=c++20",
-        "-isystem",
-        "/opt/homebrew/include/bullet",
-    ],
-    exported_linker_flags = [
-        "-L/opt/homebrew/lib",
-        "-lBulletDynamics",
-        "-lBulletCollision",
-        "-lLinearMath",
-    ],
+    compiler_flags = select({
+        "config//os:linux": [
+            "-std=c++20",
+            "-isystem",
+            "/usr/include/bullet",
+        ],
+        "config//os:macos": [
+            "-std=c++20",
+            "-isystem",
+            "/opt/homebrew/include/bullet",
+        ],
+    }),
+    exported_linker_flags = select({
+        "config//os:linux": [
+            "-lBulletDynamics",
+            "-lBulletCollision",
+            "-lLinearMath",
+        ],
+        "config//os:macos": [
+            "-L/opt/homebrew/lib",
+            "-lBulletDynamics",
+            "-lBulletCollision",
+            "-lLinearMath",
+        ],
+    }),
     link_style = "static",
 )
