@@ -28,7 +28,7 @@ static void action_input_response(
   sge::CInput::EAction events[8];
   int32_t num_events;
 
-  while (action_event.consume(subscriber, sizeof(sge::CInput::EAction), 8, events, &num_events)) {
+  while (action_event.consume(subscriber, events, &num_events)) {
     for (int32_t i = 0; i < num_events; ++i) {
       // Access character component for this event
       sge::CCharacterController* character;
