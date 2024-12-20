@@ -39,6 +39,7 @@ cxx_library(
     ],
     deps = [
         "//lib/third_party/qoi:qoi",
+        "//lib/third_party/rapidjson:rapidjson",
     ],
     visibility = [
         "PUBLIC",

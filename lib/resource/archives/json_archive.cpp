@@ -1,8 +1,8 @@
 #include <stdio.h>
 
-#include <rapidjson/filereadstream.h>
-#include <rapidjson/filewritestream.h>
-#include <rapidjson/writer.h>
+#include "lib/third_party/rapidjson/filereadstream.h"
+#include "lib/third_party/rapidjson/filewritestream.h"
+#include "lib/third_party/rapidjson/writer.h"
 
 #include "lib/base/interfaces/to_string.h"
 #include "lib/base/reflection/reflection_builder.h"

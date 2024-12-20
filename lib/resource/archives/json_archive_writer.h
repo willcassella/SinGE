@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stack>
 
-#include <rapidjson/document.h>
+#include "lib/third_party/rapidjson/document.h"
 
 #include "lib/base/io/archive_writer.h"
 

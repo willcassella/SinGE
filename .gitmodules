@@ -4,3 +4,6 @@
 [submodule "lib/third_party/qoi"]
 	path = lib/third_party/qoi/src
 	url = git@github.com:phoboslab/qoi.git
+[submodule "lib/third_party/rapidjson/src"]
+	path = lib/third_party/rapidjson/src
+	url = git@github.com:Tencent/rapidjson.git

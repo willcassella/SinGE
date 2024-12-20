@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <stack>
 
-#include <rapidjson/document.h>
+#include "lib/third_party/rapidjson/document.h"
 
 #include "lib/base/io/archive_reader.h"
 #include "lib/base/memory/functions.h"
