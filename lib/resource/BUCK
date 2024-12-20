@@ -13,7 +13,6 @@ cxx_library(
         "resources/material.h",
         "resources/shader.h",
         "resources/static_mesh.h",
-        "resources/texture.h",
     ],
     headers = [
         "archives/binary_archive_node.h",
@@ -34,10 +33,12 @@ cxx_library(
         "resources/material.cpp",
         "resources/shader.cpp",
         "resources/static_mesh.cpp",
-        "resources/texture.cpp",
     ],
     exported_deps = [
         "//lib/base:base",
+    ],
+    deps = [
+        "//lib/third_party/qoi:qoi",
     ],
     visibility = [
         "PUBLIC",

@@ -6,7 +6,7 @@
 #include "lib/resource/resources/material.h"
 #include "lib/resource/resources/shader.h"
 #include "lib/resource/resources/static_mesh.h"
-#include "lib/resource/resources/texture.h"
+#include "lib/resource/resources/image.h"
 
 namespace sge {
 namespace gl_render {
@@ -195,7 +195,7 @@ GLuint RenderResource_get_texture_2d_resource(RenderResource& resources, const c
   if (iter == resources.texture_2d_resources.end()) {
     if (!hdr) {
       // Load the texture from the file
-      Texture texture;
+      Image texture;
       const auto loaded = texture.from_file(path);
       if (!loaded) {
         printf("WARNING: GLRenderSystem could not load texture '%s'\n", path);
@@ -203,12 +203,12 @@ GLuint RenderResource_get_texture_2d_resource(RenderResource& resources, const c
 
       // Figure out the color format of the image
       GLenum format;
-      switch (texture.color_space()) {
-        case Texture::ColorSpace::RGB:
+      switch (texture.get_colorspace()) {
+        case Image::ColorSpace::Linear:
           format = GL_RGBA8;
           break;
 
-        case Texture::ColorSpace::S_RGB:
+        case Image::ColorSpace::SRGB:
           format = GL_SRGB8_ALPHA8;
           break;
 
@@ -219,9 +219,9 @@ GLuint RenderResource_get_texture_2d_resource(RenderResource& resources, const c
 
       // Create an opengl texture from the texture object
       const auto gl_tex = create_texture(
-          texture.image.get_width(),
-          texture.image.get_height(),
-          texture.image.get_bitmap(),
+          texture.get_width(),
+          texture.get_height(),
+          texture.get_bitmap(),
           format,
           GL_RGBA,
           GL_UNSIGNED_BYTE

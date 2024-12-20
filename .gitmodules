@@ -1,3 +1,6 @@
 [submodule "prelude"]
 	path = prelude
 	url = https://github.com/facebook/buck2-prelude.git
+[submodule "lib/third_party/qoi"]
+	path = lib/third_party/qoi/src
+	url = git@github.com:phoboslab/qoi.git

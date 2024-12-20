@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 
-#include "lib/resource/resources/image.h"
+struct FIBITMAP;
 
 namespace sge {
 /* Represents a linear image with 3-4 floating point channels per pixel. */

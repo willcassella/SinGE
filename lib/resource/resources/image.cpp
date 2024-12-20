@@ -1,95 +1,69 @@
 #include <stdint.h>
+#include <stddef.h>
 
-#include <FreeImage.h>
+#include "lib/third_party/qoi/qoi.h"
 
-#include "lib/base/interfaces/to_archive.h"
 #include "lib/base/memory/functions.h"
 #include "lib/base/reflection/reflection_builder.h"
 #include "lib/resource/interfaces/from_file.h"
 #include "lib/resource/resources/image.h"
 
-SGE_REFLECT_TYPE(sge::Image).implements<IToArchive>().implements<IFromFile>();
+SGE_REFLECT_TYPE(sge::Image).implements<IFromFile>();
 
 namespace sge {
-static void swap_red_and_blue_32(uint8_t* bitmap, size_t num_pixels) {
-  for (size_t i = 0; i < num_pixels; ++i) {
-    const size_t pixel_offset = i * 4;
-    const uint8_t temp = bitmap[pixel_offset];
-    bitmap[pixel_offset] = bitmap[pixel_offset + 2];
-    bitmap[pixel_offset + 2] = temp;
-  }
+static size_t calc_size(uint32_t width, uint32_t height) {
+  return width * height * sizeof(uint32_t);
 }
 
-Image::Image() : _bitmap(nullptr) {}
+Image::Image() = default;
 
 Image::Image(const std::string& path) : Image() {
   // Open the file
   from_file(path.c_str());
 }
 
-Image::Image(const Image& copy) : Image() {
-  if (copy._bitmap) {
-    _bitmap = FreeImage_Clone(copy._bitmap);
-  }
+Image::Image(const Image& copy)
+: width(copy.width),
+  height(copy.height),
+  colorspace(copy.colorspace)
+{
+  bitmap = malloc(calc_size(width, height));
+  memcpy(bitmap, copy.bitmap, calc_size(width, height));
 }
 
-Image::Image(Image&& move) : _bitmap(move._bitmap) {
-  move._bitmap = nullptr;
+Image::Image(Image&& move)
+: width(move.width),
+  height(move.height),
+  colorspace(move.colorspace),
+  bitmap(move.bitmap)
+{
+  move.width = 0;
+  move.height = 0;
+  move.colorspace = ColorSpace::SRGB;
+  move.bitmap = nullptr;
 }
 
 Image::~Image() {
-  FreeImage_Unload(_bitmap);
+  free(bitmap);
 }
 
 bool Image::from_file(const char* path) {
-  // Unload the current image
-  FreeImage_Unload(_bitmap);
-  _bitmap = nullptr;
-
-  // Open the file
-  auto format = FreeImage_GetFileType(path);
-  FIBITMAP* image = FreeImage_Load(format, path, 0);
-
-  // Check if the image was loaded successfully
-  if (!image) {
+  qoi_desc desc;
+  void* result = qoi_read(path, &desc, 4);
+  if (!result) {
     return false;
   }
 
-  // Convert to 32 bits
-  _bitmap = FreeImage_ConvertTo32Bits(image);
-  FreeImage_Unload(image);
+  // Unload current image if necessary.
+  if (bitmap) {
+    free(bitmap);
+  }
 
-  // Swap red and blue if not in the RGB format
-#if FREEIMAGE_COLORORDER == FREEIMAGE_COLORORDER_BGR
-  swap_red_and_blue_32(get_bitmap(), get_width() * get_height());
-#endif
+  width = desc.width;
+  height = desc.height;
+  colorspace = static_cast<ColorSpace>(desc.colorspace);
+  bitmap = result;
+
   return true;
-}
-
-void Image::to_archive(ArchiveWriter& writer) const {
-  // Save width and height
-  writer.object_member("width", get_width());
-  writer.object_member("height", get_height());
-
-  // Save the bitmap
-  writer.push_object_member("bitmap");
-  writer.typed_array(get_bitmap(), get_width() * get_height() * 4);
-  writer.pop();
-}
-
-uint32_t Image::get_width() const {
-  return FreeImage_GetWidth(_bitmap);
-}
-
-uint32_t Image::get_height() const {
-  return FreeImage_GetHeight(_bitmap);
-}
-
-uint8_t* Image::get_bitmap() {
-  return FreeImage_GetBits(_bitmap);
-}
-
-const uint8_t* Image::get_bitmap() const {
-  return FreeImage_GetBits(_bitmap);
 }
 }  // namespace sge
