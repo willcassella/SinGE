@@ -7,3 +7,12 @@
 [submodule "lib/third_party/rapidjson/src"]
 	path = lib/third_party/rapidjson/src
 	url = git@github.com:Tencent/rapidjson.git
+[submodule "lib/third_party/openexr/src"]
+	path = lib/third_party/openexr/src
+	url = git@github.com:AcademySoftwareFoundation/openexr.git
+[submodule "lib/third_party/Imath/src"]
+	path = lib/third_party/Imath/src
+	url = git@github.com:AcademySoftwareFoundation/Imath.git
+[submodule "lib/third_party/libdeflate/src"]
+	path = lib/third_party/libdeflate/src
+	url = git@github.com:ebiggers/libdeflate.git
