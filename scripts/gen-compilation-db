@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+
+if [[ ! -x "$(which buck2)" || ! -x "$(which jq)" ]]; then
+    1>&2 echo "ERROR: buck2 and jq must be on PATH"
+    exit 1
+fi
+
+# Navigate to the project root
+cd "$(buck2 root)"
+
+function generate_commands() {
+    buck2 build "$1[full-compilation-database]" --show-simple-output
+}
+
+# Generate compilation databases for each sub-project
+DB_PATHS=(
+    "$(generate_commands //lib/base)"
+    "$(generate_commands //lib/resource)"
+    "$(generate_commands //lib/engine)"
+    "$(generate_commands //lib/bullet_physics)"
+    "$(generate_commands //lib/gl_render)"
+    "$(generate_commands //lib/gl_window)"
+    "$(generate_commands //bin/gl_client)"
+)
+
+# Concatenate all into a single database
+jq -s '[flatten[]]' "${DB_PATHS[@]}" > compile_commands.json
