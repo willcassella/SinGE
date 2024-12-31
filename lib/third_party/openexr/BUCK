@@ -1,15 +1,21 @@
 cxx_library(
     name = "config",
-    header_namespace = "",
+    visibility = [
+        "PUBLIC"
+    ],
     exported_headers = [
         "OpenEXRConfig.h",
         "IlmThreadConfig.h",
         "OpenEXRConfigInternal.h",
     ],
+    header_namespace = "",
 )
 
 cxx_library(
     name = "OpenEXRCore",
+    visibility = [
+        "PUBLIC"
+    ],
     srcs = [
         "src/src/lib/OpenEXRCore/attributes.c",
         "src/src/lib/OpenEXRCore/base.c",
@@ -77,28 +83,27 @@ cxx_library(
         "src/src/lib/OpenEXRCore/internal_xdr.h",
         "src/src/lib/OpenEXRCore/openexr_version.h",
     ],
-    exported_headers = [
-        "src/src/lib/OpenEXRCore/openexr.h",
-        "src/src/lib/OpenEXRCore/openexr_attr.h",
-        "src/src/lib/OpenEXRCore/openexr_base.h",
-        "src/src/lib/OpenEXRCore/openexr_chunkio.h",
-        "src/src/lib/OpenEXRCore/openexr_coding.h",
-        "src/src/lib/OpenEXRCore/openexr_compression.h",
-        "src/src/lib/OpenEXRCore/openexr_config.h",
-        "src/src/lib/OpenEXRCore/openexr_context.h",
-        "src/src/lib/OpenEXRCore/openexr_debug.h",
-        "src/src/lib/OpenEXRCore/openexr_decode.h",
-        "src/src/lib/OpenEXRCore/openexr_encode.h",
-        "src/src/lib/OpenEXRCore/openexr_errors.h",
-        "src/src/lib/OpenEXRCore/openexr_part.h",
-        "src/src/lib/OpenEXRCore/openexr_std_attr.h",
-    ],
-    visibility = [
-        "PUBLIC"
-    ],
-    deps = [
+    exported_headers = {
+        "openexr.h": "src/src/lib/OpenEXRCore/openexr.h",
+        "openexr_attr.h": "src/src/lib/OpenEXRCore/openexr_attr.h",
+        "openexr_base.h": "src/src/lib/OpenEXRCore/openexr_base.h",
+        "openexr_chunkio.h": "src/src/lib/OpenEXRCore/openexr_chunkio.h",
+        "openexr_coding.h": "src/src/lib/OpenEXRCore/openexr_coding.h",
+        "openexr_compression.h": "src/src/lib/OpenEXRCore/openexr_compression.h",
+        "openexr_config.h": "src/src/lib/OpenEXRCore/openexr_config.h",
+        "openexr_context.h": "src/src/lib/OpenEXRCore/openexr_context.h",
+        "openexr_debug.h": "src/src/lib/OpenEXRCore/openexr_debug.h",
+        "openexr_decode.h": "src/src/lib/OpenEXRCore/openexr_decode.h",
+        "openexr_encode.h": "src/src/lib/OpenEXRCore/openexr_encode.h",
+        "openexr_errors.h": "src/src/lib/OpenEXRCore/openexr_errors.h",
+        "openexr_part.h": "src/src/lib/OpenEXRCore/openexr_part.h",
+        "openexr_std_attr.h": "src/src/lib/OpenEXRCore/openexr_std_attr.h",
+    },
+    exported_deps = [
         ":config",
         "//lib/third_party/Imath:Imath",
+    ],
+    deps = [
         "//lib/third_party/libdeflate:libdeflate",
     ],
 )
