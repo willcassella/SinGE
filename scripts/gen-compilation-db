@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 if [[ ! -x "$(which buck2)" || ! -x "$(which jq)" ]]; then
@@ -6,12 +6,12 @@ if [[ ! -x "$(which buck2)" || ! -x "$(which jq)" ]]; then
     exit 1
 fi
 
+function generate_commands() {
+    buck2 build "${1}[full-compilation-database]" --show-simple-output
+}
+
 # Navigate to the project root
 cd "$(buck2 root)"
-
-function generate_commands() {
-    buck2 build "$1[full-compilation-database]" --show-simple-output
-}
 
 # Generate compilation databases for each sub-project
 DB_PATHS=(
