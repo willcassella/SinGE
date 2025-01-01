@@ -11,7 +11,8 @@ function generate_commands() {
 }
 
 # Navigate to the project root
-cd "$(buck2 root)"
+ROOT=$(buck2 root)
+cd "${ROOT}"
 
 # Generate compilation databases for each sub-project
 DB_PATHS=(
@@ -24,5 +25,5 @@ DB_PATHS=(
     "$(generate_commands //bin/gl_client)"
 )
 
-# Concatenate all into a single database
-jq -s '[flatten[]]' "${DB_PATHS[@]}" > compile_commands.json
+# Concatenate all into a single database, rewriting the 'directory' field.
+jq -s "[flatten[] | . + {directory: \"${ROOT}\"}]" "${DB_PATHS[@]}" > compile_commands.json
