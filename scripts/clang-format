@@ -1,2 +1,14 @@
-#!/bin/bash
-clang-format -i $(find lib -type f -name '*.h') $(find lib -type f -name '*.cpp') $(find bin -type f -name '*.h') $(find bin -type f -name '*.cpp')
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ ! -x "$(which buck2)" || ! -x "$(which clang-format)" ]]; then
+    1>&2 "ERROR: buck2 and clang-format must be on PATH"
+    exit 1
+fi
+
+function find_cxx_files() {
+    find lib bin -type f \( -name '*.h' -or -name '*.cpp' \) -not -path '*/third_party/*' -print0
+}
+
+cd "$(buck2 root)"
+find_cxx_files | xargs -0 -n1 clang-format -i
