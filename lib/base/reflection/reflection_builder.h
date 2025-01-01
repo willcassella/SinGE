@@ -23,9 +23,7 @@ auto function_wrapper(
 
 template <typename T, typename... ArgTs>
 void constructor_wrapper(void* addr, const ArgAny* args) {
-  function_wrapper(
-      tmp::list<ArgTs...>{}, [addr](auto... args) { new (addr) T(args...); }, args
-  );
+  function_wrapper(tmp::list<ArgTs...>{}, [addr](auto... args) { new (addr) T(args...); }, args);
 }
 
 template <typename T, typename... ArgTs>
@@ -190,7 +188,7 @@ struct NativeTypeInfoBuilder {
 
   /* Registers a field. */
   template <typename FieldT>
-  NativeTypeInfoBuilder&& field(const char* name, FieldT T::*field, FieldFlags_t flags = FF_NONE) {
+  NativeTypeInfoBuilder&& field(const char* name, FieldT T::* field, FieldFlags_t flags = FF_NONE) {
     Self::create_field(name, field, flags);
     return std::move(*this);
   }
@@ -199,7 +197,7 @@ struct NativeTypeInfoBuilder {
   template <typename FieldT>
   NativeTypeInfoBuilder&& field_property(
       const char* name,
-      FieldT T::*field,
+      FieldT T::* field,
       FieldFlags_t fieldFlags = FF_NONE,
       PropertyFlags_t propertyFlags = PF_NONE
   ) {
@@ -226,7 +224,7 @@ struct NativeTypeInfoBuilder {
   template <typename FieldT>
   NativeTypeInfoBuilder&& field_readonly_property(
       const char* name,
-      FieldT T::*field,
+      FieldT T::* field,
       FieldFlags_t fieldFlags = FF_NONE,
       PropertyFlags_t propertyFlags = PF_NONE
   ) {
@@ -249,7 +247,7 @@ struct NativeTypeInfoBuilder {
 
  private:
   template <typename FieldT>
-  static size_t get_field_offset(FieldT T::*field) {
+  static size_t get_field_offset(FieldT T::* field) {
     // Bit of a hack, but necessary. If this becomes problematic, I can replace the field offset with a
     // getter/setter std::function pair or something. Though that would be much less performant.
     alignas(T&) const char fake[sizeof(T)] = {};
@@ -291,7 +289,7 @@ struct NativeTypeInfoBuilder {
   }
 
   template <typename FieldT>
-  void create_field(const char* name, FieldT T::*field, FieldFlags_t flags) {
+  void create_field(const char* name, FieldT T::* field, FieldFlags_t flags) {
     FieldInfo::Data fieldData;
     fieldData.flags = flags;
     fieldData.index = (uint32_t)type_data.fields.size();
@@ -349,21 +347,21 @@ struct NativeTypeInfoBuilder {
   }
 
   template <typename FieldT>
-  static auto create_field_getter(FieldT T::*field) {
+  static auto create_field_getter(FieldT T::* field) {
     return [field](const void* self, PropertyInfo::GetterOutFn out) -> void {
       out(static_cast<const T*>(self)->*field);
     };
   }
 
   template <typename FieldT>
-  static auto create_field_setter(FieldT T::*field) {
+  static auto create_field_setter(FieldT T::* field) {
     return [field](void* self, const void* value) -> void {
       static_cast<T*>(self)->*field = *static_cast<const FieldT*>(value);
     };
   }
 
   template <typename FieldT>
-  static auto create_field_mutate(FieldT T::*field) {
+  static auto create_field_mutate(FieldT T::* field) {
     return [field](void* self, PropertyInfo::MutatorFn mutate) -> void {
       mutate(static_cast<T*>(self)->*field);
     };

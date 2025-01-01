@@ -3,10 +3,10 @@
 #include "lib/gl_render/gl_texture_2d.h"
 #include "lib/gl_render/render_resource.h"
 #include "lib/resource/resources/hdr_image.h"
+#include "lib/resource/resources/image.h"
 #include "lib/resource/resources/material.h"
 #include "lib/resource/resources/shader.h"
 #include "lib/resource/resources/static_mesh.h"
-#include "lib/resource/resources/image.h"
 
 namespace sge {
 namespace gl_render {
@@ -219,12 +219,7 @@ GLuint RenderResource_get_texture_2d_resource(RenderResource& resources, const c
 
       // Create an opengl texture from the texture object
       const auto gl_tex = create_texture(
-          texture.get_width(),
-          texture.get_height(),
-          texture.get_bitmap(),
-          format,
-          GL_RGBA,
-          GL_UNSIGNED_BYTE
+          texture.get_width(), texture.get_height(), texture.get_bitmap(), format, GL_RGBA, GL_UNSIGNED_BYTE
       );
 
       // Add it to the resource table

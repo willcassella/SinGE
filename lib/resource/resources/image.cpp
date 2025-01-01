@@ -1,5 +1,5 @@
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include "lib/third_party/qoi/qoi.h"
 
@@ -22,21 +22,13 @@ Image::Image(const std::string& path) : Image() {
   from_file(path.c_str());
 }
 
-Image::Image(const Image& copy)
-: width(copy.width),
-  height(copy.height),
-  colorspace(copy.colorspace)
-{
+Image::Image(const Image& copy) : width(copy.width), height(copy.height), colorspace(copy.colorspace) {
   bitmap = malloc(calc_size(width, height));
   memcpy(bitmap, copy.bitmap, calc_size(width, height));
 }
 
 Image::Image(Image&& move)
-: width(move.width),
-  height(move.height),
-  colorspace(move.colorspace),
-  bitmap(move.bitmap)
-{
+    : width(move.width), height(move.height), colorspace(move.colorspace), bitmap(move.bitmap) {
   move.width = 0;
   move.height = 0;
   move.colorspace = ColorSpace::SRGB;

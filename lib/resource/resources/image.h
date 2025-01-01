@@ -11,7 +11,7 @@ class ArchiveWriter;
 struct SGE_RESOURCE_API Image {
   SGE_REFLECTED_TYPE;
 
-  enum class ColorSpace: uint8_t {
+  enum class ColorSpace : uint8_t {
     SRGB = 0,
     Linear = 1,
   };
