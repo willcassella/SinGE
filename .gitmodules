@@ -16,3 +16,6 @@
 [submodule "lib/third_party/libdeflate/src"]
 	path = lib/third_party/libdeflate/src
 	url = git@github.com:ebiggers/libdeflate.git
+[submodule "lib/third_party/bullet/src"]
+	path = lib/third_party/bullet/src
+	url = git@github.com:bulletphysics/bullet3.git
