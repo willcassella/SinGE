@@ -9,7 +9,6 @@
 #include "lib/engine/components/physics/sphere_collider.h"
 #include "lib/engine/components/physics/static_mesh_collider.h"
 #include "lib/engine/scene.h"
-#include "lib/resource/resources/static_mesh.h"
 
 namespace sge {
 namespace bullet_physics {

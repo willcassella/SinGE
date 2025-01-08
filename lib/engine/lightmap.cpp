@@ -1,5 +1,6 @@
 #include <stdint.h>
 
+#include "lib/base/memory/functions.h"
 #include "lib/base/reflection/reflection_builder.h"
 #include "lib/engine/lightmap.h"
 #include "lib/resource/misc/image_ops.h"

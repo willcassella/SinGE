@@ -2,8 +2,6 @@
 
 #include <stdint.h>
 
-#include "lib/base/functional/ufunction.h"
-#include "lib/base/reflection/type_info.h"
 #include "lib/engine/build.h"
 
 namespace sge {

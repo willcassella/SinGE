@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <algorithm>
-#include <numeric>
+#include <cassert>
 
 #include "lib/engine/event_channel.h"
 

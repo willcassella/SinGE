@@ -2,7 +2,6 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <string>
 
 #include "lib/base/reflection/reflection.h"
 #include "lib/base/util/interface_utils.h"
