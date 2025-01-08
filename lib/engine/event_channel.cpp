@@ -92,7 +92,6 @@ void EventChannel::append(const void* events, size_t event_object_size, int32_t 
     // Reassign values
     buffer = new_buff;
     capacity = new_capacity;
-    mod_start_index = 0;
     mod_end_index = size;
     end_index -= start_index;
   }
