@@ -1,7 +1,21 @@
 cxx_library(
     name = "Imath",
-    visibility = [
-        "PUBLIC",
+    visibility = [ "PUBLIC" ],
+    header_namespace = "",
+    exported_headers = dict(map(
+        lambda x: [x.removeprefix("src/src/Imath/"), x],
+        glob(
+            include = [
+                "src/src/Imath/*.h",
+                "IMathConfig.h",
+            ],
+            exclude = [
+                "src/src/Imath/toFloat.h",
+            ]
+        ),
+    )),
+    headers = [
+        "src/src/Imath/toFloat.h",
     ],
     srcs = [
         "src/src/Imath/ImathColorAlgo.cpp",
@@ -10,48 +24,9 @@ cxx_library(
         "src/src/Imath/ImathRandom.cpp",
         "src/src/Imath/half.cpp",
     ],
-    headers = [
-        "src/src/Imath/toFloat.h",
-    ],
-    exported_headers = {
-        "ImathConfig.h": "ImathConfig.h",
-        "ImathBox.h": "src/src/Imath/ImathBox.h",
-        "ImathBoxAlgo.h": "src/src/Imath/ImathBoxAlgo.h",
-        "ImathColor.h": "src/src/Imath/ImathColor.h",
-        "ImathColorAlgo.h": "src/src/Imath/ImathColorAlgo.h",
-        "ImathEuler.h": "src/src/Imath/ImathEuler.h",
-        "ImathExport.h": "src/src/Imath/ImathExport.h",
-        "ImathForward.h": "src/src/Imath/ImathForward.h",
-        "ImathFrame.h": "src/src/Imath/ImathFrame.h",
-        "ImathFrustum.h": "src/src/Imath/ImathFrustum.h",
-        "ImathFrustumTest.h": "src/src/Imath/ImathFrustumTest.h",
-        "ImathFun.h": "src/src/Imath/ImathFun.h",
-        "ImathGL.h": "src/src/Imath/ImathGL.h",
-        "ImathGLU.h": "src/src/Imath/ImathGLU.h",
-        "ImathInt64.h": "src/src/Imath/ImathInt64.h",
-        "ImathInterval.h": "src/src/Imath/ImathInterval.h",
-        "ImathLine.h": "src/src/Imath/ImathLine.h",
-        "ImathLineAlgo.h": "src/src/Imath/ImathLineAlgo.h",
-        "ImathMath.h": "src/src/Imath/ImathMath.h",
-        "ImathMatrix.h": "src/src/Imath/ImathMatrix.h",
-        "ImathMatrixAlgo.h": "src/src/Imath/ImathMatrixAlgo.h",
-        "ImathNamespace.h": "src/src/Imath/ImathNamespace.h",
-        "ImathPlane.h": "src/src/Imath/ImathPlane.h",
-        "ImathPlatform.h": "src/src/Imath/ImathPlatform.h",
-        "ImathQuat.h": "src/src/Imath/ImathQuat.h",
-        "ImathRandom.h": "src/src/Imath/ImathRandom.h",
-        "ImathRoots.h": "src/src/Imath/ImathRoots.h",
-        "ImathShear.h": "src/src/Imath/ImathShear.h",
-        "ImathSphere.h": "src/src/Imath/ImathSphere.h",
-        "ImathTypeTraits.h": "src/src/Imath/ImathTypeTraits.h",
-        "ImathVec.h": "src/src/Imath/ImathVec.h",
-        "ImathVecAlgo.h": "src/src/Imath/ImathVecAlgo.h",
-        "half.h": "src/src/Imath/half.h",
-        "halfFunction.h": "src/src/Imath/halfFunction.h",
-        "halfLimits.h": "src/src/Imath/halfLimits.h",
-    },
-    header_namespace = "",
     compiler_flags = [
         "-std=c++20",
     ],
+    link_style = "static",
+    exported_header_style = "system",
 )

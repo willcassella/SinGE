@@ -1,13 +1,12 @@
 cxx_library(
     name = "qoi",
+    visibility = [ "PUBLIC" ],
     exported_headers = {
         "qoi.h": "src/qoi.h",
     },
     srcs = [
         "impl.cpp",
     ],
-    visibility = [
-        "PUBLIC",
-    ],
     link_style = "static",
+    exported_header_style = "system",
 )
